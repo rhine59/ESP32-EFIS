@@ -1,0 +1,72 @@
+import math, uuid, json, os
+from pathlib import Path
+out=Path(__file__).resolve().parents[1] / 'carrier_rev_a'; out.mkdir(parents=True, exist_ok=True)
+def U(): return str(uuid.uuid4())
+nets=['GND','+3V3','+5V','USB_D-','USB_D+','USB_D-_MCU','USB_D+_MCU','LCD_VS','LCD_HS','LCD_PCLK','LCD_DE']
+for i in range(16): nets.append(f'LCD_D{i}')
+nets += ['SPI_MOSI','SPI_SCLK','SPI_MISO','BMI_ACC_CS','BMI_GYRO_CS','LCD_RST','LCD_CS','IOX_SDA','IOX_SCL','IOX_INT','ENC_A','ENC_B','ENC_SW','BL_PWM','LED_A','LED_K','REG_SW','REG_VOS','BOOT','EN','SPARE']
+netid={n:i+1 for i,n in enumerate(nets)}
+module_gpio_pad={4:4,5:5,6:6,7:7,15:8,16:9,17:10,18:11,8:12,19:13,20:14,3:15,46:16,9:17,10:18,11:19,12:20,13:21,14:22,21:23,47:24,48:25,45:26,0:27,35:28,36:29,37:30,38:31,39:32,40:33,41:34,42:35,44:36,43:37,2:38,1:39}
+project_gpio={
+ 'LCD_D0':4,'LCD_D1':5,'LCD_D2':6,'LCD_D3':7,'LCD_D4':8,'LCD_D5':9,'LCD_D6':10,'LCD_D7':11,
+ 'LCD_D8':12,'LCD_D9':13,'LCD_D10':14,'LCD_D11':15,'LCD_D12':16,'LCD_D13':17,'LCD_D14':18,'LCD_D15':21,
+ 'LCD_PCLK':1,'LCD_DE':2,'LCD_HS':38,'LCD_VS':39,'SPI_MOSI':35,'SPI_SCLK':36,'SPI_MISO':37,
+ 'BMI_ACC_CS':40,'BMI_GYRO_CS':41,'BL_PWM':42,'IOX_SDA':47,'IOX_SCL':48,'IOX_INT':43,'SPARE':44,'BOOT':0
+}
+j1={1:'LED_K',2:'LED_A',3:'+3V3',4:'GND',5:None,6:None,7:'GND',8:None,9:None,10:'GND',11:'LCD_VS',12:'LCD_HS',13:'LCD_PCLK',14:'LCD_DE',15:'GND'}
+for p,i in zip(range(16,21),range(0,5)): j1[p]=f'LCD_D{i}'
+for p,i in zip(range(21,27),range(5,11)): j1[p]=f'LCD_D{i}'
+j1[27]='GND'
+for p,i in zip(range(28,33),range(11,16)): j1[p]=f'LCD_D{i}'
+j1.update({33:'LCD_RST',34:'LCD_CS',35:'SPI_SCLK',36:None,37:'SPI_MOSI',38:'GND',39:'+3V3',40:'GND'})
+def prop_ref(ref,x,y,hide=False):
+    h=' hide' if hide else ''
+    return f'''    (property "Reference" "{ref}" (at {x:.3f} {y:.3f} 0) (layer "F.SilkS"){h}\n      (effects (font (size 1 1) (thickness 0.15)))\n    )'''
+def prop_val(val,x,y):
+    return f'''    (property "Value" "{val}" (at {x:.3f} {y:.3f} 0) (layer "F.Fab") hide\n      (effects (font (size 1 1) (thickness 0.15)))\n    )'''
+def net_clause(n): return '' if not n else f' (net {netid[n]} "{n}")'
+def pad(num,kind,shape,x,y,sx,sy,layers,n=None,drill=None,rot=0):
+    dr=f' (drill {drill})' if drill else ''
+    return f'    (pad "{num}" {kind} {shape} (at {x:.3f} {y:.3f} {rot}) (size {sx:.3f} {sy:.3f}){dr} (layers {layers}){net_clause(n)} (uuid {U()}))'
+def fp_generic(ref,val,x,y,pads,body=(10,6)):
+    bx,by=body
+    s=[f'  (footprint "AH:{val}" (layer "F.Cu") (at 0 0) (uuid {U()})',prop_ref(ref,x,y-by/2-1.5),prop_val(val,x,y+by/2+1.5),
+       f'    (fp_rect (start {x-bx/2:.3f} {y-by/2:.3f}) (end {x+bx/2:.3f} {y+by/2:.3f}) (stroke (width 0.15) (type default)) (fill none) (layer "F.SilkS") (uuid {U()}))']
+    for p in pads: s.append(p)
+    s.append('  )')
+    return '\n'.join(s)
+ux,uy=100,82
+u1pads={}
+for p in range(1,15): u1pads[p]=(ux-8.75,uy+(-8.26+(p-1)*1.27),0)
+for p in range(15,27): u1pads[p]=(ux+(-6.985+(p-15)*1.27),uy+9.5,90)
+for p in range(27,41): u1pads[p]=(ux+8.75,uy+(8.25-(p-27)*1.27),180)
+u1net={1:'GND',2:'+3V3',3:'EN',40:'GND',41:'GND'}
+for n,g in project_gpio.items(): u1net[module_gpio_pad[g]]=n
+u1=['  (footprint "Espressif:ESP32-S3-WROOM-1" (layer "F.Cu") (uuid '+U()+')',prop_ref('U1',ux,uy-17.3),prop_val('ESP32-S3-WROOM-1-N16R2',ux,uy+12),
+    f'    (fp_rect (start {ux-9:.3f} {uy-15.75:.3f}) (end {ux+9:.3f} {uy+9.75:.3f}) (stroke (width 0.15) (type default)) (fill none) (layer "F.SilkS") (uuid {U()}))',
+    f'    (fp_rect (start {ux-9:.3f} {uy-15.75:.3f}) (end {ux+9:.3f} {uy-9.81:.3f}) (stroke (width 0.15) (type default)) (fill none) (layer "Dwgs.User") (uuid {U()}))']
+for p,(x,y,r) in u1pads.items(): u1.append(pad(p,'smd','rect',x,y,1.5,0.9,'"F.Cu" "F.Paste" "F.Mask"',u1net.get(p),rot=r))
+u1.append(pad(41,'smd','rect',ux,uy-0.5,4.0,4.0,'"F.Cu" "F.Paste" "F.Mask"','GND'))
+u1.append('  )')
+jx,jy=100,119
+j1pads=[]
+for p in range(1,41):
+    x=jx+(p-20.5)*0.5
+    j1pads.append(pad(p,'smd','rect',x,jy,0.30,1.5,'"F.Cu" "F.Paste" "F.Mask"',j1.get(p)))
+J1=fp_generic('J1','NHD-FFC40-0.5mm',jx,jy,j1pads,(22,5))
+j2x,j2y=74,92
+j2names={1:'+3V3',2:'GND',3:'SPI_SCLK',4:'SPI_MOSI',5:'SPI_MISO',6:'BMI_ACC_CS',7:'BMI_GYRO_CS',8:'GND'}
+j2pads=[pad(p,'thru_hole','circle',j2x,j2y+(p-4.5)*1.27,1.0,1.0,'"*.Cu" "*.Mask"',j2names[p],drill=0.6) for p in range(1,9)]
+J2=fp_generic('J2','BMI088_HDR',j2x,j2y,j2pads,(5,13))
+mx,my=122,92
+mcp_names={1:'IOX_SCL',2:'IOX_SDA',3:'GND',4:'GND',5:'GND',6:'+3V3',7:None,8:'IOX_INT',9:'GND',10:'LCD_CS',11:'LCD_RST',12:'ENC_A',13:'ENC_B',14:'ENC_SW',15:None,16:None,17:None,18:'+3V3'}
+mcp_pads=[]
+for p in range(1,10): mcp_pads.append(pad(p,'smd','rect',mx-4.7,my+(p-5)*1.27,2.0,0.6,'"F.Cu" "F.Paste" "F.Mask"',mcp_names[p]))
+for p in range(10,19): mcp_pads.append(pad(p,'smd','rect',mx+4.7,my+(14-p)*1.27,2.0,0.6,'"F.Cu" "F.Paste" "F.Mask"',mcp_names[p]))
+U3=fp_generic('U3','MCP23008-E_SO',mx,my,mcp_pads,(7.5,12))
+ex,ey=128,105
+enc_names={1:'ENC_A',2:'GND',3:'ENC_B',4:'ENC_SW',5:'GND'}
+enc_pads=[pad(p,'thru_hole','circle',ex,ey+(p-3)*2.0,1.4,1.4,'"*.Cu" "*.Mask"',enc_names[p],drill=0.8) for p in range(1,6)]
+J4=fp_generic('J4','ENCODER_HDR',ex,ey,enc_pads,(5,12))
+bx,by=73,112
+bl_names={1:'+5V',2:'BL_PWM',3:'LED_A',4:'LED_K'}
