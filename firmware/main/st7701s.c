@@ -1,0 +1,152 @@
+#include "st7701s.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
+#include "driver/gpio.h"
+#include "esp_check.h"
+#include "esp_log.h"
+#include "esp_rom_sys.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "mcp23008.h"
+#include "pins.h"
+
+static const char *TAG = "st7701s";
+
+static void clock_bit(bool high)
+{
+    gpio_set_level(PIN_SPI_MOSI, high ? 1 : 0);
+    gpio_set_level(PIN_SPI_SCLK, 0);
+    esp_rom_delay_us(1);
+    gpio_set_level(PIN_SPI_SCLK, 1);
+    esp_rom_delay_us(1);
+}
+
+static esp_err_t write_9bit(bool data, uint8_t value)
+{
+    ESP_RETURN_ON_ERROR(mcp23008_set_output(IOX_LCD_CS, false), TAG, "LCD CS low");
+
+    clock_bit(data);
+    for (int bit = 7; bit >= 0; --bit) {
+        clock_bit((value >> bit) & 1u);
+    }
+
+    gpio_set_level(PIN_SPI_SCLK, 1);
+    ESP_RETURN_ON_ERROR(mcp23008_set_output(IOX_LCD_CS, true), TAG, "LCD CS high");
+    return ESP_OK;
+}
+
+static esp_err_t send_cmd(uint8_t command, const uint8_t *data, size_t data_len)
+{
+    ESP_RETURN_ON_ERROR(write_9bit(false, command), TAG, "command 0x%02X", command);
+    for (size_t i = 0; i < data_len; ++i) {
+        ESP_RETURN_ON_ERROR(write_9bit(true, data[i]), TAG, "data for 0x%02X", command);
+    }
+    return ESP_OK;
+}
+
+#define SEND(cmd, ...) do { \
+    const uint8_t _d[] = { __VA_ARGS__ }; \
+    ESP_RETURN_ON_ERROR(send_cmd((cmd), _d, sizeof(_d)), TAG, "init 0x%02X", (cmd)); \
+} while (0)
+
+esp_err_t st7701s_gpio_init(void)
+{
+    const gpio_config_t io = {
+        .pin_bit_mask = (1ULL << PIN_SPI_MOSI) | (1ULL << PIN_SPI_SCLK),
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE,
+    };
+    ESP_RETURN_ON_ERROR(gpio_config(&io), TAG, "configure serial GPIOs");
+    gpio_set_level(PIN_SPI_MOSI, 0);
+    gpio_set_level(PIN_SPI_SCLK, 1);
+    return ESP_OK;
+}
+
+esp_err_t st7701s_panel_reset(void)
+{
+    ESP_RETURN_ON_ERROR(mcp23008_set_output(IOX_LCD_CS, true), TAG, "deselect LCD");
+    ESP_RETURN_ON_ERROR(mcp23008_set_output(IOX_LCD_RESET, false), TAG, "reset low");
+    vTaskDelay(pdMS_TO_TICKS(10));
+    ESP_RETURN_ON_ERROR(mcp23008_set_output(IOX_LCD_RESET, true), TAG, "reset high");
+    vTaskDelay(pdMS_TO_TICKS(120));
+    return ESP_OK;
+}
+
+esp_err_t st7701s_init_3wire_rgb565(void)
+{
+    /*
+     * Panel-specific sequence follows Newhaven's published initialization for
+     * NHD-2.1-480480AF-ASXP.  COLMOD is changed from the example's 18-bit
+     * value (VIPF=110) to 16-bit RGB (VIPF=101), i.e. 0x5F.
+     */
+    SEND(0xFF, 0x77, 0x01, 0x00, 0x00, 0x13);
+    SEND(0xEF, 0x08);
+    SEND(0x3A, 0x5F);
+
+    SEND(0xFF, 0x77, 0x01, 0x00, 0x00, 0x10);
+    SEND(0xC0, 0x3B, 0x00);
+    SEND(0xC1, 0x09, 0x05);
+    SEND(0xC2, 0x07, 0x02);
+    SEND(0xC6, 0x21);
+    SEND(0xCC, 0x30);
+    SEND(0xB0, 0xC0, 0x54, 0x5C, 0x0D, 0x51, 0x06, 0x09, 0x08,
+               0x07, 0x24, 0x03, 0x11, 0x0F, 0xAC, 0xB5, 0x7F);
+    SEND(0xB1, 0xC0, 0x54, 0x5C, 0x0E, 0x11, 0x07, 0x0A, 0x09,
+               0x08, 0x24, 0x04, 0x51, 0x10, 0xAD, 0x75, 0x7F);
+
+    SEND(0xFF, 0x77, 0x01, 0x00, 0x00, 0x11);
+    SEND(0xB0, 0x7D);
+    SEND(0xB1, 0x33);
+    SEND(0xB2, 0x87);
+    SEND(0xB3, 0x80);
+    SEND(0xB5, 0x45);
+    SEND(0xB7, 0x87);
+    SEND(0xB8, 0x33);
+    SEND(0xB9, 0x10);
+    SEND(0xBB, 0x03);
+    SEND(0xC0, 0x03);
+    SEND(0xC1, 0x78);
+    SEND(0xC2, 0x78);
+    SEND(0xD0, 0x88);
+
+    SEND(0xFF, 0x77, 0x01, 0x00, 0x00, 0x11);
+    SEND(0xE0, 0x00, 0x18, 0x00, 0x00, 0x00, 0x20);
+    SEND(0xE1, 0x05, 0xA0, 0x00, 0xA0, 0x04, 0x0A, 0x00, 0xA0,
+               0x00, 0x44, 0x44);
+    SEND(0xE2, 0x11, 0x11, 0x44, 0x44, 0xEA, 0xA0, 0x00, 0x00,
+               0xE9, 0xA0, 0x00, 0x00);
+    SEND(0xE3, 0x00, 0x00, 0x11, 0x11);
+    SEND(0xE4, 0x44, 0x44);
+    SEND(0xE5, 0x06, 0xE5, 0xD8, 0xA0, 0x08, 0xE7, 0xD8, 0xA0,
+               0x0A, 0xE9, 0xD8, 0xA0, 0x0C, 0xEB, 0xD8, 0xA0);
+    SEND(0xE6, 0x00, 0x00, 0x11, 0x11);
+    SEND(0xE7, 0x44, 0x44);
+    SEND(0xE8, 0x05, 0xE4, 0xD8, 0xA0, 0x07, 0xE6, 0xD8, 0xA0,
+               0x09, 0xE8, 0xD8, 0xA0, 0x0B, 0xEA, 0xD8, 0xA0);
+    SEND(0xEB, 0x02, 0x00, 0xE4, 0xE4, 0x88, 0x00, 0x10);
+    SEND(0xEC, 0x3D, 0x02, 0x00);
+    SEND(0xED, 0x20, 0x76, 0x54, 0x98, 0xBA, 0xFF, 0xFF, 0xFF,
+               0xFF, 0xFF, 0xFF, 0xAB, 0x89, 0x45, 0x67, 0x02);
+    SEND(0xEF, 0x08, 0x08, 0x08, 0x45, 0x3F, 0x54);
+
+    SEND(0xFF, 0x77, 0x01, 0x00, 0x00, 0x13);
+    SEND(0xE8, 0x00, 0x0E);
+    ESP_RETURN_ON_ERROR(send_cmd(0x11, NULL, 0), TAG, "sleep out");
+    vTaskDelay(pdMS_TO_TICKS(120));
+
+    SEND(0xE8, 0x00, 0x0C);
+    vTaskDelay(pdMS_TO_TICKS(10));
+    SEND(0xE8, 0x00, 0x00);
+    SEND(0xE6, 0x16, 0x7C);
+    SEND(0xFF, 0x77, 0x01, 0x00, 0x00, 0x00);
+    ESP_RETURN_ON_ERROR(send_cmd(0x29, NULL, 0), TAG, "display on");
+    vTaskDelay(pdMS_TO_TICKS(120));
+    SEND(0x36, 0x00);
+
+    ESP_LOGI(TAG, "ST7701S initialized for 3-wire control + RGB565");
+    return ESP_OK;
+}
