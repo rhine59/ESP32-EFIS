@@ -2,7 +2,7 @@
 
 This document records the current 3D-printable enclosure design for the ESP32 artificial-horizon project.
 
-> **Status:** flight-development prototype only. This enclosure is not certified, approved or qualified as a primary flight-instrument housing. Geometry, materials, fasteners, vibration resistance, thermal performance and aircraft installation must be verified before flight use.
+> **Intended role:** supplementary/non-primary artificial horizon. This is a flight-development prototype, not the aircraft's primary attitude reference. Geometry, materials, fasteners, vibration resistance, thermal performance and aircraft installation must still be verified before flight use.
 
 ![Flight-development enclosure dimensional preview](../enclosure/images/flight-development-case-preview.svg)
 
@@ -21,39 +21,75 @@ The enclosure targets the conventional 3 1/8-inch aircraft-instrument format and
 - removable spigoted rear cover
 - internal rear-cover screw bosses
 - rear USB/cable opening
-- **four reinforced rear recesses for M5 brass threaded inserts**
+- four reinforced rear recesses for M5 brass threaded inserts
+- planned transparent protective bezel window over the LCD
+
+## Transparent bezel/window cover
+
+The LCD should not be left as the exposed front surface. The preferred development arrangement is a separate transparent circular window retained by the front bezel, with a small controlled air gap or compliant gasket between the window and LCD so that mounting loads are not transferred into the LCD glass.
+
+### Recommended material: hard-coated / optical polycarbonate
+
+Although this part is commonly called the instrument **glass**, the preferred material for this supplementary instrument is **clear polycarbonate rather than ordinary window glass**. Polycarbonate has substantially better impact resistance and is less likely to create sharp fragments if damaged. It is also straightforward to obtain as a custom circular disc in the UK.
+
+The first prototype should use approximately:
+
+| Feature | Starting specification |
+|---|---:|
+| Material | Clear polycarbonate |
+| Preferred finish | Optical/clear; hard-coated and anti-reflective if obtainable |
+| Development thickness | 2.0 mm |
+| Nominal disc diameter | 60–64 mm, to be frozen after bezel redesign |
+| Edge | Smooth/machined |
+| Mounting | Captured circumferentially by bezel, not drilled through |
+| LCD contact | None; retain a small air gap or thin compliant perimeter gasket |
+
+A 2 mm window is a useful starting point because the exposed aperture is only about 54 mm. The final disc diameter should be larger than the visible opening so the bezel captures the perimeter positively. The CAD must be updated with a dedicated annular seat and retaining lip once the exact disc is selected.
+
+### Anti-reflection and scratch resistance
+
+Bare polycarbonate is tough but scratches more easily than mineral glass. For the final development article, preference should therefore be given to **hard-coated polycarbonate**, ideally with an anti-reflective treatment suitable for displays. If a suitable coated polycarbonate disc cannot be sourced economically, a replaceable plain polycarbonate development window is preferable to exposing the LCD while the optical design is evaluated.
+
+Do not use a heavily tinted window: the selected Newhaven display is bright, but reducing transmission unnecessarily works against sunlight readability. Any anti-glare or anti-reflective surface should be evaluated in direct cockpit sunlight before freezing the material.
+
+### UK sources
+
+Current practical sources include:
+
+- Displaypro — custom clear polycarbonate circles/discs cut to size: https://displaypro.co.uk/products/clear-polycarbonate-circles-displaypro
+- Simply Plastics — clear polycarbonate discs/cut-to-size products: https://www.simplyplastics.com/
+- Cut Plastic Sheeting — anti-reflective clear acrylic discs are available if an optical acrylic alternative is required: https://www.cutplasticsheeting.co.uk/
+
+Displaypro specifically offers clear polycarbonate circles in different sizes/thicknesses and describes the material as having excellent impact strength and higher heat resistance than acrylic. This makes it a good first UK source for the development window.
+
+### True glass alternative
+
+If a genuine glass face is desired for superior scratch resistance and optical feel, use a **professionally cut and edge-finished safety-glass disc**, not a hand-cut piece of ordinary picture/window glass. UK suppliers that accept circular made-to-measure glass orders include:
+
+- Glasstops UK circular cut-to-size glass: https://www.glasstops.co.uk/order-online/circle-to-size.php
+- Prad Glass made-to-measure clear toughened glass: https://pradglass.co.uk/made-to-measure/clear-glass
+
+Prad currently lists clear toughened glass with polished edges and circular/oval CNC shapes, but its online offering starts at 4 mm thickness. That is unnecessarily thick and heavy for this small instrument unless a thinner specialist disc can be supplied. For that reason **2 mm polycarbonate remains the preferred prototype choice**.
+
+### Bezel retention design
+
+The next enclosure CAD revision should add:
+
+1. an annular front recess sized to the selected window diameter and actual measured thickness;
+2. approximately 0.2–0.3 mm radial assembly clearance around a plastic disc, adjusted after a test print;
+3. a continuous rear shoulder supporting only the perimeter of the window;
+4. a removable front retaining bezel/ring rather than adhesive as the sole retention method;
+5. a thin black silicone/EPDM perimeter gasket if needed for rattle control, dust exclusion and differential thermal expansion;
+6. no hard point contact between the protective window and LCD active glass;
+7. a matte-black internal bezel surface to minimise reflections.
+
+Do not permanently bond the cover until sunlight, reflection and thermal testing are complete. A replaceable front window is desirable because scratches can otherwise require replacement of the entire enclosure.
 
 ## M5 brass threaded insert mounting
 
-The latest CAD adds a reinforced boss and brass-insert recess at each of the four standard mounting positions on the **back of the enclosure**. These are intended to accept brass threaded inserts with an **M5 internal thread**, allowing M5 cap-head machine screws to engage a retained metal thread rather than repeatedly loading printed polymer threads.
+The CAD provides reinforced bosses and brass-insert recesses at the four standard mounting positions on the back of the enclosure. These accept brass threaded inserts with an M5 internal thread so M5 cap-head screws engage a retained metal thread rather than printed polymer.
 
-Current parametric starting dimensions are:
-
-| Feature | Value | Status |
-|---|---:|---|
-| M5 insert boss outside diameter | 12.0 mm | Development value |
-| M5 insert boss depth | 10.0 mm | Development value |
-| Insert recess diameter | 7.2 mm | **Must be matched to purchased insert** |
-| Insert recess depth | 8.0 mm | **Must be matched to purchased insert** |
-| M5 screw clearance below insert | 5.5 mm | Development value |
-| Insert positions | 62.9 × 62.9 mm square | Same centres as front mounting pattern |
-
-The 7.2 × 8.0 mm recess is intentionally treated as a **placeholder for the physical insert**, not as a universal M5 heat-set-insert standard. Brass M5 inserts are sold in several outside diameters, lengths, knurl forms and installation styles. Before the final print, measure the selected insert or use its manufacturer's recommended CAD hole diameter and depth.
-
-### Preferred installation practice
-
-For the flight-development article:
-
-1. Use a known-brand brass threaded insert intended for the chosen print material.
-2. Print a small test coupon containing several candidate recess diameters before committing to the complete enclosure.
-3. Install heat-set inserts with a temperature-controlled insert tool rather than an uncontrolled soldering-iron tip where practical.
-4. Ensure the insert sits square to the screw axis and below/flush with the rear reference face as intended.
-5. Do not overheat ASA/ABS around the boss; reject any boss showing distortion, cracking or poor layer bonding.
-6. Use an M5 cap-head machine screw of a length that provides useful thread engagement without bottoming in the insert or contacting internal electronics.
-7. Use an appropriate locking method for the aircraft installation rather than relying solely on screw friction.
-8. Re-check insert retention after thermal and vibration testing.
-
-The brass insert improves serviceability and thread durability, but it does **not** by itself qualify a printed mounting boss as an aircraft structural attachment.
+Current parametric starting dimensions are 12.0 mm boss OD, 10.0 mm boss depth, 7.2 mm insert recess diameter, 8.0 mm recess depth and 5.5 mm M5 screw clearance. The recess diameter and depth must be changed to the dimensions recommended for the exact insert purchased.
 
 ## Standard panel geometry
 
@@ -68,7 +104,7 @@ The brass insert improves serviceability and thread durability, but it does **no
 | Front mounting holes | 4.4 mm diameter |
 | Nominal wall thickness | 3.0 mm |
 
-The actual Skyranger panel dimensions remain controlling. Measure the opening, all four mounting-hole centres, panel thickness and available rear depth before freezing the installation geometry.
+The actual Skyranger panel dimensions remain controlling.
 
 ## CAD and generated files
 
@@ -85,45 +121,18 @@ Generated STL targets:
 - `enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Body.stl`
 - `enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Rear_Cover.stl`
 
-The repository workflow regenerates the STL geometry from the OpenSCAD source when the source changes.
-
 ## Material recommendation
 
 Do not use ordinary PLA for cockpit development. Evaluate ASA, ABS or a suitable engineering filament supported by the printer. A useful initial print setup is 0.2 mm layers or finer, at least four perimeters, at least five top/bottom layers and approximately 35–50% infill, followed by inspection and mechanical testing.
 
 ## Internal hardware still to be added
 
-The next CAD revision should provide positive retention for:
-
-- ESP32-S3-DevKitC-1-N8R2
-- Bosch BMI088 Shuttle Board 3.0 on a rigid, axis-defined carrier
-- TPS61169 backlight board
-- MCP23008 prototype hardware
-- display/FFC arrangement
-- rotary encoder
-- USB-C strain relief
-- internal wiring/tie points
+The next CAD revision should provide positive retention for the ESP32-S3 board, Bosch BMI088 Shuttle Board on a rigid axis-defined carrier, TPS61169 backlight board, MCP23008 hardware, display/FFC arrangement, rotary encoder, USB-C strain relief and internal wiring/tie points. It should also incorporate the dedicated protective-window seat and removable bezel described above.
 
 No flight-development article should contain loose modules, unsupported connectors or Dupont wiring.
 
 ## Flight-development verification
 
-Before aircraft use, verify at minimum:
+Before aircraft use, verify actual panel geometry; M5 insert fit, pull-out and torque behaviour; display/FFC retention; protective-window retention; direct-sunlight reflections and readability; window thermal expansion; no window/LCD contact; rigid IMU alignment; maximum-brightness thermal soak; powered vibration testing; cable strain relief; control clearance; and unmistakable `ATTITUDE INVALID` behaviour on sensor/AHRS failure.
 
-- actual panel opening and four screw centres
-- free insertion/removal without enclosure stress
-- M5 insert dimensions against the purchased hardware
-- insert pull-out and torque behaviour on representative printed coupons
-- correct cap-head screw length and engagement
-- no interference between M5 screws/bosses and electronics
-- display and FFC retention
-- rigid IMU alignment
-- maximum-brightness thermal soak
-- powered vibration test
-- post-vibration insert torque/retention inspection
-- cable strain relief and chafe protection
-- full aircraft-control clearance
-- unmistakable `ATTITUDE INVALID` behaviour on sensor/AHRS failure
-- applicable installation/approval route
-
-Until these checks and the remaining internal mounts are completed, this remains a **flight-development enclosure**, not a certified or approved primary flight-instrument housing.
+This remains a **supplementary/non-primary artificial horizon under flight development**, not the aircraft's primary attitude instrument.
