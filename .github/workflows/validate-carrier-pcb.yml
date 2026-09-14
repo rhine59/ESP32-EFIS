@@ -28,10 +28,11 @@ jobs:
           done
           python3 hardware/kicad/tools/generate_carrier_rev_a.py
 
-      - name: Install KiCad
+      - name: Install current KiCad stable
         run: |
+          sudo add-apt-repository --yes ppa:kicad/kicad-10.0-releases
           sudo apt-get update
-          sudo apt-get install -y kicad zip
+          sudo apt-get install -y --install-recommends kicad zip
           kicad-cli --version
 
       - name: Run schematic ERC
