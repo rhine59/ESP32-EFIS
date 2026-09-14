@@ -1,0 +1,79 @@
+name: Validate carrier PCB
+
+on:
+  push:
+    paths:
+      - 'hardware/kicad/tools/**'
+      - '.github/workflows/validate-carrier-pcb.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate KiCad Revision A sources
+        run: |
+          cat hardware/kicad/tools/generate_carrier_rev_a.py.part* > hardware/kicad/tools/generate_carrier_rev_a.py
+          python3 hardware/kicad/tools/generate_carrier_rev_a.py
+
+      - name: Install KiCad
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y kicad zip
+          kicad-cli --version
+
+      - name: Run schematic ERC
+        run: |
+          mkdir -p hardware/kicad/carrier_rev_a/reports
+          kicad-cli sch erc \
+            --severity-all \
+            --exit-code-violations \
+            --output hardware/kicad/carrier_rev_a/reports/erc.rpt \
+            hardware/kicad/carrier_rev_a/carrier_rev_a.kicad_sch
+
+      - name: Run PCB DRC
+        run: |
+          kicad-cli pcb drc \
+            --severity-all \
+            --all-track-errors \
+            --exit-code-violations \
+            --output hardware/kicad/carrier_rev_a/reports/drc.rpt \
+            hardware/kicad/carrier_rev_a/carrier_rev_a.kicad_pcb
+
+      - name: Export fabrication package
+        run: |
+          rm -rf hardware/kicad/carrier_rev_a/manufacturing
+          mkdir -p hardware/kicad/carrier_rev_a/manufacturing
+          kicad-cli pcb export gerbers \
+            --output hardware/kicad/carrier_rev_a/manufacturing/ \
+            --layers F.Cu,In1.Cu,In2.Cu,B.Cu,F.Paste,B.Paste,F.Silkscreen,B.Silkscreen,F.Mask,B.Mask,Edge.Cuts \
+            hardware/kicad/carrier_rev_a/carrier_rev_a.kicad_pcb
+          kicad-cli pcb export drill \
+            --output hardware/kicad/carrier_rev_a/manufacturing/ \
+            --excellon-separate-th \
+            --generate-map \
+            --map-format gerberx2 \
+            hardware/kicad/carrier_rev_a/carrier_rev_a.kicad_pcb
+          (cd hardware/kicad/carrier_rev_a/manufacturing && zip -r ../carrier_rev_a_fabrication.zip .)
+
+      - name: Commit validated sources and manufacturing outputs
+        run: |
+          rm -f hardware/kicad/tools/generate_carrier_rev_a.py
+          if git diff --quiet -- hardware/kicad && [ -z "$(git ls-files --others --exclude-standard hardware/kicad)" ]; then
+            echo "Carrier PCB outputs are already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add hardware/kicad
+          git commit -m "Generate and validate carrier PCB Revision A"
+          git pull --rebase origin main
+          git push origin HEAD:main
