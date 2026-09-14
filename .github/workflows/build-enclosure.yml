@@ -42,14 +42,14 @@ jobs:
             -D 'part="IMU_CARRIER"' \
             enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
 
-          # Control bezel and rear-service electronics hardware
+          # Control bezel and rear-service hardware
           openscad \
             -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Front_Bezel.stl \
             -D 'part="FRONT_BEZEL_CONTROL"' \
             enclosure/source/ESP32_Artificial_Horizon_Electronics_and_Controls.scad
           openscad \
-            -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Electronics_Carrier.stl \
-            -D 'part="ELECTRONICS_CARRIER"' \
+            -o enclosure/stl/ESP32_Artificial_Horizon_Custom_PCB_Fit_Gauge.stl \
+            -D 'part="PCB_FIT_GAUGE"' \
             enclosure/source/ESP32_Artificial_Horizon_Electronics_and_Controls.scad
           openscad \
             -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Rear_Cover.stl \
@@ -60,6 +60,9 @@ jobs:
             -D 'part="USB_CLAMP"' \
             enclosure/source/ESP32_Artificial_Horizon_Electronics_and_Controls.scad
 
+          # Remove obsolete generated DevKit carrier if present.
+          rm -f enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Electronics_Carrier.stl
+
       - name: Commit regenerated STL files
         run: |
           if git diff --quiet -- enclosure/stl && [ -z "$(git ls-files --others --exclude-standard enclosure/stl)" ]; then
@@ -68,7 +71,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add enclosure/stl
+          git add -A enclosure/stl
           git commit -m "Regenerate enclosure STL files"
           git pull --rebase origin main
           git push origin HEAD:main
