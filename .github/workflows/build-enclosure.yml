@@ -1,0 +1,47 @@
+name: Build enclosure STL files
+
+on:
+  push:
+    paths:
+      - 'enclosure/source/**'
+      - '.github/workflows/build-enclosure.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-stl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install OpenSCAD
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openscad
+
+      - name: Generate enclosure STL files
+        run: |
+          mkdir -p enclosure/stl
+          openscad \
+            -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Body.stl \
+            -D 'part="BODY"' \
+            enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
+          openscad \
+            -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Rear_Cover.stl \
+            -D 'part="COVER"' \
+            enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
+
+      - name: Commit regenerated STL files
+        run: |
+          if git diff --quiet -- enclosure/stl && [ -n "$(git ls-files --others --exclude-standard enclosure/stl)" ] == false; then
+            echo "STL files are already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add enclosure/stl
+          git commit -m "Regenerate enclosure STL files"
+          git push
