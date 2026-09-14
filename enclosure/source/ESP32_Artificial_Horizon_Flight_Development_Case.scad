@@ -8,15 +8,16 @@
 $fn = 64;
 
 // Standard 3-1/8 in instrument fit
-panel_cutout_d = 79.375;     // 3.125 in
-body_od        = 78.60;      // leaves ~0.39 mm radial clearance
+// A practical panel opening is slightly larger than the nominal 3.125 in instrument size.
+panel_cutout_d = 80.30;      // target/reference only; measure the actual aircraft panel
+body_od        = 79.60;      // ~0.70 mm diametral clearance in an 80.30 mm opening
 flange_size    = 88.0;       // square front flange
 flange_corner  = 5.0;
 flange_t       = 4.0;
 
 // Conventional four-hole mounting pattern
 mount_pitch    = 62.90;      // square centre-to-centre
-mount_hole_d   = 3.80;       // #6 screw clearance
+mount_hole_d   = 4.40;       // conventional #6 mounting-hole clearance/template class
 
 // Display / internal envelope
 display_open_d = 53.6;       // slightly above 53.28 mm active diameter
