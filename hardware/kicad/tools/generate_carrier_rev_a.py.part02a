@@ -1,0 +1,212 @@
+# Revision A2 PCB rebuild.  The first generated layout deliberately failed DRC
+# because generic point-to-point routing crossed fine-pitch FFC pads.  Rebuild
+# the board with a six-layer stack, ordered RGB escape, dedicated signal layers,
+# and 0.15 mm fine-pitch tracks / 0.40 mm staggered vias around the FFC.
+
+# TPS62162 VOS is strapped to the regulated output for the fixed 3.3 V device.
+reg_names[6]='+3V3'
+regpads=[]
+for p in range(1,5): regpads.append(pad(p,'smd','rect',rx-1.5,ry+(p-2.5)*0.8,0.8,0.5,'"F.Cu" "F.Paste" "F.Mask"',reg_names[p]))
+for p in range(5,9): regpads.append(pad(p,'smd','rect',rx+1.5,ry+(6.5-p)*0.8,0.8,0.5,'"F.Cu" "F.Paste" "F.Mask"',reg_names[p]))
+regpads.append(pad('9','smd','rect',rx,ry,1.6,1.6,'"F.Cu" "F.Paste" "F.Mask"','GND'))
+U2=fp_generic('U2','TPS62162Q1_WSON8',rx,ry,regpads,(4,4))
+
+layer_block='''  (layers
+    (0 "F.Cu" signal)
+    (2 "In1.Cu" power)
+    (4 "In2.Cu" signal)
+    (6 "In3.Cu" signal)
+    (8 "In4.Cu" power)
+    (31 "B.Cu" signal)
+    (32 "B.Adhes" user "B.Adhesive")
+    (33 "F.Adhes" user "F.Adhesive")
+    (34 "B.Paste" user)
+    (35 "F.Paste" user)
+    (36 "B.SilkS" user "B.Silkscreen")
+    (37 "F.SilkS" user "F.Silkscreen")
+    (38 "B.Mask" user)
+    (39 "F.Mask" user)
+    (40 "Dwgs.User" user "User.Drawings")
+    (44 "Edge.Cuts" user)
+    (46 "B.CrtYd" user "B.Courtyard")
+    (47 "F.CrtYd" user "F.Courtyard")
+    (48 "B.Fab" user)
+    (49 "F.Fab" user)
+  )'''
+
+pcb=['(kicad_pcb (version 20240108) (generator pcbnew) (generator_version "8.0")',
+     '  (general (thickness 1.6) (legacy_teardrops no))','  (paper "A4")',
+     '  (title_block (title "Artificial Horizon Carrier Rev A2") (company "ESP32 Artificial Horizon"))',layer_block,
+     '  (setup (pad_to_mask_clearance 0))','  (net 0 "")']
+for n in nets: pcb.append(f'  (net {netid[n]} "{n}")')
+pcb += [U1,J1,J2,U3,J4,J5,J3,U2,L1,C1,C2,C3,C4,Rcc1,Rcc2,Rdm,Rdp,Ren,Cen,J6,J7]
+for a in [45,135,225,315]:
+    x=100+30*math.cos(math.radians(a)); y=100+30*math.sin(math.radians(a))
+    pads=[pad('','np_thru_hole','circle',x,y,3.2,3.2,'"*.Cu" "*.Mask"',None,drill=3.2)]
+    pcb.append(fp_generic('H'+str(a),'M2.5_MOUNT',x,y,pads,(5,5)))
+pcb.append(f'  (gr_circle (center 100 100) (end 134 100) (stroke (width 0.15) (type default)) (fill none) (layer "Edge.Cuts") (uuid {U()}))')
+pcb.append(f'  (gr_text "AH CARRIER REV A2  •  N16R2  •  6 LAYER" (at 100 112.2) (layer "F.SilkS") (effects (font (size 0.9 0.9) (thickness 0.14))) (uuid {U()}))')
+pcb.append(f'  (gr_text "ANTENNA KEEP-OUT" (at 100 68.5) (layer "F.SilkS") (effects (font (size 0.8 0.8) (thickness 0.12))) (uuid {U()}))')
+
+segments=[]
+def seg(net,a,b,layer='F.Cu',w=0.20):
+    if a==b: return
+    segments.append(f'  (segment (start {a[0]:.3f} {a[1]:.3f}) (end {b[0]:.3f} {b[1]:.3f}) (width {w}) (layer "{layer}") (net {netid[net]}) (uuid {U()}))')
+def via(net,p,size=.55,drill=.25):
+    segments.append(f'  (via (at {p[0]:.3f} {p[1]:.3f}) (size {size}) (drill {drill}) (layers "F.Cu" "B.Cu") (net {netid[net]}) (uuid {U()}))')
+def micro(net,p): via(net,p,.40,.20)
+
+def route_inner(net,src,dst,layer,src_escape=None,dst_escape=None,w=.18):
+    s=src_escape or src; d=dst_escape or dst
+    if src_escape:
+        seg(net,src,s,'F.Cu',w); via(net,s)
+    if dst_escape:
+        via(net,d); seg(net,d,dst,'F.Cu',w)
+    seg(net,s,d,layer,w)
+
+j1pos={p:(jx+(p-20.5)*0.5,jy) for p in range(1,41)}
+u1source={n:u1pads[p][:2] for p,n in u1net.items() if n and p in u1pads}
+
+# --- RGB565 bus -----------------------------------------------------------
+# D0..D8 leave the WROOM left edge in reverse physical order so straight
+# B.Cu routes fan into increasing FFC pin numbers without crossing.
+for i in range(0,9):
+    n=f'LCD_D{i}'; sx,sy=u1source[n]; dx,dy=j1pos[16+i if i<5 else 21+(i-5)]
+    sv=(89.95,sy); dv=(dx,103.7+(i%2)*0.75)
+    seg(n,(sx,sy),sv,'F.Cu',.15); micro(n,sv)
+    seg(n,sv,dv,'B.Cu',.15); micro(n,dv)
+    seg(n,dv,(dx,dy),'F.Cu',.15)
+
+# D9/D10 terminate on FFC pins 25/26; D11..D15 on pins 28..32.
+for i in range(9,16):
+    n=f'LCD_D{i}'; sx,sy=u1source[n]
+    dp=(21+(i-5)) if i<=10 else (28+(i-11))
+    dx,dy=j1pos[dp]
+    knee=(sx,94.0+(i-9)*0.18)
+    dest=(dx,106.6)
+    seg(n,(sx,sy),knee,'F.Cu',.15)
+    seg(n,knee,dest,'F.Cu',.15)
+    seg(n,dest,(dx,dy),'F.Cu',.15)
+
+# --- LCD timing: dedicated In2 layer -------------------------------------
+timing={'LCD_VS':11,'LCD_HS':12,'LCD_PCLK':13,'LCD_DE':14}
+for k,n in enumerate(['LCD_PCLK','LCD_DE']):
+    sx,sy=u1source[n]; dx,dy=j1pos[timing[n]]
+    sv=(sx,93.4+k*0.55); dv=(dx,103.4+k*0.7)
+    seg(n,(sx,sy),sv,'F.Cu',.15); micro(n,sv)
+    seg(n,sv,dv,'In2.Cu',.15); micro(n,dv); seg(n,dv,(dx,dy),'F.Cu',.15)
+for k,n in enumerate(['LCD_HS','LCD_VS']):
+    sx,sy=u1source[n]; dx,dy=j1pos[timing[n]]
+    sv=(110.2+k*0.65,sy); dv=(dx,102.7+k*0.7)
+    seg(n,(sx,sy),sv,'F.Cu',.15); micro(n,sv)
+    corner=(sv[0],101.0+k*0.55)
+    seg(n,sv,corner,'In2.Cu',.15); seg(n,corner,dv,'In2.Cu',.15)
+    micro(n,dv); seg(n,dv,(dx,dy),'F.Cu',.15)
+
+# --- Shared LCD-init / BMI088 SPI ----------------------------------------
+j2pos={p:(j2x,j2y+(p-4.5)*1.27) for p in range(1,9)}
+# SCLK/MOSI share the display and BMI connector. Use In3 and branch away
+# from the fine-pitch connector only after a staggered via escape.
+for idx,(n,jp,bp) in enumerate([('SPI_SCLK',35,3),('SPI_MOSI',37,4)]):
+    sx,sy=u1source[n]; sv=(110.2+idx*0.65,sy)
+    dx,dy=j1pos[jp]; dv=(dx,103.5+idx*0.8)
+    seg(n,(sx,sy),sv,'F.Cu',.15); micro(n,sv)
+    seg(n,sv,dv,'In3.Cu',.15); micro(n,dv); seg(n,dv,(dx,dy),'F.Cu',.15)
+    # Branch to the BMI header on the same inner signal layer.
+    bend=(82.0+idx*0.8,96.5+idx*0.8)
+    seg(n,sv,bend,'In3.Cu',.15); seg(n,bend,j2pos[bp],'In3.Cu',.15)
+# MISO and chip selects go only to BMI088; split across In2/In3 to avoid
+# permutation crossings.
+for n,bp,layer,bendy in [('SPI_MISO',5,'In2.Cu',98.2),('BMI_ACC_CS',6,'In3.Cu',99.0),('BMI_GYRO_CS',7,'In2.Cu',100.0)]:
+    sx,sy=u1source[n]; sv=(110.0,sy)
+    seg(n,(sx,sy),sv,'F.Cu',.15); micro(n,sv)
+    bend=(80.0+(bp-5)*0.7,bendy)
+    seg(n,sv,bend,layer,.15); seg(n,bend,j2pos[bp],layer,.15)
+
+# --- MCP23008 and low-speed controls ------------------------------------
+mcppos={}
+for p in range(1,10): mcppos[p]=(mx-4.7,my+(p-5)*1.27)
+for p in range(10,19): mcppos[p]=(mx+4.7,my+(14-p)*1.27)
+for idx,(p,n) in enumerate([(1,'IOX_SCL'),(2,'IOX_SDA'),(8,'IOX_INT')]):
+    sx,sy=u1source[n]; dx,dy=mcppos[p]
+    xch=112.0+idx*0.75
+    seg(n,(sx,sy),(xch,sy),'F.Cu',.18); seg(n,(xch,sy),(xch,dy),'F.Cu',.18); seg(n,(xch,dy),(dx,dy),'F.Cu',.18)
+# LCD CS / RESET use In3 to reach the FFC without crossing the encoder area.
+for idx,(p,dp,n) in enumerate([(10,34,'LCD_CS'),(11,33,'LCD_RST')]):
+    sx,sy=mcppos[p]; sv=(124.5+idx*0.65,sy); dx,dy=j1pos[dp]; dv=(dx,102.8+idx*0.75)
+    seg(n,(sx,sy),sv,'F.Cu',.15); micro(n,sv)
+    seg(n,sv,dv,'In3.Cu',.15); micro(n,dv); seg(n,dv,(dx,dy),'F.Cu',.15)
+encpos={p:(ex,ey+(p-3)*2.0) for p in range(1,6)}
+for p,jp,n in [(12,1,'ENC_A'),(13,3,'ENC_B'),(14,4,'ENC_SW')]:
+    sx,sy=mcppos[p]; dx,dy=encpos[jp]
+    seg(n,(sx,sy),(125.5,sy),'F.Cu',.18); seg(n,(125.5,sy),(125.5,dy),'F.Cu',.18); seg(n,(125.5,dy),(dx,dy),'F.Cu',.18)
+
+# Backlight PWM uses In2, while LED current paths use B.Cu.
+j5pos={p:(bx+(p-2.5)*2.54,by) for p in range(1,5)}
+sx,sy=u1source['BL_PWM']; sv=(110.2,sy); dx,dy=j5pos[2]
+seg('BL_PWM',(sx,sy),sv,'F.Cu',.18); via('BL_PWM',sv)
+seg('BL_PWM',sv,(82,103),'In2.Cu',.18); seg('BL_PWM',(82,103),(dx,dy),'In2.Cu',.18)
+for jp,dp,n in [(3,2,'LED_A'),(4,1,'LED_K')]:
+    sx,sy=j5pos[jp]; dx,dy=j1pos[dp]
+    via(n,(sx,sy)); dest=(dx,105.0+(jp-3)*0.8)
+    seg(n,(sx,sy),dest,'B.Cu',.30); micro(n,dest); seg(n,dest,(dx,dy),'F.Cu',.20)
+
+# --- Native USB -----------------------------------------------------------
+# Join duplicate D+/D- contacts locally, then route through the 22R series
+# parts. MCU-side data runs on In3 around the FFC, referenced to In1 GND.
+seg('USB_D-',(cx+0.25,cy-4.045),(cx-0.75,cy-4.045),'F.Cu',.18)
+seg('USB_D+',(cx-0.25,cy-4.045),(cx+0.75,cy-4.045),'F.Cu',.18)
+seg('USB_D-',(cx-0.25,cy-4.045),(94.4,116),'F.Cu',.18)
+seg('USB_D+',(cx+0.25,cy-4.045),(102.4,116),'F.Cu',.18)
+for n,start,padnum,xoff in [('USB_D-_MCU',(97.6,116),13,-0.7),('USB_D+_MCU',(105.6,116),14,-1.35)]:
+    via(n,start); target=u1pads[padnum][:2]; tv=(90.15+xoff,target[1])
+    seg(n,start,(89.0+xoff,112.5),'In3.Cu',.18); seg(n,(89.0+xoff,112.5),tv,'In3.Cu',.18)
+    via(n,tv); seg(n,tv,target,'F.Cu',.18)
+seg('USB_CC1',(cx-1.25,cy-4.045),(92.4,123),'F.Cu',.18)
+seg('USB_CC2',(cx+1.75,cy-4.045),(104.4,123),'F.Cu',.18)
+
+# --- 5 V input and 3.3 V buck -------------------------------------------
+# Each VBUS side escapes toward the board edge before joining, avoiding the
+# USB data contacts in the connector row.
+for px in [97.55,102.45]: seg('+5V',(px,cy-4.045),(px,127.0),'F.Cu',.55)
+seg('+5V',(97.55,127.0),(102.45,127.0),'F.Cu',.55)
+seg('+5V',(97.55,127.0),(86.0,127.0),'F.Cu',.55)
+seg('+5V',(86.0,127.0),(82.5,126.4),'F.Cu',.55)
+seg('+5V',(86.0,127.0),(78.4,130),'F.Cu',.55)
+seg('+5V',(86.0,127.0),(69.19,112),'B.Cu',.55)
+seg('REG_SW',(85.5,ry-0.4),(87.4,126),'F.Cu',.45)
+# Fixed-output VOS senses the regulated output after L1.
+seg('+3V3',(85.5,ry+0.4),(90.6,126),'F.Cu',.25)
+
+# Power distribution: In4 = 3V3, In1 = GND.  Use local vias from SMD pads;
+# through-hole pads can connect to the plane with inner-layer tracks directly.
+center3=(88,105); via('+3V3',center3,.65,.30)
+three_smd=[u1pads[2][:2],mcppos[6],mcppos[18],(88.4,130),(90.4,96),(117.4,101),(111.4,80),(90.6,126)]
+for p in three_smd:
+    q=(p[0],p[1]+0.8); seg('+3V3',p,q,'F.Cu',.30); via('+3V3',q,.55,.25); seg('+3V3',q,center3,'In4.Cu',.45)
+seg('+3V3',j2pos[1],center3,'In4.Cu',.45)
+# FFC 3V3 pins 3 and 39 use staggered fine-pitch escapes.
+for idx,pp in enumerate([3,39]):
+    p=j1pos[pp]; q=(p[0],110.0+idx*0.75); seg('+3V3',p,q,'F.Cu',.20); micro('+3V3',q); seg('+3V3',q,center3,'In4.Cu',.40)
+
+gcenter=(112,106); via('GND',gcenter,.70,.30)
+# Ground SMDs away from the fine-pitch connector.
+g_smd=[u1pads[1][:2],u1pads[40][:2],(ux,uy-0.5),mcppos[3],mcppos[4],mcppos[5],mcppos[9],(81.5,ry-1.2),(82.5,ry+1.2),(84,ry),(81.6,130),(91.6,130),(93.6,123),(107.6,123),(93.6,96),(120.6,101),(117.6,83)]
+for p in g_smd:
+    q=(p[0]+0.7,p[1]); seg('GND',p,q,'F.Cu',.30); via('GND',q,.55,.25); seg('GND',q,gcenter,'In1.Cu',.50)
+# Through-hole ground points.
+for p in [j2pos[2],j2pos[8],encpos[2],encpos[5],(114.73,72),(117.27,72),(114.73,77),(117.27,77)]: seg('GND',p,gcenter,'In1.Cu',.50)
+# USB ground + shell vias.
+for p in [(cx-3.25,cy-4.045),(cx+3.25,cy-4.045),(cx-4.32,cy+1.05),(cx+4.32,cy+1.05),(cx-4.32,cy-3.13),(cx+4.32,cy-3.13)]:
+    q=(p[0],p[1]+0.8); seg('GND',p,q,'F.Cu',.35); via('GND',q,.60,.30); seg('GND',q,gcenter,'In1.Cu',.50)
+# Fine-pitch FFC grounds.
+for idx,pp in enumerate([4,7,10,15,27,38,40]):
+    p=j1pos[pp]; q=(p[0],110.0+(idx%2)*0.75); seg('GND',p,q,'F.Cu',.18); micro('GND',q); seg('GND',q,gcenter,'In1.Cu',.40)
+
+# EN and BOOT service connections.
+seg('EN',(114.6,80),u1pads[3][:2],'F.Cu',.20); seg('EN',(114.6,80),(114.4,83),'F.Cu',.20); seg('EN',(114.6,80),(114.73,77),'F.Cu',.20)
+seg('BOOT',(114.73,72),u1pads[27][:2],'F.Cu',.20)
+
+pcb += segments
+pcb.append(')')
+(out/'carrier_rev_a.kicad_pcb').write_text('\n'.join(pcb)+'\n')
