@@ -1,7 +1,8 @@
 #pragma once
 
 // ESP32 Artificial Horizon - prototype pin allocation
-// Target board: ESP32-S3-DevKitC-1-N8R2
+// Target module: ESP32-S3-WROOM-1-N16R2 on custom carrier PCB
+// Supplementary/non-primary flight-development instrument.
 
 // RGB565 display data bus: D0..D15
 #define PIN_LCD_D0   4   // panel B1
@@ -54,5 +55,9 @@
 // Keep GPIO44 unused initially for diagnostics/debug expansion.
 #define PIN_SPARE 44
 
-// Deliberately reserved:
-// GPIO19/20 native USB; GPIO0/3/45/46 strapping pins.
+// Native USB on the custom carrier PCB.
+#define PIN_USB_DM 19
+#define PIN_USB_DP 20
+
+// Deliberately reserved strapping pins:
+// GPIO0 = BOOT; GPIO3/GPIO45/GPIO46 have no operational loads.
