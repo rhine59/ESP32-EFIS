@@ -34,6 +34,14 @@ jobs:
             -D 'part="FRONT_BEZEL"' \
             enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
           openscad \
+            -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Display_Carrier.stl \
+            -D 'part="DISPLAY_CARRIER"' \
+            enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
+          openscad \
+            -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_IMU_Carrier.stl \
+            -D 'part="IMU_CARRIER"' \
+            enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
+          openscad \
             -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Rear_Cover.stl \
             -D 'part="COVER"' \
             enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
