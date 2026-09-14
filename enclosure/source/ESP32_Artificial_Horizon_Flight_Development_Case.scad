@@ -1,28 +1,25 @@
 // ESP32 Artificial Horizon — flight-development enclosure
 // NOT a certified/approved primary flight instrument enclosure.
 // Units: mm
-//
-// Geometry is deliberately conservative for a first printable flight-development article.
-// Verify against the actual aircraft panel and installed components before flight use.
+// Verify the actual insert manufacturer's dimensions before final printing.
 
 $fn = 64;
 
 // Standard 3-1/8 in instrument fit
-// A practical panel opening is slightly larger than the nominal 3.125 in instrument size.
-panel_cutout_d = 80.30;      // target/reference only; measure the actual aircraft panel
-body_od        = 79.60;      // ~0.70 mm diametral clearance in an 80.30 mm opening
-flange_size    = 88.0;       // square front flange
+panel_cutout_d = 80.30;
+body_od        = 79.60;
+flange_size    = 88.0;
 flange_corner  = 5.0;
 flange_t       = 4.0;
 
 // Conventional four-hole mounting pattern
-mount_pitch    = 62.90;      // square centre-to-centre
-mount_hole_d   = 4.40;       // conventional #6 mounting-hole clearance/template class
+mount_pitch    = 62.90;
+mount_hole_d   = 4.40;
 
 // Display / internal envelope
-display_open_d = 53.6;       // slightly above 53.28 mm active diameter
-display_pocket_x = 58.6;     // clearance around 58.18 mm panel outline
-display_pocket_y = 61.2;     // clearance around 60.71 mm panel outline
+display_open_d = 53.6;
+display_pocket_x = 58.6;
+display_pocket_y = 61.2;
 display_pocket_depth = 3.2;
 
 wall           = 3.0;
@@ -38,15 +35,24 @@ cover_flange_d = body_od - 0.8;
 
 // Rear cover retaining screws
 rear_screw_circle_d = 66.0;
-rear_screw_d = 3.2;          // M3 clearance in cover
+rear_screw_d = 3.2;
 rear_boss_d  = 7.5;
 rear_boss_h  = 8.0;
+
+// M5 brass threaded insert recesses at the back of the enclosure.
+// Intended for heat-set / press-fit threaded inserts accepting M5 cap-head screws.
+// These dimensions are deliberately parametric because M5 insert outside diameters vary by manufacturer.
+m5_insert_circle_d = 66.0;
+m5_insert_boss_d   = 12.0;
+m5_insert_boss_h   = 10.0;
+m5_insert_recess_d = 7.2;    // starting value only; match purchased insert datasheet
+m5_insert_recess_h = 8.0;    // starting value only; match purchased insert length
+m5_thread_clearance_d = 5.5; // clearance below insert for M5 screw end
 
 // Cable opening in rear cover
 usb_slot_w = 13.0;
 usb_slot_h = 7.0;
 
-// Small anti-rotation / orientation mark
 index_notch_w = 4.0;
 index_notch_d = 1.2;
 
@@ -63,44 +69,52 @@ module rear_bosses() {
         translate([x,y,body_depth-rear_boss_h])
             difference() {
                 cylinder(d=rear_boss_d, h=rear_boss_h);
-                cylinder(d=2.5, h=rear_boss_h+0.2); // pilot for M3 insert/tapping choice
+                cylinder(d=2.5, h=rear_boss_h+0.2);
             }
     }
+}
+
+module m5_insert_bosses() {
+    for (x=[-mount_pitch/2, mount_pitch/2])
+        for (y=[-mount_pitch/2, mount_pitch/2])
+            translate([x,y,body_depth-m5_insert_boss_h])
+                cylinder(d=m5_insert_boss_d, h=m5_insert_boss_h);
 }
 
 module body() {
     difference() {
         union() {
-            // Front mounting flange
             rounded_square(flange_size, flange_corner, flange_t);
-
-            // Panel-cutout locating body
             translate([0,0,flange_t])
                 cylinder(d=body_od, h=body_depth-flange_t);
-
-            // Rear cover screw bosses
             rear_bosses();
+            // Reinforced rear bosses for captive M5 threaded inserts.
+            m5_insert_bosses();
         }
 
-        // Four standard panel mounting holes
+        // Front panel through-holes remain aligned with the standard mounting pattern.
         for (x=[-mount_pitch/2, mount_pitch/2])
-            for (y=[-mount_pitch/2, mount_pitch/2])
+            for (y=[-mount_pitch/2, mount_pitch/2]) {
                 translate([x,y,-0.1])
                     cylinder(d=mount_hole_d, h=flange_t+0.3);
 
-        // Front visible display aperture
+                // Recess opens from the rear face. The M5 brass insert is installed here
+                // and accepts an M5 cap-head screw from the rear installation side.
+                translate([x,y,body_depth-m5_insert_recess_h])
+                    cylinder(d=m5_insert_recess_d, h=m5_insert_recess_h+0.2);
+                translate([x,y,flange_t])
+                    cylinder(d=m5_thread_clearance_d, h=body_depth-flange_t-m5_insert_recess_h+0.2);
+            }
+
         translate([0,0,-0.1])
             cylinder(d=display_open_d, h=flange_t+display_pocket_depth+0.2);
 
-        // Rectangular display pocket behind front face
         translate([-display_pocket_x/2,-display_pocket_y/2,flange_t])
             cube([display_pocket_x, display_pocket_y, display_pocket_depth]);
 
-        // Main electronics cavity
         translate([0,0,flange_t+display_pocket_depth])
             cylinder(d=rear_open_d, h=body_depth+1);
 
-        // Orientation notch at top edge
         translate([-index_notch_w/2, flange_size/2-index_notch_d, -0.1])
             cube([index_notch_w,index_notch_d+0.2,1.0]);
     }
@@ -114,7 +128,6 @@ module rear_cover() {
                 cylinder(d=cover_spigot_d, h=rear_lip_h);
         }
 
-        // Four retaining screw clearance holes
         for (a=[45,135,225,315]) {
             x=(rear_screw_circle_d/2)*cos(a);
             y=(rear_screw_circle_d/2)*sin(a);
@@ -122,14 +135,11 @@ module rear_cover() {
                 cylinder(d=rear_screw_d, h=cover_t+rear_lip_h+0.3);
         }
 
-        // USB-C / cable slot; deliberately generous for strain relief
         translate([-usb_slot_w/2, -cover_flange_d/2-0.1, 0.8])
             cube([usb_slot_w, usb_slot_h+2, cover_t+rear_lip_h]);
     }
 }
 
-// Render selector. GitHub Actions uses this to generate separate STL files.
 part = "BODY";
-
 if (part == "BODY") body();
 if (part == "COVER") rear_cover();
