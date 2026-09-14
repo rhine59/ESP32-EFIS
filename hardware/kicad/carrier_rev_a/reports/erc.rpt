@@ -1,0 +1,159 @@
+ERC report (2026-09-14T07:28:45, Encoding UTF8)
+Report includes: Errors, Warnings, Exclusions
+
+***** Sheet /
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(22.46 mm, 93.81 mm): Symbol J2 Pin 1 [3V3, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(22.46 mm, 162.54 mm): Symbol J3 Pin 1 [VBUS, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(22.46 mm, 195.00 mm): Symbol R1 Pin 1 [1, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(22.46 mm, 210.00 mm): Symbol R3 Pin 1 [1, Passive, Line]
+[footprint_link_issues]: The current configuration does not include the footprint library 'Connector_PinHeader_1.27mm'
+    ; warning
+    @(35.00 mm, 90.00 mm): Symbol J2 [BMI088_HDR]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(35.00 mm, 90.00 mm): Symbol J2 [BMI088_HDR]
+[footprint_link_issues]: The current configuration does not include the footprint library 'Connector_USB'
+    ; warning
+    @(35.00 mm, 160.00 mm): Symbol J3 [USB_C]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(35.00 mm, 160.00 mm): Symbol J3 [USB_C]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(35.00 mm, 195.00 mm): Symbol R1 [TWO_PIN]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(35.00 mm, 210.00 mm): Symbol R3 [TWO_PIN]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(42.46 mm, 195.00 mm): Symbol R2 Pin 1 [1, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(42.46 mm, 210.00 mm): Symbol R4 Pin 1 [1, Passive, Line]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(55.00 mm, 195.00 mm): Symbol R2 [TWO_PIN]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(55.00 mm, 210.00 mm): Symbol R4 [TWO_PIN]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(67.46 mm, 115.40 mm): Symbol U1 Pin 1 [GND, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(67.46 mm, 135.00 mm): Symbol C3 Pin 1 [1, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(67.46 mm, 170.16 mm): Symbol U3 Pin 1 [SCL, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(67.46 mm, 190.00 mm): Symbol C4 Pin 1 [1, Passive, Line]
+[footprint_link_issues]: The current configuration does not include the footprint library 'Espressif'
+    ; warning
+    @(80.00 mm, 90.00 mm): Symbol U1 [ESP32S3_WROOM]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(80.00 mm, 90.00 mm): Symbol U1 [ESP32S3_WROOM]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(80.00 mm, 135.00 mm): Symbol C3 [TWO_PIN]
+[footprint_link_issues]: The current configuration does not include the footprint library 'Package_SO'
+    ; warning
+    @(80.00 mm, 160.00 mm): Symbol U3 [MCP23008]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(80.00 mm, 160.00 mm): Symbol U3 [MCP23008]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(80.00 mm, 190.00 mm): Symbol C4 [TWO_PIN]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(87.46 mm, 135.00 mm): Symbol R5 Pin 1 [1, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(87.46 mm, 145.00 mm): Symbol C5 Pin 1 [1, Passive, Line]
+[isolated_pin_label]: Label connected to only one pin
+    ; warning
+    @(92.54 mm, 78.57 mm): Label 'BOOT'
+[isolated_pin_label]: Label connected to only one pin
+    ; warning
+    @(92.54 mm, 101.43 mm): Label 'SPARE'
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(100.00 mm, 135.00 mm): Symbol R5 [TWO_PIN]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(100.00 mm, 145.00 mm): Symbol C5 [TWO_PIN]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(102.46 mm, 200.00 mm): Symbol C1 Pin 1 [1, Passive, Line]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(115.00 mm, 200.00 mm): Symbol C1 [TWO_PIN]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(117.46 mm, 165.08 mm): Symbol U2 Pin 1 [PGND, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(117.46 mm, 185.00 mm): Symbol L1 Pin 1 [1, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(122.46 mm, 200.00 mm): Symbol C2 Pin 1 [1, Passive, Line]
+[footprint_link_issues]: The current configuration does not include the footprint library 'Package_DFN_QFN'
+    ; warning
+    @(130.00 mm, 160.00 mm): Symbol U2 [TPS62162Q1]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(130.00 mm, 160.00 mm): Symbol U2 [TPS62162Q1]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(130.00 mm, 185.00 mm): Symbol L1 [TWO_PIN]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(135.00 mm, 200.00 mm): Symbol C2 [TWO_PIN]
+[isolated_pin_label]: Label connected to only one pin
+    ; warning
+    @(142.54 mm, 156.19 mm): Label 'REG_VOS'
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(147.46 mm, 114.13 mm): Symbol J1 Pin 1 [FFC_1, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(147.46 mm, 162.54 mm): Symbol J4 Pin 1 [A, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(147.46 mm, 206.27 mm): Symbol J5 Pin 1 [5V, Passive, Line]
+[footprint_link_issues]: The current configuration does not include the footprint library 'Connector_FFC-FPC'
+    ; warning
+    @(160.00 mm, 90.00 mm): Symbol J1 [NHD_FFC40]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(160.00 mm, 90.00 mm): Symbol J1 [NHD_FFC40]
+[footprint_link_issues]: The current configuration does not include the footprint library 'Connector_PinHeader_2.00mm'
+    ; warning
+    @(160.00 mm, 160.00 mm): Symbol J4 [ENC_HDR]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(160.00 mm, 160.00 mm): Symbol J4 [ENC_HDR]
+[footprint_link_issues]: The current configuration does not include the footprint library 'Connector_PinHeader_2.54mm'
+    ; warning
+    @(160.00 mm, 205.00 mm): Symbol J5 [BL_HDR]
+[lib_symbol_issues]: The current configuration does not include the symbol library 'AH'
+    ; warning
+    @(160.00 mm, 205.00 mm): Symbol J5 [BL_HDR]
+
+ ** ERC messages: 49  Errors 0  Warnings 49
+
+ ** Ignored checks:
+    - Global label only appears once in the schematic
+    - Four connection points are joined together
+    - SPICE model issue
+    - Assigned footprint doesn't match footprint filters
