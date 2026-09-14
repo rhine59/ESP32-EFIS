@@ -8,23 +8,21 @@ This directory is now a buildable ESP-IDF project. The current milestone is a **
 
 The AHRS itself is intentionally the next milestone.
 
-## Build
+## Deployment
 
-With ESP-IDF installed:
+For the complete macOS deployment procedure — installing/activating ESP-IDF, connecting the ESP32-S3 over native USB, entering BOOT/download mode, building, flashing, monitoring, recovery, clean rebuilds, flash erase and first-boot verification — see:
+
+**[DEPLOYMENT.md](DEPLOYMENT.md)**
+
+Quick development cycle once ESP-IDF is installed and the device port is known:
 
 ```bash
 cd firmware
-idf.py set-target esp32s3
 idf.py build
-```
-
-To flash and monitor over native USB once the carrier is connected:
-
-```bash
 idf.py -p /dev/cu.usbmodemXXXX flash monitor
 ```
 
-Use the actual device name reported by macOS rather than copying the example literally.
+Use the actual `/dev/cu.usbmodem...` device reported by macOS.
 
 GitHub Actions also builds the project automatically through `.github/workflows/build-firmware.yml` using Espressif's official ESP-IDF CI action.
 
@@ -34,6 +32,7 @@ GitHub Actions also builds the project automatically through `.github/workflows/
 firmware/
 ├── CMakeLists.txt
 ├── sdkconfig.defaults
+├── DEPLOYMENT.md
 ├── include/
 │   └── pins.h
 └── main/
