@@ -1,121 +1,140 @@
 # Hardware Design
 
-## Processor
+## Processor — optimised reference choice
 
-The baseline processor is an **ESP32-S3 N8R8-class board**, with 8 MB PSRAM preferred. PSRAM is useful for one or more 480×480 display buffers, sprites and anti-aliased graphics.
+The reference processor is now the **Espressif ESP32-S3-WROOM-1-N16R2** module mounted on a project-specific carrier PCB.
 
-The ESP32-S3 will handle:
+Key reasons for this choice:
+
+- 16 MB Quad flash
+- 2 MB Quad PSRAM
+- enough PSRAM for double-buffered 480×480 RGB565 graphics
+- Quad rather than Octal PSRAM, preserving GPIO35–37 for the pin-heavy display/IMU design
+- active module with good current distributor availability
+- smaller and mechanically cleaner than designing the instrument around a development board
+- native USB available directly from the ESP32-S3
+
+The processor handles:
 
 - BMI088 acquisition over SPI
 - calibration and alignment correction
-- AHRS/filter execution
+- quaternion AHRS/filter execution
 - validity monitoring
-- horizon graphics
-- rotary encoder input
-- display brightness control
+- 480×480 horizon graphics
+- rotary encoder input through MCP23008
+- display brightness PWM
 
-The exact ESP32-S3 development-board part number is still to be frozen after the display GPIO requirement is mapped in detail.
+The earlier **ESP32-S3-DevKitC-1-N8R2** remains useful for bench firmware development if already available, but is no longer the reference final hardware because that exact DevKit variant is obsolete at major distributors.
+
+### Why not an 8 MB Octal-PSRAM ESP32-S3
+
+The display requires 16 RGB data signals plus timing and sensor/control interfaces. Espressif documents GPIO35–37 as part of the Octal memory interface on Octal-PSRAM configurations. Losing those three pins makes the current design significantly harder.
+
+For this project, **2 MB Quad PSRAM is a better system-level choice than 8 MB Octal PSRAM** because GPIO availability is more valuable than the extra memory.
+
+Two RGB565 frame buffers require:
+
+`480 × 480 × 2 bytes × 2 buffers = 921,600 bytes`
+
+That fits comfortably inside 2 MB PSRAM.
+
+## Custom processor carrier
+
+The final PCB should carry the N16R2 module directly and provide:
+
+- regulated 5 V instrument input via USB-C
+- 3.3 V regulator sized for ESP32-S3 transient current plus peripherals
+- local bulk and high-frequency decoupling
+- native USB D-/D+ routing to GPIO19/GPIO20
+- EN/reset network
+- BOOT access on GPIO0
+- test/programming pads
+- RGB display connector
+- shared LCD-configuration/BMI088 SPI connector
+- I²C/MCP23008 connector
+- TPS61169 PWM/output wiring
+- deliberate grounding and short high-speed return paths
+
+Normal flight firmware should not require Wi-Fi or Bluetooth. They should remain disabled during ordinary attitude-display operation unless deliberately enabled for a maintenance function.
 
 ## IMU — reference part frozen
 
-The reference IMU board is now the **Bosch Sensortec SHUTTLE BOARD 3.0 BMI088**.
+The reference IMU board is the **Bosch Sensortec SHUTTLE BOARD 3.0 BMI088** using SPI.
 
-Reasons for choosing it:
+Approximate board dimensions are 22 × 14 mm with a 1.27 mm-pitch connector. The accelerometer and gyroscope are separate logical SPI devices with separate chip selects. Firmware must explicitly perform the accelerometer's documented SPI-mode transition after reset.
 
-- it uses the genuine Bosch BMI088
-- it is official Bosch evaluation hardware
-- Bosch publishes mechanical and electrical documentation
-- both SPI and I²C are available
-- it is compact enough to fit easily inside the instrument body
-
-Project interface: **SPI**.
-
-Approximate shuttle-board dimensions are **22 mm × 14 mm**, with **1.27 mm-pitch** interconnects. The 1.27 mm pitch is smaller than normal breadboard spacing, so the prototype will use a carrier/adapter rather than unsupported flying wires.
-
-The BMI088 exposes accelerometer and gyroscope functions as separate devices. The firmware will provide separate chip-select control and explicitly perform the BMI088 accelerometer SPI-mode initialisation sequence after power-up.
-
-The sensor board must be mounted rigidly and its axis orientation documented. Firmware will contain an explicit sensor-to-aircraft axis transform rather than relying on the PCB being installed in only one physical orientation.
+The sensor is rigidly mounted and its axes are explicitly mapped to aircraft longitudinal, lateral and vertical axes. Soft foam suspension is not used as the primary structural mounting method.
 
 ## Display — reference part frozen
 
-The reference display is the **Newhaven Display NHD-2.1-480480AF-ASXP**.
-
-Key specifications:
+The reference display is the **Newhaven NHD-2.1-480480AF-ASXP**:
 
 - 2.1-inch round IPS TFT
 - 480 × 480 pixels
-- **1000 nit** luminance
+- 1000 nit typical luminance
 - ST7701S controller/driver
 - no touch layer
-- 18-bit parallel RGB or 1-lane MIPI DSI
-- project interface: **18-bit parallel RGB**
-- 40-pin, 0.5 mm-pitch FFC
-- active area: **53.28 × 53.28 mm**
-- outline: **58.18 × 60.71 × 2.26 mm**
-- TFT supply: approximately 3.0 V
-- backlight: approximately **6.0 V / 100 mA**
-- operating temperature: -20 °C to +70 °C
-- EMI-shielded FPC
-- manufacturer-specified anti-glare construction
+- project pixel interface: **16-bit RGB565 parallel RGB**
+- ST7701S configuration: 9-bit serial/SPI-style initialization
+- 40-pin 0.5 mm FFC
+- active area 53.28 × 53.28 mm
+- outline 58.18 × 60.71 × 2.26 mm
+- TFT supply approximately 3.0–3.3 V
+- backlight approximately 6.0 V / 100 mA
+- operating temperature -20 °C to +70 °C
 
-The 1000-nit backlight is the main reason for choosing this panel over the common 300–650 nit 2.1-inch alternatives.
+RGB565 is chosen instead of the panel's full 18-bit mode to save two direct ESP32 GPIOs.
 
-## Backlight-power implication
+## Backlight
 
-The instrument receives **5 V through USB-C**, but the selected display backlight is specified at about **6 V / 100 mA**. Therefore the final electronics must include a small boost/constant-current LED-driver stage between the 5 V input rail and LCD backlight.
+The prototype uses the **Adafruit TPS61169 constant-current boost converter, PID 6354**, configured for approximately 100 mA maximum LED current. Brightness is controlled by ESP32 PWM.
 
-The backlight must not be connected directly to the ESP32 3.3 V rail or driven directly from a GPIO.
+The backlight is not powered from an ESP32 GPIO or from the ESP32's 3.3 V regulator output.
 
-Brightness control will be performed through the LED-driver enable/PWM/current-control input once the exact driver is selected.
+## Low-speed GPIO
+
+The **Microchip MCP23008** handles low-speed functions including:
+
+- LCD configuration chip select
+- LCD hardware reset
+- rotary encoder A
+- rotary encoder B
+- rotary encoder push switch
+
+Its interrupt output is connected directly to the ESP32.
 
 ## User input
 
-One rotary encoder with integral push switch is planned.
+The reference control family is **Bourns PEC09**, using an incremental rotary encoder with push switch. Exact shaft length/knob suffix remains to be physically frozen.
 
 Likely functions:
 
 - rotate: brightness/menu selection
 - short press: acknowledge/select
-- deliberate long press: zero/cage/calibration function, subject to safety design
-
-Critical functions must not be easy to trigger accidentally in flight.
+- deliberate long press: cage/calibration action subject to final safety logic
 
 ## Power
 
-The instrument is powered from a regulated **5 V supply via USB-C**.
+Development power is a regulated **5 V input via USB-C**. Aircraft 12 V conversion, surge suppression and reverse-polarity protection remain outside the enclosure during this phase.
 
-The 12 V aircraft electrical system, conversion, surge suppression and reverse-polarity protection are outside the enclosure during this development phase.
+The custom carrier will regulate 5 V down to 3.3 V for the ESP32-S3 and logic. The 5 V rail also supplies the dedicated backlight boost/current driver.
 
-The 5 V supply must have enough current capacity for:
+## Enclosure integration
 
-- ESP32-S3 processor and PSRAM
-- LCD logic
-- backlight boost converter and 1000-nit LED load
-- BMI088 and other low-power peripherals
+The 3 1/8-inch enclosure now provides:
 
-A conservative power budget will be established once the ESP32 board and backlight driver are chosen.
+1. optical-window/front-bezel assembly
+2. Newhaven display carrier
+3. rigid BMI088 carrier
+4. rear-service electronics carrier
+5. rotary encoder control pod
+6. USB-C cable strain relief
+7. removable rear cover
 
-The enclosure must provide cable clearance and strain relief so the USB-C receptacle on the ESP32 board does not carry vibration or cable load.
+The existing electronics carrier was deliberately designed with edge-location rails so it can be revised for the final custom N16R2 PCB without redesigning the main enclosure.
 
-## Enclosure
+## Thermal and mechanical considerations
 
-Target format is a **3 1/8-inch aircraft instrument-style housing**.
+The 1000-nit LCD backlight is likely to dominate heat generation. The complete assembly must be tested at elevated ambient temperature and under representative solar loading.
 
-Planned printed parts:
-
-1. front bezel/display carrier
-2. main cylindrical/recessed body
-3. rigid BMI088 shuttle-board carrier/alignment plate
-4. removable rear cover
-
-The display carrier will be designed around the Newhaven outline of 58.18 × 60.71 mm and its 40-pin FFC exit. The BMI088 carrier will be designed around the Bosch 22 × 14 mm shuttle-board envelope and must preserve a defined aircraft-axis reference.
-
-PLA is not preferred for a sun-heated cockpit. ASA, ABS or another suitable engineering filament should be evaluated.
-
-## Thermal considerations
-
-The 1000-nit LCD backlight may be a significant heat source. The final enclosure should be tested at elevated ambient temperature and under direct solar loading. Ventilation may be required, but must not compromise structural integrity or introduce excessive glare/light leakage.
-
-## Mechanical design principle
-
-Electronics that affect attitude measurement must not move relative to the airframe. Display cosmetic alignment and IMU reference alignment are different requirements; the latter is the more important one.
+Electronics that affect attitude measurement must not move relative to the airframe. IMU reference alignment is more important than cosmetic display alignment.
