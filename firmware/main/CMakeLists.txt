@@ -4,6 +4,7 @@ idf_component_register(
         "mcp23008.c"
         "st7701s.c"
         "horizon_renderer.c"
+        "bmi088.c"
     INCLUDE_DIRS
         "."
         "../include"
@@ -11,4 +12,5 @@ idf_component_register(
         esp_lcd
         esp_driver_i2c
         esp_driver_gpio
+        esp_driver_spi
 )
