@@ -4,6 +4,38 @@ Checked: 14 September 2026.
 
 This document records the exact reference hardware selected for the ESP32 artificial-horizon prototype. Availability and prices are time-sensitive and should be rechecked before ordering.
 
+## Selected-parts gallery
+
+The photographs below are manufacturer/distributor-hosted reference images. They are included here so the exact physical parts can be recognised during purchasing and assembly. Product specifications and part numbers, rather than appearance alone, remain authoritative.
+
+### ESP32-S3-DevKitC-1-N8R2
+
+<img src="https://cdn-shop.adafruit.com/970x728/5310-04.jpg" alt="Espressif ESP32-S3-DevKitC-1-N8R2" width="420">
+
+### Bosch BMI088 Shuttle Board 3.0
+
+<img src="https://www.bosch-sensortec.com/media/boschsensortec/downloads/shuttle_board_flyer/application_board_3_1/bst-bmi088-sf000.pdf" alt="Bosch BMI088 Shuttle Board 3.0 — see Bosch product flyer" width="420">
+
+> GitHub cannot render the Bosch PDF itself as an inline photograph in all clients. The Bosch flyer linked above contains the official product photograph and mechanical drawing. A repository-local image can be added later if Bosch supplies a standalone redistributable product image.
+
+### Newhaven NHD-2.1-480480AF-ASXP 2.1-inch round display
+
+<img src="https://cdn11.bigcommerce.com/s-ybeckn7x79/images/stencil/1280x1280/products/690/3468/LCD-TFT-21-Round-IPS-display-BACK__18610.1725658911.jpg?c=1" alt="Newhaven NHD-2.1-480480AF-ASXP round LCD" width="420">
+
+### Newhaven NHD-FFC40 prototype FFC adapter
+
+<img src="https://mm.digikey.com/Volume0/opasdata/d220001/medias/images/1821/NHD-FFC40.jpg" alt="Newhaven NHD-FFC40 FFC adapter" width="420">
+
+### Adafruit TPS61169 constant-current backlight driver — PID 6354
+
+<img src="https://cdn-shop.adafruit.com/970x728/6354-00.jpg" alt="Adafruit TPS61169 constant-current boost converter PID 6354" width="420">
+
+### Microchip MCP23008 GPIO expander — prototype DIP package
+
+<img src="https://cdn-shop.adafruit.com/970x728/593-01.jpg" alt="Microchip MCP23008 I2C GPIO expander" width="420">
+
+---
+
 ## 1. MCU — Espressif ESP32-S3-DevKitC-1-N8R2
 
 **Selected part:** Espressif `ESP32-S3-DevKitC-1-N8R2`
