@@ -2,7 +2,7 @@
 
 Target hardware: **ESP32-S3-WROOM-1-N16R2** on the project custom carrier PCB.
 
-Framework baseline: **ESP-IDF v5.4.2**.
+Framework baseline: **ESP-IDF v5.4.4**.
 
 This directory is now a buildable ESP-IDF project. The current milestone is a **display + sensor proof-of-life build**: initialize the low-speed control hardware, run the Newhaven/ST7701S startup sequence, create a 480×480 RGB565 panel with two PSRAM framebuffers, draw a static artificial horizon, enable the LCD backlight, then bring up the BMI088 and verify both sensor chip IDs.
 
