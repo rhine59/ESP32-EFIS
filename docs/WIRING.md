@@ -1,136 +1,94 @@
 # Wiring Plan
 
-This document records the intended electrical architecture using the now-selected reference IMU and display. Exact ESP32-S3 GPIO numbers will be frozen after the specific ESP32-S3 development board is selected.
+This document records the electrical architecture using the selected ESP32-S3, BMI088 and Newhaven 1000-nit display.
 
 ## Power
 
 ```text
 regulated 5 V source
-      │
-      └── USB-C ──> ESP32-S3 board
-                       │
-                       ├── 3.3 V logic/sensor rail
-                       │      └── Bosch BMI088 shuttle board
-                       │
-                       ├── display logic supply as required
-                       │
-                       └── 5 V rail ──> boost / constant-current LED driver
-                                          │
-                                          └── ~6 V / 100 mA LCD backlight
+      |
+      +-- USB-C --> ESP32-S3-DevKitC-1-N8R8
+      |                |
+      |                +-- 3.3 V logic/sensor rail --> BMI088
+      |                +-- display logic/interface
+      |
+      +-- TPS61169 constant-current boost driver
+                         |
+                         +-- LED_A / LED_K --> display backlight (~6 V / 100 mA)
 ```
 
-The prototype deliberately avoids bringing raw aircraft 12 V into the instrument enclosure.
+Raw aircraft 12 V is deliberately kept outside the prototype instrument.
 
-## BMI088 reference board
-
-Selected board: **Bosch Sensortec SHUTTLE BOARD 3.0 BMI088**.
-
-Preferred interface: **SPI**.
-
-The BMI088 contains separate accelerometer and gyroscope interfaces. The design will provide:
-
-- SCLK
-- MOSI
-- MISO
-- accelerometer CS
-- gyroscope CS
-- optional accelerometer data-ready interrupt
-- optional gyroscope data-ready interrupt
-- 3.3 V
-- GND
-
-Important firmware detail: the accelerometer starts in I²C mode after power-up and must be switched into SPI mode by the documented CS transition / initial dummy SPI access sequence. The gyro interface mode is selected separately.
-
-The Bosch Shuttle Board 3.0 uses **1.27 mm-pitch interconnects**, so a suitable adapter/carrier is required. Do not assume 2.54 mm breadboard compatibility.
-
-## Display reference panel
+## Display connection
 
 Selected panel: **Newhaven NHD-2.1-480480AF-ASXP**.
 
-The project will use the display's **18-bit parallel RGB** interface.
+Prototype adapter: **Newhaven NHD-FFC40**. This converts a 40-pin 0.5 mm FFC to a dual-row 20 × 2, 2.54 mm-pitch through-hole layout. This makes bench probing and wiring substantially easier than working directly on the panel flex.
 
-Signals will include, according to the final timing implementation:
+Final compact carrier: use **Molex 54104-4096** or a verified compatible 40-position 0.5 mm FFC/FPC connector.
 
-- RGB data bus: 18 bits
-- pixel clock
-- DE
-- HSYNC / VSYNC as required
-- ST7701S configuration/control
-- reset
-- backlight PWM/enable through the LED driver
-- display logic power
-- ground
+### Newhaven panel FFC signals
 
-The panel uses a **40-pin, 0.5 mm-pitch FFC**. Newhaven recommends Molex 54104-4096 or a compatible connector.
+| FFC pin | Signal | Purpose |
+|---:|---|---|
+| 1 | LED_K | Backlight cathode |
+| 2 | LED_A | Backlight anode |
+| 3 | VDD | TFT supply |
+| 4 | GND | Ground |
+| 5 | DNP | Do not populate/connect unless manufacturer specifies otherwise |
+| 6 | DP0 | MIPI signal; unused in selected RGB mode |
+| 7 | GND | Ground |
+| 8 | CN | MIPI signal; unused in selected RGB mode |
+| 9 | CP | MIPI signal; unused in selected RGB mode |
+| 10 | GND | Ground |
+| 11 | VS | Vertical sync |
+| 12 | HS | Horizontal sync |
+| 13 | PCLK | RGB pixel clock |
+| 14 | DE | Data enable |
+| 15-20 | B0-B5 | Blue RGB data |
+| 21-26 | G0-G5 | Green RGB data |
+| 27-32 | R0-R5 | Red RGB data |
+| 33 | RESETX | Display reset |
+| 34 | CSX | ST7701S serial configuration chip select |
+| 35 | SCL | ST7701S serial configuration clock |
+| 36 | DCX | ST7701S serial command/data control |
+| 37 | SDA | ST7701S serial configuration data |
+| 38 | IM0 | Interface-mode selection |
+| 39 | IM1 | Interface-mode selection |
+| 40 | IM2 | Interface-mode selection |
 
-Because the RGB bus consumes many GPIOs, the exact ESP32-S3 board pinout must be checked before committing the wiring.
+The IM0/IM1/IM2 levels must be set for the selected 18-bit RGB operating mode according to the Newhaven/ST7701S initialization requirements. Do not guess these levels during assembly.
 
-## Backlight driver
+## BMI088
 
-The Newhaven display backlight is specified at approximately **6.0 V / 100 mA**, while the instrument input is **5 V USB-C**.
+Selected board: **Bosch Sensortec SHUTTLE BOARD 3.0 BMI088**, using SPI.
 
-A dedicated boost/constant-current LED driver is therefore required between the 5 V rail and the panel backlight.
+Required signals are SCLK, MOSI, MISO, accelerometer CS, gyroscope CS, optional accelerometer/gyro data-ready interrupts, 3.3 V and GND. The accelerometer and gyro are separate logical devices. Firmware must perform the Bosch-required accelerometer transition into SPI mode after reset.
 
-Requirements for the driver:
+## Backlight
 
-- 5 V input
-- output voltage compliance comfortably above 6 V
-- regulated LED current of at least 100 mA as required by the panel
-- PWM or analogue dimming input
-- safe startup/shutdown behaviour
+Selected development driver: **Adafruit TPS61169 Constant Current Boost Converter, PID 6354**.
 
-The exact driver part remains TBD.
+The Newhaven backlight is approximately 6 V / 100 mA. Configure the driver for 100 mA and use an ESP32 PWM-capable output for brightness control. LED current must never be sourced directly from an ESP32 GPIO.
 
-## Rotary encoder
+## GPIO assignment status
 
-Expected signals:
+The ESP32-S3-DevKitC-1-N8R8 is now frozen, but the final GPIO map is intentionally not committed until the RGB LCD peripheral requirements, ESP32-S3 boot/strapping pins, USB/JTAG use and PSRAM/flash restrictions have all been cross-checked together. This avoids creating a superficially complete pin table that cannot boot or conflicts with the RGB peripheral.
 
-- encoder A
-- encoder B
-- push button
-- ground
+The final map must allocate:
 
-Internal or external pull-ups will be chosen to suit the selected encoder and ESP32 board.
+- 18 RGB data outputs
+- PCLK, DE, HS and VS
+- RESETX and ST7701S serial configuration signals
+- BMI088 SPI clock/data and two chip selects
+- BMI088 interrupt(s), if used
+- backlight PWM
+- rotary encoder A/B/push
 
-## Grounding
+## Prototype wiring rule
 
-All prototype modules must share a common ground. Wiring should be kept short, especially for BMI088 SPI and the high-speed RGB display bus.
+The NHD-FFC40 is suitable for bench development and measurement. Long Dupont leads are not suitable for the high-speed RGB bus in a flight-development build. Once display timing is proven, move the ESP32/display interconnect to a short dedicated carrier PCB.
 
-The display bus should ideally move to a short controlled-layout carrier PCB rather than long jumper wires once first power-up is complete.
+## Grounding and installation
 
-## Final installation considerations
-
-Bench jumper wires are not suitable for a vibrating aircraft environment. The later flight-development build should use:
-
-- locking or positively retained connectors
-- proper crimped or soldered terminations
-- cable support and strain relief
-- secured wiring looms
-- separation from noisy ignition or high-current wiring where practical
-
-## GPIO table
-
-To be completed once the exact ESP32-S3 board is selected.
-
-| Function | ESP32-S3 GPIO | Notes |
-|---|---:|---|
-| BMI088 SCLK | TBD | Shared SPI clock |
-| BMI088 MOSI | TBD | Shared SPI MOSI |
-| BMI088 MISO | TBD | Shared SPI MISO |
-| BMI088 ACC CS | TBD | Separate chip select |
-| BMI088 GYRO CS | TBD | Separate chip select |
-| BMI088 ACC DRDY | TBD | Optional |
-| BMI088 GYRO DRDY | TBD | Optional |
-| Display R0–R5 | TBD | 6 red data bits |
-| Display G0–G5 | TBD | 6 green data bits |
-| Display B0–B5 | TBD | 6 blue data bits |
-| Display PCLK | TBD | Pixel clock |
-| Display DE | TBD | Data enable |
-| Display HSYNC | TBD | If required |
-| Display VSYNC | TBD | If required |
-| Display reset | TBD | |
-| Display init/config | TBD | ST7701S configuration interface |
-| Backlight PWM | TBD | Drives LED-driver control input |
-| Encoder A | TBD | |
-| Encoder B | TBD | |
-| Encoder push | TBD | |
+All modules share common ground. Keep BMI088 SPI wiring short and keep the IMU away from high-current backlight wiring where practical. Flight-development wiring should use retained connectors, proper strain relief and mechanically secured looms.
