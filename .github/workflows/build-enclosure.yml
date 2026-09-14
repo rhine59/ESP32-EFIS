@@ -30,6 +30,10 @@ jobs:
             -D 'part="BODY"' \
             enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
           openscad \
+            -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Front_Bezel.stl \
+            -D 'part="FRONT_BEZEL"' \
+            enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
+          openscad \
             -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Rear_Cover.stl \
             -D 'part="COVER"' \
             enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
