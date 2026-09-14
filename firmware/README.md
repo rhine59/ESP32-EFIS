@@ -4,9 +4,9 @@ Target hardware: **ESP32-S3-WROOM-1-N16R2** on the project custom carrier PCB.
 
 Framework baseline: **ESP-IDF v5.4.2**.
 
-This directory is now a buildable ESP-IDF project rather than a placeholder. The current milestone is a **display proof-of-life build**: initialize the low-speed control hardware, run the Newhaven/ST7701S startup sequence, create a 480×480 RGB565 panel with two PSRAM framebuffers, draw a static artificial horizon, and only then enable the LCD backlight.
+This directory is now a buildable ESP-IDF project. The current milestone is a **display + sensor proof-of-life build**: initialize the low-speed control hardware, run the Newhaven/ST7701S startup sequence, create a 480×480 RGB565 panel with two PSRAM framebuffers, draw a static artificial horizon, enable the LCD backlight, then bring up the BMI088 and verify both sensor chip IDs.
 
-The BMI088/AHRS path is intentionally the next milestone rather than being mixed into the first display bring-up.
+The AHRS itself is intentionally the next milestone.
 
 ## Build
 
@@ -39,6 +39,8 @@ firmware/
 └── main/
     ├── CMakeLists.txt
     ├── app_main.c
+    ├── bmi088.c
+    ├── bmi088.h
     ├── mcp23008.c
     ├── mcp23008.h
     ├── st7701s.c
@@ -97,8 +99,13 @@ ESP-IDF's native RGB LCD driver allocates both buffers in PSRAM.
 9. draw the static test horizon into both buffers
 10. select the prepared frame
 11. enable the backlight
+12. initialize the BMI088 hardware SPI bus
+13. perform the accelerometer dummy read required to switch it from power-up I²C mode to SPI mode
+14. verify accelerometer chip ID `0x1E`
+15. verify gyro chip ID `0x0F`
+16. put the accelerometer into active mode
 
-The backlight is deliberately enabled last so an uninitialized or random framebuffer is not presented as a valid-looking attitude display.
+The display proof-of-life remains usable even if BMI088 bring-up fails; the failure is logged rather than aborting the static display test.
 
 ## Current proof-of-life screen
 
@@ -117,14 +124,14 @@ This is a test pattern, not yet an attitude solution. Its purpose is to expose t
 
 The next implementation stage is:
 
-1. initialize BMI088 accelerometer and gyro on the shared SPI bus
-2. verify chip IDs and communication health
-3. perform the accelerometer's required post-reset SPI transition
-4. put the accelerometer into active/normal mode
-5. acquire gyro + accelerometer at ~200 Hz
-6. estimate stationary gyro bias
-7. add quaternion AHRS
-8. replace the static renderer inputs with live pitch/roll
+1. configure BMI088 measurement ranges, ODR and bandwidth
+2. acquire gyro + accelerometer at approximately 200 Hz
+3. timestamp every sensor sample
+4. estimate stationary gyro bias
+5. define the sensor-to-aircraft axis transform
+6. add quaternion attitude propagation
+7. add acceleration-confidence weighting/rejection
+8. drive live pitch/roll into the renderer
 9. add sensor-freshness and AHRS-confidence monitoring
 10. replace the horizon with an unmistakable `ATTITUDE INVALID` state whenever attitude validity is lost
 
