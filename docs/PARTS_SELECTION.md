@@ -4,6 +4,30 @@ Checked: 14 September 2026.
 
 This document records the exact reference hardware selected for the ESP32 artificial-horizon prototype. Availability and prices are time-sensitive and should be rechecked before ordering.
 
+## Purchase links — UK
+
+Use the **manufacturer part number** as the authoritative identifier before ordering; retailer descriptions and photographs can be ambiguous.
+
+| Part | Preferred purchase link | Status when checked |
+|---|---|---|
+| Bosch BMI088 Shuttle Board 3.0 | [DigiKey UK — SHUTTLE BOARD 3.0 BMI088](https://www.digikey.co.uk/en/products/detail/bosch-sensortec/SHUTTLE-BOARD-3-0-BMI088/14617528) | In stock when checked |
+| Newhaven NHD-2.1-480480AF-ASXP | [DigiKey UK — NHD-2.1-480480AF-ASXP](https://www.digikey.co.uk/en/products/detail/newhaven-display-intl/NHD-2-1-480480AF-ASXP/25724289) | Listed, but no immediate stock when checked; use stock notification/back-order |
+| Newhaven NHD-FFC40 adapter | [RS UK — NHD-FFC40](https://uk.rs-online.com/web/p/display-interface-kits/0723891) | Listed; availability should be checked at order time |
+| Adafruit TPS61169 PID 6354 | [Pimoroni UK — TPS61169 constant-current boost converter](https://shop.pimoroni.com/products/adafruit-tps61169-constant-current-boost-converter-for-leds) | UK product listing |
+| Microchip MCP23008-E/P | [DigiKey UK — MCP23008-E/P](https://www.digikey.co.uk/en/products/detail/microchip-technology/MCP23008-E-P/735951) | In stock when checked |
+| ESP32-S3-DevKitC-1-N8R2 | [DigiKey UK — ESP32-S3-DevKitC-1-N8R2](https://www.digikey.co.uk/en/products/detail/espressif-systems/ESP32-S3-DEVKITC-1-N8R2/15199627) | **Do not order blindly:** DigiKey currently marks this exact N8R2 DevKit as obsolete. See note below. |
+
+### Important ESP32 purchasing note
+
+The electrical design currently targets `ESP32-S3-DevKitC-1-N8R2` because Quad PSRAM leaves GPIO35–37 available. However, the exact Espressif N8R2 DevKitC-1 is now shown as obsolete by major distributors. Do **not** substitute an N8R8/OCTAL-PSRAM board without revisiting the GPIO map, because GPIO35–37 are used internally by Octal PSRAM variants.
+
+Before buying the MCU board, confirm either:
+
+1. genuine remaining stock of `ESP32-S3-DevKitC-1-N8R2`, or
+2. another ESP32-S3 development board/module using Quad PSRAM and exposing the required GPIOs.
+
+The generic [Pi Hut ESP32-S3-DevKitC-1 listing](https://thepihut.com/collections/espressif/products/esp32-s3-devkitc-1-development-board) is useful for UK sourcing, but the exact fitted module/PSRAM variant must be confirmed before purchase.
+
 ## Selected-parts gallery
 
 The photographs below are manufacturer/distributor-hosted reference images. They are included here so the exact physical parts can be recognised during purchasing and assembly. Product specifications and part numbers, rather than appearance alone, remain authoritative.
@@ -16,7 +40,7 @@ The photographs below are manufacturer/distributor-hosted reference images. They
 
 <img src="https://www.bosch-sensortec.com/media/boschsensortec/downloads/shuttle_board_flyer/application_board_3_1/bst-bmi088-sf000.pdf" alt="Bosch BMI088 Shuttle Board 3.0 — see Bosch product flyer" width="420">
 
-> GitHub cannot render the Bosch PDF itself as an inline photograph in all clients. The Bosch flyer linked above contains the official product photograph and mechanical drawing. A repository-local image can be added later if Bosch supplies a standalone redistributable product image.
+> GitHub cannot render the Bosch PDF itself as an inline photograph in all clients. The Bosch flyer linked above contains the official product photograph and mechanical drawing.
 
 ### Newhaven NHD-2.1-480480AF-ASXP 2.1-inch round display
 
@@ -50,11 +74,9 @@ Why this board:
 - GPIO35, GPIO36 and GPIO37 remain available externally
 - published schematic, pinout and mechanical documentation
 
-This replaces the earlier N8R8 choice. Espressif documents that Octal PSRAM variants use GPIO35–37 internally, making those pins unavailable. The N8R2 avoids that restriction and still has enough PSRAM for two full 480×480 RGB565 frame buffers (~922 kB total).
+This replaces the earlier N8R8 choice. Octal PSRAM variants use GPIO35–37 internally, making those pins unavailable. The N8R2 avoids that restriction and still has enough PSRAM for two full 480×480 RGB565 frame buffers (~922 kB total).
 
-Useful references:
-
-- Espressif DevKitC-1 user guide: https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/
+Useful reference: [Espressif DevKitC-1 user guide](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/).
 
 ## 2. IMU — Bosch Sensortec SHUTTLE BOARD 3.0 BMI088
 
@@ -68,10 +90,7 @@ Why this board:
 - compact 22 mm × 14 mm board envelope
 - avoids uncertainty around regulator, decoupling and axis marking on third-party modules
 
-Useful references:
-
-- Bosch BMI088: https://www.bosch-sensortec.com/en/products/motion-sensors/imus/bmi088/
-- Bosch Shuttle Board flyer: https://www.bosch-sensortec.com/media/boschsensortec/downloads/shuttle_board_flyer/application_board_3_1/bst-bmi088-sf000.pdf
+References: [Bosch BMI088](https://www.bosch-sensortec.com/en/products/motion-sensors/imus/bmi088/) and [Bosch Shuttle Board flyer](https://www.bosch-sensortec.com/media/boschsensortec/downloads/shuttle_board_flyer/application_board_3_1/bst-bmi088-sf000.pdf).
 
 The BMI088 accelerometer and gyro are separate logical devices and require separate chip-select handling. Firmware must explicitly switch the accelerometer into SPI mode after reset.
 
@@ -114,10 +133,7 @@ The panel will use **RGB + 9-bit SPI** for controller initialization. Hardware s
 
 The 9th SPI bit carries command/data state, eliminating a dedicated DC GPIO. SPI is used only to initialize/configure the ST7701S; pixel data then travels over the RGB bus.
 
-Useful references:
-
-- Product page: https://newhavendisplay.com/2-1-inch-tft-display-480x480-round-sunlight-readable-ips-rgb-mipi-dsi-interface/
-- Datasheet: https://newhavendisplay.com/content/specs/NHD-2.1-480480AF-ASXP.pdf
+References: [Newhaven product page](https://newhavendisplay.com/2-1-inch-tft-display-480x480-round-sunlight-readable-ips-rgb-mipi-dsi-interface/) and [datasheet](https://newhavendisplay.com/content/specs/NHD-2.1-480480AF-ASXP.pdf).
 
 ## 4. Display adapter
 
@@ -151,9 +167,7 @@ Prototype allocation:
 
 The MCP23008 interrupt output connects to a direct ESP32 GPIO so encoder changes can be serviced promptly.
 
-Useful reference:
-
-- Microchip MCP23008: https://www.microchip.com/en-us/product/MCP23008
+Reference: [Microchip MCP23008](https://www.microchip.com/en-us/product/MCP23008).
 
 ## 7. 5 V USB-C architecture
 
