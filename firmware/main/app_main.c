@@ -8,6 +8,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "bmi088.h"
 #include "horizon_renderer.h"
 #include "mcp23008.h"
 #include "pins.h"
@@ -110,9 +111,19 @@ void app_main(void)
                                               fb0));
     vTaskDelay(pdMS_TO_TICKS(100));
     gpio_set_level(PIN_LCD_BACKLIGHT_PWM, 1);
-
     ESP_LOGI(TAG, "static horizon active; backlight enabled");
-    ESP_LOGW(TAG, "BMI088/AHRS is not active yet; this is a display proof-of-life build");
+
+    /* BMI088 bring-up is deliberately non-fatal at this stage so the display
+       proof-of-life remains usable while sensor wiring is commissioned. */
+    bmi088_status_t imu = {0};
+    esp_err_t imu_err = bmi088_init(&imu);
+    if (imu_err == ESP_OK) {
+        ESP_LOGI(TAG, "BMI088 communication verified");
+    } else {
+        ESP_LOGE(TAG, "BMI088 bring-up failed: %s", esp_err_to_name(imu_err));
+    }
+
+    ESP_LOGW(TAG, "AHRS is not active yet; horizon is a static test image");
 
     while (true) {
         vTaskDelay(pdMS_TO_TICKS(1000));
