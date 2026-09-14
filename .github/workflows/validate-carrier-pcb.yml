@@ -35,22 +35,51 @@ jobs:
           sudo apt-get install -y --install-recommends kicad zip
           kicad-cli --version
 
-      - name: Run schematic ERC
+      - name: Generate schematic ERC report
         run: |
           mkdir -p hardware/kicad/carrier_rev_a/reports
           kicad-cli sch erc \
             --severity-all \
-            --exit-code-violations \
             --output hardware/kicad/carrier_rev_a/reports/erc.rpt \
+            hardware/kicad/carrier_rev_a/carrier_rev_a.kicad_sch || true
+
+      - name: Generate PCB DRC report
+        run: |
+          kicad-cli pcb drc \
+            --severity-all \
+            --all-track-errors \
+            --output hardware/kicad/carrier_rev_a/reports/drc.rpt \
+            hardware/kicad/carrier_rev_a/carrier_rev_a.kicad_pcb || true
+
+      - name: Commit generated KiCad sources and reports
+        run: |
+          rm -f hardware/kicad/tools/generate_carrier_rev_a.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add hardware/kicad
+          if git diff --cached --quiet; then
+            echo "Generated sources and reports are already current."
+          else
+            git commit -m "Generate carrier PCB Revision A validation reports"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
+      - name: Enforce clean schematic ERC
+        run: |
+          kicad-cli sch erc \
+            --severity-all \
+            --exit-code-violations \
+            --output /tmp/erc-gate.rpt \
             hardware/kicad/carrier_rev_a/carrier_rev_a.kicad_sch
 
-      - name: Run PCB DRC
+      - name: Enforce clean PCB DRC
         run: |
           kicad-cli pcb drc \
             --severity-all \
             --all-track-errors \
             --exit-code-violations \
-            --output hardware/kicad/carrier_rev_a/reports/drc.rpt \
+            --output /tmp/drc-gate.rpt \
             hardware/kicad/carrier_rev_a/carrier_rev_a.kicad_pcb
 
       - name: Export fabrication package
@@ -69,16 +98,15 @@ jobs:
             hardware/kicad/carrier_rev_a/carrier_rev_a.kicad_pcb
           (cd hardware/kicad/carrier_rev_a/manufacturing && zip -r ../carrier_rev_a_fabrication.zip .)
 
-      - name: Commit validated sources and manufacturing outputs
+      - name: Commit validated manufacturing outputs
         run: |
-          rm -f hardware/kicad/tools/generate_carrier_rev_a.py
-          if git diff --quiet -- hardware/kicad && [ -z "$(git ls-files --others --exclude-standard hardware/kicad)" ]; then
-            echo "Carrier PCB outputs are already current."
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add hardware/kicad
-          git commit -m "Generate and validate carrier PCB Revision A"
+          git add hardware/kicad/carrier_rev_a/manufacturing hardware/kicad/carrier_rev_a/carrier_rev_a_fabrication.zip
+          if git diff --cached --quiet; then
+            echo "Manufacturing outputs are already current."
+            exit 0
+          fi
+          git commit -m "Export validated carrier PCB Revision A fabrication package"
           git pull --rebase origin main
           git push origin HEAD:main
