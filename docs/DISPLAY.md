@@ -2,122 +2,113 @@
 
 ## Selected reference panel
 
-The project reference display is now the **Newhaven Display NHD-2.1-480480AF-ASXP**.
+Reference display: **Newhaven Display NHD-2.1-480480AF-ASXP**.
 
-Key manufacturer specifications:
+Manufacturer characteristics:
 
 - 2.1-inch round IPS TFT
 - 480 × 480 pixels
-- **1000 cd/m² (1000 nit)** luminance
+- 1000 cd/m² luminance
 - ST7701S controller/driver
-- transmissive, normally black
-- full-view IPS
 - no touch layer
-- 18-bit parallel RGB or 1-lane MIPI DSI
-- project interface: **18-bit parallel RGB**
 - 40-pin, 0.5 mm-pitch FFC
-- active area: **53.28 × 53.28 mm**
-- outline: **58.18 × 60.71 × 2.26 mm**
-- TFT supply around 3.0 V
-- backlight around **6.0 V / 100 mA**
+- active area: 53.28 × 53.28 mm
+- outline: 58.18 × 60.71 × 2.26 mm
+- TFT supply: 2.5–3.3 V, project uses 3.3 V
+- backlight: approximately 6.0 V / 100 mA
 - operating temperature: -20 °C to +70 °C
-- storage temperature: -30 °C to +80 °C
 - EMI-shielded FPC
 - anti-glare construction
 
-## Why this display
+The panel is marketed as an 18-bit parallel RGB / 1-lane MIPI DSI display. The ST7701S itself supports 16-bit RGB input mode, which this project uses to reduce ESP32-S3 GPIO demand.
 
-The key requirement is cockpit readability. Common 2.1-inch round ST7701S panels are often 300–650 nit. The Newhaven part provides a documented 1000-nit backlight while retaining the same useful 480×480 round format.
+## Project interface
 
-The lack of a touch layer is deliberate. User input will come from a physical rotary encoder and push switch, reducing reflections and avoiding touch interaction in turbulence.
+The project uses:
 
-## Why 480×480
+- **16-bit RGB565** pixel bus
+- DE-mode parallel RGB
+- PCLK + HSYNC + VSYNC + DE
+- 3-wire / 9-bit serial control for ST7701S startup
+- physical mode straps IM0=0, IM1=1, IM2=0
 
-A 480×480 circular panel provides enough resolution for:
+The RGB565 mapping is:
 
-- smooth bank rotation
-- crisp pitch ladder lines
-- readable numeric pitch labels
-- anti-aliased aircraft symbol
-- warning annunciations
-- future slip/skid or flight-director overlays
+- ESP D0..D4 -> panel B1..B5
+- ESP D5..D10 -> panel G0..G5
+- ESP D11..D15 -> panel R1..R5
+- panel B0 -> GND
+- panel R0 -> GND
 
-## ESP32-S3 interface
+The ST7701S `COLMOD` RGB pixel-format field is set to `VIPF=101` for 16-bit/pixel mode.
 
-The selected panel supports both parallel RGB and MIPI DSI. The ESP32-S3 design will use the **18-bit parallel RGB interface**.
+## Current RGB timing baseline
 
-This consumes a substantial number of GPIOs because the interface includes:
+The current Newhaven datasheet gives these recommended **RGB** values:
 
-- 18 RGB data bits
-- pixel clock
-- timing/control lines such as DE and/or HSYNC/VSYNC depending on the final timing configuration
-- ST7701S initialisation/control signals
-- reset
-- backlight control
+- pixel clock: **30 MHz**
+- HFP: **50** clocks
+- HBP: **50** clocks
+- HS pulse width: **4** clocks
+- VFP: **50** lines
+- VBP: **50** lines
+- VS pulse width: **2** lines
 
-The exact ESP32-S3 board and GPIO map must therefore be frozen before wiring or a carrier PCB is finalised.
+An earlier project note used 18 MHz with 40/60/20 and 10/10/6 porches/sync widths. Those values belong to Newhaven's **MIPI timing table**, not the RGB table, and are no longer the firmware baseline.
 
-## FFC connection
+## ESP-IDF integration
 
-The display uses a **40-pin 0.5 mm-pitch FFC**. Newhaven recommends a compatible connector such as **Molex 54104-4096**.
+The firmware uses Espressif's native RGB LCD driver:
 
-For bench testing it is preferable to use a proper FFC breakout/carrier rather than hand-wire the flexible tail.
+- `esp_lcd_new_rgb_panel()`
+- `data_width = 16`
+- two full framebuffers
+- framebuffers allocated in PSRAM
 
-## Backlight power
+Two 480×480 RGB565 framebuffers consume 921,600 bytes, which fits comfortably in the N16R2 module's 2 MB Quad PSRAM.
 
-The instrument input remains **5 V USB-C**, but the selected high-brightness panel backlight requires approximately **6 V / 100 mA**.
+## ST7701S startup
 
-A dedicated boost/constant-current LED driver is therefore required. Brightness control should be performed through that driver rather than by switching LED current directly with an ESP32 GPIO.
+The firmware retains Newhaven's published panel-specific power/gamma initialization sequence and changes the example's RGB pixel-format setting from 18-bit to the ST7701S-defined 16-bit RGB value.
 
-This driver must support:
+This is a bench-validation item. The first hardware test must verify:
 
-- 5 V input
-- suitable output compliance for the 6 V LED string
-- at least the required 100 mA LED current
-- PWM or analogue dimming
-- a low enough minimum brightness for dusk/night use
+- colour order
+- line/column alignment
+- no horizontal or vertical tearing
+- stable 30 MHz pixel clock operation
+- correct HSYNC/VSYNC/DE polarity
+- correct RGB565 mapping
 
-The exact driver part is still TBD.
+If any of those fail, the display electrical configuration must be corrected before AHRS rendering is introduced.
 
-## Target frame rate
+## Backlight
 
-The display target is **30–60 fps**. Sensor acquisition and AHRS execution should run faster than the display so attitude estimation remains responsive even if rendering occasionally takes longer.
+The 5 V instrument rail feeds the dedicated TPS61169 constant-current boost driver. The ESP32-S3 controls brightness through the driver control/PWM input.
+
+The proof-of-life firmware keeps the backlight off throughout panel initialization and framebuffer preparation, then enables it only after a complete static horizon image exists.
 
 ## Graphics concept
 
-The artificial horizon should use a conventional visual language:
+The artificial horizon will use:
 
-- blue sky region
-- brown/dark ground region
+- blue sky
+- brown ground
 - white horizon line
 - bank-angle scale
 - pitch ladder
 - fixed aircraft reference symbol
-- prominent invalid-attitude overlay when required
+- prominent invalid-attitude overlay
 
-## Brightness control
-
-Brightness will be adjustable with the rotary encoder. A future ambient-light sensor may be added, but manual control should remain available.
-
-The dimming range must be wide because a 1000-nit panel suitable for sunlight can be uncomfortably bright at dusk or at night.
-
-## Mechanical integration
-
-The enclosure CAD should use the actual Newhaven dimensions, not generic 2.1-inch assumptions:
-
-- active area: 53.28 × 53.28 mm
-- panel outline: 58.18 × 60.71 mm
-- thickness: about 2.26 mm
-
-The glass must be retained without point loading or bending. The FFC must have a controlled bend radius and a protected path to the carrier electronics.
+The current firmware contains a static version of this scene purely for display bring-up.
 
 ## Failure display
 
-A failed or stale attitude solution must not leave a believable frozen horizon. The renderer should replace or obscure the normal horizon with a clear message such as:
+A failed or stale attitude solution must never leave a believable frozen horizon. The eventual live renderer must replace or obscure the attitude image with:
 
 ```text
 ATTITUDE
  INVALID
 ```
 
-The failure state should be visually unmistakable.
+This requirement applies regardless of whether the fault originates in the BMI088, SPI link, AHRS timing or validity logic.
