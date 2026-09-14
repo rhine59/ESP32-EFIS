@@ -32,7 +32,7 @@ jobs:
         run: |
           sudo add-apt-repository --yes ppa:kicad/kicad-10.0-releases
           sudo apt-get update
-          sudo apt-get install -y --install-recommends kicad zip
+          sudo apt-get install -y --no-install-recommends kicad zip
           kicad-cli --version
 
       - name: Generate schematic ERC report
