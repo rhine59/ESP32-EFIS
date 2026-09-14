@@ -72,7 +72,7 @@ The panel is operated as:
 - 480 × 480
 - 16-bit RGB565 pixel bus
 - DE mode
-- 18 MHz starting pixel clock target
+- **30 MHz** RGB pixel clock starting point
 - 9-bit SPI only for ST7701S initialization
 
 ### RGB + serial mode straps
@@ -91,7 +91,7 @@ DCX is not required by the selected 3-wire 9-bit serial protocol because command
 - panel B0 -> GND
 - panel R0 -> GND
 
-The ST7701S initialization must configure 16-bit pixel format.
+The ST7701S initialization configures the RGB interface for 16-bit/pixel mode (`VIPF=101`).
 
 ## Frozen ESP32 GPIO map
 
@@ -113,7 +113,7 @@ The ST7701S initialization must configure 16-bit pixel format.
 | RGB D13 / R3 | 17 | |
 | RGB D14 / R4 | 18 | |
 | RGB D15 / R5 | 21 | |
-| LCD PCLK | 1 | 18 MHz starting point |
+| LCD PCLK | 1 | 30 MHz RGB starting point |
 | LCD DE | 2 | Data enable |
 | LCD HSYNC | 38 | Horizontal sync |
 | LCD VSYNC | 39 | Vertical sync |
@@ -170,15 +170,19 @@ LCD VDD runs from **+3V3_SYS**. Newhaven specifies 2.5–3.3 V.
 
 ## Starting RGB timings
 
-- PCLK: 18 MHz
-- HFP: 40
-- HBP: 60
-- HS pulse: 20
-- VFP: 10
-- VBP: 10
-- VS pulse: 6
+The current Newhaven datasheet gives the following **RGB** timing values:
 
-These are starting values for bench validation.
+- PCLK: **30 MHz**
+- HFP: **50** clocks
+- HBP: **50** clocks
+- HS pulse: **4** clocks
+- VFP: **50** lines
+- VBP: **50** lines
+- VS pulse: **2** lines
+
+The earlier 18 MHz / 40 / 60 / 20 / 10 / 10 / 6 values were Newhaven's **MIPI** timing table and must not be used as the baseline RGB timing.
+
+These RGB values remain subject to bench verification on the actual panel and carrier PCB.
 
 ## PCB implementation rule
 
