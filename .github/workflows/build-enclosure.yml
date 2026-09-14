@@ -25,13 +25,11 @@ jobs:
       - name: Generate enclosure STL files
         run: |
           mkdir -p enclosure/stl
+
+          # Main enclosure and sensor/display carriers
           openscad \
             -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Body.stl \
             -D 'part="BODY"' \
-            enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
-          openscad \
-            -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Front_Bezel.stl \
-            -D 'part="FRONT_BEZEL"' \
             enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
           openscad \
             -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Display_Carrier.stl \
@@ -41,10 +39,24 @@ jobs:
             -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_IMU_Carrier.stl \
             -D 'part="IMU_CARRIER"' \
             enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
+
+          # Control bezel and rear-service electronics hardware
+          openscad \
+            -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Front_Bezel.stl \
+            -D 'part="FRONT_BEZEL_CONTROL"' \
+            enclosure/source/ESP32_Artificial_Horizon_Electronics_and_Controls.scad
+          openscad \
+            -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Electronics_Carrier.stl \
+            -D 'part="ELECTRONICS_CARRIER"' \
+            enclosure/source/ESP32_Artificial_Horizon_Electronics_and_Controls.scad
           openscad \
             -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Rear_Cover.stl \
-            -D 'part="COVER"' \
-            enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
+            -D 'part="REAR_COVER_SERVICE"' \
+            enclosure/source/ESP32_Artificial_Horizon_Electronics_and_Controls.scad
+          openscad \
+            -o enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_USB_Strain_Relief_Clamp.stl \
+            -D 'part="USB_CLAMP"' \
+            enclosure/source/ESP32_Artificial_Horizon_Electronics_and_Controls.scad
 
       - name: Commit regenerated STL files
         run: |
