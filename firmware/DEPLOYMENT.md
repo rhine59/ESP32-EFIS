@@ -2,7 +2,7 @@
 
 This guide explains how to build, flash and monitor the artificial-horizon firmware on the project **ESP32-S3-WROOM-1-N16R2** hardware from macOS.
 
-The firmware is an ESP-IDF project rooted at `firmware/` and currently targets **ESP-IDF v5.4.2**.
+The firmware is an ESP-IDF project rooted at `firmware/` and currently targets **ESP-IDF v5.4.4**.
 
 > **Important:** this project is a supplementary/non-primary flight-development instrument. Do not use a newly flashed build in the aircraft until the display, sensor, failure-state and power-up behaviour have been bench-tested.
 
@@ -21,36 +21,52 @@ For first bring-up, connect the board directly to the Mac with a known-good **US
 
 ## 2. Install ESP-IDF on the Mac
 
-The project baseline is ESP-IDF **v5.4.2**. Keep the development machine on that version until the project is deliberately migrated and CI is updated.
+The project baseline is ESP-IDF **v5.4.4**. Keep the development machine on that version until the project is deliberately migrated and CI is updated.
 
-Espressif's current Installation Manager can install a specific version. For example:
+Espressif's Installation Manager can install a specific version. If the GUI has already installed v5.4.4, the normal activation script on macOS is:
 
 ```bash
-eim install -i v5.4.2
+source "$HOME/.espressif/tools/activate_idf_v5.4.4.sh"
 ```
 
-After installation, activate that ESP-IDF environment in each new Terminal session. The installer prints the exact activation command. A typical macOS installation looks similar to:
+If the Python environment was not created during installation, initialise it once with:
 
 ```bash
-source "$HOME/.espressif/tools/activate_idf_v5.4.2.sh"
+cd "$HOME/.espressif/v5.4.4/esp-idf"
+./install.sh esp32s3
+```
+
+Then activate ESP-IDF again:
+
+```bash
+source "$HOME/.espressif/tools/activate_idf_v5.4.4.sh"
 ```
 
 Verify the active toolchain:
 
 ```bash
 idf.py --version
+which idf.py
+which python
+python --version
 ```
 
-Expected result should identify ESP-IDF 5.4.2.
+Expected ESP-IDF result:
+
+```text
+ESP-IDF v5.4.4
+```
+
+The Python executable should normally be inside Espressif's dedicated environment under `~/.espressif/python_env/` rather than an unrelated pyenv/virtualenv environment.
 
 Do not place the repository in a filesystem path containing spaces; ESP-IDF does not support project paths containing spaces reliably.
 
 ## 3. Clone or update the project
 
-If cloning for the first time:
+If cloning for the first time, do not create the target directory manually first. Let Git create it:
 
 ```bash
-cd ~/Xcode
+cd ~/Documents/Xcode
 git clone https://github.com/rhine59/ESP32-Artificial-Horizon.git
 cd ESP32-Artificial-Horizon
 ```
@@ -58,7 +74,7 @@ cd ESP32-Artificial-Horizon
 If the repository is already present:
 
 ```bash
-cd ~/Xcode/ESP32-Artificial-Horizon
+cd ~/Documents/Xcode/ESP32-Artificial-Horizon
 git pull
 ```
 
@@ -86,9 +102,21 @@ Always build locally before deploying:
 idf.py build
 ```
 
-A successful build ends with output indicating that the application and bootloader binaries were created successfully.
+A successful build ends with output similar to:
 
-The repository also has GitHub Actions CI for the same ESP32-S3 firmware. Local deployment should preferably be done from a commit whose firmware CI build is green.
+```text
+Successfully created esp32s3 image.
+Project build complete. To flash, run:
+ idf.py flash
+```
+
+The generated application binary is:
+
+```text
+firmware/build/esp32_artificial_horizon.bin
+```
+
+The repository also has GitHub Actions CI for the same ESP32-S3 firmware using ESP-IDF v5.4.4. Local deployment should preferably be done from a commit whose firmware CI build is green.
 
 ## 6. Find the USB device on macOS
 
@@ -198,10 +226,10 @@ Any BMI088 communication problem should be investigated before continuing into A
 For subsequent firmware changes, the normal sequence is:
 
 ```bash
-cd ~/Xcode/ESP32-Artificial-Horizon
+cd ~/Documents/Xcode/ESP32-Artificial-Horizon
 git pull
 
-source "$HOME/.espressif/tools/activate_idf_v5.4.2.sh"
+source "$HOME/.espressif/tools/activate_idf_v5.4.4.sh"
 
 cd firmware
 idf.py build
