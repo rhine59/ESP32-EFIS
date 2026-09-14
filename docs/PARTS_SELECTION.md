@@ -2,9 +2,31 @@
 
 Checked: 14 September 2026.
 
-This document records the exact reference IMU and display chosen for the ESP32 artificial-horizon prototype. Availability and prices are time-sensitive and should be rechecked before ordering.
+This document records the exact reference hardware selected for the ESP32 artificial-horizon prototype. Availability and prices are time-sensitive and should be rechecked before ordering.
 
-## 1. IMU — Bosch Sensortec SHUTTLE BOARD 3.0 BMI088
+## 1. MCU — Espressif ESP32-S3-DevKitC-1-N8R8
+
+**Selected part:** Espressif `ESP32-S3-DevKitC-1-N8R8`
+
+Why this board:
+
+- official Espressif development board
+- ESP32-S3-WROOM-1-N8R8 module
+- 8 MB flash
+- 8 MB Octal PSRAM, useful for 480×480 frame buffers and graphics work
+- 3.3 V logic
+- most GPIOs broken out to headers
+- reproducible schematic, dimensions and pinout from the MCU manufacturer
+- avoids clone-board ambiguity during GPIO and enclosure design
+
+Useful references:
+
+- Espressif DevKit overview: https://www.espressif.com/en/products/devkits
+- DevKitC-1 user guide: https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/user_guide_v1.1.html
+
+Revision note: Espressif states that initial and v1.1 boards differ mainly in the onboard RGB LED GPIO assignment. Firmware should therefore avoid depending on the onboard RGB LED for any critical function.
+
+## 2. IMU — Bosch Sensortec SHUTTLE BOARD 3.0 BMI088
 
 **Selected part:** Bosch Sensortec `SHUTTLE BOARD 3.0 BMI088`
 
@@ -26,11 +48,6 @@ Mechanical notes:
 
 The 1.27 mm pitch means this is not a normal 2.54 mm breadboard module. The prototype should use a suitable carrier/adapter or mating socket.
 
-Current UK sourcing found during selection:
-
-- DigiKey UK listed the Bosch Shuttle Board 3.0 BMI088 in stock at the time of selection.
-- Manufacturer product page and shuttle-board flyer should be treated as the authoritative source for dimensions and pin behaviour.
-
 Useful references:
 
 - Bosch BMI088 product page: https://www.bosch-sensortec.com/en/products/motion-sensors/imus/bmi088/
@@ -41,7 +58,7 @@ Useful references:
 
 The BMI088 accelerometer and gyro are separate logical devices and require separate chip-select handling. The accelerometer powers up in I²C mode and must be explicitly transitioned into SPI mode using the sequence documented by Bosch. Firmware must implement this intentionally rather than assume both halves of the sensor behave identically.
 
-## 2. Display — Newhaven Display NHD-2.1-480480AF-ASXP
+## 3. Display — Newhaven Display NHD-2.1-480480AF-ASXP
 
 **Selected part:** Newhaven Display `NHD-2.1-480480AF-ASXP`
 
@@ -73,27 +90,63 @@ Useful references:
 - Newhaven product page: https://newhavendisplay.com/2-1-inch-tft-display-480x480-round-sunlight-readable-ips-rgb-mipi-dsi-interface/
 - Newhaven specification PDF: https://newhavendisplay.com/content/specs/NHD-2.1-480480AF-ASXP.pdf
 
-Newhaven lists distributors including DigiKey, Mouser and RS. Electromaker also surfaced this exact part during the September 2026 sourcing check. Recheck stock immediately before purchasing.
+## 4. Backlight driver — Adafruit TPS61169 breakout, PID 6354
 
-## 3. Consequence of using a 5 V USB-C input
+**Selected prototype part:** Adafruit `TPS61169 Constant Current Boost Converter for LEDs`, Product ID `6354`.
 
-The selected display is not a self-contained 5 V display module. The instrument's 5 V USB-C input therefore needs supporting circuitry for the bare panel:
+Why this board:
 
-1. LCD logic supply at the voltage required by the panel/carrier.
-2. A 40-pin 0.5 mm FFC connector or carrier board.
-3. A boost/constant-current LED driver for the approximately 6 V / 100 mA high-brightness backlight.
-4. PWM or analogue dimming control from the ESP32-S3.
+- based on the Texas Instruments TPS61169 boost WLED driver
+- accepts 3–5 V input, therefore works from the instrument's 5 V USB-C rail
+- constant-current operation suits an LCD LED backlight better than a simple fixed-voltage boost module
+- PWM input allows software brightness control
+- onboard DIP switches allow current selection
+- assembled breakout avoids designing a tiny SC70 boost converter circuit before the first display tests
 
-The backlight must not be connected directly to an ESP32 GPIO or the 3.3 V rail.
+Prototype configuration:
 
-## 4. Remaining parts to select
+- input: 5 V rail
+- maximum selected LED current: **100 mA**
+- output: display backlight anode/cathode as required by the Newhaven pinout
+- PWM/CTRL: driven from a non-critical ESP32 GPIO
 
-Before finalising the wiring loom or CAD enclosure, freeze:
+Adafruit states that the breakout can source up to 400 mA depending on voltage/power limits and that the selectable current increments allow a 100 mA setting. Board dimensions are approximately 25.2 × 19.0 × 10.1 mm.
 
-- exact ESP32-S3 N8R8 development board
-- 40-pin FFC connector/carrier arrangement
-- 5 V-input LED boost/current driver
+Useful references:
+
+- Adafruit breakout: https://www.adafruit.com/product/6354
+- TI TPS61169: https://www.ti.com/product/TPS61169
+
+For a later custom PCB, the same TPS61169 IC or an equivalent automotive/industrial-grade LED driver may replace the breakout.
+
+## 5. 5 V USB-C power architecture
+
+The first prototype remains a **regulated 5 V USB-C instrument**.
+
+```text
+5 V USB-C
+   |
+   +--> ESP32-S3-DevKitC-1-N8R8
+   |       +--> 3.3 V logic / BMI088 as appropriate
+   |       +--> RGB + control signals to display carrier
+   |       +--> PWM brightness control
+   |
+   +--> TPS61169 breakout
+           +--> constant-current boosted output
+                   +--> Newhaven 1000-nit backlight (~6 V / 100 mA)
+```
+
+The display backlight is not powered through an ESP32 GPIO or the ESP32's 3.3 V regulator.
+
+The final 5 V source must have adequate current margin for the MCU, display logic and backlight. Bench testing should measure worst-case current with Wi-Fi/Bluetooth disabled and enabled, maximum backlight brightness, and high graphics load before specifying the aircraft-side 5 V USB supply.
+
+## 6. Remaining parts to select
+
+Before the complete GPIO map and enclosure CAD are frozen, select:
+
+- exact 40-pin FFC connector/carrier arrangement
 - rotary encoder and shaft dimensions
-- aircraft-panel cutout and mounting-hole pattern
+- rear USB-C cable/connector and strain-relief geometry
+- actual aircraft-panel cutout and mounting-hole pattern
 
-Once those are frozen, the project can move to a complete GPIO assignment, first firmware build and parametric enclosure CAD.
+Once the FFC carrier is defined, the 18-bit RGB bus can be mapped to ESP32 GPIOs without guesswork and the first firmware build can begin.
