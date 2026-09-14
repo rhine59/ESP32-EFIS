@@ -1,6 +1,7 @@
 #include "mcp23008.h"
 
 #include "driver/i2c_master.h"
+#include "esp_check.h"
 #include "esp_log.h"
 #include "pins.h"
 
