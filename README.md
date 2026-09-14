@@ -13,14 +13,46 @@ An experimental **supplementary/non-primary** aircraft artificial-horizon / atti
 - **IMU:** Bosch **SHUTTLE BOARD 3.0 BMI088**, SPI
 - **Display:** Newhaven **NHD-2.1-480480AF-ASXP**, 2.1-inch round 480×480, 1000 nit, ST7701S
 - **Pixel interface:** 16-bit RGB565 plus timing; 9-bit serial initialization
-- **Backlight driver:** Adafruit **TPS61169**, PID 6354, plug-in Revision-A module
-- **Low-speed GPIO expansion:** Microchip **MCP23008**, SMD on custom carrier
+- **Backlight driver:** Adafruit **TPS61169**, PID 6354
+- **Low-speed GPIO expansion:** Microchip **MCP23008**
 - **Control:** Bourns **PEC09-class** incremental rotary encoder with push switch
 - **Power:** regulated **5 V input via USB-C**
 - **Instrument format:** conventional **3 1/8-inch aircraft instrument** panel format
 - **Front window:** 2.0 mm hard-coated anti-reflective optical polycarbonate, 62.0 mm prototype diameter
 
 The earlier ESP32-S3 DevKit remains useful for bench work if already available, but it is no longer part of the final mechanical/electrical architecture.
+
+## Firmware status
+
+The repository now contains a real **ESP-IDF v5.4.2 project** in `firmware/`.
+
+The current proof-of-life firmware:
+
+1. configures the BMI088 chip-select lines to a safe inactive state
+2. initializes the MCP23008 over I²C
+3. hardware-resets the Newhaven LCD through the MCP23008
+4. runs the Newhaven-derived ST7701S 3-wire initialization sequence
+5. selects the ST7701S 16-bit RGB pixel format
+6. creates the ESP32-S3 native RGB LCD peripheral at 480×480 / RGB565
+7. allocates two full framebuffers in PSRAM
+8. draws a static artificial-horizon test pattern
+9. enables the backlight only after a complete image exists
+
+The build is checked automatically by `.github/workflows/build-firmware.yml` using Espressif's official ESP-IDF CI action.
+
+See `firmware/README.md` for build, flash and bring-up instructions.
+
+## Display timing correction
+
+The current Newhaven datasheet gives the following recommended **RGB** timing baseline:
+
+- PCLK: **30 MHz**
+- HFP/HBP: **50 / 50**
+- HS pulse: **4**
+- VFP/VBP: **50 / 50**
+- VS pulse: **2**
+
+The earlier 18 MHz timing values in the project came from Newhaven's MIPI timing table and are no longer used as the RGB firmware baseline.
 
 ## Why N16R2
 
@@ -58,42 +90,29 @@ ESP32-S3
 
 ## Custom carrier PCB
 
-Revision A is now electrically and mechanically defined.
+The custom carrier architecture and mechanical envelope are defined, but **detailed KiCad PCB work is currently parked** while firmware development proceeds.
 
 Board target:
 
-- **68 mm diameter**
-- **1.6 mm FR-4** starting thickness
-- **four 2.7 mm mounting holes on 60 mm PCD**
-- four-layer stack preferred
+- 68 mm diameter
+- 1.6 mm FR-4 starting thickness
+- four 2.7 mm mounting holes on 60 mm PCD
 - ESP32 antenna at 12 o'clock with explicit RF keepout/cutout
 - USB-C at 6 o'clock aligned to rear service slot
 - board mounts directly to rear-cover standoffs
 
-The former printed DevKit electronics carrier has been retired.
-
-Authoritative PCB design files:
-
-- `hardware/schematics/CARRIER_PCB_SCHEMATIC.md`
-- `hardware/schematics/carrier-netlist.csv`
-- `hardware/pcb/README.md`
-
-The enclosure CAD also generates a printable:
-
-`enclosure/stl/ESP32_Artificial_Horizon_Custom_PCB_Fit_Gauge.stl`
-
-That gauge should be printed and fitted before ordering PCBs.
+Authoritative PCB design references remain in `hardware/` so the KiCad work can resume without redesigning the architecture.
 
 ## Project goals
 
 The firmware will:
 
-1. Sample the BMI088 gyroscope and accelerometer at high rate.
-2. Calibrate sensor offset, scale and alignment.
-3. Run a quaternion-based AHRS/filter on the ESP32-S3.
-4. Derive pitch and roll from the attitude solution.
-5. Render the horizon, bank scale, pitch ladder, aircraft symbol and warning states smoothly.
-6. Detect stale, implausible or failed sensor data and clearly flag the attitude as invalid rather than freezing the last valid display.
+1. sample the BMI088 gyroscope and accelerometer at high rate
+2. calibrate sensor offset, scale and alignment
+3. run a quaternion-based AHRS/filter on the ESP32-S3
+4. derive pitch and roll from the attitude solution
+5. render the horizon, bank scale, pitch ladder, aircraft symbol and warning states smoothly
+6. detect stale, implausible or failed sensor data and clearly flag the attitude as invalid rather than freezing the last valid display
 
 ## Enclosure
 
@@ -116,15 +135,6 @@ The flight-development enclosure includes:
 
 See `docs/ENCLOSURE.md` for mechanical detail.
 
-## Enclosure CAD sources
-
-```text
-enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
-enclosure/source/ESP32_Artificial_Horizon_Electronics_and_Controls.scad
-```
-
-GitHub Actions regenerates the printable STL set automatically.
-
 ## Repository layout
 
 ```text
@@ -133,16 +143,12 @@ GitHub Actions regenerates the printable STL set automatically.
 ├── BOM.md
 ├── docs/
 ├── firmware/
-│   └── include/pins.h
+│   ├── CMakeLists.txt
+│   ├── sdkconfig.defaults
+│   ├── include/pins.h
+│   └── main/
 ├── hardware/
-│   ├── pcb/README.md
-│   └── schematics/
-│       ├── CARRIER_PCB_SCHEMATIC.md
-│       └── carrier-netlist.csv
 └── enclosure/
-    ├── images/
-    ├── source/
-    └── stl/
 ```
 
 ## Important design principles
@@ -164,8 +170,8 @@ ATTITUDE
  INVALID
 ```
 
-## Status
+## Current next step
 
-The processor choice, custom carrier schematic architecture, net map, PCB mechanical envelope and enclosure interface are now defined.
+The active development path is now **firmware**. Once the display proof-of-life build is compiling and running on the real hardware, the next stage is the BMI088 SPI driver, 200 Hz acquisition, stationary gyro calibration and first live quaternion pitch/roll solution.
 
-The next major development task is to build the **actual KiCad Revision-A schematic/PCB project**, run ERC/DRC, produce fabrication outputs, and in parallel start the first ESP-IDF display firmware for a static artificial-horizon test screen.
+The detailed KiCad carrier PCB task is deliberately parked and can be resumed later from the existing design files.
