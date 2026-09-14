@@ -1,0 +1,67 @@
+        pu=U(); pins.append((num,pu))
+        if i<left:
+            yy=y-((left-1)/2)*2.54+i*2.54; xx=x-12.54
+        else:
+            j=i-left; yy=y-((right-1)/2)*2.54+j*2.54; xx=x+12.54
+        endpoints.append((num,pname,xx,yy))
+        s.append(f'    (pin "{num}" (uuid {pu}))')
+    s+=['    (instances','      (project "carrier_rev_a"',f'        (path "/ROOTUUID" (reference "{ref}") (unit 1) (value "{val}") (footprint "{footprint}"))','      )','    )','  )']
+    return '\n'.join(s),endpoints
+u1pins=[]
+module_names={1:'GND',2:'3V3',3:'EN',4:'IO4',5:'IO5',6:'IO6',7:'IO7',8:'IO15',9:'IO16',10:'IO17',11:'IO18',12:'IO8',13:'IO19_USB_D-',14:'IO20_USB_D+',15:'IO3',16:'IO46',17:'IO9',18:'IO10',19:'IO11',20:'IO12',21:'IO13',22:'IO14',23:'IO21',24:'IO47',25:'IO48',26:'IO45',27:'IO0',28:'IO35',29:'IO36',30:'IO37',31:'IO38',32:'IO39',33:'IO40',34:'IO41',35:'IO42',36:'IO44',37:'IO43',38:'IO2',39:'IO1',40:'GND',41:'EPAD_GND'}
+u1pins=[(str(i),module_names[i]) for i in range(1,42)]
+j1pins=[(str(i),f'FFC_{i}') for i in range(1,41)]
+mcppins=[(str(i), {1:'SCL',2:'SDA',3:'A2',4:'A1',5:'A0',6:'RESET',7:'NC',8:'INT',9:'VSS',10:'GP0',11:'GP1',12:'GP2',13:'GP3',14:'GP4',15:'GP5',16:'GP6',17:'GP7',18:'VDD'}[i]) for i in range(1,19)]
+regpins=[(str(i),{1:'PGND',2:'VIN',3:'EN',4:'AGND',5:'FB',6:'VOS',7:'SW',8:'PG',9:'EPAD'}[i]) for i in range(1,10)]
+usbpin=[('1','VBUS'),('2','GND'),('3','D-'),('4','D+'),('5','CC1'),('6','CC2')]
+bmipins=[(str(i),{1:'3V3',2:'GND',3:'SCLK',4:'MOSI',5:'MISO',6:'ACC_CS',7:'GYRO_CS',8:'GND'}[i]) for i in range(1,9)]
+encpins=[('1','A'),('2','GND'),('3','B'),('4','SW'),('5','GND')]
+blpins=[('1','5V'),('2','PWM'),('3','LED_A'),('4','LED_K')]
+twopins=[('1','1'),('2','2')]
+defs=[]
+for nm,r,pins in [('ESP32S3_WROOM','U',u1pins),('NHD_FFC40','J',j1pins),('MCP23008','U',mcppins),('TPS62162Q1','U',regpins),('USB_C','J',usbpin),('BMI088_HDR','J',bmipins),('ENC_HDR','J',encpins),('BL_HDR','J',blpins),('TWO_PIN','R',twopins)]: defs.append(sym_def(nm,r,pins)[0])
+root=U()
+sch=['(kicad_sch (version 20231120) (generator "eeschema") (generator_version "8.0")',f'  (uuid {root})','  (paper "A4")','  (title_block (title "Artificial Horizon Carrier Rev A") (company "ESP32 Artificial Horizon"))','  (lib_symbols']+defs+['  )']
+instances=[]; endpoints=[]
+def add_inst(*args,**kwargs):
+    txt,ep=sym_inst(*args,**kwargs); instances.append(txt.replace('ROOTUUID',root)); endpoints.append((args[2],ep)); return ep
+uep=add_inst('AH:ESP32S3_WROOM','ESP32S3_WROOM','U1','ESP32-S3-WROOM-1-N16R2',(80,90),u1pins,'Espressif:ESP32-S3-WROOM-1')
+jep=add_inst('AH:NHD_FFC40','NHD_FFC40','J1','NHD-2.1-480480AF-ASXP FFC',(160,90),j1pins,'Connector_FFC-FPC:FFC_1x40-1MP_P0.50mm_Horizontal')
+mep=add_inst('AH:MCP23008','MCP23008','U3','MCP23008-E/SO',(80,160),mcppins,'Package_SO:SOIC-18W_7.5x11.6mm_P1.27mm')
+rep=add_inst('AH:TPS62162Q1','TPS62162Q1','U2','TPS62162-Q1',(130,160),regpins,'Package_DFN_QFN:WSON-8-1EP_2x2mm_P0.5mm_EP0.8x1.6mm')
+usep=add_inst('AH:USB_C','USB_C','J3','USB-C 2.0',(35,160),usbpin,'Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12')
+bep=add_inst('AH:BMI088_HDR','BMI088_HDR','J2','BMI088 Shuttle',(35,90),bmipins,'Connector_PinHeader_1.27mm:PinHeader_1x08_P1.27mm_Vertical')
+eep=add_inst('AH:ENC_HDR','ENC_HDR','J4','Bourns PEC09',(160,160),encpins,'Connector_PinHeader_2.00mm:PinHeader_1x05_P2.00mm_Vertical')
+blep=add_inst('AH:BL_HDR','BL_HDR','J5','TPS61169 Interface',(160,205),blpins,'Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical')
+passive_eps={}
+for ref,val,pos in [('R1','5.1k',(35,195)),('R2','5.1k',(55,195)),('R3','22R',(35,210)),('R4','22R',(55,210)),('R5','10k',(100,135)),('C1','10uF',(115,200)),('C2','22uF',(135,200)),('C3','100nF',(80,135)),('C4','100nF',(80,190)),('C5','1uF',(100,145)),('L1','2.2uH',(130,185))]:
+    ep=add_inst('AH:TWO_PIN','TWO_PIN',ref,val,pos,twopins,''); passive_eps[ref]=ep
+sch += instances
+def epdict(ep): return {num:(x,y) for num,name,x,y in ep}
+def label(name,p):
+    return f'  (label "{name}" (at {p[0]:.2f} {p[1]:.2f} 0) (effects (font (size 1.0 1.0)) (justify left bottom)) (uuid {U()}))'
+def nc(p): return f'  (no_connect (at {p[0]:.2f} {p[1]:.2f}) (uuid {U()}))'
+Ue,Je,Me,Re,Use,Be,Ee,Ble=map(epdict,[uep,jep,mep,rep,usep,bep,eep,blep])
+u1_sch_nets={1:'GND',2:'+3V3',3:'EN',40:'GND',41:'GND',13:'USB_D-_MCU',14:'USB_D+_MCU'}
+for n,g in project_gpio.items(): u1_sch_nets[module_gpio_pad[g]]=n
+for i in range(1,42): sch.append(label(u1_sch_nets[i],Ue[str(i)]) if i in u1_sch_nets else nc(Ue[str(i)]))
+for i in range(1,41): sch.append(label(j1[i],Je[str(i)]) if j1.get(i) else nc(Je[str(i)]))
+mcp_nets=mcp_names
+for i in range(1,19): sch.append(label(mcp_nets[i],Me[str(i)]) if mcp_nets.get(i) else nc(Me[str(i)]))
+for i in range(1,9): sch.append(label(j2names[i],Be[str(i)]))
+for i,n in enc_names.items(): sch.append(label(n,Ee[str(i)]))
+for i,n in bl_names.items(): sch.append(label(n,Ble[str(i)]))
+for i,n in {1:'+5V',2:'GND',3:'USB_D-',4:'USB_D+',5:'USB_CC1',6:'USB_CC2'}.items(): sch.append(label(n,Use[str(i)]))
+for i,n in {1:'GND',2:'+5V',3:'+5V',4:'GND',5:'GND',6:'REG_VOS',7:'REG_SW'}.items(): sch.append(label(n,Re[str(i)]))
+sch.append(nc(Re['8'])); sch.append(label('GND',Re['9']))
+pnet={'R1':('USB_CC1','GND'),'R2':('USB_CC2','GND'),'R3':('USB_D-','USB_D-_MCU'),'R4':('USB_D+','USB_D+_MCU'),'R5':('+3V3','EN'),'C1':('+5V','GND'),'C2':('+3V3','GND'),'C3':('+3V3','GND'),'C4':('+3V3','GND'),'C5':('EN','GND'),'L1':('REG_SW','+3V3')}
+for ref,ep in passive_eps.items():
+    d=epdict(ep); sch.append(label(pnet[ref][0],d['1'])); sch.append(label(pnet[ref][1],d['2']))
+sch.append(f'  (text "REV A: 68 mm carrier PCB, 16-bit RGB565, native USB-C, BMI088 SPI, MCP23008 controls" (at 30 25 0) (effects (font (size 1.5 1.5)) (justify left bottom)) (uuid {U()}))')
+sch.append('  (sheet_instances (path "/" (page "1")))')
+sch.append(')')
+(out/'carrier_rev_a.kicad_sch').write_text('\n'.join(sch)+'\n')
+(out/'carrier_rev_a.kicad_pro').write_text(json.dumps({"board":{},"boards":[],"cvpcb":{},"erc":{},"libraries":{},"meta":{"filename":"carrier_rev_a.kicad_pro","version":1},"net_settings":{},"pcbnew":{},"schematic":{},"sheets":[],"text_variables":{}},indent=2))
+(out/'README.md').write_text('''# Carrier PCB Revision A\n\nKiCad 8-compatible project for the ESP32 Artificial Horizon custom carrier.\n\n- 68 mm circular 4-layer PCB\n- ESP32-S3-WROOM-1-N16R2\n- TPS62162-Q1 3.3 V buck\n- MCP23008 control expander\n- USB-C 2.0 device/power input\n- direct 40-pin Newhaven FFC\n- BMI088, encoder and TPS61169 interfaces\n- 60 mm mounting-hole PCD\n\nThis is a prototype hardware revision for bench validation. It is not flight-qualified hardware.\n''')
+print('generated', out)
+for f in out.iterdir(): print(f.name, f.stat().st_size)
