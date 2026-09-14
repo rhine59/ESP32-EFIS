@@ -21,7 +21,11 @@ jobs:
 
       - name: Generate KiCad Revision A sources
         run: |
-          cat hardware/kicad/tools/generate_carrier_rev_a.py.part* > hardware/kicad/tools/generate_carrier_rev_a.py
+          : > hardware/kicad/tools/generate_carrier_rev_a.py
+          for f in hardware/kicad/tools/generate_carrier_rev_a.py.part*; do
+            cat "$f" >> hardware/kicad/tools/generate_carrier_rev_a.py
+            printf '\n' >> hardware/kicad/tools/generate_carrier_rev_a.py
+          done
           python3 hardware/kicad/tools/generate_carrier_rev_a.py
 
       - name: Install KiCad
