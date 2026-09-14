@@ -4,91 +4,92 @@ This BOM records the current reference hardware for the ESP32 artificial-horizon
 
 | Item | Reference choice | Qty | Notes |
 |---|---|---:|---|
-| MCU module | **Espressif ESP32-S3-WROOM-1-N16R2** | 1 | 16 MB flash, 2 MB Quad PSRAM; active module; preserves GPIO35–37 for this pin-heavy RGB design |
-| MCU carrier PCB | **Project custom carrier PCB** | 1 | Provides 5 V input, 3.3 V regulation, native USB-C, EN/BOOT, decoupling and project connectors; replaces the bulky DevKit in the final prototype |
+| MCU module | **Espressif ESP32-S3-WROOM-1-N16R2** | 1 | 16 MB flash, 2 MB Quad PSRAM; preserves GPIO35–37 |
+| MCU carrier PCB | **Project custom 68 mm Revision-A carrier PCB** | 1 | 4-layer preferred, 60 mm mounting PCD, native USB-C, display/IMU/control interfaces |
+| 3.3 V regulator | **TI TPS62162-Q1** | 1 | Fixed 3.3 V, 1 A synchronous buck, 3–17 V input, AEC-Q100 automotive-qualified |
+| Regulator inductor | **2.2 µH, ≥1.5 A preferred** | 1 | Select low-DCR shielded part; verify against TI layout/design guidance |
+| Regulator input capacitor | **10 µF X7R/X5R + 100 nF** | 1 each | Close to TPS62162-Q1 VIN/GND |
+| Regulator output capacitor | **22 µF X7R/X5R** | 1 | Close to inductor/regulator output loop |
+| USB-C receptacle | **USB 2.0 Type-C receptacle** | 1 | Sink/device use; exact footprint to be frozen in KiCad |
+| USB CC resistors | **5.1 kΩ** | 2 | CC1/CC2 to GND |
+| USB series resistors | **22 Ω starting value** | 2 | D- and D+ close to ESP32 as recommended by Espressif |
+| USB ESD protection | **Low-capacitance USB ESD array** | 1 | Place adjacent to USB-C connector |
 | IMU | **Bosch Sensortec SHUTTLE BOARD 3.0 BMI088** | 1 | Official BMI088 evaluation board; project uses SPI |
-| Display | **Newhaven NHD-2.1-480480AF-ASXP** | 1 | 2.1-inch round, 480×480, IPS, 1000 nit, ST7701S, non-touch |
-| Display prototype adapter | **Newhaven NHD-FFC40** | 1 | 40-pin 0.5 mm FFC to dual-row 2.54 mm through-hole; bench development adapter |
-| Final display connector | **Molex 54104-4031** or verified compatible | 1 | 40-position, 0.5 mm pitch connector named in current Newhaven datasheet |
-| Backlight driver | **Adafruit TPS61169 Constant Current Boost Converter (PID 6354)** | 1 | 5 V input; configure for ~100 mA; PWM dimming |
-| GPIO expander | **Microchip MCP23008-E/P** | 1 | 8-bit I²C GPIO expander; prototype PDIP version; handles encoder + LCD CS/reset |
-| Control | **Bourns PEC09-class rotary encoder with push switch** | 1 | Encoder A/B and push handled through MCP23008 |
-| Power lead | USB-C cable | 1 | Instrument input is regulated 5 V through USB-C |
+| Display | **Newhaven NHD-2.1-480480AF-ASXP** | 1 | 2.1-inch round, 480×480, IPS, 1000 nit, ST7701S |
+| Display prototype adapter | **Newhaven NHD-FFC40** | 1 | Bench only |
+| Final display connector | **Molex 54104-4031** or verified compatible | 1 | 40-position, 0.5 mm FFC |
+| Backlight driver | **Adafruit TPS61169 PID 6354** | 1 | Plug-in Revision-A module; ~100 mA LED current, PWM dimming |
+| GPIO expander | **Microchip MCP23008, SMD package** | 1 | I²C, address 0x20; encoder + LCD CS/reset |
+| I²C pull-ups | **4.7 kΩ starting value** | 2 | SDA/SCL to 3.3 V |
+| Control | **Bourns PEC09-class rotary encoder with push switch** | 1 | Front pod; exact suffix to be physically verified |
+| Power lead | USB-C cable | 1 | 5 V development input |
 | 5 V supply | Regulated 5 V source | 1 | External to instrument during development |
-| Wiring | Prototype wiring | as needed | Bench only; no Dupont wiring in flight-development assembly |
-| Fasteners | M2/M2.5/M3/M5 hardware and threaded inserts | as needed | Enclosure mounting |
+| Fasteners | M2/M2.5/M3/M5 hardware and inserts | as needed | Enclosure/PCB mounting |
 | Enclosure | 3D-printed nominal 3 1/8-inch instrument case | 1 | ASA/ABS or suitable engineering filament preferred |
 
 ## Optimised MCU choice
 
-The project now uses **ESP32-S3-WROOM-1-N16R2** as the reference processor module rather than building the final instrument around a DevKitC board.
+The project uses **ESP32-S3-WROOM-1-N16R2** rather than a DevKit in the final prototype.
 
 Reasons:
 
-- 16 MB Quad flash gives ample firmware, graphics-asset, diagnostics and update headroom.
-- 2 MB Quad PSRAM is sufficient for two complete 480×480 RGB565 frame buffers.
-- Quad PSRAM avoids the GPIO35–37 loss associated with Octal PSRAM configurations.
-- the bare module is substantially smaller and mechanically cleaner than a development board;
-- native ESP32-S3 USB can be brought directly to the instrument USB-C connector;
-- the final carrier PCB can place power, display, IMU and control connectors exactly where needed.
+- 16 MB Quad flash provides substantial firmware/asset/update headroom.
+- 2 MB Quad PSRAM is sufficient for two 480×480 RGB565 framebuffers.
+- Quad PSRAM keeps GPIO35–37 available.
+- the module is much smaller than a development board.
+- native USB is routed directly to the instrument USB-C connector.
+- the carrier PCB can place power and connectors exactly around the instrument geometry.
 
 Framebuffer requirement:
 
-- one RGB565 frame buffer: 480 × 480 × 2 = 460,800 bytes
+- one RGB565 frame buffer: 460,800 bytes
 - two frame buffers: 921,600 bytes
 
-Two frame buffers therefore use about 0.92 MB, leaving useful PSRAM headroom for graphics working memory while AHRS state remains small.
+Do **not** substitute an R8/R16 Octal-PSRAM variant without redesigning the GPIO map; those configurations consume GPIO33–37.
 
-The earlier `ESP32-S3-DevKitC-1-N8R2` remains acceptable as a **bench-development substitute** if one is already available, because it uses the same ESP32-S3 architecture and Quad PSRAM arrangement. It is no longer the reference final hardware because that exact DevKit variant is obsolete at major distributors.
+## Revision-A custom carrier
 
-Do **not** substitute an `N8R8`/Octal-PSRAM module without redesigning the GPIO map. Espressif documents GPIO35, GPIO36 and GPIO37 as part of the Octal memory interface, which conflicts with the current display/IMU allocation.
-
-## Custom MCU carrier requirements
-
-The final carrier PCB should include:
+The first PCB integrates:
 
 - ESP32-S3-WROOM-1-N16R2
-- 5 V USB-C input
-- correctly sized low-noise 3.3 V regulator with adequate transient current
-- local bulk and high-frequency decoupling
-- native USB D-/D+ routing to GPIO19/GPIO20
-- EN reset network
-- BOOT access to GPIO0
-- programming/test pads
-- display RGB/timing connector
-- shared LCD-init/BMI088 SPI connector
-- I²C connector for MCP23008
-- PWM output to TPS61169
-- defined ground plane and short return paths
+- USB-C power/programming
+- TPS62162-Q1 3.3 V regulator
+- EN/RESET and GPIO0/BOOT controls
+- MCP23008 in SMD form
+- Newhaven 40-pin FFC connector
+- BMI088 harness/carrier connector
+- rotary-encoder harness connector
+- plug-in TPS61169 interface
+- test pads and power-good access
 
-Wi-Fi and Bluetooth are not required for normal attitude display operation and should be disabled in the normal flight firmware unless a specific maintenance function requires them.
+The board target is approximately **68 mm diameter**, **1.6 mm thick**, with four **2.7 mm holes on a 60 mm PCD**. A printed PCB fit gauge is generated before board fabrication.
+
+Authoritative design documents:
+
+- `hardware/schematics/CARRIER_PCB_SCHEMATIC.md`
+- `hardware/schematics/carrier-netlist.csv`
+- `hardware/pcb/README.md`
 
 ## Display bus decision
 
-The Newhaven panel supports 16-bit/pixel RGB operation. The project uses **RGB565** rather than all 18 panel data inputs. This reduces the ESP32 data-bus requirement from 18 GPIOs to 16 without materially affecting an artificial-horizon display.
+The Newhaven panel is used in **16-bit RGB565** mode:
 
-Wiring convention:
+- B0 tied low; B1–B5 carry blue
+- G0–G5 carry green
+- R0 tied low; R1–R5 carry red
 
-- panel B0 tied low; B1–B5 carry the five blue bits
-- panel G0–G5 carry all six green bits
-- panel R0 tied low; R1–R5 carry the five red bits
+ST7701S setup uses the shared 9-bit serial interface before RGB output starts.
 
-The ST7701S is configured for 16-bit pixel format during initialization.
+## Flight-development configuration
 
-## GPIO expander decision
+Wi-Fi and Bluetooth are not required for normal attitude display operation and should remain disabled in normal flight firmware unless deliberately enabled for a maintenance/test function.
 
-A **Microchip MCP23008** keeps low-speed controls off the ESP32's scarce direct GPIOs. It handles LCD configuration chip select, LCD hardware reset, rotary encoder A/B and encoder push switch. Its interrupt output uses one ESP32 GPIO.
-
-## Remaining hardware choices
-
-- exact production carrier PCB layout
-- final USB-C cable jacket diameter for the strain-relief clamp
-- exact M5 and M2/M2.5 insert types
-- physical verification of the actual aircraft panel geometry
+No loose Dupont wiring should remain in the assembled instrument.
 
 ## Future optional items
 
-- GNSS receiver for aided attitude development
-- independent watchdog/power supervisor
-- ambient-light sensor for automatic dimming
-- external temperature sensor for enclosure/thermal testing
+- integrate bare TPS61169 on a later PCB revision
+- integrate an independent watchdog/power supervisor
+- GNSS aiding
+- ambient-light sensor
+- enclosure temperature sensor
