@@ -2,236 +2,128 @@
 
 This document records the current 3D-printable enclosure design for the ESP32 artificial-horizon project.
 
-> **Status:** flight-development prototype only. This enclosure is not certified, approved or qualified as a primary flight-instrument housing. The geometry, materials, fasteners, vibration resistance, thermal performance and aircraft installation must all be verified before any flight use.
+> **Status:** flight-development prototype only. This enclosure is not certified, approved or qualified as a primary flight-instrument housing. Geometry, materials, fasteners, vibration resistance, thermal performance and aircraft installation must be verified before flight use.
 
 ![Flight-development enclosure dimensional preview](../enclosure/images/flight-development-case-preview.svg)
 
-## Purpose
+## Current mechanical configuration
 
-The enclosure is intended to move the electronics, display, IMU, wiring and controls beyond an open bench prototype and into a mechanically restrained 3 1/8-inch instrument-format test article.
+The enclosure targets the conventional 3 1/8-inch aircraft-instrument format and currently provides:
 
-The current design prioritises:
+- 80.30 mm reference panel opening
+- 79.60 mm cylindrical locating body
+- 88 × 88 mm rounded front flange
+- 58 mm body depth
+- 3 mm nominal structural wall
+- 53.6 mm display aperture and Newhaven-specific display pocket
+- four-hole 62.9 × 62.9 mm standard instrument mounting pattern
+- 4.4 mm front panel mounting holes
+- removable spigoted rear cover
+- internal rear-cover screw bosses
+- rear USB/cable opening
+- **four reinforced rear recesses for M5 brass threaded inserts**
 
-- compatibility with the conventional 3 1/8-inch round instrument format
-- a rigid front flange
-- four-point panel attachment
-- a close-fitting cylindrical locating body
-- a protected display pocket
-- a removable rear cover
-- rear-cover screw bosses rather than a friction-fit lid
-- a rear cable/USB exit with strain-relief allowance
-- 3 mm nominal wall thickness
-- parametric OpenSCAD source so the design can be revised after measuring the actual Skyranger panel
+## M5 brass threaded insert mounting
 
-## Corrected panel-fit geometry
+The latest CAD adds a reinforced boss and brass-insert recess at each of the four standard mounting positions on the **back of the enclosure**. These are intended to accept brass threaded inserts with an **M5 internal thread**, allowing M5 cap-head machine screws to engage a retained metal thread rather than repeatedly loading printed polymer threads.
 
-A key correction from the first sample is that a nominal 3 1/8-inch instrument should not be modelled around a literal 79.375 mm panel opening. Real installation guidance uses a slightly oversized opening so the instrument can be inserted without interference.
+Current parametric starting dimensions are:
 
-The current CAD therefore uses **80.30 mm as the reference panel opening** and a **79.60 mm locating-body diameter**, giving approximately **0.70 mm diametral clearance** before allowing for printer tolerance, finish and paint. The actual aircraft panel must still be measured before treating this value as final.
-
-| Feature | Current value | Notes |
+| Feature | Value | Status |
 |---|---:|---|
-| Reference aircraft panel opening | 80.30 mm | Practical 3 1/8-inch class cutout target; verify actual panel |
-| Enclosure locating-body diameter | 79.60 mm | Approx. 0.70 mm diametral clearance in 80.30 mm opening |
-| Front flange | 88 × 88 mm | Rounded-square flange |
-| Front flange thickness | 4.0 mm | Structural face plate |
-| Main body depth | 58.0 mm | From panel face to rear of body |
-| Nominal wall thickness | 3.0 mm | Development print target |
-| Display opening | 53.6 mm diameter | Slightly larger than 53.28 mm active area |
-| Display pocket | 58.6 × 61.2 mm | Clearance around selected Newhaven panel outline |
-| Panel mounting-hole pattern | 62.9 × 62.9 mm square | Conventional four-hole 3 1/8-inch pattern used for this prototype |
-| Panel mounting holes | 4.4 mm diameter | #6 mounting-hole/template class clearance |
-| Rear-cover screw circle | 66 mm diameter | Four positions at 45/135/225/315 degrees |
-| Rear-cover holes | 3.2 mm diameter | M3 clearance |
-| Rear-cover boss pilot | 2.5 mm diameter | Allows later insert/tapping decision |
-| Rear cable slot | 13 × 7 mm nominal | USB-C/cable and strain-relief development allowance |
+| M5 insert boss outside diameter | 12.0 mm | Development value |
+| M5 insert boss depth | 10.0 mm | Development value |
+| Insert recess diameter | 7.2 mm | **Must be matched to purchased insert** |
+| Insert recess depth | 8.0 mm | **Must be matched to purchased insert** |
+| M5 screw clearance below insert | 5.5 mm | Development value |
+| Insert positions | 62.9 × 62.9 mm square | Same centres as front mounting pattern |
 
-## Standard panel mounting pattern
+The 7.2 × 8.0 mm recess is intentionally treated as a **placeholder for the physical insert**, not as a universal M5 heat-set-insert standard. Brass M5 inserts are sold in several outside diameters, lengths, knurl forms and installation styles. Before the final print, measure the selected insert or use its manufacturer's recommended CAD hole diameter and depth.
 
-The model includes the conventional four-hole arrangement used by many traditional 3 1/8-inch round aircraft instruments.
+### Preferred installation practice
 
-For this prototype the four panel screw centres are on a **62.9 mm × 62.9 mm square** around the instrument centre. The holes are **4.4 mm diameter**, intentionally in the normal #6 mounting-hole/template class rather than tightly dimensioned around the screw shank.
+For the flight-development article:
 
-Current aviation suppliers continue to sell drill jigs and panel-layout templates specifically for standard 3 1/8-inch instruments, and current 3 1/8-inch electronic instruments such as the uAvionix AV-30 use four #6-32 mounting screws.
+1. Use a known-brand brass threaded insert intended for the chosen print material.
+2. Print a small test coupon containing several candidate recess diameters before committing to the complete enclosure.
+3. Install heat-set inserts with a temperature-controlled insert tool rather than an uncontrolled soldering-iron tip where practical.
+4. Ensure the insert sits square to the screw axis and below/flush with the rear reference face as intended.
+5. Do not overheat ASA/ABS around the boss; reject any boss showing distortion, cracking or poor layer bonding.
+6. Use an M5 cap-head machine screw of a length that provides useful thread engagement without bottoming in the insert or contacting internal electronics.
+7. Use an appropriate locking method for the aircraft installation rather than relying solely on screw friction.
+8. Re-check insert retention after thermal and vibration testing.
 
-References:
+The brass insert improves serviceability and thread durability, but it does **not** by itself qualify a printed mounting boss as an aircraft structural attachment.
 
-- Aircraft Spruce instrument panel layout template: https://www.aircraftspruce.com/catalog/inpages/panel_layout.php
-- Aircraft Spruce instrument mounting-hole drill jig: https://www.aircraftspruce.com/catalog/topages/instrumentmounting.php
-- uAvionix AV-30 3 1/8-inch mounting example: https://www.aircraftspruce.com/catalog/inpages/uavionix_11-17556.php
-- EAA panel fabrication guidance: https://www.eaa.org/eaa/aircraft-building/builderresources/while-youre-building/building-articles/instruments-and-avionics/making-your-instrument-panel
+## Standard panel geometry
 
-These references support the general 3 1/8-inch mounting class; the actual Skyranger panel remains the controlling geometry for this project.
+| Feature | Current value |
+|---|---:|
+| Reference panel opening | 80.30 mm |
+| Enclosure locating-body diameter | 79.60 mm |
+| Front flange | 88 × 88 mm |
+| Front flange thickness | 4.0 mm |
+| Main body depth | 58.0 mm |
+| Panel mounting-hole pattern | 62.9 × 62.9 mm square |
+| Front mounting holes | 4.4 mm diameter |
+| Nominal wall thickness | 3.0 mm |
 
-## CAD, preview and generated STL files
+The actual Skyranger panel dimensions remain controlling. Measure the opening, all four mounting-hole centres, panel thickness and available rear depth before freezing the installation geometry.
+
+## CAD and generated files
 
 Parametric source:
 
 - `enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad`
 
-Repository-hosted preview image:
+Preview:
 
 - `enclosure/images/flight-development-case-preview.svg`
 
-Generated printable files:
+Generated STL targets:
 
 - `enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Body.stl`
 - `enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Rear_Cover.stl`
 
-The STL files are regenerated automatically by GitHub Actions whenever the OpenSCAD source changes. This keeps the checked-in printable geometry tied to the parametric source rather than maintaining unrelated hand-edited STL files.
+The repository workflow regenerates the STL geometry from the OpenSCAD source when the source changes.
 
-The OpenSCAD source has a simple selector:
+## Material recommendation
 
-```text
-part = "BODY";
-part = "COVER";
-```
+Do not use ordinary PLA for cockpit development. Evaluate ASA, ABS or a suitable engineering filament supported by the printer. A useful initial print setup is 0.2 mm layers or finer, at least four perimeters, at least five top/bottom layers and approximately 35–50% infill, followed by inspection and mechanical testing.
 
-## Improvements over the original sample
+## Internal hardware still to be added
 
-The original model was only a proportions/printability exercise. The present flight-development model adds or improves:
+The next CAD revision should provide positive retention for:
 
-1. practical clearance for a 3 1/8-inch class panel opening
-2. the conventional four-point mounting pattern
-3. realistic #6 mounting-hole clearance
-4. an 88 mm structural front flange
-5. display-specific aperture and rear pocket
-6. 3 mm nominal structural walls
-7. four rear-cover bosses
-8. a removable spigoted rear cover
-9. a rear USB/cable opening
-10. a top orientation/index feature
-11. repository-hosted dimensional artwork
-12. automatic STL regeneration from version-controlled CAD
+- ESP32-S3-DevKitC-1-N8R2
+- Bosch BMI088 Shuttle Board 3.0 on a rigid, axis-defined carrier
+- TPS61169 backlight board
+- MCP23008 prototype hardware
+- display/FFC arrangement
+- rotary encoder
+- USB-C strain relief
+- internal wiring/tie points
 
-## Printing recommendation
+No flight-development article should contain loose modules, unsupported connectors or Dupont wiring.
 
-For cockpit development, ordinary PLA is not recommended because cockpit solar heating can produce temperatures high enough to cause softening or creep.
+## Flight-development verification
 
-Suitable materials to evaluate include:
+Before aircraft use, verify at minimum:
 
-- ASA
-- ABS
-- a suitable engineering-grade filament supported by the printer
+- actual panel opening and four screw centres
+- free insertion/removal without enclosure stress
+- M5 insert dimensions against the purchased hardware
+- insert pull-out and torque behaviour on representative printed coupons
+- correct cap-head screw length and engagement
+- no interference between M5 screws/bosses and electronics
+- display and FFC retention
+- rigid IMU alignment
+- maximum-brightness thermal soak
+- powered vibration test
+- post-vibration insert torque/retention inspection
+- cable strain relief and chafe protection
+- full aircraft-control clearance
+- unmistakable `ATTITUDE INVALID` behaviour on sensor/AHRS failure
+- applicable installation/approval route
 
-Suggested starting development settings:
-
-- 0.2 mm layer height or finer
-- at least 4 perimeters/walls
-- at least 5 top and bottom layers
-- 35–50% infill as an initial target
-- print the front flange flat when practical for best mounting-face accuracy
-- inspect every screw boss for voids, cracking or layer separation
-- reject any visibly warped or damaged print
-
-These are development settings, not structural qualification limits.
-
-## Panel attachment
-
-Use proper machine screws and locking hardware appropriate to the aircraft panel construction. Do not rely on self-tapping screws in printed plastic for the primary panel attachment.
-
-The CAD currently provides four through-holes in the front flange; the panel or rear mounting hardware should provide the retained thread. The final hardware arrangement should be chosen to match the actual aircraft panel construction and installation approval route.
-
-## Rear-cover attachment
-
-The rear cover uses four M3 clearance holes with matching internal bosses. The present bosses intentionally have pilot holes rather than assuming one fastening technology.
-
-Preferred development options are:
-
-- correctly specified brass heat-set inserts
-- captive nuts
-- nut plates
-
-Repeatedly driving screws directly into printed polymer is not preferred for a serviceable flight-development instrument.
-
-## Display retention
-
-The front opening is 53.6 mm diameter and the internal rectangular pocket is based on the selected Newhaven `NHD-2.1-480480AF-ASXP` display outline.
-
-The final retention scheme should only be frozen with the physical display and FFC in hand. Do not clamp the LCD glass hard between printed surfaces. Use controlled support points or a suitable thin compliant gasket that does not load the active glass area.
-
-## IMU mounting
-
-The BMI088 remains the most mechanically critical internal part. A dedicated rigid IMU carrier still needs to be added after the Bosch Shuttle Board is physically measured in the intended installation.
-
-The final IMU mount must:
-
-- define aircraft X/Y/Z axes unambiguously
-- prevent sensor movement under vibration
-- allow repeatable removal and reinstallation
-- avoid soft foam suspension that can introduce phase lag
-- keep the sensor clear of high-current backlight wiring where practical
-
-## ESP32 and power-module retention
-
-The next mechanical revision should add positive retention for:
-
-- ESP32-S3 board
-- BMI088 carrier
-- TPS61169 backlight driver
-- MCP23008 carrier if separately mounted
-- display FFC adapter during prototype development
-
-No flight-development article should contain loose modules, loose Dupont leads or unsupported connectors.
-
-## USB-C and wiring
-
-The rear cover currently uses a generous slot rather than a connector-specific cutout. This allows bench development with different right-angle USB-C leads.
-
-Before flight-development use:
-
-- select the actual USB-C lead or panel connector
-- add positive strain relief
-- prevent cable loads reaching the ESP32 connector
-- prevent chafing at the rear-cover opening
-- secure all internal wiring
-
-## Flight-development readiness checklist
-
-Before mounting this enclosure in the aircraft, complete at least the following:
-
-- [ ] measure the actual panel opening diameter at several axes
-- [ ] measure all four mounting-hole centres
-- [ ] measure panel thickness
-- [ ] print a thin front-ring test coupon before committing to the full case
-- [ ] confirm the 79.60 mm body slides freely without excessive play
-- [ ] verify #6 mounting screws pass cleanly through the flange holes
-- [ ] confirm at least 58 mm rear depth plus cable/connector clearance
-- [ ] check full stick/control-column travel
-- [ ] check nearby cables, hoses and wiring
-- [ ] confirm no interference with adjacent instruments
-- [ ] confirm the display and FFC bend fit without stress
-- [ ] secure every electronic module mechanically
-- [ ] secure all wiring against vibration and chafing
-- [ ] perform a maximum-brightness thermal soak
-- [ ] measure internal enclosure temperature
-- [ ] perform powered vibration testing
-- [ ] inspect the print and fasteners after vibration testing
-- [ ] verify IMU alignment remains unchanged
-- [ ] verify display failure and sensor failure produce an unmistakable invalid indication
-- [ ] determine the required aircraft installation/approval route before operational use
-
-## Material and environmental limitations
-
-A 3D-printed enclosure is not automatically suitable for an aircraft cockpit. Solar loading can raise instrument-panel temperatures well above ambient. Material creep, glass-transition temperature, UV ageing, vibration fatigue, fastener relaxation and thermal expansion all need consideration.
-
-The selected LCD has its own environmental limits, but those limits do not qualify the complete instrument. The ESP32 board, sensor, connectors, printed polymer, wiring, backlight driver, fasteners and installation must be assessed as one system.
-
-## What remains before this can be called final
-
-- actual Skyranger panel measurements
-- physical test print and panel-fit result
-- exact rotary encoder selection and location
-- exact USB-C connector/lead geometry
-- rigid BMI088 carrier
-- ESP32 retention features
-- TPS61169 retention and insulation
-- MCP23008 retention
-- display retaining method
-- internal cable-routing and tie points
-- final insert/nut-plate selection
-- thermal test results
-- vibration test results
-- final aircraft installation/approval decision
-
-Until those items are complete, this is the **best current flight-development enclosure**, not a production, certified or approved primary flight-instrument housing.
+Until these checks and the remaining internal mounts are completed, this remains a **flight-development enclosure**, not a certified or approved primary flight-instrument housing.
