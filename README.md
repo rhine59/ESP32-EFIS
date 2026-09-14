@@ -6,17 +6,19 @@ An experimental **supplementary/non-primary** aircraft artificial-horizon / atti
 
 ## Current hardware baseline
 
-- **Processor reference:** Espressif **ESP32-S3-DevKitC-1-N8R2** — 8 MB flash, 2 MB Quad PSRAM; exact board now needs a current-stock replacement check because N8R2 DevKitC-1 is obsolete at major distributors
+- **Processor reference:** Espressif **ESP32-S3-WROOM-1-N16R2** module — 16 MB flash, 2 MB Quad PSRAM, mounted on a project-specific carrier PCB
 - **IMU:** Bosch **SHUTTLE BOARD 3.0 BMI088**, using SPI
 - **Display:** Newhaven **NHD-2.1-480480AF-ASXP**, 2.1-inch round 480×480, 1000 nit, ST7701S
 - **Display prototype adapter:** Newhaven **NHD-FFC40**
-- **Pixel interface:** 16-bit RGB565 plus display timing signals; 9-bit SPI used for ST7701S configuration
+- **Pixel interface:** 16-bit RGB565 plus display timing signals; 9-bit serial initialization for ST7701S
 - **Backlight driver:** Adafruit **TPS61169**, PID 6354, configured for approximately 100 mA maximum LED current
 - **Low-speed GPIO expansion:** Microchip **MCP23008**
-- **Control reference:** compact **Bourns PEC09** incremental rotary encoder with push switch; prototype CAD references `PEC09-2320F-T0015`
+- **Control reference:** compact **Bourns PEC09** incremental rotary encoder with push switch
 - **Power:** regulated **5 V input via USB-C**
 - **Instrument format:** conventional **3 1/8-inch aircraft instrument** panel format
 - **Front window:** 2.0 mm hard-coated anti-reflective optical polycarbonate, 62.0 mm prototype diameter
+
+The earlier `ESP32-S3-DevKitC-1-N8R2` remains acceptable for bench development if already available, but the final design no longer depends on that obsolete DevKit. The active `ESP32-S3-WROOM-1-N16R2` module is preferred because its **2 MB Quad PSRAM is enough for double 480×480 RGB565 frame buffers while preserving GPIO35–37**, which Octal-PSRAM variants consume.
 
 ## Project goals
 
@@ -38,7 +40,7 @@ BMI088
   |
   | SPI: gyro + accelerometer
   v
-ESP32-S3
+ESP32-S3-WROOM-1-N16R2
   |
   +-- calibration
   +-- quaternion AHRS/filter
@@ -54,28 +56,26 @@ ESP32-S3
 
 ## Power arrangement
 
-The prototype is powered from a clean, regulated **5 V USB-C supply**. Aircraft 12 V conversion is intentionally outside the instrument at this stage. This keeps display/AHRS development separate from aircraft transient-protection and power-conditioning design.
+The prototype is powered from a clean, regulated **5 V USB-C supply**. Aircraft 12 V conversion is intentionally outside the instrument at this stage.
 
-The display backlight is powered through the dedicated constant-current boost driver rather than from an ESP32 GPIO or its 3.3 V rail.
+The final processor carrier will derive 3.3 V locally for the ESP32-S3 and logic, while the LCD backlight remains on its dedicated constant-current boost driver.
 
 ## Enclosure
 
-The flight-development enclosure architecture now includes:
+The flight-development enclosure architecture includes:
 
-- **80.30 mm** reference panel opening
-- **79.60 mm** cylindrical locating body
-- **88 × 88 mm** rounded-square front flange
-- four panel mounting holes on a **62.9 × 62.9 mm square pattern**
-- **4.4 mm** front mounting-hole diameter
-- **58 mm** body depth
-- **3 mm** nominal structural wall
-- **62.0 mm × 2.0 mm** hard-coated AR front window
+- 80.30 mm reference panel opening
+- 79.60 mm cylindrical locating body
+- 88 × 88 mm rounded-square front flange
+- four panel mounting holes on a 62.9 × 62.9 mm square pattern
+- 58 mm body depth
+- 3 mm nominal structural wall
+- 62.0 mm × 2.0 mm hard-coated AR front window
 - removable front retaining bezel
 - front-side compact rotary-encoder control pod
 - removable Newhaven display carrier
 - rigid, axis-defined BMI088 cradle
 - rear-service electronics carrier
-- ESP32 edge-location rails
 - TPS61169 and MCP23008/prototype mounting zones
 - harness tie points
 - removable rear cover
@@ -83,7 +83,7 @@ The flight-development enclosure architecture now includes:
 - separate cable-jacket strain-relief clamp
 - rear M5 brass-insert mounting provisions
 
-The encoder pod is intentionally on the **cockpit side of the panel**, so it does not require a second rectangular cutout beside the standard 3 1/8-inch aircraft-instrument opening.
+The electronics carrier will be revised around the final **custom N16R2 carrier PCB outline** once the PCB dimensions and connector positions are frozen.
 
 ![Flight-development enclosure](enclosure/images/flight-development-case-preview.svg)
 
@@ -96,17 +96,7 @@ enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad
 enclosure/source/ESP32_Artificial_Horizon_Electronics_and_Controls.scad
 ```
 
-GitHub Actions regenerates the printable STL set automatically:
-
-```text
-enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Body.stl
-enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Front_Bezel.stl
-enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Display_Carrier.stl
-enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_IMU_Carrier.stl
-enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Electronics_Carrier.stl
-enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_Rear_Cover.stl
-enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_USB_Strain_Relief_Clamp.stl
-```
+GitHub Actions regenerates the printable STL set automatically.
 
 ## Repository layout
 
@@ -140,7 +130,7 @@ enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_USB_Strain_Relief_Clam
 
 ### Phase 1 — Bench prototype
 
-- ESP32-S3 reference board
+- ESP32-S3 development hardware or custom N16R2 carrier
 - Bosch BMI088 Shuttle Board 3.0
 - Newhaven 2.1-inch 480×480 1000-nit display
 - NHD-FFC40 prototype adapter
@@ -160,9 +150,7 @@ enclosure/stl/ESP32_Artificial_Horizon_Flight_Development_USB_Strain_Relief_Clam
 
 ### Phase 3 — Mechanical prototype
 
-The major enclosure architecture is now represented in CAD, including the optical window, display carrier, rigid BMI088 carrier, electronics carrier, rotary control pod and USB strain relief.
-
-Remaining mechanical work is primarily **physical-fit validation and parametric tuning** against the actual purchased parts and aircraft panel.
+The major enclosure architecture is represented in CAD. Remaining mechanical work is primarily physical-fit validation and tuning around the actual parts and final custom processor carrier PCB.
 
 ### Phase 4 — Flight-development prototype
 
@@ -172,7 +160,7 @@ Only after extensive bench, motion, thermal and vibration testing. The device re
 
 ### The IMU must be rigidly mounted
 
-The BMI088 board is carried on a stiff, repeatable reference plane. Its axes must be known relative to the aircraft longitudinal, lateral and vertical axes. The carrier must be permanently marked `FWD` and `UP` and its firmware axis mapping must match the physical installation.
+The BMI088 board is carried on a stiff, repeatable reference plane. Its axes must be known relative to the aircraft longitudinal, lateral and vertical axes.
 
 ### Do not blindly trust accelerometer tilt
 
@@ -187,10 +175,6 @@ ATTITUDE
  INVALID
 ```
 
-### Mechanical fit must be verified, not assumed
-
-The enclosure uses conventional 3 1/8-inch geometry as the design basis, but the actual Skyranger panel cutout, screw centres, panel thickness, adjacent-instrument clearance and behind-panel depth must be measured before installation.
-
 ## Status
 
-The hardware architecture and main mechanical enclosure architecture are now substantially defined. The next major development step is the **first real ESP-IDF firmware build**: initialize the display, render a static artificial-horizon test screen, bring up the BMI088, then add live pitch/roll estimation and validity monitoring.
+The hardware architecture is now optimised around the **active ESP32-S3-WROOM-1-N16R2 module** rather than an obsolete DevKit. The next major development step is the **first real ESP-IDF firmware build**, followed by the custom processor-carrier schematic/PCB and physical-fit update to the electronics carrier.
