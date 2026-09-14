@@ -36,7 +36,7 @@ jobs:
 
       - name: Commit regenerated STL files
         run: |
-          if git diff --quiet -- enclosure/stl && [ -n "$(git ls-files --others --exclude-standard enclosure/stl)" ] == false; then
+          if git diff --quiet -- enclosure/stl && [ -z "$(git ls-files --others --exclude-standard enclosure/stl)" ]; then
             echo "STL files are already up to date."
             exit 0
           fi
