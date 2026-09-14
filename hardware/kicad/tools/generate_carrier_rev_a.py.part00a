@@ -1,0 +1,25 @@
+# Revision A2 routing overlay: map the RGB bus to follow the physical WROOM pad order.
+# This avoids the dense bus crossings seen in the first DRC run while preserving
+# native USB on GPIO19/20 and avoiding boot strapping pins 3/45/46.
+project_gpio={
+ 'LCD_D0':8,'LCD_D1':18,'LCD_D2':17,'LCD_D3':16,'LCD_D4':15,
+ 'LCD_D5':7,'LCD_D6':6,'LCD_D7':5,'LCD_D8':4,
+ 'LCD_D9':9,'LCD_D10':10,'LCD_D11':11,'LCD_D12':12,'LCD_D13':13,'LCD_D14':14,'LCD_D15':21,
+ 'LCD_PCLK':47,'LCD_DE':48,'LCD_HS':1,'LCD_VS':2,
+ 'SPI_MOSI':35,'SPI_SCLK':36,'SPI_MISO':37,
+ 'BMI_ACC_CS':40,'BMI_GYRO_CS':41,
+ 'BL_PWM':39,'IOX_SDA':43,'IOX_SCL':44,'IOX_INT':42,'BOOT':0
+}
+
+u1net={1:'GND',2:'+3V3',3:'EN',13:'USB_D-_MCU',14:'USB_D+_MCU',40:'GND',41:'GND'}
+for n,g in project_gpio.items(): u1net[module_gpio_pad[g]]=n
+
+# Bring the FFC closer to the processor.  Shorter routing plus ordered signal
+# assignment substantially reduces crossings and makes the fine-pitch escape
+# deterministic.
+jx,jy=100,108
+j1pads=[]
+for p in range(1,41):
+    x=jx+(p-20.5)*0.5
+    j1pads.append(pad(p,'smd','rect',x,jy,0.30,1.50,'"F.Cu" "F.Paste" "F.Mask"',j1.get(p)))
+J1=fp_generic('J1','NHD-FFC40-0.5mm',jx,jy,j1pads,(22,5))
