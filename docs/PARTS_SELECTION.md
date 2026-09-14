@@ -15,7 +15,25 @@ Use the **manufacturer part number** as the authoritative identifier before orde
 | Newhaven NHD-FFC40 adapter | [RS UK — NHD-FFC40](https://uk.rs-online.com/web/p/display-interface-kits/0723891) | Listed; availability should be checked at order time |
 | Adafruit TPS61169 PID 6354 | [Pimoroni UK — TPS61169 constant-current boost converter](https://shop.pimoroni.com/products/adafruit-tps61169-constant-current-boost-converter-for-leds) | UK product listing |
 | Microchip MCP23008-E/P | [DigiKey UK — MCP23008-E/P](https://www.digikey.co.uk/en/products/detail/microchip-technology/MCP23008-E-P/735951) | In stock when checked |
-| ESP32-S3-DevKitC-1-N8R2 | [DigiKey UK — ESP32-S3-DevKitC-1-N8R2](https://www.digikey.co.uk/en/products/detail/espressif-systems/ESP32-S3-DEVKITC-1-N8R2/15199627) | **Do not order blindly:** DigiKey currently marks this exact N8R2 DevKit as obsolete. See note below. |
+| ESP32-S3-DevKitC-1-N8R2 | [DigiKey UK — ESP32-S3-DevKitC-1-N8R2](https://www.digikey.co.uk/en/products/detail/espressif-systems/ESP32-S3-DEVKITC-1-N8R2/15199627) | **Do not order blindly:** exact N8R2 DevKit is marked obsolete by major distributors. |
+| Optical front window | [Diamond Coatings — hard-coated AR polycarbonate](https://diamondcoatings.co.uk/product/hard-coated-polycarbonate-anti-reflective-coating-on-both-sides-and-afp-coating-one-side/) | Preferred final window source; custom sizes/CNC available by enquiry |
+
+### Optical window specification
+
+The front protective window should be **2.0 mm optical clear polycarbonate with a scratch-resistant hard coat and anti-reflective coating on both sides**. An anti-fingerprint coating on the cockpit-facing surface is preferred if available.
+
+Diamond Coatings states that its DIAMOX AR coating on hard-coated polycarbonate can provide around **98% transmission and less than 0.5% reflection from 500–600 nm**. Specific sizes and CNC profiles are available by request.
+
+Preferred source:
+
+- Diamond Coatings hard-coated polycarbonate, AR both sides, AFP one side: https://diamondcoatings.co.uk/product/hard-coated-polycarbonate-anti-reflective-coating-on-both-sides-and-afp-coating-one-side/
+- Sunlight-readable hard-coated/AR polycarbonate: https://diamondcoatings.co.uk/product/sunlight-readable-polycarbonate/
+
+Alternative UK source:
+
+- Itotek AR-coated acrylic/polycarbonate display windows: https://www.itotek.co.uk/ar-coated-acrylic-polycarbonate-sheet
+
+The final circular diameter is currently expected to be approximately **60–64 mm** and will be frozen when the removable bezel/window seat is added to the enclosure CAD.
 
 ### Important ESP32 purchasing note
 
@@ -30,7 +48,7 @@ The generic [Pi Hut ESP32-S3-DevKitC-1 listing](https://thepihut.com/collections
 
 ## Selected-parts gallery
 
-The photographs below are manufacturer/distributor-hosted reference images. They are included here so the exact physical parts can be recognised during purchasing and assembly. Product specifications and part numbers, rather than appearance alone, remain authoritative.
+The photographs below are manufacturer/distributor-hosted reference images. Product specifications and part numbers, rather than appearance alone, remain authoritative.
 
 ### ESP32-S3-DevKitC-1-N8R2
 
@@ -39,8 +57,6 @@ The photographs below are manufacturer/distributor-hosted reference images. They
 ### Bosch BMI088 Shuttle Board 3.0
 
 <img src="https://www.bosch-sensortec.com/media/boschsensortec/downloads/shuttle_board_flyer/application_board_3_1/bst-bmi088-sf000.pdf" alt="Bosch BMI088 Shuttle Board 3.0 — see Bosch product flyer" width="420">
-
-> GitHub cannot render the Bosch PDF itself as an inline photograph in all clients. The Bosch flyer linked above contains the official product photograph and mechanical drawing.
 
 ### Newhaven NHD-2.1-480480AF-ASXP 2.1-inch round display
 
@@ -92,8 +108,6 @@ Why this board:
 
 References: [Bosch BMI088](https://www.bosch-sensortec.com/en/products/motion-sensors/imus/bmi088/) and [Bosch Shuttle Board flyer](https://www.bosch-sensortec.com/media/boschsensortec/downloads/shuttle_board_flyer/application_board_3_1/bst-bmi088-sf000.pdf).
 
-The BMI088 accelerometer and gyro are separate logical devices and require separate chip-select handling. Firmware must explicitly switch the accelerometer into SPI mode after reset.
-
 ## 3. Display — Newhaven NHD-2.1-480480AF-ASXP
 
 **Selected part:** Newhaven Display `NHD-2.1-480480AF-ASXP`
@@ -111,27 +125,7 @@ Key characteristics:
 - VDD range 2.5–3.3 V
 - backlight approximately 6.0 V / 100 mA
 
-### Project interface choice: RGB565
-
-The panel supports 16-bit/pixel mode as well as 18-bit. The project will use **16-bit RGB565** to reduce ESP32 GPIO consumption:
-
-- B1–B5 used; B0 tied low
-- G0–G5 used
-- R1–R5 used; R0 tied low
-
-The display remains 480×480; only colour depth is reduced to 65,536 colours, which is more than adequate for sky/ground shading, pitch ladders, symbols and warnings.
-
-The panel requires PCLK, HS, VS and DE in DE mode, so those four timing signals remain connected.
-
-### ST7701S configuration mode
-
-The panel will use **RGB + 9-bit SPI** for controller initialization. Hardware strap levels:
-
-- IM0 = 0
-- IM1 = 1
-- IM2 = 0
-
-The 9th SPI bit carries command/data state, eliminating a dedicated DC GPIO. SPI is used only to initialize/configure the ST7701S; pixel data then travels over the RGB bus.
+The project uses **16-bit RGB565** to reduce ESP32 GPIO consumption. The panel uses RGB plus 9-bit SPI for controller initialization.
 
 References: [Newhaven product page](https://newhavendisplay.com/2-1-inch-tft-display-480x480-round-sunlight-readable-ips-rgb-mipi-dsi-interface/) and [datasheet](https://newhavendisplay.com/content/specs/NHD-2.1-480480AF-ASXP.pdf).
 
@@ -139,35 +133,15 @@ References: [Newhaven product page](https://newhavendisplay.com/2-1-inch-tft-dis
 
 **Prototype adapter:** Newhaven `NHD-FFC40`.
 
-For the final compact PCB, Newhaven's current datasheet names **Molex 54104-4031** as the example 40-pin 0.5 mm FFC connector. Verify stock and mechanical compatibility again before PCB manufacture.
+For the final compact PCB, Newhaven's current datasheet names **Molex 54104-4031** as the example 40-pin 0.5 mm FFC connector.
 
 ## 5. Backlight driver — Adafruit TPS61169 breakout, PID 6354
 
 Selected for the prototype because it accepts the 5 V instrument rail, regulates LED current and supports PWM dimming.
 
-Prototype setup:
-
-- input: 5 V
-- LED current: 100 mA setting
-- output: LED_A / LED_K
-- PWM: direct ESP32 GPIO
-
 ## 6. GPIO expander — Microchip MCP23008-E/P
 
-An 8-bit I²C GPIO expander is added to avoid using ESP32 strapping pins for low-speed controls.
-
-Prototype allocation:
-
-- GP0 — LCD CSX
-- GP1 — LCD RESETX
-- GP2 — rotary encoder A
-- GP3 — rotary encoder B
-- GP4 — rotary encoder push
-- GP5–GP7 — spare
-
-The MCP23008 interrupt output connects to a direct ESP32 GPIO so encoder changes can be serviced promptly.
-
-Reference: [Microchip MCP23008](https://www.microchip.com/en-us/product/MCP23008).
+An 8-bit I²C GPIO expander is used for low-speed controls and LCD reset/chip-select handling.
 
 ## 7. 5 V USB-C architecture
 
@@ -185,11 +159,10 @@ Reference: [Microchip MCP23008](https://www.microchip.com/en-us/product/MCP23008
            +--> Newhaven backlight (~100 mA)
 ```
 
-The display may be powered at **3.3 V**, which is within its specified 2.5–3.3 V VDD range and avoids a logic-level mismatch with the ESP32's 3.3 V outputs.
-
 ## 8. Remaining mechanical choices
 
 - exact rotary encoder model and shaft dimensions
 - USB-C cable/strain relief
 - actual aircraft panel cutout and mounting-hole pattern
 - final compact carrier PCB arrangement
+- final optical-window diameter and bezel retention geometry
