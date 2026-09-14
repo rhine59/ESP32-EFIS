@@ -1,0 +1,104 @@
+bl_pads=[pad(p,'thru_hole','circle',bx+(p-2.5)*2.54,by,1.6,1.6,'"*.Cu" "*.Mask"',bl_names[p],drill=0.9) for p in range(1,5)]
+J5=fp_generic('J5','TPS61169_HDR',bx,by,bl_pads,(12,5))
+cx,cy=100,129
+usb=[]
+usb.append('  (footprint "Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12" (layer "F.Cu") (uuid '+U()+')')
+usb.append(prop_ref('J3',cx,cy-6)); usb.append(prop_val('USB_C_Receptacle_HRO_TYPE-C-31-M-12',cx,cy+5))
+usbpadinfo=[('A6',-0.25,-4.045,'USB_D+'),('B6',0.75,-4.045,'USB_D+'),('A7',0.25,-4.045,'USB_D-'),('B7',-0.75,-4.045,'USB_D-'),('A5',-1.25,-4.045,'USB_CC1'),('B5',1.75,-4.045,'USB_CC2'),('A4',-2.45,-4.045,'+5V'),('B9',-2.45,-4.045,'+5V'),('A9',2.45,-4.045,'+5V'),('B4',2.45,-4.045,'+5V'),('A1',-3.25,-4.045,'GND'),('B12',-3.25,-4.045,'GND'),('A12',3.25,-4.045,'GND'),('B1',3.25,-4.045,'GND')]
+for n in ['USB_CC1','USB_CC2']:
+    if n not in netid: netid[n]=len(netid)+1; nets.append(n)
+for n,dx,dy,net in usbpadinfo: usb.append(pad(n,'smd','rect',cx+dx,cy+dy,0.45 if 'A5' in n or 'B5' in n or 'A6' in n or 'B6' in n or 'A7' in n or 'B7' in n else 0.7,1.45,'"F.Cu" "F.Paste" "F.Mask"',net))
+for k,(dx,dy) in enumerate([(-4.32,1.05),(4.32,1.05),(-4.32,-3.13),(4.32,-3.13)]): usb.append(pad('S1','thru_hole','oval',cx+dx,cy+dy,1.0,1.8,'"*.Cu" "*.Mask"','GND',drill=0.7))
+usb.append('  )'); J3='\n'.join(usb)
+rx,ry=84,126
+reg_names={1:'GND',2:'+5V',3:'+5V',4:'GND',5:'GND',6:'REG_VOS',7:'REG_SW',8:None}
+regpads=[]
+for p in range(1,5): regpads.append(pad(p,'smd','rect',rx-1.5,ry+(p-2.5)*0.8,0.8,0.5,'"F.Cu" "F.Paste" "F.Mask"',reg_names[p]))
+for p in range(5,9): regpads.append(pad(p,'smd','rect',rx+1.5,ry+(6.5-p)*0.8,0.8,0.5,'"F.Cu" "F.Paste" "F.Mask"',reg_names[p]))
+regpads.append(pad('9','smd','rect',rx,ry,1.6,1.6,'"F.Cu" "F.Paste" "F.Mask"','GND'))
+U2=fp_generic('U2','TPS62162Q1_WSON8',rx,ry,regpads,(4,4))
+def two_pad(ref,val,x,y,n1,n2,size=(3.2,1.6),padsize=(1.2,1.2)):
+    px=size[0]/2-0.6
+    pads=[pad(1,'smd','rect',x-px,y,padsize[0],padsize[1],'"F.Cu" "F.Paste" "F.Mask"',n1),pad(2,'smd','rect',x+px,y,padsize[0],padsize[1],'"F.Cu" "F.Paste" "F.Mask"',n2)]
+    return fp_generic(ref,val,x,y,pads,size)
+L1=two_pad('L1','2.2uH',89,126,'REG_SW','+3V3',(4,2),(1.4,1.4))
+C1=two_pad('C1','10uF_IN',80,130,'+5V','GND',(3.2,1.6))
+C2=two_pad('C2','22uF_OUT',90,130,'+3V3','GND',(3.2,1.6))
+C3=two_pad('C3','100nF_U1',92,96,'+3V3','GND',(3.2,1.6))
+C4=two_pad('C4','100nF_U3',119,101,'+3V3','GND',(3.2,1.6))
+Rcc1=two_pad('R1','5.1k_CC1',94,123,'USB_CC1','GND',(3.2,1.6))
+Rcc2=two_pad('R2','5.1k_CC2',106,123,'USB_CC2','GND',(3.2,1.6))
+Rdm=two_pad('R3','22R_USB_DM',96,116,'USB_D-','USB_D-_MCU',(3.2,1.6))
+Rdp=two_pad('R4','22R_USB_DP',104,116,'USB_D+','USB_D+_MCU',(3.2,1.6))
+Ren=two_pad('R5','10k_EN',113,80,'+3V3','EN',(3.2,1.6))
+Cen=two_pad('C5','1uF_EN',116,83,'EN','GND',(3.2,1.6))
+forhdr=[]
+def hdr2(ref,x,y,n1,n2):
+    pads=[pad(1,'thru_hole','circle',x-1.27,y,1.5,1.5,'"*.Cu" "*.Mask"',n1,drill=0.8),pad(2,'thru_hole','circle',x+1.27,y,1.5,1.5,'"*.Cu" "*.Mask"',n2,drill=0.8)]
+    return fp_generic(ref,ref+'_SW_HDR',x,y,pads,(6,4))
+J6=hdr2('J6',116,72,'BOOT','GND')
+J7=hdr2('J7',116,77,'EN','GND')
+u1net[13]='USB_D-_MCU'; u1net[14]='USB_D+_MCU'
+u1=['  (footprint "Espressif:ESP32-S3-WROOM-1" (layer "F.Cu") (uuid '+U()+')',prop_ref('U1',ux,uy-17.3),prop_val('ESP32-S3-WROOM-1-N16R2',ux,uy+12),
+    f'    (fp_rect (start {ux-9:.3f} {uy-15.75:.3f}) (end {ux+9:.3f} {uy+9.75:.3f}) (stroke (width 0.15) (type default)) (fill none) (layer "F.SilkS") (uuid {U()}))',
+    f'    (fp_rect (start {ux-9:.3f} {uy-15.75:.3f}) (end {ux+9:.3f} {uy-9.81:.3f}) (stroke (width 0.15) (type default)) (fill none) (layer "Dwgs.User") (uuid {U()}))']
+for p,(x,y,r) in u1pads.items(): u1.append(pad(p,'smd','rect',x,y,1.5,0.9,'"F.Cu" "F.Paste" "F.Mask"',u1net.get(p),rot=r))
+u1.append(pad(41,'smd','rect',ux,uy-0.5,4.0,4.0,'"F.Cu" "F.Paste" "F.Mask"','GND')); u1.append('  )'); U1='\n'.join(u1)
+layer_block='''  (layers
+    (0 "F.Cu" signal)
+    (2 "In1.Cu" power)
+    (4 "In2.Cu" power)
+    (31 "B.Cu" signal)
+    (36 "B.SilkS" user "b.silkscreen")
+    (37 "F.SilkS" user "f.silkscreen")
+    (44 "Edge.Cuts" user)
+    (46 "B.CrtYd" user "b.courtyard")
+    (47 "F.CrtYd" user "f.courtyard")
+    (48 "B.Fab" user)
+    (49 "F.Fab" user)
+    (36 "B.Adhes" user "b.adhesive")
+  )'''
+layer_block='''  (layers
+    (0 "F.Cu" signal)
+    (2 "In1.Cu" power)
+    (4 "In2.Cu" power)
+    (31 "B.Cu" signal)
+    (32 "B.Adhes" user "B.Adhesive")
+    (33 "F.Adhes" user "F.Adhesive")
+    (34 "B.Paste" user)
+    (35 "F.Paste" user)
+    (36 "B.SilkS" user "B.Silkscreen")
+    (37 "F.SilkS" user "F.Silkscreen")
+    (38 "B.Mask" user)
+    (39 "F.Mask" user)
+    (40 "Dwgs.User" user "User.Drawings")
+    (44 "Edge.Cuts" user)
+    (46 "B.CrtYd" user "B.Courtyard")
+    (47 "F.CrtYd" user "F.Courtyard")
+    (48 "B.Fab" user)
+    (49 "F.Fab" user)
+  )'''
+pcb=['(kicad_pcb (version 20240108) (generator pcbnew) (generator_version "8.0")','  (general (thickness 1.6) (legacy_teardrops no))','  (paper "A4")','  (title_block (title "Artificial Horizon Carrier Rev A") (company "ESP32 Artificial Horizon"))',layer_block,
+     '  (setup (pad_to_mask_clearance 0))','  (net 0 "")']
+for n in nets: pcb.append(f'  (net {netid[n]} "{n}")')
+pcb += [U1,J1,J2,U3,J4,J5,J3,U2,L1,C1,C2,C3,C4,Rcc1,Rcc2,Rdm,Rdp,Ren,Cen,J6,J7]
+for a in [45,135,225,315]:
+    x=100+30*math.cos(math.radians(a)); y=100+30*math.sin(math.radians(a))
+    pads=[pad('','np_thru_hole','circle',x,y,3.2,3.2,'"*.Cu" "*.Mask"',None,drill=3.2)]
+    pcb.append(fp_generic('H'+str(a),'M2.5_MOUNT',x,y,pads,(5,5)))
+pcb.append(f'  (gr_circle (center 100 100) (end 134 100) (stroke (width 0.15) (type default)) (fill none) (layer "Edge.Cuts") (uuid {U()}))')
+pcb.append(f'  (gr_text "AH CARRIER REV A  •  N16R2  •  5V IN" (at 100 107) (layer "F.SilkS") (effects (font (size 1 1) (thickness 0.15))) (uuid {U()}))')
+pcb.append(f'  (gr_text "ANTENNA EDGE" (at 100 68.5) (layer "F.SilkS") (effects (font (size 0.8 0.8) (thickness 0.12))) (uuid {U()}))')
+segments=[]
+def seg(net,a,b,layer='F.Cu',w=0.22): segments.append(f'  (segment (start {a[0]:.3f} {a[1]:.3f}) (end {b[0]:.3f} {b[1]:.3f}) (width {w}) (layer "{layer}") (net {netid[net]}) (uuid {U()}))')
+def via(net,p,size=.7,drill=.3): segments.append(f'  (via (at {p[0]:.3f} {p[1]:.3f}) (size {size}) (drill {drill}) (layers "F.Cu" "B.Cu") (net {netid[net]}) (uuid {U()}))')
+j1pos={p:(jx+(p-20.5)*0.5,jy) for p in range(1,41)}
+u1source={n:u1pads[p][:2] for p,n in u1net.items() if n and p in u1pads}
+for p,n in j1.items():
+    if n in u1source and n not in ['+3V3','GND','USB_D-_MCU','USB_D+_MCU']:
+        sx,sy=u1source[n]; dx,dy=j1pos[p]
+        if abs(sy-(uy+9.5))<0.01:
+            midy=sy+0.6+(p%7)*0.35
+            seg(n,(sx,sy),(sx,midy)); seg(n,(sx,midy),(dx,midy)); via(n,(dx,midy)); seg(n,(dx,midy),(dx,dy-1.2),'B.Cu'); via(n,(dx,dy-1.2)); seg(n,(dx,dy-1.2),(dx,dy))
+        else:
+            seg(n,(sx,sy),(dx,sy)); via(n,(dx,sy)); seg(n,(dx,sy),(dx,dy-1.2),'B.Cu'); via(n,(dx,dy-1.2)); seg(n,(dx,dy-1.2),(dx,dy))
