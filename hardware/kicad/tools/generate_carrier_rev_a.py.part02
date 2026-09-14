@@ -1,0 +1,72 @@
+j2pos={p:(j2x,j2y+(p-4.5)*1.27) for p in range(1,9)}
+for p,n in j2names.items():
+    if n in u1source and n not in ['+3V3','GND']:
+        sx,sy=u1source[n]; dx,dy=j2pos[p]
+        chx=78+p*0.55
+        seg(n,(sx,sy),(sx,sy+0.25*p)); seg(n,(sx,sy+0.25*p),(chx,sy+0.25*p)); via(n,(chx,sy+0.25*p)); seg(n,(chx,sy+0.25*p),(chx,dy),'B.Cu'); via(n,(chx,dy)); seg(n,(chx,dy),(dx,dy))
+mcppos={}
+for p in range(1,10): mcppos[p]=(mx-4.7,my+(p-5)*1.27)
+for p in range(10,19): mcppos[p]=(mx+4.7,my+(14-p)*1.27)
+for p,n in [(1,'IOX_SCL'),(2,'IOX_SDA'),(8,'IOX_INT')]:
+    sx,sy=u1source[n]; dx,dy=mcppos[p]; seg(n,(sx,sy),(dx,sy)); seg(n,(dx,sy),(dx,dy))
+for p,dp,n in [(10,34,'LCD_CS'),(11,33,'LCD_RST')]:
+    sx,sy=mcppos[p]; dx,dy=j1pos[dp]; chx=111.5+(p-10)*0.5
+    seg(n,(sx,sy),(chx,sy)); via(n,(chx,sy)); seg(n,(chx,sy),(chx,dy-2.0),'B.Cu'); seg(n,(chx,dy-2.0),(dx,dy-2.0),'B.Cu'); via(n,(dx,dy-2.0)); seg(n,(dx,dy-2.0),(dx,dy))
+encpos={p:(ex,ey+(p-3)*2.0) for p in range(1,6)}
+for mp,jp,n in [(12,1,'ENC_A'),(13,3,'ENC_B'),(14,4,'ENC_SW')]:
+    sx,sy=mcppos[mp]; dx,dy=encpos[jp]; seg(n,(sx,sy),(dx,sy)); seg(n,(dx,sy),(dx,dy))
+j5pos={p:(bx+(p-2.5)*2.54,by) for p in range(1,5)}
+sx,sy=u1source['BL_PWM']; dx,dy=j5pos[2]; seg('BL_PWM',(sx,sy),(114,sy)); via('BL_PWM',(114,sy)); seg('BL_PWM',(114,sy),(114,110),'B.Cu'); seg('BL_PWM',(114,110),(dx,110),'B.Cu'); via('BL_PWM',(dx,110)); seg('BL_PWM',(dx,110),(dx,dy))
+for jp,dp,n in [(3,2,'LED_A'),(4,1,'LED_K')]:
+    sx,sy=j5pos[jp]; dx,dy=j1pos[dp]; via(n,(sx,sy)); seg(n,(sx,sy),(dx,sy),'B.Cu',0.35); seg(n,(dx,sy),(dx,dy-1.5),'B.Cu',0.35); via(n,(dx,dy-1.5)); seg(n,(dx,dy-1.5),(dx,dy),w=0.35)
+seg('USB_D-', (cx+0.25,cy-4.045),(cx-0.75,cy-4.045)); seg('USB_D-',(cx-0.25,cy-4.045),(94.4,116));
+seg('USB_D+', (cx-0.25,cy-4.045),(cx+0.75,cy-4.045)); seg('USB_D+',(cx+0.25,cy-4.045),(102.4,116));
+seg('USB_D-_MCU',(97.6,116),(91.25,u1pads[13][1])); seg('USB_D+_MCU',(105.6,116),(91.25,u1pads[14][1]));
+seg('USB_CC1',(cx-1.25,cy-4.045),(92.4,123)); seg('USB_CC2',(cx+1.75,cy-4.045),(104.4,123));
+vbus=(97.55,cy-4.045)
+seg('+5V',(97.55,cy-4.045),(81,126),w=.6); seg('+5V',(81,126),(82.5,126.4),w=.6); seg('+5V',(81,126),(78.4,130),w=.6); seg('+5V',(81,126),(69.19,112),w=.6)
+for x in [102.45]: seg('+5V',(97.55,cy-4.045),(x,cy-4.045),w=.6)
+seg('REG_SW',(85.5,ry-0.4),(87.4,126),w=.5)
+seg('REG_VOS',(85.5,ry+0.4),(90.6,126),w=.3)
+p3v=[(90.6,126),(u1pads[2][0],u1pads[2][1]),j1pos[3],j1pos[39],mcppos[6],mcppos[18],j2pos[1],(88.4,130),(90.4,96),(117.4,101),(111.4,80)]
+center3=(88,105); via('+3V3',center3,0.8,0.35)
+for p in p3v:
+    seg('+3V3',p,(p[0],p[1]-0.8),w=.45); via('+3V3',(p[0],p[1]-0.8),0.8,0.35); seg('+3V3',(p[0],p[1]-0.8),center3,'In1.Cu',.55)
+pgnd=[u1pads[1][:2],u1pads[40][:2],(ux,uy-0.5),j1pos[4],j1pos[7],j1pos[10],j1pos[15],j1pos[27],j1pos[38],j1pos[40],j2pos[2],j2pos[8],mcppos[3],mcppos[4],mcppos[5],mcppos[9],encpos[2],encpos[5],(81.5,ry-1.2),(82.5,ry+1.2),(84,ry),(81.6,130),(91.6,130),(93.6,123),(107.6,123),(93.6,96),(120.6,101),(117.6,83),(114.73,72),(117.27,72),(114.73,77),(117.27,77)]
+pgnd += [(cx-3.25,cy-4.045),(cx+3.25,cy-4.045),(cx-4.32,cy+1.05),(cx+4.32,cy+1.05),(cx-4.32,cy-3.13),(cx+4.32,cy-3.13)]
+centerg=(112,106); via('GND',centerg,0.9,0.4)
+for p in pgnd:
+    q=(p[0]+0.8,p[1])
+    seg('GND',p,q,w=.45); via('GND',q,0.8,0.35); seg('GND',q,centerg,'In2.Cu',.6)
+seg('EN',(114.6,80),u1pads[3][:2],w=.25); seg('EN',(114.6,80),(114.4,83)); seg('EN',(114.6,80),(114.73,77))
+seg('BOOT',(114.73,72),u1pads[27][:2],w=.25)
+pcb += segments
+pcb.append(')')
+pcb_text='\n'.join(pcb)+'\n'
+(out/'carrier_rev_a.kicad_pcb').write_text(pcb_text)
+def sym_def(name,ref_prefix,pin_names):
+    n=len(pin_names); left=(n+1)//2; right=n-left; h=max(left,right)*2.54+5
+    s=[f'    (symbol "AH:{name}" (pin_names (offset 1.0)) (exclude_from_sim no) (in_bom yes) (on_board yes)',
+       f'      (property "Reference" "{ref_prefix}" (at 0 {-h/2-2:.2f} 0) (effects (font (size 1.27 1.27))))',
+       f'      (property "Value" "{name}" (at 0 {h/2+2:.2f} 0) (effects (font (size 1.27 1.27))))',
+       '      (property "Footprint" "" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))',
+       '      (property "Datasheet" "" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))',
+       f'      (symbol "{name}_0_1" (rectangle (start -10 {-h/2:.2f}) (end 10 {h/2:.2f}) (stroke (width 0.254) (type default)) (fill (type background))))',
+       f'      (symbol "{name}_1_1"']
+    for i,(num,pname) in enumerate(pin_names):
+        if i<left:
+            y=-((left-1)/2)*2.54+i*2.54; x=-12.54; ang=0
+        else:
+            j=i-left; y=-((right-1)/2)*2.54+j*2.54; x=12.54; ang=180
+        s.append(f'        (pin passive line (at {x:.2f} {y:.2f} {ang}) (length 2.54) (name "{pname}" (effects (font (size 1.0 1.0)))) (number "{num}" (effects (font (size 1.0 1.0)))))')
+    s+=['      )','    )']
+    return '\n'.join(s),left,right,h
+def sym_inst(lib,name,ref,val,pos,pin_names,footprint=''):
+    x,y=pos; n=len(pin_names); left=(n+1)//2; right=n-left
+    s=[f'  (symbol (lib_id "AH:{name}") (at {x} {y} 0) (unit 1) (in_bom yes) (on_board yes) (dnp no) (uuid {U()})',
+       f'    (property "Reference" "{ref}" (at {x} {y-20} 0) (effects (font (size 1.27 1.27))))',
+       f'    (property "Value" "{val}" (at {x} {y+20} 0) (effects (font (size 1.27 1.27))))',
+       f'    (property "Footprint" "{footprint}" (at {x} {y} 0) (effects (font (size 1.27 1.27)) hide))',
+       f'    (property "Datasheet" "" (at {x} {y} 0) (effects (font (size 1.27 1.27)) hide))']
+    pins=[]; endpoints=[]
+    for i,(num,pname) in enumerate(pin_names):
