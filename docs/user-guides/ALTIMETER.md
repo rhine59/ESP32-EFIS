@@ -4,7 +4,11 @@
 The Altimeter page deliberately resembles a classic round aircraft altimeter: black face, high-contrast white circumference scale and three analogue hands. It remains supplementary/non-primary and does not replace the aircraft's required altimeter.
 
 ## Presentation
-The renderer uses 50 circumference divisions with a long 100-ft hand, medium 1,000-ft hand and short 10,000-ft hand. A lower Kollsman/QNH setting area is provided.
+The renderer uses 50 circumference divisions with a long 100-ft hand, medium 1,000-ft hand and short 10,000-ft hand. A digital altitude readout supplements the analogue hands.
+
+The accepted Kollsman presentation is a compact mechanical-style curved pressure scale at the **3 o'clock** position. The selected QNH sits beneath a fixed index while the surrounding pressure graduations move with the setting. The visible sector spans approximately **8 hPa total**. Pressure numbers and hatch marks remain at constant radii from the centre of the instrument; no `QNH`, `HPA` or `KOLLSMAN` unit text is shown in the window. The exact **1013.25 hPa** standard-pressure datum is identified by a substantially heavier tick. QNH selection itself remains integer hPa in 1 hPa steps.
+
+Above 10,000 ft, a separate hatched annular sector appears at **9 o'clock**. It progressively reveals between 10,000 and 11,000 ft and remains fully exposed above 11,000 ft.
 
 ## Controls
 - **Short press:** Compass.
