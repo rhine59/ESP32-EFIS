@@ -4,46 +4,44 @@ Simulation is development-only and must never be used as a fallback for failed f
 
 ## One instrument at a time
 
-QEMU acceptance is deliberately performed one instrument at a time. The **Artificial Horizon / PFD functional and presentation pass is accepted and parked**. The Altimeter presentation is also accepted, including its circular EFIS presentation, above-10,000-ft warning hatching and conventional rectangular Kollsman pressure-setting window in hPa. The earlier experimental idea of a slice-shaped Kollsman window is explicitly discarded.
+QEMU acceptance is deliberately performed one instrument at a time. The **Artificial Horizon / PFD** and **Altimeter** functional/presentation passes are accepted and parked. Their accepted geometry and behaviour should remain unchanged while Compass development proceeds.
 
-The active stage is now **Altimeter QNH/pressure calculation**. Compass testing remains parked until this passes.
+The active stage is now **Compass only**. QEMU is locked to `PANEL_COMPASS`.
 
 ## Artificial Horizon acceptance record
 
 The accepted attitude suite covered level, ±10° and ±20° pitch, ±30° and ±60° bank, combined +10° pitch/+30° right bank, attitude failure and explicit recovery. The accepted presentation uses a dark circular inner bezel, fixed bank scale/pointer and a yellow aircraft reference fixed at display centre. Positive pitch moves the horizon down, negative pitch moves it up, and the attitude sphere moves opposite aircraft bank. `ATT FAIL` prevents a failed attitude from remaining plausibly usable.
 
-## Altimeter presentation acceptance
+## Altimeter acceptance record
 
-The Altimeter pointer mathematics and presentation have passed the visual functional check. The accepted presentation uses the circular EFIS bezel, 0–9 dial numerals, differentiated hundreds/thousands/ten-thousands hands, digital altitude readout, conventional rectangular Kollsman/QNH window in hectopascals and fail-obvious `ALT FAIL` state.
+The Altimeter presentation and QNH/pressure calculation are accepted for the current QEMU phase. The accepted presentation uses the circular EFIS bezel, 0–9 dial numerals, differentiated hundreds/thousands/ten-thousands hands, digital altitude readout, conventional rectangular Kollsman/QNH window in hectopascals and fail-obvious `ALT FAIL` state.
 
-The hundreds pointer completes one revolution per 1,000 ft. The thousands pointer completes one revolution per 10,000 ft. The ten-thousands pointer completes one revolution per 100,000 ft.
+The accepted above-10,000-ft warning has no hatching at or below 10,000 ft, progressively reveals hatching over the next 1,000 ft and remains fully exposed thereafter. The pressure-setting window is hPa only. The discarded slice-shaped Kollsman concept is not part of the design.
 
-### Above-10,000-ft hatching
+The accepted functional QNH test held simulated static pressure at 927.0 hPa while changing `ui.qnh_hpa` through 1013, 1003, 1023, 950 and 1050 hPa. Lower QNH produced lower indicated altitude, higher QNH produced higher indicated altitude, and invalid pressure produced `ALT FAIL`. The reusable `baro_altitude` module therefore remains the calculation path for static pressure plus selected QNH.
 
-The accepted Altimeter includes a striped/hatching warning field driven by calculated altitude. At and below 10,000 ft no hatching is shown. Above 10,000 ft the hatching is progressively exposed over the next 1,000 ft and remains fully exposed thereafter. The previous acceptance suite checked 9,900, 10,000, 10,100, 10,500 and 12,500 ft specifically around this transition.
+Physical BMP585 acquisition, stale-data timing and rotary encoder direction/detent validation remain hardware-integration tests and are not simulated as real hardware in QEMU.
 
-### Kollsman pressure-setting window
+## Active Compass QEMU suite
 
-The pressure-setting window is a **Kollsman window in hectopascals (hPa)**. It displays selected QNH numerically with an explicit `HPA` unit. The project does not use inches of mercury for this instrument. When settings mode is active the window is highlighted to identify the encoder-controlled setting. The window remains a conventional rectangular pressure-setting window; no slice-shaped treatment is planned.
+The Compass is now the only QEMU instrument under test. The first functional suite contains twelve repeating six-second states:
 
-## Active QNH / pressure calculation test
+1. `HDG NORTH` — 000°
+2. `HDG NE` — 045°
+3. `HDG EAST` — 090°
+4. `HDG SE` — 135°
+5. `HDG SOUTH` — 180°
+6. `HDG SW` — 225°
+7. `HDG WEST` — 270°
+8. `HDG NW` — 315°
+9. `HDG 350-010` — moving through north to verify 359° → 000° wrap
+10. `HDG ROTATE` — continuous rotation to expose discontinuities or reversed card movement
+11. `HEADING FAIL` — heading invalidity must be unmistakable
+12. `HDG NORTH` — explicit recovery to a valid 000° indication
 
-A reusable `baro_altitude` module now converts static pressure plus selected QNH to indicated altitude using the ISA tropospheric barometric relation. It validates pressure and QNH before returning an altitude so invalid inputs fail rather than silently producing a plausible indication.
+The heading bug is fixed at **060°** during this initial QEMU pass. It is deliberately independent of aircraft heading, so its position relative to the rotating compass card can be checked. Physical encoder adjustment of the heading bug remains a hardware test because QEMU bypasses the MCP23008 and rotary encoder.
 
-The current QEMU suite holds simulated static pressure at **927.0 hPa** while changing the actual `ui.qnh_hpa` value used by the calculation. This proves that the altitude indication is derived through the pressure/QNH calculation path rather than by directly changing the displayed altitude.
-
-The six repeating states are:
-
-1. `QNH 1013` — 927.0 hPa static pressure, QNH 1013 hPa
-2. `QNH 1003` — same static pressure, lower QNH; indicated altitude must decrease
-3. `QNH 1023` — same static pressure, higher QNH; indicated altitude must increase
-4. `QNH 950` — lower supported setting limit
-5. `QNH 1050` — upper supported setting limit
-6. `PRESS FAIL` — invalid pressure input; the altitude must become invalid and show `ALT FAIL`
-
-The QNH range remains **950–1050 hPa in 1 hPa increments**. `instrument_ui` already persists `qnh_hpa` in NVS and the physical rotary encoder adjusts it when Altimeter settings mode is active. QEMU bypasses the physical MCP23008/encoder hardware, so this stage verifies the calculation and UI value path; physical encoder direction, detents and persistence will be checked on the prototype hardware.
-
-Altitude invalidity and stale pressure data must fail visibly. The firmware must never substitute synthetic altitude or retain a plausible frozen value in an aircraft-use build.
+For a conventional rotating compass card, increasing aircraft heading should rotate the card in the opposite direction beneath the fixed lubber/reference line. North wrap must be continuous without a full-circle jump in the wrong direction. Heading invalidity must fail visibly and must not leave a plausibly usable frozen heading.
 
 ## Build and run scripts
 
@@ -61,8 +59,8 @@ QEMU uses the real 480×480 RGB565 geometry but bypasses physical LCD, MCP23008,
 
 ## Display resolution and graphics quality
 
-The selected Newhaven NHD-2.1-480480AF-ASXP has a native resolution of **480×480 pixels**, so QEMU deliberately uses exactly 480×480. The firmware uses RGB565. Enlarging QEMU on a desktop makes primitive graphics look coarser than at the physical panel size. After Horizon, Altimeter and Compass functionality is accepted, a common graphics-quality pass is planned for typography, smoother primitives, line weights and bezel shading.
+The selected Newhaven NHD-2.1-480480AF-ASXP has a native resolution of **480×480 pixels**, so QEMU deliberately uses exactly 480×480. The firmware uses RGB565. Enlarging QEMU on a desktop makes primitive graphics look coarser than at the physical panel size. After Compass functionality is accepted, a common graphics-quality pass is planned for typography, smoother primitives, line weights and bezel shading.
 
 ## Following stage
 
-If the QNH/pressure sequence passes, the Altimeter calculation and presentation can be frozen for the current development phase. Physical BMP585 acquisition and encoder hardware validation remain hardware-integration tasks. QEMU then switches to a **Compass-only acceptance sequence**.
+First accept Compass direction, cardinal/intercardinal geometry, north wrap, continuous rotation, heading-bug relationship and fail/recovery behaviour. Then refine the Compass presentation without changing the accepted heading mathematics. Hardware integration with the remote RM3100 magnetometer and encoder follows later on the physical prototype.
