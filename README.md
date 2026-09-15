@@ -30,11 +30,24 @@ No missing sensor value is replaced by a plausible fallback. Invalid or stale da
 
 See `BOM.md`, `docs/SENSORS.md`, `docs/HARDWARE.md` and `docs/WIRING.md` for the evolving authoritative detail.
 
-## Firmware
+## Firmware and development environment
 
-`firmware/` is an **ESP-IDF v5.4.4** project named `esp32_efis`. It initializes the LCD/control hardware, maintains fail-obvious data validity, persists user settings in NVS and includes an explicit synthetic bench simulator for exercising all three pages before the complete sensor system is fitted.
+`firmware/` is an **ESP-IDF v5.4.4** project named `esp32_efis`. It contains the physical display/control path, fail-obvious data validity, NVS-backed UI settings, explicit synthetic bench simulation, and an Espressif QEMU virtual-display backend.
 
-Bench simulation is development-only and must be disabled in aircraft-use firmware. See `docs/SIMULATION.md` and `firmware/README.md`.
+On macOS, the standard new-shell setup is:
+
+```bash
+cd ~/Documents/Xcode/ESP32-EFIS
+git pull
+source scripts/efis-env.sh
+cd "$EFIS_FIRMWARE_DIR"
+```
+
+`scripts/efis-env.sh` pins the project to the known ESP-IDF v5.4.4 Python environment and also finds the Espressif QEMU installation when its bin directory is not exported automatically. Do not mix ESP-IDF Python environments within one build directory.
+
+The QEMU configuration is deliberately isolated in `build-qemu` and `sdkconfig.qemu.defaults`. It enables synthetic data and the virtual 480×480 RGB565 display, and disables physical external PSRAM because the emulator does not provide the N16R2's real Quad-PSRAM device in this configuration. Physical hardware builds continue to enable the module's 2 MB PSRAM through `sdkconfig.defaults`.
+
+Bench/QEMU simulation is development-only. Every synthetic firmware screen carries a conspicuous red **SIM** marker. Never flash a QEMU build to aircraft hardware. See `docs/SIMULATION.md`, `docs/MACOS_BUILD_AND_QEMU_SETUP.md` and `firmware/README.md`.
 
 ## iPhone/iPad simulator
 
@@ -44,7 +57,7 @@ See `simulator/README.md`.
 
 ## Display baseline
 
-The Newhaven panel uses 16-bit RGB565 with 9-bit serial controller initialization. Current RGB timing is 30 MHz PCLK, HFP/HBP 50/50, HS pulse 4, VFP/VBP 50/50 and VS pulse 2. Two 480×480 RGB565 framebuffers require 921,600 bytes, fitting comfortably in the N16R2's 2 MB Quad PSRAM while retaining GPIO35–37.
+The Newhaven panel uses 16-bit RGB565 with 9-bit serial controller initialization. Current RGB timing is 30 MHz PCLK, HFP/HBP 50/50, HS pulse 4, VFP/VBP 50/50 and VS pulse 2. Two 480×480 RGB565 framebuffers require 921,600 bytes, fitting in the N16R2's 2 MB Quad PSRAM on physical hardware.
 
 ## Enclosure
 
@@ -61,6 +74,8 @@ The multifunction revision adds rear service provisions for the static-pressure 
 ├── docs/
 │   └── user-guides/
 ├── firmware/
+├── scripts/
+│   └── efis-env.sh
 ├── simulator/
 ├── hardware/
 └── enclosure/
