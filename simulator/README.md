@@ -1,27 +1,36 @@
 # ESP32 EFIS iPhone/iPad Simulator
 
-Native SwiftUI design/bench simulator for the ESP32 EFIS instrument. It is not a flight-navigation application and all displayed data is synthetic unless a future explicitly identified source is added.
+Native SwiftUI design/bench simulator for ESP32 EFIS. It is not a flight-navigation application; displayed flight data is synthetic.
 
 ## Features
 
 - adaptive iPhone portrait and iPad/landscape layouts
 - Horizon/PFD, classic three-pointer Altimeter and rotating-card Compass
-- tap the round instrument to cycle pages
+- tap the round instrument or use the segmented selector to change pages
 - manual pitch, roll, altitude, heading, QNH and heading-bug controls
 - AUTO FLIGHT continuously exercises all displays
 - independent attitude/altitude/heading validity switches for failure testing
 - prominent `SIMULATOR — SYNTHETIC DATA ONLY` indication
 
-## Xcode setup
+## Generate and run the Xcode project
 
-Create an iOS App project named `ESP32EFISSimulator` using SwiftUI and Swift, with iPhone and iPad device families enabled. Place the three Swift source files in the app target. Deployment target can be set to the current iOS version used for development; the code intentionally uses standard SwiftUI APIs.
+The repository includes an XcodeGen `project.yml`, so no manual Xcode target creation is required.
 
-The simulator's visual/behavioral specification should evolve with the ESP32 renderer. It is a fast design tool, not an independent source of flight-instrument requirements.
+```bash
+cd ~/Documents/Xcode/ESP32-EFIS/simulator
+brew install xcodegen       # only if xcodegen is not already installed
+xcodegen generate
+open ESP32EFISSimulator.xcodeproj
+```
 
-## Controls versus physical PEC09
+In Xcode select an iPhone or iPad simulator and press **Run**. The generated `.xcodeproj` is a build product; `project.yml` and the Swift sources are the maintained project definition.
 
-The segmented panel selector and tapping the instrument emulate short-press page changes. Sliders expose the values that the hardware/sensors will ultimately supply. QNH and heading-bug controls emulate rotary-setting behavior. A later revision can add a graphical rotary knob with short/long press semantics identical to the PEC09.
+The app targets both iPhone and iPad (`TARGETED_DEVICE_FAMILY = 1,2`) and iOS 17 or later.
+
+## Relationship to the physical instrument
+
+The simulator's visual and behavioral specification evolves with the ESP32 renderer. It is a fast design/failure-injection tool, not an independent source of flight-instrument requirements. The current UI exposes values directly; a future revision can add a graphical knob with the same short/long-press semantics as the physical PEC09.
 
 ## Safety
 
-Simulator values must never be copied into an aircraft build as fallback sensor values. ESP32 aircraft-use firmware must retain fail-obvious validity handling and have bench simulation disabled.
+Simulator values must never become fallback values in an aircraft build. ESP32 aircraft-use firmware retains independent fail-obvious validity handling and must have bench simulation disabled.
