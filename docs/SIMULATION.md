@@ -24,7 +24,7 @@ Physical BMP585 acquisition, stale-data timing and rotary encoder direction/dete
 
 ## Active Compass QEMU suite
 
-The Compass is now the only QEMU instrument under test. The first functional suite contains twelve repeating six-second states:
+The Compass is now the only QEMU instrument under test. The functional suite contains twelve repeating six-second states:
 
 1. `HDG NORTH` — 000°
 2. `HDG NE` — 045°
@@ -39,11 +39,15 @@ The Compass is now the only QEMU instrument under test. The first functional sui
 11. `HEADING FAIL` — heading invalidity must be unmistakable
 12. `HDG NORTH` — explicit recovery to a valid 000° indication
 
-The initial compass renderer had graduations but no directional markings, making the fixed-heading tests impossible to judge visually. The QEMU functional harness now overlays large **N, E, S and W** labels on the rotating compass card and a central three-digit heading readout. These markings are derived from the same `heading_deg` value as the rose rotation, allowing card direction and cardinal alignment to be checked directly. This is a functional-test aid; the final Compass presentation will integrate permanent direction/heading markings into the production renderer.
+The Compass renderer now carries large **N, E, S and W** labels on the rotating card and a central three-digit heading readout. These are derived from the same `heading_deg` value as the card rotation, so card direction and cardinal alignment can be checked directly.
 
-The heading bug is fixed at **060°** during this initial QEMU pass. It is deliberately independent of aircraft heading, so its position relative to the rotating compass card can be checked. Physical encoder adjustment of the heading bug remains a hardware test because QEMU bypasses the MCP23008 and rotary encoder.
+### Heading bug
 
-For a conventional rotating compass card, increasing aircraft heading should rotate the card in the opposite direction beneath the fixed lubber/reference line. At 000° the N should be under the top reference; at 090° E should be under it; at 180° S should be under it; and at 270° W should be under it. North wrap must be continuous without a full-circle jump in the wrong direction. Heading invalidity must fail visibly and must not leave a plausibly usable frozen heading.
+The initial heading-bug rendering was only a radial yellow line. In testing this was visually ambiguous and appeared to remain vertical. It has been replaced by a distinct outlined yellow triangular bug whose angular position is explicitly calculated as `heading_bug_deg - heading_deg`.
+
+The QEMU heading bug remains fixed at **060° magnetic heading** during this pass. Therefore its screen position must change as aircraft heading changes: at aircraft heading 000° it is 60° clockwise from the lubber line; at heading 060° it is at the top; at heading 090° it is 30° counter-clockwise from the top; and so on. The bug represents a selected magnetic heading, not a fixed screen pointer. Physical encoder adjustment remains a hardware test because QEMU bypasses the MCP23008 and rotary encoder.
+
+For a conventional rotating compass card, increasing aircraft heading should rotate the card in the opposite direction beneath the fixed lubber/reference line. At 000° N should be under the top reference; at 090° E should be under it; at 180° S should be under it; and at 270° W should be under it. North wrap must be continuous without a full-circle jump in the wrong direction. Heading invalidity must fail visibly and must not leave a plausibly usable frozen heading.
 
 ## Build and run scripts
 
@@ -65,4 +69,4 @@ The selected Newhaven NHD-2.1-480480AF-ASXP has a native resolution of **480×48
 
 ## Following stage
 
-First accept Compass direction, cardinal/intercardinal geometry, north wrap, continuous rotation, heading-bug relationship and fail/recovery behaviour. Then integrate the accepted direction/heading presentation into the Compass renderer and refine its appearance without changing the heading mathematics. Hardware integration with the remote RM3100 magnetometer and encoder follows later on the physical prototype.
+First accept Compass direction, cardinal/intercardinal geometry, north wrap, continuous rotation, heading-bug relationship and fail/recovery behaviour. Then refine its appearance without changing the accepted heading mathematics. Hardware integration with the remote RM3100 magnetometer and encoder follows later on the physical prototype.
