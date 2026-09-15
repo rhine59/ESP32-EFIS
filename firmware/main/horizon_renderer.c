@@ -1,6 +1,7 @@
 #include "horizon_renderer.h"
 
 #include <math.h>
+#include <stdbool.h>
 #include <stdlib.h>
 
 #define RGB565_BLUE   0x259F
