@@ -21,4 +21,5 @@ void instrument_sim_step(instrument_sim_t *s, float dt, instrument_data_t *d)
     d->altitude_valid = true;
     d->heading_deg = ((int)(s->t * 12.0f)) % 360;
     d->heading_valid = true;
+    d->simulated = true;
 }
