@@ -21,6 +21,11 @@ static esp_err_t write_reg(uint8_t reg, uint8_t value)
     return i2c_master_transmit(s_dev, tx, sizeof(tx), 100);
 }
 
+static esp_err_t read_reg(uint8_t reg, uint8_t *value)
+{
+    return i2c_master_transmit_receive(s_dev, &reg, 1, value, 1, 100);
+}
+
 esp_err_t mcp23008_init(void)
 {
     const i2c_master_bus_config_t bus_cfg = {
@@ -42,9 +47,9 @@ esp_err_t mcp23008_init(void)
 
     /* GP0 LCD CS and GP1 LCD RESET are outputs. GP2..GP7 are inputs. */
     ESP_RETURN_ON_ERROR(write_reg(MCP23008_REG_IODIR, 0xFC), TAG, "IODIR");
+    /* Pull-ups on encoder A/B and encoder push switch. */
     ESP_RETURN_ON_ERROR(write_reg(MCP23008_REG_GPPU, 0x1C), TAG, "GPPU");
 
-    /* LCD deselected and held in reset until panel init starts. */
     s_olat = (1u << IOX_LCD_CS);
     ESP_RETURN_ON_ERROR(write_reg(MCP23008_REG_OLAT, s_olat), TAG, "OLAT");
 
@@ -60,15 +65,16 @@ esp_err_t mcp23008_write_gpio(uint8_t value)
 
 esp_err_t mcp23008_set_output(unsigned bit, bool high)
 {
-    if (bit > 7) {
-        return ESP_ERR_INVALID_ARG;
-    }
-    if (high) {
-        s_olat |= (uint8_t)(1u << bit);
-    } else {
-        s_olat &= (uint8_t)~(1u << bit);
-    }
+    if (bit > 7) return ESP_ERR_INVALID_ARG;
+    if (high) s_olat |= (uint8_t)(1u << bit);
+    else s_olat &= (uint8_t)~(1u << bit);
     return write_reg(MCP23008_REG_OLAT, s_olat);
+}
+
+esp_err_t mcp23008_read_gpio(uint8_t *value)
+{
+    if (!value) return ESP_ERR_INVALID_ARG;
+    return read_reg(MCP23008_REG_GPIO, value);
 }
 
 uint8_t mcp23008_output_shadow(void)
