@@ -45,13 +45,47 @@ static void pitch_mark(uint16_t *fb,int w,int h,float roll,float pitch_px,int cx
     const int half=major?66:38;
     const int gap=major?18:12;
     int x0,y0,x1,y1;
-
     world_to_screen(-half,wy,roll,pitch_px,cx,cy,&x0,&y0);
     world_to_screen(-gap,wy,roll,pitch_px,cx,cy,&x1,&y1);
     thick_line(fb,w,h,x0,y0,x1,y1,RGB565_WHITE,major?3:2);
     world_to_screen(gap,wy,roll,pitch_px,cx,cy,&x0,&y0);
     world_to_screen(half,wy,roll,pitch_px,cx,cy,&x1,&y1);
     thick_line(fb,w,h,x0,y0,x1,y1,RGB565_WHITE,major?3:2);
+}
+
+static void bank_tick(uint16_t *fb,int w,int h,int cx,int cy,float deg,int inner,int outer,int thickness)
+{
+    const float a=(deg-90.0f)*(float)M_PI/180.0f;
+    const int x0=cx+(int)lroundf(cosf(a)*inner),y0=cy+(int)lroundf(sinf(a)*inner);
+    const int x1=cx+(int)lroundf(cosf(a)*outer),y1=cy+(int)lroundf(sinf(a)*outer);
+    thick_line(fb,w,h,x0,y0,x1,y1,RGB565_WHITE,thickness);
+}
+
+static void bank_scale(uint16_t *fb,int w,int h,int cx,int cy,float roll_deg)
+{
+    /* Fixed conventional bank scale: 10, 20, 30, 45 and 60 degrees each side. */
+    static const int marks[]={10,20,30,45,60};
+    for(unsigned i=0;i<sizeof(marks)/sizeof(marks[0]);i++){
+        const int d=marks[i];
+        const bool major=(d==30||d==60);
+        bank_tick(fb,w,h,cx,cy,-d,major?177:183,202,major?4:3);
+        bank_tick(fb,w,h,cx,cy, d,major?177:183,202,major?4:3);
+    }
+    bank_tick(fb,w,h,cx,cy,0,172,202,4);
+
+    /* Moving white roll pointer. Positive/right bank moves clockwise. */
+    const float a=(roll_deg-90.0f)*(float)M_PI/180.0f;
+    const float ux=cosf(a),uy=sinf(a),vx=-uy,vy=ux;
+    const int tipx=cx+(int)lroundf(ux*169),tipy=cy+(int)lroundf(uy*169);
+    const int basex=cx+(int)lroundf(ux*150),basey=cy+(int)lroundf(uy*150);
+    const int x1=basex+(int)lroundf(vx*9),y1=basey+(int)lroundf(vy*9);
+    const int x2=basex-(int)lroundf(vx*9),y2=basey-(int)lroundf(vy*9);
+    thick_line(fb,w,h,tipx,tipy,x1,y1,RGB565_BLACK,7);
+    thick_line(fb,w,h,x1,y1,x2,y2,RGB565_BLACK,7);
+    thick_line(fb,w,h,x2,y2,tipx,tipy,RGB565_BLACK,7);
+    thick_line(fb,w,h,tipx,tipy,x1,y1,RGB565_WHITE,3);
+    thick_line(fb,w,h,x1,y1,x2,y2,RGB565_WHITE,3);
+    thick_line(fb,w,h,x2,y2,tipx,tipy,RGB565_WHITE,3);
 }
 
 void horizon_render(uint16_t *fb,int width,int height,float pitch_deg,float roll_deg)
@@ -74,20 +108,19 @@ void horizon_render(uint16_t *fb,int width,int height,float pitch_deg,float roll
 
     for(int deg=-20;deg<=20;deg+=5){if(deg!=0)pitch_mark(fb,width,height,roll,pitch_px,cx,cy,deg);}
 
+    bank_scale(fb,width,height,cx,cy,roll_deg);
+
     /* Fixed aircraft reference. Accepted attitude mathematics are unchanged:
        the sphere moves around this symbol; the symbol never follows pitch/bank. */
     thick_line(fb,width,height,cx-92,cy,cx-24,cy,RGB565_BLACK,9);
     thick_line(fb,width,height,cx+24,cy,cx+92,cy,RGB565_BLACK,9);
     thick_line(fb,width,height,cx-92,cy,cx-24,cy,RGB565_YELLOW,5);
     thick_line(fb,width,height,cx+24,cy,cx+92,cy,RGB565_YELLOW,5);
-
     thick_line(fb,width,height,cx-24,cy,cx-10,cy+13,RGB565_BLACK,9);
     thick_line(fb,width,height,cx+24,cy,cx+10,cy+13,RGB565_BLACK,9);
     thick_line(fb,width,height,cx-24,cy,cx-10,cy+13,RGB565_YELLOW,5);
     thick_line(fb,width,height,cx+24,cy,cx+10,cy+13,RGB565_YELLOW,5);
     thick_line(fb,width,height,cx-10,cy+13,cx+10,cy+13,RGB565_YELLOW,5);
 
-    /* Small black centre datum preserves a precise visual reference against
-       the yellow aircraft symbol at all sphere colours and attitudes. */
     for(int d=-5;d<=5;d++){put_pixel(fb,width,height,cx+d,cy,RGB565_BLACK);put_pixel(fb,width,height,cx,cy+d,RGB565_BLACK);}
 }
