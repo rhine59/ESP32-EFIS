@@ -11,4 +11,15 @@ typedef struct {
     bool gyro_ok;
 } bmi088_status_t;
 
+typedef struct {
+    float accel_x_g;
+    float accel_y_g;
+    float accel_z_g;
+    float gyro_x_dps;
+    float gyro_y_dps;
+    float gyro_z_dps;
+    uint32_t timestamp_ms;
+} bmi088_sample_t;
+
 esp_err_t bmi088_init(bmi088_status_t *status);
+esp_err_t bmi088_read_sample(bmi088_sample_t *sample);
