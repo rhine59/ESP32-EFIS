@@ -98,13 +98,29 @@ ESP-IDF maintains its own Python environment under `~/.espressif/tools/python/`.
 
 ## 5. Activate ESP-IDF
 
-For every new Terminal session that will build the firmware:
+The repository now contains `scripts/efis-env.sh`, which is the preferred way to prepare a new Terminal session after the one-time installation is complete.
+
+From anywhere inside the repository:
+
+```bash
+source scripts/efis-env.sh
+```
+
+If the current directory is not the repository root, source it using its full checkout path, for example:
+
+```bash
+source ~/Documents/Xcode/ESP32-EFIS/scripts/efis-env.sh
+```
+
+The script must be **sourced**, not simply executed, because `IDF_PATH` and `PATH` need to be changed in the current shell. It activates ESP-IDF v5.4.4, finds the repository root, exports `EFIS_ROOT` and `EFIS_FIRMWARE_DIR`, checks QEMU and works around the QEMU PATH issue encountered on the original Apple Silicon installation.
+
+The manual equivalent is:
 
 ```bash
 source ~/.espressif/v5.4.4/esp-idf/export.sh
 ```
 
-Check the environment:
+Check the environment with:
 
 ```bash
 echo $IDF_PATH
@@ -163,7 +179,15 @@ After QEMU installs successfully, refresh the environment:
 source "$IDF_PATH/export.sh"
 ```
 
-Verify it:
+On the original machine `idf_tools.py` installed QEMU below:
+
+```text
+~/.espressif/tools/tools/qemu-xtensa/<version>/qemu/bin
+```
+
+but `idf_tools.py export` did not include that directory in `PATH`. `scripts/efis-env.sh` detects this condition and adds an installed `qemu-system-xtensa` automatically rather than requiring the long path to be entered for every shell.
+
+Verify QEMU with:
 
 ```bash
 which qemu-system-xtensa
@@ -177,7 +201,7 @@ Do not proceed to QEMU testing until the version command runs without a dynamic-
 The ordinary hardware build deliberately uses the project's normal defaults, in which bench simulation is OFF:
 
 ```bash
-cd ~/ESP32-EFIS/firmware
+cd "$EFIS_FIRMWARE_DIR"
 idf.py set-target esp32s3
 idf.py build
 ```
@@ -191,7 +215,7 @@ Never reuse the normal hardware build directory for QEMU. The project provides `
 From the firmware directory:
 
 ```bash
-cd ~/ESP32-EFIS/firmware
+cd "$EFIS_FIRMWARE_DIR"
 rm -rf build-qemu
 
 idf.py \
@@ -243,31 +267,35 @@ Do not flash a `build-qemu` image to aircraft hardware.
 
 ## 11. New-machine quick sequence
 
-Once Homebrew, Git and ESP-IDF v5.4.4 are available, the essential sequence is:
+Once Homebrew, Git and ESP-IDF v5.4.4 are available, the one-time installation is:
 
 ```bash
 brew install libgcrypt sdl2
 
 ~/.espressif/v5.4.4/esp-idf/install.sh esp32s3
 source ~/.espressif/v5.4.4/esp-idf/export.sh
-
 python "$IDF_PATH/tools/idf_tools.py" install qemu-xtensa
-source "$IDF_PATH/export.sh"
+```
 
-which qemu-system-xtensa
-qemu-system-xtensa --version
+After that, each new shell only needs:
 
-cd ~/ESP32-EFIS/firmware
+```bash
+cd ~/Documents/Xcode/ESP32-EFIS
+git pull
+source scripts/efis-env.sh
+cd "$EFIS_FIRMWARE_DIR"
+```
+
+For a clean QEMU build:
+
+```bash
 rm -rf build-qemu
-
 idf.py -B build-qemu \
   -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.qemu.defaults" \
   set-target esp32s3
-
 idf.py -B build-qemu \
   -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.qemu.defaults" \
   build
-
 idf.py -B build-qemu qemu --graphics monitor
 ```
 
@@ -275,7 +303,7 @@ idf.py -B build-qemu qemu --graphics monitor
 
 If `source .../export.sh` fails, read the first `ERROR:` line rather than reinstalling everything. A message such as `tool <name> has no installed versions` normally means the ESP-IDF tool installation is incomplete.
 
-If `qemu-system-xtensa` is not found after installation, run `source "$IDF_PATH/export.sh"` again.
+If `qemu-system-xtensa` is not found after ESP-IDF activation, use `source scripts/efis-env.sh`. It includes the workaround for the QEMU installation path seen on the original Mac.
 
 If QEMU is found but terminates immediately with `dyld: Library not loaded`, install the named Homebrew dependency and retry the QEMU installation/check. The two dependencies encountered on the original Apple Silicon installation were `libgcrypt` and `sdl2`.
 
