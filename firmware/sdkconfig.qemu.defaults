@@ -2,3 +2,10 @@
 # Use together with sdkconfig.defaults. Never use for aircraft hardware builds.
 CONFIG_EFIS_BENCH_SIMULATION=y
 CONFIG_EFIS_QEMU=y
+
+# The physical ESP32-S3-WROOM-1-N16R2 uses 2 MB Quad PSRAM, so the normal
+# sdkconfig.defaults enables SPIRAM. Espressif QEMU does not provide that
+# physical PSRAM device for this firmware configuration. Leaving SPIRAM enabled
+# causes esp_psram_init() to assert during CPU startup, before app_main() runs.
+# Override the hardware default for emulator builds only.
+# CONFIG_SPIRAM is not set
