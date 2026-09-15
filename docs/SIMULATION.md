@@ -16,11 +16,13 @@ The accepted attitude suite covers level, ±10° and ±20° pitch, ±30° and ±
 
 QEMU is currently locked back to `PANEL_HORIZON` and runs the same twelve six-second attitude states used for functional acceptance. This is now a visual-regression suite rather than a change to attitude mathematics.
 
-The first graphics refinement keeps `PITCH_PIXELS_PER_DEG` at the accepted **6.8 px/degree** and preserves the accepted roll transform. The horizon line has been regularised, 5° and 10° pitch marks now have clearer hierarchy and centre gaps, and the fixed yellow aircraft symbol has a black outline for reliable contrast against both sky and ground. Its centre datum remains fixed at the exact display centre.
+The graphics refinement keeps `PITCH_PIXELS_PER_DEG` at the accepted **6.8 px/degree** and preserves the accepted roll transform. The horizon line has been regularised, 5° and 10° pitch marks have clearer hierarchy and centre gaps, and the fixed yellow aircraft symbol has a black outline for reliable contrast against both sky and ground. Its centre datum remains fixed at the exact display centre.
 
-The temporary QEMU-only Compass label/readout overlay has also been removed. Those markings now belong to the production Compass renderer, so QEMU no longer draws a second test-only representation over the real instrument graphics.
+A conventional fixed **bank-angle scale** is now drawn across the upper part of the attitude sphere, with marks at **10°, 20°, 30°, 45° and 60° on both sides** plus the zero reference. The 30° and 60° marks are deliberately stronger. A white triangular roll pointer, outlined in black for contrast, moves with measured roll: left bank moves the pointer left/counter-clockwise and right bank moves it right/clockwise. This adds the missing quantitative roll reference without changing the accepted roll mathematics.
 
-The native Swift simulator should mirror these visual changes while retaining the same accepted pitch/bank direction. QEMU remains authoritative for pixel-level ESP32 rendering.
+The temporary QEMU-only Compass label/readout overlay has been removed. Those markings belong to the production Compass renderer, so QEMU no longer draws a second test-only representation over the real instrument graphics.
+
+The native Swift simulator mirrors the bank scale and roll pointer while retaining the same accepted pitch/bank direction. QEMU remains authoritative for pixel-level ESP32 rendering.
 
 ## Altimeter acceptance record
 
