@@ -22,15 +22,17 @@ The native Swift simulator mirrors this accepted Horizon presentation. QEMU rema
 
 The Altimeter presentation and QNH/pressure calculation are functionally accepted. The accepted presentation uses the circular EFIS bezel, 0–9 dial numerals, differentiated hundreds/thousands/ten-thousands hands, digital altitude readout, conventional rectangular Kollsman/QNH window in hectopascals and fail-obvious `ALT FAIL` state.
 
-The accepted above-10,000-ft warning has no hatching at or below 10,000 ft, progressively reveals hatching over the next 1,000 ft and remains fully exposed thereafter. The pressure-setting window is hPa only. The discarded slice-shaped Kollsman concept is not part of the design.
+The accepted above-10,000-ft logic has no hatching at or below 10,000 ft, progressively reveals hatching over the next 1,000 ft and remains fully exposed thereafter. The pressure-setting window is hPa only. The discarded slice-shaped Kollsman concept is not part of the design.
 
 The accepted functional QNH test held simulated static pressure at 927.0 hPa while changing `ui.qnh_hpa` through 1013, 1003, 1023, 950 and 1050 hPa. Lower QNH produced lower indicated altitude, higher QNH produced higher indicated altitude, and invalid pressure produced `ALT FAIL`. The reusable `baro_altitude` module therefore remains the calculation path for static pressure plus selected QNH.
 
 ### Active Altimeter graphics review
 
-QEMU is now locked to `PANEL_ALTIMETER` for visual review. It cycles fourteen six-second states: **0, 500, 1,000, 2,500, 5,000, 9,500, 9,900, 10,000, 10,100, 10,500 and 12,500 ft**, a moving altitude sweep, `ALT FAIL`, and explicit recovery to 2,500 ft.
+QEMU is locked to `PANEL_ALTIMETER` for visual review. It cycles fourteen six-second states: **0, 500, 1,000, 2,500, 5,000, 9,500, 9,900, 10,000, 10,100, 10,500 and 12,500 ft**, a moving altitude sweep, `ALT FAIL`, and explicit recovery to 2,500 ft.
 
-This suite is intended to expose dial readability, hand hierarchy, digital altitude legibility, Kollsman/QNH layout, the 10,000-ft hatching transition and failure presentation before any graphics changes are accepted. The altitude/QNH mathematics and hatching thresholds are frozen during this review.
+The former rectangular >10,000-ft hatched window has been replaced by an **annular hatched sector centred at the 9 o'clock position**. The sector occupies a 60° arc on the left side of the dial and sits inside the numeral ring so it does not obscure the digital altitude or Kollsman/QNH window. At or below 10,000 ft it is absent; from 10,000 to 11,000 ft the sector progressively grows through its 60° arc; at and above 11,000 ft the full sector remains visible. This is a presentation change only: the accepted 10,000/11,000-ft thresholds are unchanged.
+
+The native Swift simulator mirrors the 9 o'clock annular sector and progressive reveal. QEMU remains authoritative for the RGB565 implementation.
 
 Physical BMP585 acquisition, stale-data timing and rotary encoder direction/detent validation remain hardware-integration tests and are not simulated as real hardware in QEMU.
 
