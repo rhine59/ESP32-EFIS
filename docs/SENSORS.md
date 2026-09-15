@@ -1,6 +1,22 @@
-# Pressure and heading sensor architecture
+# Sensor architecture
 
 This project is a supplementary/non-primary flight instrument. Sensor validity, freshness and installation effects must be explicit; missing data must never be replaced by plausible stale data.
+
+## Attitude sensor — BMI088
+
+**Bosch Sensortec BMI088** is the reference six-axis inertial source for pitch and roll. It combines independent 16-bit triaxial accelerometer and gyroscope sections and is specifically intended for vibration-heavy applications including drones and robotics.
+
+The ESP32-S3 uses SPI with separate accelerometer and gyroscope chip selects. Firmware verifies both chip IDs before accepting the device, explicitly configures ±6 g acceleration and ±500 °/s gyro ranges, observes the accelerometer SPI dummy-byte behaviour, and waits for accelerometer startup before samples are accepted.
+
+`bmi088_read_sample()` now supplies engineering-unit acceleration in g and angular rate in degrees/second plus a monotonic sample timestamp. `attitude_estimator` is a separate body-frame estimator: gyro integration supplies short-term motion while gravity-derived pitch/roll provides low-frequency correction through a complementary filter. Accelerometer correction is suppressed when total acceleration is outside 0.70–1.30 g so manoeuvre acceleration is not blindly interpreted as gravity.
+
+The estimator is fail-obvious. It rejects non-finite samples, refuses initialization without a plausible gravity vector, invalidates an excessive sample interval, rejects impossible/non-finite attitude output and provides a 250 ms stale-data invalidation check. A failed or stale attitude must set `attitude_valid=false`; the renderer must never continue to show a frozen plausible attitude.
+
+### Installation-axis gate
+
+The estimator requires aircraft body axes **+X forward, +Y right, +Z down**. The Bosch shuttle-board axes have not yet been physically related to the final EFIS enclosure/aircraft installation. Therefore raw BMI088 samples are **not yet connected to the live `instrument_data_t` attitude fields**. Before that connection is enabled, the actual mounted shuttle board must be bench-tested in known nose-up, nose-down, left-bank and right-bank orientations and an explicit sensor-to-body axis/sign mapping recorded in firmware and this document. This deliberately prevents an unverified axis assumption from becoming a plausible but reversed flight indication.
+
+The first hardware attitude acceptance sequence is: verify chip IDs and raw stationary values; establish axis/sign mapping; confirm approximately 1 g magnitude when stationary; characterize stationary gyro bias; exercise known ±10°/±20° pitch and ±30°/±60° roll positions; then enable the estimator-to-display path and verify stale/disconnect failure. Calibration and vibration testing follow before any aircraft evaluation.
 
 ## Pressure sensor — frozen choice
 
@@ -43,4 +59,4 @@ The compass does not use raw magnetometer azimuth alone. Heading is produced fro
 
 ## Bench development
 
-Until sensors arrive, `CONFIG_AH_BENCH_SIMULATION=y` supplies clearly synthetic values. Simulation must be disabled for aircraft-use firmware.
+Until sensors are physically connected and their installation mappings are verified, bench simulation supplies clearly synthetic values. Simulation must be disabled for aircraft-use firmware.
