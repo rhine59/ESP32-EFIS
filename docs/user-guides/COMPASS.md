@@ -1,29 +1,29 @@
 # Compass panel — user guide
 
 ## Purpose
-The Compass page uses the familiar aircraft directional-gyro/HSI convention: the aircraft and top lubber line remain fixed while the compass card rotates beneath them. It is a supplementary/non-primary display.
+The Compass page uses the familiar aircraft directional-gyro/HSI convention: aircraft symbol and top lubber line remain fixed while the compass card rotates beneath them. It is supplementary/non-primary.
 
 ## Presentation
-The revised renderer uses a black round card, white 5-degree ticks, stronger major divisions, fixed yellow top lubber triangle and fixed yellow aircraft symbol. When a valid heading is available, the entire scale rotates opposite aircraft heading so the current heading is always read at 12 o'clock. A yellow heading bug is positioned on the rotating card.
+The renderer uses a black rotating card, white 5-degree ticks, stronger major divisions, fixed yellow lubber triangle and fixed yellow aircraft symbol. A yellow heading bug belongs to the rotating card.
 
 ## Controls
 - **Short press:** Horizon/PFD.
 - **Long press (~0.8 s):** enter/leave HDG BUG setting.
-- **Rotate:** move the heading bug 1 degree per detent through 000–359°.
+- **Rotate:** heading bug 1 degree per detent through 000–359°.
 - **Short press in settings:** accept/leave settings.
 
-Heading bug and last selected panel are stored in ESP32 NVS and restored after power cycling.
+Heading bug and last panel are persisted in ESP32 NVS.
 
-## Heading source required
-BMI088 alone cannot provide stable absolute heading. Gyro yaw drifts and the accelerometer cannot determine magnetic north, so the current page remains explicitly invalid until an absolute source is chosen.
+## Heading source
+The reference magnetic sensor is now **PNI RM3100-CB**, mounted remotely from the instrument electronics on a rigid non-magnetic bracket. BMI088 gyro/accelerometer attitude is combined with calibrated three-axis magnetic field for tilt-compensated heading. Raw gyro yaw is not accepted as an absolute compass source.
 
-Candidate architecture includes a properly installed/calibrated three-axis magnetometer, or GNSS track presented explicitly as **TRK** rather than heading. Panel-mounted magnetometers require careful aircraft magnetic-interference testing.
+The RM3100-CB installation requires hard-iron and soft-iron calibration, installation-axis alignment and magnetic-interference testing with aircraft electrical loads in multiple states. Until that pipeline is integrated and valid, the normal non-simulation build keeps heading invalid.
 
 ## Heading versus track
-GNSS course over ground must never silently masquerade as magnetic heading. If GNSS track is later displayed, it is labelled TRK. Magnetic/true reference and variation handling must be explicit in the final design.
+GNSS course over ground, if later provided, is labelled **TRK**, not HDG. Magnetic/true reference and variation handling must be explicit.
 
 ## Failure behaviour
-Missing, stale or invalid heading data invalidates the card rather than freezing the last plausible heading.
+Missing, stale, implausible or magnetically disturbed heading data invalidates the card rather than freezing the last plausible heading.
 
 ## Bench/aircraft checks
-Verify clockwise/counter-clockwise card sense, 000/359 continuity, heading-bug relationship to the rotating card, NVS persistence, source freshness, invalid-state behaviour and magnetic installation effects.
+Verify card sense, 000/359 continuity, bug relationship, NVS persistence, tilt compensation, full calibration, source freshness and magnetic effects from display/backlight, radios, wiring and adjacent equipment. See `../SENSORS.md`.
