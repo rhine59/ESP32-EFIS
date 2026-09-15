@@ -1,26 +1,26 @@
-# Artificial Horizon panel — user guide
+# Artificial Horizon / PFD panel — user guide
 
 ## Purpose
-The Horizon panel is the attitude display of the supplementary/non-primary instrument. A short press of the Bourns PEC09 push switch cycles **Horizon → Altimeter → Compass → Horizon**.
+The Horizon panel is the primary page of this supplementary/non-primary multifunction instrument. A short PEC09 push cycles **Horizon/PFD → Altimeter → Compass → Horizon/PFD**.
 
-## Display
-The normal design uses blue sky, brown ground, a white horizon/pitch ladder and a fixed yellow aircraft symbol. Live pitch and roll will come from the BMI088-based quaternion AHRS.
+## Presentation
+The revised design takes its cues from modern compact round EFIS instruments while retaining a deliberately uncluttered attitude display. The centre remains the dominant blue-sky/brown-ground horizon with white pitch ladder and fixed yellow aircraft symbol. An upper roll arc and fixed yellow roll reference are added. Reserved data areas allow pressure altitude on the right and heading/track at the top once those independent sources exist and are valid.
 
-The current firmware is still a bench-development build: BMI088 communication exists, but live attitude estimation is not yet connected to the renderer. The panel therefore overlays the invalid indication rather than pretending the static proof-of-life horizon is current aircraft attitude.
+No unavailable value is fabricated merely to fill a box. The present bench firmware therefore makes attitude, altitude and heading validity obvious while their live sensor pipelines are unfinished.
 
 ## Controls
 - **Short press:** next panel.
 - **Long press (~0.8 s):** enter/leave Horizon settings.
-- **Rotate while settings are active:** adjust display brightness in 5% steps, constrained to 10–100%.
-- **Short press while settings are active:** leave settings without changing panel.
+- **Rotate in settings:** brightness, 5% per detent, 10–100%.
+- **Short press in settings:** accept/leave settings without changing panel.
 
-Brightness is currently a UI setting only; hardware PWM application is the next backlight-control step.
+The selected brightness and last selected panel are now persisted in ESP32 NVS. Actual TPS61169 PWM application remains a hardware bring-up task.
 
-## Planned live-data requirements
-The Horizon panel becomes operational only after the firmware has live BMI088 XYZ acquisition, gyro-bias calibration, sensor-to-aircraft axis transformation, quaternion attitude estimation, acceleration rejection/confidence logic and freshness monitoring.
+## Future PFD data
+The PFD may show altitude only from the validated static-pressure system and heading/track only from an explicitly identified validated source. GPS groundspeed, if later added, must be labelled **GS**, never IAS.
 
 ## Failure behaviour
-Stale, unavailable or implausible attitude data must make the normal horizon unmistakably invalid. A plausible frozen attitude is not acceptable. This requirement applies even though the instrument is supplementary/non-primary.
+Stale, unavailable or implausible attitude must invalidate the normal attitude presentation. A plausible frozen horizon is unacceptable. Optional PFD fields must independently show invalid/unavailable rather than retaining stale values.
 
 ## Bench checks
-Confirm the encoder cycles panels, long press enters settings, rotation changes the setting, the display never presents the static test attitude as valid, and loss of BMI088 communication remains obvious.
+Confirm screen cycling, long-press settings, persistence across power cycles, roll-scale geometry, independent field validity and obvious loss of BMI088/AHRS validity.
