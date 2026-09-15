@@ -1,30 +1,26 @@
 # Altimeter panel — user guide
 
 ## Purpose
-The Altimeter panel is designed to reproduce the quick visual interpretation of a classic round aircraft altimeter on the 480×480 display. It is a supplementary/non-primary indication and is not a replacement for the aircraft's required altimeter.
+The Altimeter page deliberately resembles a classic round aircraft altimeter: black face, high-contrast white circumference scale and three analogue hands. It remains supplementary/non-primary and does not replace the aircraft's required altimeter.
+
+## Presentation
+The revised renderer uses 50 circumference divisions with stronger major divisions and three hands: a long **100-ft** hand, medium **1,000-ft** hand and short **10,000-ft** hand. A lower Kollsman/QNH setting window is reserved on the face. The electronic implementation may later add a small digital altitude confirmation without displacing the classic analogue presentation.
 
 ## Controls
-- **Short press:** next panel (Compass).
-- **Long press (~0.8 s):** enter/leave Altimeter settings.
-- **Rotate while settings are active:** change QNH one hPa per detent.
-- QNH is constrained to **950–1050 hPa** in the current UI.
-- **Short press while settings are active:** leave settings without changing panel.
+- **Short press:** Compass.
+- **Long press (~0.8 s):** enter/leave BARO/QNH setting.
+- **Rotate:** change QNH by 1 hPa per detent, currently 950–1050 hPa.
+- **Short press in settings:** accept/leave settings.
 
-The initial default is 1013 hPa. Persistence to NVS is deliberately deferred until the sensor/data architecture is complete.
+QNH defaults to 1013 hPa on a fresh instrument. QNH and the last selected panel are now stored in ESP32 NVS and restored after power cycling.
 
-## Display concept
-The renderer provides a classic dark circular dial with a white scale and separate altitude hands. A QNH setting area is reserved in the lower part of the dial. The final version should include clearly readable altitude numerals and QNH digits sized for the 2.1-inch display.
+## Pressure source required
+The current hardware specification still has no static/barometric pressure sensor. BMI088 cannot measure pressure. Consequently the altimeter remains explicitly invalid until a suitable pressure sensor and static installation are integrated.
 
-## Pressure sensor required
-**The present hardware specification does not contain a barometric pressure sensor.** The BMI088 measures acceleration and angular rate; it cannot provide barometric altitude. Therefore the current Altimeter panel is intentionally invalid and does not invent an altitude.
-
-Before this panel can display live altitude, the hardware needs a suitable static-pressure/barometric sensor and a defined pneumatic/static installation. Sensor selection should consider range, resolution, temperature behaviour, long-term drift, update rate and aircraft static-pressure plumbing.
-
-## Altitude calculation
-When a pressure source is added, firmware will convert measured static pressure to pressure altitude and apply the pilot-selected QNH for indicated altitude. The implementation must define units, filtering, startup validity, pressure-sensor diagnostics and stale-data limits.
+The future pressure implementation must define sensor range, resolution, temperature compensation, filtering, startup validity, stale-data timeout and static-pressure plumbing. QNH must be applied to the measured static pressure rather than used to manufacture an altitude without pressure data.
 
 ## Failure behaviour
-Missing, stale or invalid pressure data must invalidate the dial rather than leave the last plausible altitude displayed.
+Missing, stale or invalid pressure data invalidates the indication. The instrument must never freeze the last plausible altitude.
 
 ## Bench checks
-Before aircraft installation, compare the electronic indication against a trusted pressure reference over multiple pressures/altitudes, exercise the full QNH range, test rapid pressure changes, power cycles and deliberately disconnected/stale sensor conditions.
+Compare against a trusted pressure reference over multiple pressures/altitudes, exercise all three hands through their wrap points, test QNH adjustment and NVS persistence, rapid pressure changes, power cycles and disconnected/stale pressure data.
