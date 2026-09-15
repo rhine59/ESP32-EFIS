@@ -28,7 +28,21 @@ static void num(uint16_t*f,int w,int h,int x,int y,int n,int scale,uint16_t c){c
 static void sim_marker(uint16_t*f,int w,int h){rect(f,w,h,194,h-38,286,h-7,RED);box(f,w,h,192,h-40,288,h-5,BLACK);text(f,w,h,211,h-32,"SIM",4,WHITE);}
 static void instrument_bezel(uint16_t*f,int w,int h){int cx=w/2,cy=h/2;for(int r=239;r>=224;r--)circ(f,w,h,cx,cy,r,(r>232)?DARK_GREY:BLACK);for(int k=0;k<3;k++)circ(f,w,h,cx,cy,222-k,WHITE);for(int k=0;k<3;k++)circ(f,w,h,cx,cy,216-k,GREY);}
 static void alt_number(uint16_t*f,int w,int h,int value,float deg){float a=(deg-90)*M_PI/180.0f;int r=162;int x=w/2+(int)(cosf(a)*r)-9;int y=h/2+(int)(sinf(a)*r)-10;num(f,w,h,x,y,value,4,WHITE);}
-static void altitude_hatching(uint16_t*f,int w,int h,int altitude_ft){if(altitude_ft<=10000)return;int excess=altitude_ft-10000;if(excess>1000)excess=1000;const int x0=196,x1=284,y0=190,y1=236;int height=y1-y0+1;int reveal=(height*excess)/1000;if(reveal<3)reveal=3;int top=y1-reveal+1;rect(f,w,h,x0,top,x1,y1,BLACK);for(int x=x0-48;x<=x1+48;x+=14){for(int d=0;d<5;d++){int sx=x+d,sy=y1,ex=sx+reveal,ey=top;if(ex<x0||sx>x1)continue;if(sx<x0){sy-=x0-sx;sx=x0;}if(ex>x1){ey+=ex-x1;ex=x1;}if(sy<top)sy=top;if(ey>y1)ey=y1;ln(f,w,h,sx,sy,ex,ey,WHITE);}}box(f,w,h,x0,y0,x1,y1,WHITE);}
+static void altitude_hatching(uint16_t*f,int w,int h,int altitude_ft){
+    if(altitude_ft<=10000)return;
+    int excess=altitude_ft-10000;if(excess>1000)excess=1000;
+    const float start_deg=240.0f;
+    const float sweep_deg=60.0f*(float)excess/1000.0f;
+    const int cx=w/2,cy=h/2,inner=108,outer=145;
+    for(int y=cy-outer;y<=cy+outer;y++)for(int x=cx-outer;x<=cx+outer;x++){
+        int dx=x-cx,dy=y-cy;int r2=dx*dx+dy*dy;
+        if(r2<inner*inner||r2>outer*outer)continue;
+        float deg=atan2f((float)dy,(float)dx)*180.0f/(float)M_PI+90.0f;if(deg<0)deg+=360.0f;
+        if(deg>=start_deg&&deg<=start_deg+sweep_deg&&((x+y)%14+14)%14<4)px(f,w,h,x,y,WHITE);
+    }
+    radial(f,w,h,start_deg,inner,outer,WHITE);
+    radial(f,w,h,start_deg+sweep_deg,inner,outer,WHITE);
+}
 static void alt_test_overlay(uint16_t*f,int w,int h,const instrument_data_t*d){if(!d->test_overlay)return;rect(f,w,h,96,78,384,136,BLACK);box(f,w,h,96,78,384,136,WHITE);text(f,w,h,132,85,"TEST MODE - ALT",2,YELLOW);num(f,w,h,116,108,d->test_index,2,WHITE);text(f,w,h,136,108,"/",2,WHITE);num(f,w,h,148,108,d->test_count,2,WHITE);text(f,w,h,180,108,d->test_name?d->test_name:"TEST",2,WHITE);text(f,w,h,184,127,"TIME",1,WHITE);num(f,w,h,208,127,d->test_seconds_left,1,GREEN);text(f,w,h,220,127,"S",1,GREEN);}
 static void altimeter(uint16_t*f,int w,int h,const instrument_ui_t*u,const instrument_data_t*d){fill(f,w,h,BLACK);instrument_bezel(f,w,h);int r=205;for(int i=0;i<50;i++){int major=(i%5)==0;radial(f,w,h,i*7.2f,r-(major?28:12),r,WHITE);}for(int n=0;n<10;n++)alt_number(f,w,h,n,n*36.0f);text(f,w,h,204,151,"ALT",3,WHITE);text(f,w,h,208,171,"FEET",2,GREY);if(d->altitude_valid){int a=d->altitude_ft<0?0:d->altitude_ft;altitude_hatching(f,w,h,a);hand(f,w,h,(a%1000)*.36f,142,WHITE,3);hand(f,w,h,(a%10000)*.036f,105,WHITE,5);hand(f,w,h,(a%100000)*.0036f,70,WHITE,7);for(int k=0;k<8;k++)circ(f,w,h,w/2,h/2,k,WHITE);rect(f,w,h,154,292,326,337,BLACK);box(f,w,h,154,292,326,337,WHITE);num(f,w,h,174,302,a,4,GREEN);}else{rect(f,w,h,120,187,360,286,BLACK);box(f,w,h,120,187,360,286,RED);invalid_x(f,w,h,132,195,348,278);rect(f,w,h,142,211,338,255,BLACK);text(f,w,h,151,220,"ALT FAIL",5,RED);}rect(f,w,h,148,347,332,398,BLACK);box(f,w,h,148,347,332,398,u->settings_active?YELLOW:WHITE);text(f,w,h,164,355,"QNH",2,u->settings_active?YELLOW:WHITE);num(f,w,h,218,352,u->qnh_hpa,3,GREEN);text(f,w,h,274,365,"HPA",1,WHITE);text(f,w,h,178,383,"KOLLSMAN",1,GREY);alt_test_overlay(f,w,h,d);}
 static void compass_label(uint16_t*f,int w,int h,const char*s,float bearing,int radius){float a=(bearing-90.0f)*M_PI/180.0f;int x=w/2+(int)(cosf(a)*radius)-10;int y=h/2+(int)(sinf(a)*radius)-10;text(f,w,h,x,y,s,4,WHITE);}
