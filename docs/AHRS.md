@@ -1,110 +1,97 @@
 # AHRS / Attitude Solution
 
-## Purpose
+## Purpose and current status
 
-The BMI088 provides raw angular-rate and specific-force measurements. It does **not** directly provide a trustworthy aircraft attitude solution. The ESP32-S3 therefore runs the attitude estimator.
+The BMI088 provides raw angular-rate and specific-force measurements; it does not directly provide a trustworthy aircraft attitude. An initial attitude estimator is now implemented in `firmware/main/attitude_estimator.c` and compiles for the ESP32-S3 target. **It has not been physically validated and is deliberately not connected to the live Horizon until the Shuttle Board axis/sign mapping is demonstrated on hardware.**
 
-## Initial estimator architecture
+Physical sensor work is currently paused because no prototype hardware is available.
 
-The first implementation should be quaternion based.
+## Implemented initial estimator
 
-Inputs:
+The present implementation is a deliberately simple **pitch/roll complementary estimator**, not the quaternion estimator described in the earlier design proposal. That distinction is important: documentation must describe the code that exists, while quaternion/Mahony/Madgwick/error-state approaches remain possible later evolutions after real BMI088 data are available.
 
-- gyro X/Y/Z
-- accelerometer X/Y/Z
-- calibration parameters
-- sensor-to-aircraft alignment transform
+Input is a `bmi088_sample_t` already expressed in aircraft body axes. Required body convention is:
 
-Outputs:
+- **+X forward**
+- **+Y right**
+- **+Z down**
 
-- quaternion attitude state
-- roll
-- pitch
-- health/confidence flags
+Sensor-to-aircraft axis/sign transformation is intentionally outside the estimator and has not yet been frozen.
 
-## Update rates
+Outputs in `attitude_estimator_t` are pitch, roll, last-sample timestamp, initialization state and validity.
 
-Suggested initial targets:
+## Current calculation
 
-- IMU acquisition: 200–500 Hz
-- attitude propagation: same rate as gyro acquisition
-- accelerometer correction: lower effective bandwidth than gyro propagation
-- display update: 30–60 Hz
+On first usable sample, gravity-derived roll and pitch initialize the estimator. Subsequent samples propagate:
 
-These values are starting points and must be validated experimentally.
+- roll from gyro X rate
+- pitch from gyro Y rate
 
-## Gyroscope role
+When acceleration magnitude is considered gravity-usable, the gyro-propagated result is corrected toward accelerometer-derived attitude with a complementary weight of **0.98 gyro / 0.02 accelerometer per update**.
 
-The gyro is the primary short-term attitude source. Angular rates are integrated into the quaternion state.
+Accelerometer attitude is calculated only when total acceleration magnitude lies between **0.70 g and 1.30 g**. Outside this range, gyro propagation can continue but the accelerometer is not blindly treated as gravity.
 
-Advantages:
+The present pitch validity limit is ±89° and roll ±180°. These are implementation guards, not claims about validated flight envelope.
 
-- fast response
-- unaffected directly by linear acceleration
+## Timing and stale-data handling
 
-Limitation:
+The estimator rejects:
 
-- bias causes attitude drift over time
+- null/non-finite samples
+- initialization without a plausible gravity vector
+- zero sample interval
+- sample interval greater than **100 ms**
+- non-finite output
+- output beyond the current pitch/roll implementation limits
 
-## Accelerometer role
+`attitude_estimator_check_stale()` marks an initialized attitude invalid when the latest sample is more than **250 ms** old. A failed/stale real source must ultimately result in `attitude_valid=false`; it must never leave a frozen plausible Horizon.
 
-The accelerometer provides long-term reference information only when the measured specific-force vector is sufficiently close to the expected gravity magnitude and dynamics are benign enough for it to be informative.
+These thresholds are initial software values and require physical/dynamic validation before aircraft use.
 
-A simple aircraft acceleration can make the measured vector differ from gravity, so the filter must **not** blindly force the estimated vertical to follow every accelerometer sample.
+## BMI088 acquisition layer
 
-## Confidence weighting
+The current BMI088 SPI driver:
 
-The estimator should reduce accelerometer correction when any of the following are observed:
+- uses separate accelerometer and gyroscope chip selects
+- verifies accelerometer ID `0x1E` and gyro ID `0x0F`
+- configures ±6 g accelerometer range
+- configures ±500 °/s gyro range
+- handles the accelerometer SPI dummy byte
+- returns six engineering-unit values plus a monotonic millisecond timestamp
 
-- magnitude differs significantly from approximately 1 g
-- rapid changes in acceleration
-- high angular rates
-- turbulence / vibration indicators
-- implausible disagreement with the propagated gyro attitude
+An optional `CONFIG_EFIS_BMI088_DIAGNOSTICS` commissioning mode logs acceleration X/Y/Z, acceleration magnitude and gyro X/Y/Z at approximately 5 Hz. It is OFF by default, unavailable in QEMU and never feeds the display.
 
-## Candidate algorithms
+## Physical installation gate — not yet passed
 
-Early development can compare:
+Before connecting BMI088 measurements to the Horizon:
 
-- quaternion complementary filter
-- Mahony-style filter
-- Madgwick-style filter
-- error-state / extended Kalman filtering later if justified
+1. connect the actual Shuttle Board to the ESP32-S3 prototype
+2. verify both chip IDs and stable sample acquisition
+3. establish which physical sensor axes/signs correspond to aircraft +X forward, +Y right, +Z down
+4. confirm approximately 1 g stationary magnitude in known orientations
+5. record stationary gyro bias/noise
+6. verify positive/negative pitch and roll rate signs by deliberate hand/fixture rotation
+7. encode the explicit sensor-to-body mapping
+8. only then feed mapped samples into the estimator and `instrument_data_t`
 
-The project should prefer understandable, testable behaviour over algorithmic complexity for its own sake.
+This gate prevents an assumed PCB orientation from producing a convincing but reversed attitude indication.
 
-## Yaw
+## Validation still required
 
-The first instrument requirement is pitch and roll. The BMI088 does not include a magnetometer, so absolute heading is not a primary objective for the initial version.
+Static tests: level, ±10°/±20° pitch and ±30°/±60° roll against a physical reference.
 
-Yaw still exists internally in the quaternion propagation, but long-term absolute yaw reference is not required to render an artificial horizon.
+Dynamic tests: smooth/abrupt rotations, latency, overshoot, drift after stopping and timing behaviour.
 
-## Startup
+Acceleration rejection: translational acceleration without intended rotation.
 
-On startup the system should:
+Fault/stale tests: communication failure, delayed samples, invalid values and disconnect; indication must become conspicuously invalid.
 
-1. initialise the BMI088 and verify identity/status
-2. estimate gyro zero-rate bias while stationary
-3. estimate an initial gravity direction from accelerometer data
-4. initialise the quaternion
-5. mark attitude invalid until minimum stability/initialisation criteria are satisfied
-6. transition explicitly to valid attitude mode
+Vibration/thermal tests: characterize gyro/accelerometer noise and estimator stability under representative conditions.
 
-## Health monitoring
+Only after these tests should estimator weighting or a more sophisticated quaternion/filter architecture be selected on evidence from real data.
 
-The estimator should continuously track:
+## Future estimator evolution
 
-- sensor communication failures
-- stale sample age
-- gyro saturation
-- accelerometer saturation
-- NaN/infinite calculations
-- quaternion normalisation errors
-- unreasonable attitude jumps
-- time-step anomalies
+Candidate later approaches remain quaternion complementary filtering, Mahony, Madgwick or an error-state/EKF approach if measurements justify the additional complexity. Gyro bias estimation, calibration storage, confidence weighting based on angular rate/vibration, and potentially other aiding sources remain future work.
 
-Any serious condition should make the displayed attitude invalid.
-
-## Future aiding
-
-GNSS velocity and potentially pitot/static information may later be investigated as aiding sources. These are not required for the first bench prototype.
+Absolute heading is a separate fusion problem using the remote RM3100 plus validated attitude for tilt compensation. GNSS course over ground, if introduced, is **TRK**, not HDG.
