@@ -1,14 +1,9 @@
-name: Build ESP-IDF firmware
+name: Build ESP-IDF hardware firmware (paused)
 
+# Physical-hardware activity is paused while no prototype hardware is available.
+# Keep this workflow for an explicit manual compile check only; pushes and pull
+# requests must not start routine hardware-target builds during the pause.
 on:
-  push:
-    paths:
-      - 'firmware/**'
-      - '.github/workflows/build-firmware.yml'
-  pull_request:
-    paths:
-      - 'firmware/**'
-      - '.github/workflows/build-firmware.yml'
   workflow_dispatch:
 
 jobs:
@@ -18,7 +13,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build ESP32-S3 firmware
+      - name: Build ESP32-S3 firmware (compile validation only)
         uses: espressif/esp-idf-ci-action@v1
         with:
           esp_idf_version: v5.4.4
