@@ -1,148 +1,82 @@
 # ESP-IDF Firmware
 
-Target hardware: **ESP32-S3-WROOM-1-N16R2** on the project custom carrier PCB.
+Target: **ESP32-S3-WROOM-1-N16R2**, framework baseline **ESP-IDF v5.4.4**.
 
-Framework baseline: **ESP-IDF v5.4.4**.
+The firmware is now structured as a **multi-panel supplementary flight instrument**. The Newhaven 480×480 RGB565 display and double PSRAM framebuffer architecture are unchanged, but the front-panel Bourns `PEC09-2320F-T0015` now controls three screens:
 
-This directory is now a buildable ESP-IDF project. The current milestone is a **display + sensor proof-of-life build**: initialize the low-speed control hardware, run the Newhaven/ST7701S startup sequence, create a 480×480 RGB565 panel with two PSRAM framebuffers, draw a static artificial horizon, enable the LCD backlight, then bring up the BMI088 and verify both sensor chip IDs.
+1. Artificial Horizon
+2. Classic Altimeter
+3. Compass
 
-The AHRS itself is intentionally the next milestone.
+A short encoder press advances to the next panel. A long press of about 0.8 seconds enters/leaves the current panel's settings. Rotation changes that panel's setting: Horizon brightness, Altimeter QNH, or Compass heading bug.
 
-## Deployment
+Per-panel operating documentation is in [`../docs/user-guides/`](../docs/user-guides/README.md).
 
-For the complete macOS deployment procedure — installing/activating ESP-IDF, connecting the ESP32-S3 over native USB, entering BOOT/download mode, building, flashing, monitoring, recovery, clean rebuilds, flash erase and first-boot verification — see:
+## Important current limitation
 
-**[DEPLOYMENT.md](DEPLOYMENT.md)**
+The new screen framework is implemented before all live sensors are available. The firmware therefore marks flight data **invalid** rather than inventing plausible values:
 
-Quick development cycle once ESP-IDF is installed and the device port is known:
+- Horizon: BMI088 communication exists, but live quaternion AHRS is not yet connected.
+- Altimeter: a barometric/static-pressure sensor is not yet part of the hardware.
+- Compass: BMI088 has no magnetometer and cannot provide stable absolute heading by itself.
+
+This is intentional fail-obvious behaviour for a supplementary/non-primary instrument.
+
+## Source layout
+
+```text
+main/
+├── app_main.c              display/sensor startup and UI loop
+├── instrument_ui.c/.h      PEC09 short/long press and rotary settings
+├── instrument_screens.c/.h three-panel renderer and data-validity contract
+├── horizon_renderer.c/.h   horizon graphics
+├── bmi088.c/.h             BMI088 SPI bring-up
+├── mcp23008.c/.h           LCD control plus encoder input I/O
+└── st7701s.c/.h            panel controller initialization
+```
+
+## Display configuration
+
+- Newhaven `NHD-2.1-480480AF-ASXP`
+- ST7701S
+- 480×480 RGB565, 16-bit RGB bus
+- 30 MHz pixel clock
+- HFP/HBP/HS = 50/50/4
+- VFP/VBP/VS = 50/50/2
+- two 460,800-byte framebuffers in 2 MB Quad PSRAM
+
+The ST7701S is configured first over 3-wire/9-bit serial; the same GPIOs are then reused for BMI088 SPI. The project adapts Newhaven's panel sequence from 18-bit to the ST7701S 16-bit `VIPF=101` mode; physical-panel verification remains required.
+
+## Control implementation
+
+MCP23008 GP2/GP3 read encoder A/B and GP4 reads the active-low push switch, all with pull-ups. `instrument_ui_poll()` runs approximately every 10 ms. A short released press cycles panels; holding for about 800 ms toggles settings. Encoder rotation is ignored outside settings to avoid accidental in-flight value changes.
+
+Settings are currently RAM-only. NVS persistence will be added once the settings/data-source design is frozen. Brightness is represented in the UI but still needs to be connected to TPS61169 PWM rather than the current simple on/off backlight output.
+
+## Data-source contract
+
+`instrument_data_t` separates each value from its validity flag. A renderer must not treat a stale or absent value as valid. The future sensor tasks will update pitch/roll, altitude and heading independently with freshness/health checks.
+
+## Next implementation stages
+
+The attitude path remains first: configure BMI088 ranges/ODR, acquire at ~200 Hz, timestamp samples, calibrate gyro bias, apply aircraft-axis transform, run quaternion AHRS and acceleration-confidence logic, then feed live pitch/roll to the Horizon panel.
+
+The Altimeter additionally needs selection/integration of a suitable static-pressure sensor and pressure-to-altitude/QNH processing. The Compass needs a deliberate absolute-heading architecture; gyro yaw alone is not acceptable as a compass. A magnetometer or other aiding source must be evaluated for the aircraft installation.
+
+## Build/deploy
+
+See [DEPLOYMENT.md](DEPLOYMENT.md). Normal local build:
 
 ```bash
+source ~/.espressif/tools/activate_idf_v5.4.4.sh
 cd firmware
 idf.py build
-idf.py -p /dev/cu.usbmodemXXXX flash monitor
 ```
 
-Use the actual `/dev/cu.usbmodem...` device reported by macOS.
-
-GitHub Actions also builds the project automatically through `.github/workflows/build-firmware.yml` using Espressif's official ESP-IDF CI action.
-
-## Current source layout
-
-```text
-firmware/
-├── CMakeLists.txt
-├── sdkconfig.defaults
-├── DEPLOYMENT.md
-├── include/
-│   └── pins.h
-└── main/
-    ├── CMakeLists.txt
-    ├── app_main.c
-    ├── bmi088.c
-    ├── bmi088.h
-    ├── mcp23008.c
-    ├── mcp23008.h
-    ├── st7701s.c
-    ├── st7701s.h
-    ├── horizon_renderer.c
-    └── horizon_renderer.h
-```
-
-## Display mode
-
-- panel: Newhaven `NHD-2.1-480480AF-ASXP`
-- controller: ST7701S
-- resolution: 480 × 480
-- project pixel format: RGB565
-- ESP32 RGB bus width: 16 bits
-- RGB pixel clock baseline: **30 MHz**
-- HFP: **50**
-- HBP: **50**
-- HS pulse width: **4**
-- VFP: **50**
-- VBP: **50**
-- VS pulse width: **2**
-- ST7701S setup: 3-wire / 9-bit serial control, then parallel RGB pixel streaming
-- panel mode straps: IM0=0, IM1=1, IM2=0
-
-The older 18 MHz timing values previously recorded in this repository belong to Newhaven's MIPI timing table. The current firmware now uses the manufacturer's current **RGB timing table**.
-
-## RGB565 controller setting
-
-Newhaven's published example initialization uses an 18-bit `COLMOD` setting. The ST7701S documentation defines `VIPF=101` as the 16-bit RGB mode. The firmware therefore changes that one pixel-format field to the 16-bit setting while retaining Newhaven's panel-specific power/gamma sequence.
-
-This must be confirmed on the physical panel during bench bring-up. If colour ordering or pixel alignment is wrong, do not compensate in the AHRS renderer; first verify the controller pixel-format setting and FFC data mapping.
-
-## Framebuffers
-
-One RGB565 frame buffer is:
-
-```text
-480 × 480 × 2 = 460,800 bytes
-```
-
-Two complete buffers require 921,600 bytes. The N16R2 module's 2 MB Quad PSRAM is therefore sufficient for double buffering with useful remaining headroom.
-
-ESP-IDF's native RGB LCD driver allocates both buffers in PSRAM.
-
-## Initialization order implemented now
-
-1. configure BMI088 chip-select pins high
-2. force backlight off
-3. initialize MCP23008 over I²C
-4. configure the ST7701S 3-wire serial GPIOs
-5. hardware-reset the LCD through MCP23008
-6. run the Newhaven-derived ST7701S initialization sequence in RGB565 mode
-7. create the ESP-IDF RGB LCD peripheral at 480×480 / 16 bit / 30 MHz
-8. obtain two PSRAM-backed framebuffers
-9. draw the static test horizon into both buffers
-10. select the prepared frame
-11. enable the backlight
-12. initialize the BMI088 hardware SPI bus
-13. perform the accelerometer dummy read required to switch it from power-up I²C mode to SPI mode
-14. verify accelerometer chip ID `0x1E`
-15. verify gyro chip ID `0x0F`
-16. put the accelerometer into active mode
-
-The display proof-of-life remains usable even if BMI088 bring-up fails; the failure is logged rather than aborting the static display test.
-
-## Current proof-of-life screen
-
-The renderer displays:
-
-- blue sky
-- brown ground
-- white horizon
-- symmetric pitch-ladder test marks
-- fixed yellow aircraft symbol
-- centre datum
-
-This is a test pattern, not yet an attitude solution. Its purpose is to expose timing, pixel-format, colour-order and framebuffer problems immediately.
-
-## Next firmware milestone
-
-The next implementation stage is:
-
-1. configure BMI088 measurement ranges, ODR and bandwidth
-2. acquire gyro + accelerometer at approximately 200 Hz
-3. timestamp every sensor sample
-4. estimate stationary gyro bias
-5. define the sensor-to-aircraft axis transform
-6. add quaternion attitude propagation
-7. add acceleration-confidence weighting/rejection
-8. drive live pitch/roll into the renderer
-9. add sensor-freshness and AHRS-confidence monitoring
-10. replace the horizon with an unmistakable `ATTITUDE INVALID` state whenever attitude validity is lost
+GitHub Actions builds the same ESP32-S3 firmware automatically.
 
 ## Safety behaviour
 
-The finished renderer must never leave a plausible frozen horizon after sensor or AHRS failure. Stale data, failed sensor communication, implausible timing or failed validity checks must obscure the normal attitude display.
-
-The intended failure indication remains:
-
-```text
-ATTITUDE
- INVALID
-```
+No panel may leave a plausible frozen flight indication after its source becomes stale or invalid. The final UI will use explicit textual invalid annunciations; the current screen framework uses a prominent invalid overlay until the font/annunciation renderer is added.
 
 This project remains a **supplementary/non-primary flight-development instrument**.
