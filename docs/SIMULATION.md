@@ -4,7 +4,7 @@ Simulation is development-only and must never be used as a fallback for failed f
 
 ## Instrument acceptance status
 
-The **Artificial Horizon / PFD graphics pass and Altimeter graphics pass are accepted and parked**. The Compass functional pass remains accepted; the active 480×480 graphics-quality stage is now the **Compass**.
+The **Artificial Horizon / PFD, Altimeter and Compass graphics passes are accepted and parked**. The complete 480×480 instrument graphics-quality stage is therefore accepted. The next development stage is the **real sensor pipeline and physical prototype integration**.
 
 Graphics work must preserve the accepted indication direction, mathematics and failure behaviour.
 
@@ -36,19 +36,13 @@ Physical BMP585 acquisition, stale-data timing and rotary encoder direction/dete
 
 ## Compass acceptance record
 
-The Compass QEMU functional pass is accepted. The functional suite used twelve repeating six-second states: 000°, 045°, 090°, 135°, 180°, 225°, 270°, 315°, a moving 350°→010° north crossing, continuous rotation, `HEADING FAIL`, and explicit recovery to 000°.
+The **Compass functional and graphics passes are accepted**. The QEMU suite used twelve repeating six-second states: 000°, 045°, 090°, 135°, 180°, 225°, 270°, 315°, a moving 350°→010° north crossing, continuous rotation, `HEADING FAIL`, and explicit recovery to 000°.
 
 The accepted Compass renderer carries large **N, E, S and W** labels on the rotating card and a central three-digit heading readout. These derive from the same `heading_deg` value as card rotation. For increasing aircraft heading the card rotates in the opposite direction beneath the fixed lubber/reference line. At 000° N is under the top reference; at 090° E is under it; at 180° S is under it; and at 270° W is under it. North wrap is continuous.
 
 The accepted heading bug is a distinct outlined yellow triangular bug. It represents a selected magnetic heading and its screen position is calculated from `heading_bug_deg - heading_deg`; it is not a fixed screen pointer. The acceptance suite held the bug at 060° while aircraft heading changed. Physical encoder adjustment remains a hardware test because QEMU bypasses the MCP23008 and rotary encoder.
 
-`HEADING FAIL` is the accepted fail-obvious state and must not be replaced by a frozen plausible heading.
-
-### Active Compass graphics review
-
-QEMU is now locked to `PANEL_COMPASS` for the graphics-quality pass. The review preserves the accepted heading/card direction, north wrap, selected-heading bug mathematics and fail-obvious behaviour while allowing typography, spacing, line weights, primitive quality and failure-state presentation to be refined.
-
-The graphics suite exercises the eight cardinal/intercardinal headings, the 350°→010° north crossing, continuous rotation, `HEADING FAIL`, and recovery to north. Particular attention must be paid to the failure state: a failed heading must not leave a frozen or otherwise plausible usable compass presentation.
+`HEADING FAIL` is the accepted fail-obvious state and must not be replaced by a frozen plausible heading. The complete twelve-state Compass graphics suite was visually reviewed in QEMU and accepted without further presentation changes.
 
 ## Simulator synchronisation
 
@@ -76,4 +70,4 @@ The selected Newhaven NHD-2.1-480480AF-ASXP has a native resolution of **480×48
 
 The graphics pass may improve typography, primitive smoothness, line weights, spacing, alignment, clipping and bezel/failure presentation. It must not change accepted attitude, altitude/QNH or heading/bug mathematics.
 
-The active graphics stage is now the Compass. After the Compass graphics pass is accepted, development moves to the real sensor pipeline: BMI088 attitude, BMP585 pressure/QNH altitude and RM3100 heading, including explicit stale/invalid-data handling before physical prototype testing.
+The **480×480 graphics-quality stage is complete and accepted for the Artificial Horizon, Altimeter and Compass**. Development now moves to the real sensor pipeline: BMI088 attitude, BMP585 pressure/QNH altitude and RM3100 heading, with explicit startup, range, freshness, plausibility and stale/invalid-data handling before physical prototype testing.
