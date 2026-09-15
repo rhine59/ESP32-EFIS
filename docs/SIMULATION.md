@@ -4,13 +4,23 @@ Simulation is development-only and must never be used as a fallback for failed f
 
 ## Instrument acceptance status
 
-The **Artificial Horizon / PFD, Altimeter and Compass functional/presentation passes are now accepted and parked**. Their accepted geometry, indication direction and failure behaviour should not be changed accidentally during subsequent work.
+The **Artificial Horizon / PFD, Altimeter and Compass functional passes are accepted and parked**. Their accepted indication direction, mathematics and failure behaviour must not be changed accidentally during graphics work.
 
-The next development stage is a common 480×480 graphics-quality pass. This may improve typography, primitive smoothness, line weights, alignment, clipping and bezel treatment, but it must preserve the accepted instrument mathematics and behaviour recorded below.
+The active development stage is the common 480×480 graphics-quality pass, proceeding one instrument at a time: **Artificial Horizon → Altimeter → Compass**.
 
 ## Artificial Horizon acceptance record
 
-The accepted attitude suite covered level, ±10° and ±20° pitch, ±30° and ±60° bank, combined +10° pitch/+30° right bank, attitude failure and explicit recovery. The accepted presentation uses a dark circular inner bezel, fixed bank scale/pointer and a yellow aircraft reference fixed at display centre. Positive pitch moves the horizon down, negative pitch moves it up, and the attitude sphere moves opposite aircraft bank. `ATT FAIL` prevents a failed attitude from remaining plausibly usable.
+The accepted attitude suite covers level, ±10° and ±20° pitch, ±30° and ±60° bank, combined +10° pitch/+30° right bank, attitude failure and explicit recovery. Positive pitch moves the horizon down, negative pitch moves it up, and the attitude sphere moves opposite aircraft bank. `ATT FAIL` prevents a failed attitude from remaining plausibly usable.
+
+### Active Horizon graphics review
+
+QEMU is currently locked back to `PANEL_HORIZON` and runs the same twelve six-second attitude states used for functional acceptance. This is now a visual-regression suite rather than a change to attitude mathematics.
+
+The first graphics refinement keeps `PITCH_PIXELS_PER_DEG` at the accepted **6.8 px/degree** and preserves the accepted roll transform. The horizon line has been regularised, 5° and 10° pitch marks now have clearer hierarchy and centre gaps, and the fixed yellow aircraft symbol has a black outline for reliable contrast against both sky and ground. Its centre datum remains fixed at the exact display centre.
+
+The temporary QEMU-only Compass label/readout overlay has also been removed. Those markings now belong to the production Compass renderer, so QEMU no longer draws a second test-only representation over the real instrument graphics.
+
+The native Swift simulator should mirror these visual changes while retaining the same accepted pitch/bank direction. QEMU remains authoritative for pixel-level ESP32 rendering.
 
 ## Altimeter acceptance record
 
@@ -54,6 +64,6 @@ QEMU uses the real 480×480 RGB565 geometry but bypasses physical LCD, MCP23008,
 
 The selected Newhaven NHD-2.1-480480AF-ASXP has a native resolution of **480×480 pixels**, so QEMU deliberately uses exactly 480×480. The firmware uses RGB565. Enlarging QEMU on a desktop makes primitive graphics look coarser than at the physical panel size.
 
-The next stage is a common graphics-quality pass across all three accepted instruments. The goals are improved typography, smoother circles/diagonals where practical, consistent line weights and spacing, cleaner alignment, reliable circular-display clipping and consistent bezel/failure presentation. This is a presentation pass: accepted attitude, altitude/QNH and heading/bug mathematics must remain unchanged.
+The graphics pass may improve typography, primitive smoothness, line weights, spacing, alignment, clipping and bezel/failure presentation. It must not change accepted attitude, altitude/QNH or heading/bug mathematics.
 
 After graphics acceptance, development moves to the real sensor pipeline: BMI088 attitude, BMP585 pressure/QNH altitude and RM3100 heading, including explicit stale/invalid-data handling before physical prototype testing.
