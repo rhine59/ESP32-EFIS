@@ -18,7 +18,18 @@ cd "$EFIS_FIRMWARE_DIR"
 
 Confirm the script reports ESP-IDF v5.4.4, the pinned ESP-IDF Python interpreter and a working `qemu-system-xtensa` when QEMU is installed.
 
-For QEMU, always use a clean `build-qemu` after emulator configuration changes. Confirm `sdkconfig.qemu.defaults` enables QEMU and synthetic data but disables physical SPIRAM. The emulator must reach `app_main()` without an `esp_psram_init()` assertion, open the 480×480 virtual display, animate synthetic data, cycle all three pages and show the red **SIM** marker on every page.
+For QEMU, always use a clean `build-qemu` after emulator configuration changes. Confirm `sdkconfig.qemu.defaults` enables QEMU and synthetic data but disables physical SPIRAM. The emulator must reach `app_main()` without an `esp_psram_init()` assertion, open the 480×480 virtual display and show the red **SIM** marker on every page.
+
+Run the complete deterministic scenario sequence described in `SIMULATION.md`. The validity tests are not satisfied merely because `ALL FAIL` produces a large red cross. Each source must fail obviously on every page where that source is presented:
+
+- `ATTITUDE FAIL`: the Horizon/PFD must show the large red invalid cross over the attitude presentation.
+- `ALTITUDE FAIL`: the Altimeter must show the large red invalid cross; on the Horizon/PFD the altitude region must gain a red border and local red cross.
+- `HEADING FAIL`: the Compass must show the large red invalid cross; on the Horizon/PFD the heading region must gain a red border and local red cross.
+- `ALL FAIL`: all affected regions must be invalid simultaneously.
+
+This per-source requirement exists because the QEMU harness and panel cycle are independent: a failed source can occur while another instrument page is being displayed. Absence of a full-screen red cross on a page that does not use the failed source is expected; absence of an invalid indication where that failed source is actually presented is a defect.
+
+The permanent red **SIM** marker is deliberately compact so that it remains unmistakable without obscuring the lower instrument face.
 
 Also build the normal hardware configuration separately and verify bench simulation remains OFF. Never reuse `build-qemu` for hardware deployment.
 
