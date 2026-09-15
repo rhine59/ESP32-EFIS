@@ -18,4 +18,15 @@ config EFIS_QEMU
         backlight and BMI088 initialization with Espressif's QEMU virtual RGB
         panel. Never enable this option for hardware or aircraft-use builds.
 
+config EFIS_BMI088_DIAGNOSTICS
+    bool "Enable BMI088 axis commissioning diagnostics"
+    default n
+    depends on !EFIS_QEMU
+    help
+        Bench commissioning only. Logs raw BMI088 accelerometer and gyro
+        engineering-unit samples plus acceleration magnitude at approximately
+        5 Hz so the installed Shuttle Board axis/sign mapping can be verified.
+        This option does not feed BMI088 data into the flight display and must
+        remain disabled for normal aircraft-use builds.
+
 endmenu
