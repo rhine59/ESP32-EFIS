@@ -8,76 +8,85 @@ The firmware contains an explicit synthetic-data source so the complete three-pa
 
 For any aircraft-use build, simulation and QEMU mode must both remain disabled. Before loading firmware for aircraft use, verify the boot log reports `BENCH SIMULATION: OFF`. Missing or failed real sensors must produce invalid indications, never synthetic or frozen plausible values.
 
-## Current simulated motion
+## Deterministic simulator scenarios
 
-- pitch: slow ±8° sinusoid
-- roll: slow ±28° sinusoid
-- altitude: approximately 1550–3350 ft
-- heading: continuous 12°/s rotation through 000/359
-- all simulated validity flags are true
+The QEMU simulator is a repeatable test harness rather than an uncontrolled flight animation. Each scenario begins from a known reference state of pitch 0°, roll 0°, altitude 2500 ft and heading 000°, with all sources valid unless that scenario deliberately fails one.
+
+The scenario sequence is:
+
+1. `LEVEL` — 0° pitch, 0° roll, 2500 ft, heading 000°.
+2. `PITCH +10` — fixed +10° pitch.
+3. `PITCH -10` — fixed -10° pitch.
+4. `BANK LEFT 30` — fixed -30° roll.
+5. `BANK RIGHT 30` — fixed +30° roll.
+6. `ALTITUDE 1000-5000` — controlled sweep between 1000 and 5000 ft.
+7. `HEADING 350-010` — controlled heading movement through the 359°/000° wrap.
+8. `ATTITUDE FAIL` — attitude validity false while altitude and heading remain valid.
+9. `ALTITUDE FAIL` — altitude validity false while attitude and heading remain valid.
+10. `HEADING FAIL` — heading validity false while attitude and altitude remain valid.
+11. `ALL FAIL` — attitude, altitude and heading validity all false.
+
+QEMU advances to the next scenario every eight seconds and also advances the displayed panel. The serial console logs each scenario transition as `QEMU SCENARIO: ...`, making screenshots and observed behaviour reproducible. Failure scenarios are specifically intended to prove the fail-obvious display contract: invalid data must not remain as a plausible frozen instrument indication.
 
 ## Physical bench simulation
 
-Enable **ESP32 EFIS development options → Enable synthetic bench flight data** with `idf.py menuconfig`. This leaves the real LCD, MCP23008, encoder and BMI088 hardware paths active while substituting synthetic flight values.
+Enable **ESP32 EFIS development options → Enable synthetic bench flight data** with `idf.py menuconfig`. This leaves the real LCD, MCP23008, encoder and BMI088 hardware paths active while substituting synthetic flight values. The same deterministic simulator data source is used, starting with the LEVEL scenario; automatic QEMU scenario sequencing is confined to QEMU mode.
 
 ESP-IDF boolean Kconfig symbols that are disabled are normally absent from `sdkconfig.h`; the firmware therefore tests development symbols with `#ifdef` rather than assuming they expand to zero.
 
 ## QEMU virtual display
 
-QEMU mode is a separate Kconfig option, `CONFIG_EFIS_QEMU`, and depends on bench simulation. It bypasses physical LCD, MCP23008, encoder, backlight and BMI088 initialization and uses Espressif's `esp_lcd_qemu_rgb` virtual RGB panel in RGB565 mode at the real 480×480 instrument resolution. The QEMU display automatically cycles Horizon → Altimeter → Compass while the synthetic flight evolves.
+QEMU mode is a separate Kconfig option, `CONFIG_EFIS_QEMU`, and depends on bench simulation. It bypasses physical LCD, MCP23008, encoder, backlight and BMI088 initialization and uses Espressif's `esp_lcd_qemu_rgb` virtual RGB panel in RGB565 mode at the real 480×480 instrument resolution.
 
-The managed component dependency is pinned to compatible major version `espressif/esp_lcd_qemu_rgb ^1.0.2`. Espressif documents the virtual framebuffer as supporting RGB565 and the ESP-IDF QEMU launcher can open the graphics window with `--graphics`.
+The managed component dependency is pinned to compatible major version `espressif/esp_lcd_qemu_rgb ^1.0.2`. The virtual framebuffer supports RGB565 and the ESP-IDF QEMU launcher can open the graphics window with `--graphics`.
 
-The physical ESP32-S3-WROOM-1-N16R2 target uses external Quad PSRAM, so `sdkconfig.defaults` enables `CONFIG_SPIRAM`. The QEMU target must override that hardware setting with `# CONFIG_SPIRAM is not set` in `sdkconfig.qemu.defaults`. Without this override the emulator reaches `esp_psram_init()` during CPU startup, asserts in `s_psram_chip_init`, and continuously reboots before `app_main()` can run. This is an emulator-only override; PSRAM remains enabled for normal hardware builds.
+The physical ESP32-S3-WROOM-1-N16R2 target uses external Quad PSRAM, so `sdkconfig.defaults` enables `CONFIG_SPIRAM`. The QEMU target overrides that hardware setting with `# CONFIG_SPIRAM is not set` in `sdkconfig.qemu.defaults`. Without this override the emulator reaches `esp_psram_init()` during CPU startup, asserts in `s_psram_chip_init`, and continuously reboots before `app_main()` can run. This is an emulator-only override; PSRAM remains enabled for normal hardware builds.
 
 ### First-time QEMU setup on macOS
 
-With ESP-IDF v5.4.4 installed, install the optional Xtensa QEMU tool if it is not already present:
+Use the full setup procedure in `MACOS_BUILD_AND_QEMU_SETUP.md`. For normal development shells the preferred entry point is:
 
 ```bash
-cd ~/.espressif/v5.4.4/esp-idf
-python tools/idf_tools.py install qemu-xtensa
-. ./export.sh
+cd ~/Documents/Xcode/ESP32-EFIS
+git pull
+source scripts/efis-env.sh
+cd "$EFIS_FIRMWARE_DIR"
 ```
 
-If QEMU reports missing host libraries, install the documented macOS dependencies with Homebrew: `libgcrypt`, `glib`, `pixman`, `sdl2`, and `libslirp`.
-
-The repository's `scripts/efis-env.sh` is the preferred setup for subsequent shells; it also handles the QEMU PATH layout encountered on the original Apple Silicon development machine.
+The helper pins ESP-IDF v5.4.4 and its known Python environment and adds the installed Espressif QEMU binary to PATH when required.
 
 ### Build the emulator configuration
 
-From the repository root:
+After configuration changes, use a clean QEMU build:
 
 ```bash
-cd firmware
 rm -rf build-qemu
-idf.py -B build-qemu -D SDKCONFIG=build-qemu/sdkconfig \
+idf.py -B build-qemu \
   -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.qemu.defaults" \
-  set-target esp32s3 build
+  set-target esp32s3
+idf.py -B build-qemu \
+  -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.qemu.defaults" \
+  build
 ```
 
-This keeps the emulator configuration separate from the normal hardware `sdkconfig` and prevents QEMU/synthetic settings leaking into an aircraft build. A clean reconfiguration is required after changing emulator-only Kconfig defaults such as the PSRAM override.
+This keeps emulator configuration separate from the normal hardware build and prevents QEMU/synthetic settings leaking into an aircraft build.
 
-### Run with graphics
+### Run with graphics and capture a log
 
 ```bash
-idf.py -B build-qemu -D SDKCONFIG=build-qemu/sdkconfig \
-  -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.qemu.defaults" \
-  qemu --graphics monitor
+rm -f qemu.log
+idf.py -B build-qemu qemu --graphics monitor 2>&1 | tee qemu.log
 ```
 
-Expected behaviour: a 480×480 QEMU graphics window appears, synthetic instruments animate, the page changes automatically about every eight seconds, and every page carries the red **SIM** marker. The console must also report both `BENCH SIMULATION: ENABLED - SYNTHETIC DATA` and `QEMU MODE: ENABLED - NO PHYSICAL SENSOR OR DISPLAY I/O`.
+Expected behaviour: a 480×480 QEMU graphics window appears, the test scenarios advance every eight seconds, the Horizon/PFD, Altimeter and Compass are exercised, and every page carries the red **SIM** marker. The console reports `BENCH SIMULATION: ENABLED - SYNTHETIC DATA`, `QEMU MODE: ENABLED - NO PHYSICAL SENSOR OR DISPLAY I/O`, `QEMU TEST HARNESS`, and each `QEMU SCENARIO` transition.
 
-## Bench test sequence
+Exit the ESP-IDF monitor/QEMU session with `Ctrl-]`. If necessary, QEMU can be terminated from another shell with `pkill -f qemu-system-xtensa`.
 
-1. Enable simulation and verify both the serial warning and red **SIM** marker.
-2. Observe changing PFD state.
-3. On physical bench hardware, short-push to Altimeter and confirm all hands move smoothly and wrap correctly.
-4. Long-push, rotate QNH, exit settings, power-cycle and verify persistence.
-5. Short-push to Compass and verify the card rotates beneath the fixed aircraft/lubber line.
-6. Set heading bug and verify persistence.
-7. Cycle back to Horizon/PFD.
-8. Rebuild with simulation disabled and verify `BENCH SIMULATION: OFF`; unavailable real data must become visibly invalid.
+## QEMU acceptance sequence
+
+A useful complete run is long enough to observe all eleven scenarios. Verify the fixed attitude cases have the expected sign and magnitude, the altitude hands sweep without discontinuity, heading crosses 359°/000° correctly, and each individual failure invalidates only its affected presentation. `ALL FAIL` must make all three data domains invalid. At no point may a failed source leave its previous valid value displayed as though it were current.
+
+The red **SIM** annunciation must remain present throughout all valid and invalid synthetic scenarios. Its presentation may be refined for screen space, but it must remain unmistakable.
 
 ## References
 
