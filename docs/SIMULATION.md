@@ -4,11 +4,13 @@ Simulation is development-only and must never be used as a fallback for failed f
 
 ## One instrument at a time
 
-QEMU acceptance is deliberately performed one instrument at a time. The current stage is **Artificial Horizon / PFD only** and `ui.panel` is locked to `PANEL_HORIZON`. Altimeter and Compass testing remain parked until attitude presentation is accepted.
+QEMU acceptance is deliberately performed one instrument at a time. The **Artificial Horizon / PFD functional and presentation pass is now accepted and parked**. Its tested pitch/bank geometry and revised round-EFIS bezel should remain unchanged while the project moves to the next instrument. A later common graphics-quality pass may improve fonts, anti-aliasing, line quality and shading without changing the accepted attitude geometry.
 
-## Artificial Horizon acceptance suite
+The next development stage is **Altimeter only**. QEMU should be locked to `PANEL_ALTIMETER` while altitude behaviour is developed and accepted. Compass testing remains parked until the Altimeter stage is complete.
 
-The current sequence contains twelve six-second states and repeats continuously:
+## Artificial Horizon acceptance record
+
+The accepted attitude sequence contains twelve six-second states:
 
 1. `LEVEL` — 0° pitch, 0° bank; aircraft reference centred on the horizon.
 2. `PITCH +10` — +10° pitch.
@@ -21,21 +23,34 @@ The current sequence contains twelve six-second states and repeats continuously:
 9. `BANK RIGHT 60` — +60° roll edge case.
 10. `PITCH +10 BANK R30` — combined +10° pitch and +30° right bank.
 11. `ATTITUDE FAIL` — attitude invalid while altitude and heading remain valid.
-12. `RECOVERY LEVEL` — explicit valid level state immediately after failure, proving recovery does not leave stale invalid/frozen state.
+12. `RECOVERY LEVEL` — explicit valid level state immediately after failure.
 
-The on-screen black/yellow test banner gives test number, scenario and countdown, so terminal watching is unnecessary. The console also logs transitions.
+The accepted presentation uses a dark circular inner bezel, contrasting inner lip, fixed bank scale at 10°, 20°, 30°, 45° and 60°, fixed triangular bank pointer and a yellow aircraft reference fixed at the display centre. Positive pitch moves the horizon down, negative pitch moves it up, and the attitude sphere moves opposite aircraft bank. Pitch ladder and horizon rotate together. The failure presentation uses a conspicuous `ATT FAIL` indication rather than leaving a plausible frozen attitude usable.
 
-## PFD presentation reference
+## Altimeter development stage
 
-The Artificial Horizon presentation now follows the approved round-EFIS visual reference rather than the earlier bare framebuffer presentation. The renderer keeps the already-tested pitch and bank geometry, but adds a dark circular inner bezel, contrasting inner lip, conventional fixed bank scale at 10°, 20°, 30°, 45° and 60°, and a fixed triangular bank pointer. The yellow aircraft reference remains fixed at the display centre.
+The Altimeter will use the same development method that proved effective for attitude: one instrument on screen, deterministic test values, on-screen test number/name/countdown, permanent red `SIM` annunciation, explicit failure state and explicit recovery state.
 
-Altitude is presented in a compact black/white box at the right and heading in a compact box below the attitude sphere, with valid numeric values highlighted in green. Development-only `TEST MODE - ATTITUDE` and red `SIM` annunciations remain deliberately conspicuous. The test overlay is not part of the intended aircraft presentation.
+The initial Altimeter acceptance sequence is planned to include:
 
-Attitude invalidity now replaces the central plausible attitude area with a prominent black/red `ATT FAIL` annunciation and red crossed invalid indication. The underlying data may still exist in memory for diagnostics, but it must not remain visually usable as though valid.
+1. `ALT 0` — zero-foot datum.
+2. `ALT 500` — low-altitude half-thousand indication.
+3. `ALT 1000` — first thousand crossing.
+4. `ALT 2500` — normal intermediate indication.
+5. `ALT 5000` — mid-scale reference.
+6. `ALT 9500` — approach to 10,000 ft.
+7. `ALT 10000` — 10,000 ft crossing and pointer relationship.
+8. `ALT SWEEP` — deterministic changing altitude to verify continuous pointer motion and wrap/carry behaviour.
+9. `ALT FAIL` — altitude invalid and no plausible frozen altitude left usable.
+10. `RECOVERY ALT` — fresh valid altitude immediately after failure.
 
-## Acceptance criteria
+Before this sequence is accepted, the current development altimeter artwork should be replaced with a proper aircraft-instrument presentation: clear circular bezel, strong major/minor tick hierarchy, large readable numerals and unmistakable hundreds/thousands indication. The exact visual design will be reviewed in QEMU before being frozen.
 
-The fixed yellow aircraft reference must not move and must lie on the zero-pitch horizon in LEVEL. Positive pitch moves the horizon downward; negative pitch moves it upward. The attitude sphere moves opposite aircraft bank: in left bank the horizon slopes down to the left/up to the right, and vice versa for right bank. Pitch ladder and horizon must rotate together. Combined pitch/bank must preserve both transformations. Fixed bezel/bank markings must not rotate with the attitude sphere. `ATTITUDE FAIL` must make a plausible attitude unusable immediately while unrelated valid altitude/heading remain available. `RECOVERY LEVEL` must restore a fresh valid level presentation. The red **SIM** annunciation remains visible throughout.
+### QNH testing
+
+QNH is a separate functional test from the basic display sequence. The adjustable pressure setting must be exercised through the rotary control and persisted UI setting. Changing QNH must affect indicated altitude in the expected direction and magnitude once the BMP585 pressure-to-altitude model is connected. QNH tests must not be simulated merely by directly changing the displayed altitude value; they must exercise the pressure/QNH calculation path.
+
+Altitude invalidity and stale pressure data must fail visibly. The firmware must never substitute synthetic altitude or retain a plausible frozen value in an aircraft-use build.
 
 ## Build and run scripts
 
@@ -49,10 +64,23 @@ zsh scripts/build-qemu.sh
 zsh scripts/run-qemu.sh
 ```
 
-For a clean emulator rebuild use `zsh scripts/build-qemu.sh --clean`. QEMU uses the real 480×480 RGB565 geometry but bypasses physical LCD, MCP23008, encoder, backlight and sensors. `sdkconfig.qemu.defaults` disables physical PSRAM emulation while the normal hardware build retains the ESP32-S3-WROOM-1-N16R2 PSRAM configuration. Never flash `build-qemu` to hardware.
+For a clean emulator rebuild use:
+
+```bash
+zsh scripts/build-qemu.sh --clean
+zsh scripts/run-qemu.sh
+```
+
+QEMU uses the real 480×480 RGB565 geometry but bypasses physical LCD, MCP23008, encoder, backlight and sensors. `sdkconfig.qemu.defaults` disables physical PSRAM emulation while the normal hardware build retains the ESP32-S3-WROOM-1-N16R2 PSRAM configuration. Never flash `build-qemu` to hardware.
 
 Physical bench simulation leaves hardware I/O active and substitutes explicitly synthetic instrument data. It is separate from QEMU and must never be enabled for aircraft use.
 
-## Next stage
+## Display resolution and graphics quality
 
-Once this twelve-state Horizon/PFD suite and revised bezel presentation are accepted, freeze the attitude renderer and switch QEMU to an Altimeter-only acceptance sequence. Compass/heading follows separately.
+The selected Newhaven NHD-2.1-480480AF-ASXP has a native resolution of **480×480 pixels**, so the QEMU framebuffer deliberately uses exactly 480×480. There is no higher native pixel mode available from the selected panel. The firmware uses RGB565, which is appropriate for the ESP32-S3 RGB display path and this EFIS presentation.
+
+QEMU is primarily a geometry and functional-development environment. Enlarging its 480×480 window on a desktop can make primitive graphics appear coarser than they will at the physical 2.1-inch display size. After Horizon, Altimeter and Compass functionality is accepted, a common graphics-quality pass is planned to improve typography, line/circle smoothness, anti-aliasing or pre-rendered graphics where practical, line weights and bezel shading without changing accepted instrument behaviour.
+
+## Following stage
+
+After Altimeter presentation, altitude/failure/recovery behaviour and QNH interaction are accepted, freeze the Altimeter geometry and switch QEMU to a Compass-only acceptance sequence. A final common graphics-quality pass follows functional acceptance of all three instruments.
