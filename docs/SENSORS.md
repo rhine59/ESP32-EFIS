@@ -18,6 +18,27 @@ The estimator requires aircraft body axes **+X forward, +Y right, +Z down**. The
 
 The first hardware attitude acceptance sequence is: verify chip IDs and raw stationary values; establish axis/sign mapping; confirm approximately 1 g magnitude when stationary; characterize stationary gyro bias; exercise known ±10°/±20° pitch and ±30°/±60° roll positions; then enable the estimator-to-display path and verify stale/disconnect failure. Calibration and vibration testing follow before any aircraft evaluation.
 
+### BMI088 commissioning diagnostic
+
+A dedicated build option, `CONFIG_EFIS_BMI088_DIAGNOSTICS`, is available for bench axis commissioning. It is **OFF by default**, unavailable in the QEMU build, and does not connect BMI088 measurements to the instrument display. When enabled on hardware it logs approximately five samples per second in this form:
+
+```text
+BMI088 DIAG t=12345ms A[g] X=+0.001 Y=-0.006 Z=+1.002 |A|=1.002 G[dps] X=+0.08 Y=-0.03 Z=+0.11
+```
+
+Use the diagnostic with the Shuttle Board stationary and then rotate it deliberately through known orientations. Record which sensor acceleration axis carries approximately ±1 g for each orientation and which gyro axis/sign responds to each positive rotation. The required final mapping is aircraft **+X forward, +Y right, +Z down**. Do not enable the estimator-to-display path until that mapping has been physically demonstrated rather than inferred from connector or PCB orientation.
+
+For a stationary board, `|A|` should be close to 1 g and gyro rates should remain near zero apart from bias/noise. Large stationary departures, unstable readings, SPI errors or implausible gyro output are commissioning failures to resolve before attitude work continues.
+
+To enable the diagnostic temporarily:
+
+```bash
+cd ~/Documents/Xcode/ESP32-EFIS/firmware
+idf.py menuconfig
+```
+
+Select **ESP32 EFIS development options → Enable BMI088 axis commissioning diagnostics**, save, then build/flash/monitor. Disable the option again after commissioning. The startup log explicitly states when diagnostics are enabled and that the diagnostic data are not feeding the display.
+
 ## Pressure sensor — frozen choice
 
 **Bosch Sensortec BMP585** is the reference static-pressure sensor for the Altimeter/PFD.
