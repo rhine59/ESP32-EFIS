@@ -25,9 +25,17 @@ The current sequence contains twelve six-second states and repeats continuously:
 
 The on-screen black/yellow test banner gives test number, scenario and countdown, so terminal watching is unnecessary. The console also logs transitions.
 
+## PFD presentation reference
+
+The Artificial Horizon presentation now follows the approved round-EFIS visual reference rather than the earlier bare framebuffer presentation. The renderer keeps the already-tested pitch and bank geometry, but adds a dark circular inner bezel, contrasting inner lip, conventional fixed bank scale at 10°, 20°, 30°, 45° and 60°, and a fixed triangular bank pointer. The yellow aircraft reference remains fixed at the display centre.
+
+Altitude is presented in a compact black/white box at the right and heading in a compact box below the attitude sphere, with valid numeric values highlighted in green. Development-only `TEST MODE - ATTITUDE` and red `SIM` annunciations remain deliberately conspicuous. The test overlay is not part of the intended aircraft presentation.
+
+Attitude invalidity now replaces the central plausible attitude area with a prominent black/red `ATT FAIL` annunciation and red crossed invalid indication. The underlying data may still exist in memory for diagnostics, but it must not remain visually usable as though valid.
+
 ## Acceptance criteria
 
-The fixed yellow aircraft reference must not move and must lie on the zero-pitch horizon in LEVEL. Positive pitch moves the horizon downward; negative pitch moves it upward. The attitude sphere moves opposite aircraft bank: in left bank the horizon slopes down to the left/up to the right, and vice versa for right bank. Pitch ladder and horizon must rotate together. Combined pitch/bank must preserve both transformations. `ATTITUDE FAIL` must make a plausible attitude unusable immediately while unrelated valid altitude/heading remain available. `RECOVERY LEVEL` must restore a fresh valid level presentation. The red **SIM** annunciation remains visible throughout.
+The fixed yellow aircraft reference must not move and must lie on the zero-pitch horizon in LEVEL. Positive pitch moves the horizon downward; negative pitch moves it upward. The attitude sphere moves opposite aircraft bank: in left bank the horizon slopes down to the left/up to the right, and vice versa for right bank. Pitch ladder and horizon must rotate together. Combined pitch/bank must preserve both transformations. Fixed bezel/bank markings must not rotate with the attitude sphere. `ATTITUDE FAIL` must make a plausible attitude unusable immediately while unrelated valid altitude/heading remain available. `RECOVERY LEVEL` must restore a fresh valid level presentation. The red **SIM** annunciation remains visible throughout.
 
 ## Build and run scripts
 
@@ -47,4 +55,4 @@ Physical bench simulation leaves hardware I/O active and substitutes explicitly 
 
 ## Next stage
 
-Once this twelve-state Horizon/PFD suite and presentation are accepted, freeze the attitude renderer and switch QEMU to an Altimeter-only acceptance sequence. Compass/heading follows separately.
+Once this twelve-state Horizon/PFD suite and revised bezel presentation are accepted, freeze the attitude renderer and switch QEMU to an Altimeter-only acceptance sequence. Compass/heading follows separately.
