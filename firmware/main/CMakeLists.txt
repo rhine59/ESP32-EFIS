@@ -6,6 +6,7 @@ idf_component_register(
         "horizon_renderer.c"
         "instrument_screens.c"
         "instrument_ui.c"
+        "instrument_sim.c"
         "bmi088.c"
     INCLUDE_DIRS
         "."
