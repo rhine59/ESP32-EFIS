@@ -12,6 +12,7 @@ typedef struct {
     bool altitude_valid;
     int heading_deg;
     bool heading_valid;
+    bool simulated;
 } instrument_data_t;
 
 void instrument_render(uint16_t *fb, int width, int height,
