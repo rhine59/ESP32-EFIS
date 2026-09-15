@@ -4,39 +4,39 @@ Simulation is development-only and must never be used as a fallback for failed f
 
 ## Instrument acceptance status
 
-The **Artificial Horizon / PFD, Altimeter and Compass functional passes are accepted and parked**. Their accepted indication direction, mathematics and failure behaviour must not be changed accidentally during graphics work.
+The **Artificial Horizon / PFD graphics pass is accepted and parked**. The Altimeter and Compass functional passes remain accepted; the active 480×480 graphics-quality stage is now the **Altimeter**.
 
-The active development stage is the common 480×480 graphics-quality pass, proceeding one instrument at a time: **Artificial Horizon → Altimeter → Compass**.
+Graphics work must preserve the accepted indication direction, mathematics and failure behaviour.
 
 ## Artificial Horizon acceptance record
 
 The accepted attitude suite covers level, ±10° and ±20° pitch, ±30° and ±60° bank, combined +10° pitch/+30° right bank, attitude failure and explicit recovery. Positive pitch moves the horizon down, negative pitch moves it up, and the attitude sphere moves opposite aircraft bank. `ATT FAIL` prevents a failed attitude from remaining plausibly usable.
 
-### Active Horizon graphics review
+The accepted graphics keep `PITCH_PIXELS_PER_DEG` at **6.8 px/degree**, use a regularised horizon line, differentiated 5°/10° pitch marks with centre gaps, and a fixed yellow aircraft symbol with black contrast outline. The centre datum remains at exact display centre.
 
-QEMU is currently locked back to `PANEL_HORIZON` and runs the same twelve six-second attitude states used for functional acceptance. This is now a visual-regression suite rather than a change to attitude mathematics.
+The accepted fixed bank-angle scale marks **10°, 20°, 30°, 45° and 60° on both sides** plus zero. The 30° and 60° marks are stronger. A white triangular roll pointer with black contrast outline moves with measured roll: left bank moves left/counter-clockwise and right bank moves right/clockwise. The bank scale is presentation only and does not alter roll mathematics.
 
-The graphics refinement keeps `PITCH_PIXELS_PER_DEG` at the accepted **6.8 px/degree** and preserves the accepted roll transform. The horizon line has been regularised, 5° and 10° pitch marks have clearer hierarchy and centre gaps, and the fixed yellow aircraft symbol has a black outline for reliable contrast against both sky and ground. Its centre datum remains fixed at the exact display centre.
-
-A conventional fixed **bank-angle scale** is now drawn across the upper part of the attitude sphere, with marks at **10°, 20°, 30°, 45° and 60° on both sides** plus the zero reference. The 30° and 60° marks are deliberately stronger. A white triangular roll pointer, outlined in black for contrast, moves with measured roll: left bank moves the pointer left/counter-clockwise and right bank moves it right/clockwise. This adds the missing quantitative roll reference without changing the accepted roll mathematics.
-
-The temporary QEMU-only Compass label/readout overlay has been removed. Those markings belong to the production Compass renderer, so QEMU no longer draws a second test-only representation over the real instrument graphics.
-
-The native Swift simulator mirrors the bank scale and roll pointer while retaining the same accepted pitch/bank direction. QEMU remains authoritative for pixel-level ESP32 rendering.
+The native Swift simulator mirrors this accepted Horizon presentation. QEMU remains authoritative for pixel-level ESP32 rendering.
 
 ## Altimeter acceptance record
 
-The Altimeter presentation and QNH/pressure calculation are accepted. The accepted presentation uses the circular EFIS bezel, 0–9 dial numerals, differentiated hundreds/thousands/ten-thousands hands, digital altitude readout, conventional rectangular Kollsman/QNH window in hectopascals and fail-obvious `ALT FAIL` state.
+The Altimeter presentation and QNH/pressure calculation are functionally accepted. The accepted presentation uses the circular EFIS bezel, 0–9 dial numerals, differentiated hundreds/thousands/ten-thousands hands, digital altitude readout, conventional rectangular Kollsman/QNH window in hectopascals and fail-obvious `ALT FAIL` state.
 
 The accepted above-10,000-ft warning has no hatching at or below 10,000 ft, progressively reveals hatching over the next 1,000 ft and remains fully exposed thereafter. The pressure-setting window is hPa only. The discarded slice-shaped Kollsman concept is not part of the design.
 
 The accepted functional QNH test held simulated static pressure at 927.0 hPa while changing `ui.qnh_hpa` through 1013, 1003, 1023, 950 and 1050 hPa. Lower QNH produced lower indicated altitude, higher QNH produced higher indicated altitude, and invalid pressure produced `ALT FAIL`. The reusable `baro_altitude` module therefore remains the calculation path for static pressure plus selected QNH.
 
+### Active Altimeter graphics review
+
+QEMU is now locked to `PANEL_ALTIMETER` for visual review. It cycles fourteen six-second states: **0, 500, 1,000, 2,500, 5,000, 9,500, 9,900, 10,000, 10,100, 10,500 and 12,500 ft**, a moving altitude sweep, `ALT FAIL`, and explicit recovery to 2,500 ft.
+
+This suite is intended to expose dial readability, hand hierarchy, digital altitude legibility, Kollsman/QNH layout, the 10,000-ft hatching transition and failure presentation before any graphics changes are accepted. The altitude/QNH mathematics and hatching thresholds are frozen during this review.
+
 Physical BMP585 acquisition, stale-data timing and rotary encoder direction/detent validation remain hardware-integration tests and are not simulated as real hardware in QEMU.
 
 ## Compass acceptance record
 
-The Compass QEMU pass is accepted. The functional suite used twelve repeating six-second states: 000°, 045°, 090°, 135°, 180°, 225°, 270°, 315°, a moving 350°→010° north crossing, continuous rotation, `HEADING FAIL`, and explicit recovery to 000°.
+The Compass QEMU functional pass is accepted. The functional suite used twelve repeating six-second states: 000°, 045°, 090°, 135°, 180°, 225°, 270°, 315°, a moving 350°→010° north crossing, continuous rotation, `HEADING FAIL`, and explicit recovery to 000°.
 
 The accepted Compass renderer carries large **N, E, S and W** labels on the rotating card and a central three-digit heading readout. These derive from the same `heading_deg` value as card rotation. For increasing aircraft heading the card rotates in the opposite direction beneath the fixed lubber/reference line. At 000° N is under the top reference; at 090° E is under it; at 180° S is under it; and at 270° W is under it. North wrap is continuous.
 
@@ -46,7 +46,9 @@ The accepted heading bug is a distinct outlined yellow triangular bug. It repres
 
 ## Simulator synchronisation
 
-The native Swift iPhone/iPad simulator is maintained in step with the QEMU acceptance behaviour. QEMU remains authoritative for the actual ESP32 480×480 renderer; changes to an accepted instrument should be reflected in the Swift simulator and its documentation as part of the same change.
+The native Swift iPhone/iPad simulator is maintained in step with QEMU acceptance behaviour. QEMU remains authoritative for the actual ESP32 480×480 renderer; accepted visual changes should be reflected in the Swift simulator and its documentation as part of the same change.
+
+The temporary QEMU-only Compass label/readout overlay has been retired. Compass labels and readout are supplied by the production renderer, so QEMU directly exercises production instrument graphics.
 
 ## Build and run scripts
 
@@ -68,4 +70,4 @@ The selected Newhaven NHD-2.1-480480AF-ASXP has a native resolution of **480×48
 
 The graphics pass may improve typography, primitive smoothness, line weights, spacing, alignment, clipping and bezel/failure presentation. It must not change accepted attitude, altitude/QNH or heading/bug mathematics.
 
-After graphics acceptance, development moves to the real sensor pipeline: BMI088 attitude, BMP585 pressure/QNH altitude and RM3100 heading, including explicit stale/invalid-data handling before physical prototype testing.
+After Altimeter graphics acceptance, the next graphics stage is the Compass. After all graphics passes are accepted, development moves to the real sensor pipeline: BMI088 attitude, BMP585 pressure/QNH altitude and RM3100 heading, including explicit stale/invalid-data handling before physical prototype testing.
