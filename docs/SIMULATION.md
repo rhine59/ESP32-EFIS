@@ -4,7 +4,7 @@ Simulation is development-only and must never be used as a fallback for failed f
 
 ## Instrument acceptance status
 
-The **Artificial Horizon / PFD, Altimeter and Compass graphics passes are accepted and parked**. The complete 480×480 instrument graphics-quality stage is therefore accepted. The next development stage is the **real sensor pipeline and physical prototype integration**.
+The **Artificial Horizon / PFD, Altimeter and Compass graphics passes are accepted and parked**. The complete 480×480 instrument graphics-quality stage is accepted. Physical hardware work is currently paused because prototype hardware is unavailable; software/QEMU/simulator work may continue without claiming physical validation.
 
 Graphics work must preserve the accepted indication direction, mathematics and failure behaviour.
 
@@ -14,43 +14,47 @@ The accepted attitude suite covers level, ±10° and ±20° pitch, ±30° and ±
 
 The accepted graphics keep `PITCH_PIXELS_PER_DEG` at **6.8 px/degree**, use a regularised horizon line, differentiated 5°/10° pitch marks with centre gaps, and a fixed yellow aircraft symbol with black contrast outline. The centre datum remains at exact display centre.
 
-The accepted fixed bank-angle scale marks **10°, 20°, 30°, 45° and 60° on both sides** plus zero. The 30° and 60° marks are stronger. A white triangular roll pointer with black contrast outline moves with measured roll: left bank moves left/counter-clockwise and right bank moves right/clockwise. The bank scale is presentation only and does not alter roll mathematics.
-
-The native Swift simulator mirrors this accepted Horizon presentation. QEMU remains authoritative for pixel-level ESP32 rendering.
+The accepted fixed bank-angle scale marks **10°, 20°, 30°, 45° and 60° on both sides** plus zero. The 30° and 60° marks are stronger. A white triangular roll pointer with black contrast outline moves with measured roll: left bank moves left/counter-clockwise and right bank moves right/clockwise.
 
 ## Altimeter acceptance record
 
-The Altimeter presentation and QNH/pressure calculation are accepted. The accepted presentation uses the circular EFIS bezel, 0–9 dial numerals, differentiated hundreds/thousands/ten-thousands hands, digital altitude readout, compact mechanical-style Kollsman pressure scale at 3 o'clock, the 9 o'clock >10,000-ft hatching sector and fail-obvious `ALT FAIL` state.
+The accepted presentation uses the circular EFIS bezel, 0–9 dial numerals, differentiated hundreds/thousands/ten-thousands hands, digital altitude readout, compact mechanical-style Kollsman pressure scale at 3 o'clock, the 9 o'clock >10,000-ft hatching sector and fail-obvious `ALT FAIL` state.
 
-The accepted Kollsman display replaces the former lower rectangular QNH box. It is a curved circumferential sector centred at **3 o'clock**, spanning approximately **8 hPa total** at 2° per hPa. The selected QNH is aligned with a fixed 3-o'clock index while the pressure graduations move around it. Pressure numbers and hatch marks are maintained at constant radii from the instrument centre and the window contains no `QNH`, `HPA` or `KOLLSMAN` text. The exact **1013.25 hPa** standard-pressure datum is represented by a substantially heavier radial tick. This datum is a presentation reference only: selected QNH remains 950–1050 hPa in integer 1 hPa increments and the accepted pressure/altitude mathematics are unchanged.
+The Kollsman display is a curved circumferential sector centred at **3 o'clock**, spanning approximately **8 hPa total** at 2° per hPa. Selected QNH aligns with a fixed index while pressure graduations move. The exact **1013.25 hPa** datum is a heavier radial tick. Selected QNH remains 950–1050 hPa in integer 1 hPa increments.
 
-The accepted above-10,000-ft logic has no hatching at or below 10,000 ft, progressively reveals hatching over the next 1,000 ft and remains fully exposed thereafter. The hatching is an **annular sector centred at the 9 o'clock position**. The sector occupies a 60° arc on the left side of the dial and sits inside the numeral ring. At or below 10,000 ft it is absent; from 10,000 to 11,000 ft the sector progressively grows through its 60° arc; at and above 11,000 ft the full sector remains visible. This is a presentation change only: the accepted 10,000/11,000-ft thresholds are unchanged.
+The >10,000-ft hatching is a 60° annular sector centred at 9 o'clock. It is absent at/below 10,000 ft, progressively appears from 10,000 to 11,000 ft and remains fully visible thereafter.
 
-The accepted functional QNH test held simulated static pressure at 927.0 hPa while changing `ui.qnh_hpa` through 1013, 1003, 1023, 950 and 1050 hPa. Lower QNH produced lower indicated altitude, higher QNH produced higher indicated altitude, and invalid pressure produced `ALT FAIL`. The reusable `baro_altitude` module therefore remains the calculation path for static pressure plus selected QNH.
+The accepted functional QNH test held simulated static pressure at 927.0 hPa while changing QNH through 1013, 1003, 1023, 950 and 1050 hPa. Lower QNH produced lower indicated altitude, higher QNH higher indicated altitude, and invalid pressure produced `ALT FAIL`.
 
-The Altimeter graphics suite used fourteen six-second states: **0, 500, 1,000, 2,500, 5,000, 9,500, 9,900, 10,000, 10,100, 10,500 and 12,500 ft**, a moving altitude sweep, `ALT FAIL`, and explicit recovery to 2,500 ft. The final compact Kollsman geometry was visually accepted in QEMU.
-
-The native Swift simulator mirrors both the accepted 9 o'clock altitude-hatching sector and the compact 3 o'clock Kollsman presentation. QEMU remains authoritative for the RGB565 implementation.
-
-Physical BMP585 acquisition, stale-data timing and rotary encoder direction/detent validation remain hardware-integration tests and are not simulated as real hardware in QEMU.
+The formal Altimeter graphics suite used fourteen states: 0, 500, 1,000, 2,500, 5,000, 9,500, 9,900, 10,000, 10,100, 10,500 and 12,500 ft, moving sweep, `ALT FAIL`, and recovery.
 
 ## Compass acceptance record
 
-The **Compass functional and graphics passes are accepted**. The QEMU suite used twelve repeating six-second states: 000°, 045°, 090°, 135°, 180°, 225°, 270°, 315°, a moving 350°→010° north crossing, continuous rotation, `HEADING FAIL`, and explicit recovery to 000°.
+The accepted Compass suite used 000°, 045°, 090°, 135°, 180°, 225°, 270°, 315°, moving 350°→010° north crossing, continuous rotation, `HEADING FAIL`, and recovery to 000°.
 
-The accepted Compass renderer carries large **N, E, S and W** labels on the rotating card and a central three-digit heading readout. These derive from the same `heading_deg` value as card rotation. For increasing aircraft heading the card rotates in the opposite direction beneath the fixed lubber/reference line. At 000° N is under the top reference; at 090° E is under it; at 180° S is under it; and at 270° W is under it. North wrap is continuous.
+The renderer carries large N/E/S/W labels and a three-digit heading. Increasing aircraft heading rotates the card oppositely beneath the fixed reference. The outlined yellow selected-heading bug is calculated from `heading_bug_deg - heading_deg`; the acceptance suite held it at 060°.
 
-The accepted heading bug is a distinct outlined yellow triangular bug. It represents a selected magnetic heading and its screen position is calculated from `heading_bug_deg - heading_deg`; it is not a fixed screen pointer. The acceptance suite held the bug at 060° while aircraft heading changed. Physical encoder adjustment remains a hardware test because QEMU bypasses the MCP23008 and rotary encoder.
+`HEADING FAIL` must not be replaced by a frozen plausible heading.
 
-`HEADING FAIL` is the accepted fail-obvious state and must not be replaced by a frozen plausible heading. The complete twelve-state Compass graphics suite was visually reviewed in QEMU and accepted without further presentation changes.
+## Full QEMU demonstration mode
 
-## Simulator synchronisation
+The normal QEMU application now runs a **28-step continuous demonstration** intended both for regression viewing and video capture. Each step lasts three seconds and uses the production instrument renderer plus the existing synthetic scenario engine.
 
-The native Swift iPhone/iPad simulator is maintained in step with QEMU acceptance behaviour. QEMU remains authoritative for the actual ESP32 480×480 renderer; accepted visual changes should be reflected in the Swift simulator and its documentation as part of the same change.
+The demonstration sequence is:
 
-The temporary QEMU-only Compass label/readout overlay has been retired. Compass labels and readout are supplied by the production renderer, so QEMU directly exercises production instrument graphics.
+- Horizon: level, pitch +10, pitch -10, bank left 30, bank right 30, combined pitch/bank, `ATTITUDE FAIL`, recovery
+- Altimeter: 0, 2,500, 9,500, 10,000, 10,100, 10,500 and 12,500 ft, altitude sweep, `ALT FAIL`, recovery
+- Compass: north, north-east, east, south, west, north-west, 350→010 wrap, continuous rotation, `HEADING FAIL`, recovery north
 
-## Build and run scripts
+The selected heading bug is fixed at 060° during the QEMU demonstration. The on-screen test overlay identifies the current scenario and step. The complete loop is approximately **84 seconds** and then repeats.
+
+This concise demonstration does not replace the formal acceptance records above; it samples the accepted behaviour for presentation and regression purposes.
+
+## Swift simulator synchronisation
+
+The native Swift iPhone/iPad simulator mirrors the accepted Horizon, Altimeter and Compass presentation. It also provides automated selectors for the complete 12-state Horizon, 14-state Altimeter and 12-state Compass acceptance suites. QEMU remains authoritative for the actual ESP32 RGB565 renderer.
+
+## Build, run and record
 
 From the repository root:
 
@@ -62,12 +66,18 @@ zsh scripts/build-qemu.sh --clean
 zsh scripts/run-qemu.sh
 ```
 
-QEMU uses the real 480×480 RGB565 geometry but bypasses physical LCD, MCP23008, encoder, backlight and sensors. `sdkconfig.qemu.defaults` disables physical PSRAM emulation while the normal hardware build retains the ESP32-S3-WROOM-1-N16R2 PSRAM configuration. Never flash `build-qemu` to hardware.
+To make a macOS video recording of the full QEMU demonstration:
+
+```bash
+zsh scripts/record-qemu-demo.sh
+```
+
+The recording helper starts QEMU, asks the user to click the QEMU graphics window for macOS window capture, stops automatically and writes the `.mov` under `docs/media/`. See `DEMONSTRATION.md`.
+
+QEMU uses the real 480×480 RGB565 geometry but bypasses physical LCD, MCP23008, encoder, backlight and sensors. `sdkconfig.qemu.defaults` disables physical PSRAM emulation. Never flash `build-qemu` to hardware.
 
 ## Display resolution and graphics-quality stage
 
-The selected Newhaven NHD-2.1-480480AF-ASXP has a native resolution of **480×480 pixels**, so QEMU deliberately uses exactly 480×480. The firmware uses RGB565. Enlarging QEMU on a desktop makes primitive graphics look coarser than at the physical panel size.
+The selected Newhaven NHD-2.1-480480AF-ASXP has a native resolution of **480×480 pixels**, so QEMU uses exactly 480×480 RGB565. Enlarging QEMU on a desktop makes primitive graphics look coarser than at the physical panel size.
 
-The graphics pass may improve typography, primitive smoothness, line weights, spacing, alignment, clipping and bezel/failure presentation. It must not change accepted attitude, altitude/QNH or heading/bug mathematics.
-
-The **480×480 graphics-quality stage is complete and accepted for the Artificial Horizon, Altimeter and Compass**. Development now moves to the real sensor pipeline: BMI088 attitude, BMP585 pressure/QNH altitude and RM3100 heading, with explicit startup, range, freshness, plausibility and stale/invalid-data handling before physical prototype testing.
+The **480×480 graphics-quality stage is complete and accepted for the Artificial Horizon, Altimeter and Compass**. Sensor and physical integration remain separately gated and must not inherit an acceptance status merely from emulator success.
