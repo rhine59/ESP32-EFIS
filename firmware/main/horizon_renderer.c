@@ -33,8 +33,6 @@ static void world_to_screen(float wx,float wy,float roll_rad,float pitch_px,int 
 {
     float c=cosf(roll_rad),s=sinf(roll_rad);
     float y=wy+pitch_px;
-    /* The attitude sphere moves opposite the aircraft bank. A positive/right
-       aircraft roll therefore rotates the horizon counter-clockwise on screen. */
     *sx=cx+(int)lroundf(wx*c+y*s);
     *sy=cy+(int)lroundf(-wx*s+y*c);
 }
@@ -46,8 +44,6 @@ void horizon_render(uint16_t *fb,int width,int height,float pitch_deg,float roll
     const float pitch_px=pitch_deg*PITCH_PIXELS_PER_DEG;
     const float c=cosf(roll),s=sinf(roll);
 
-    /* Inverse of the display rotation above. The horizon/sphere moves opposite
-       aircraft roll while the yellow aircraft reference remains fixed. */
     for(int y=0;y<height;y++)for(int x=0;x<width;x++){
         float dx=(float)(x-cx),dy=(float)(y-cy);
         float world_y=dx*s+dy*c-pitch_px;
@@ -61,10 +57,13 @@ void horizon_render(uint16_t *fb,int width,int height,float pitch_deg,float roll
 
     for(int deg=-20;deg<=20;deg+=5){if(deg==0)continue;float wy=-(float)deg*PITCH_PIXELS_PER_DEG;int half=(abs(deg)%10)?42:62;world_to_screen(-half,wy,roll,pitch_px,cx,cy,&x0,&y0);world_to_screen(half,wy,roll,pitch_px,cx,cy,&x1,&y1);thick_line(fb,width,height,x0,y0,x1,y1,RGB565_WHITE,2);}
 
-    thick_line(fb,width,height,cx-82,cy+26,cx-18,cy+26,RGB565_YELLOW,5);
-    thick_line(fb,width,height,cx+18,cy+26,cx+82,cy+26,RGB565_YELLOW,5);
-    thick_line(fb,width,height,cx-18,cy+36,cx+18,cy+36,RGB565_YELLOW,5);
-    thick_line(fb,width,height,cx,cy+18,cx,cy+38,RGB565_YELLOW,2);
+    /* Fixed aircraft reference is centred exactly on the zero-pitch horizon.
+       At LEVEL the wing bars and centre datum lie on y=cy. Pitch and bank move
+       the attitude sphere around this fixed reference, never the aircraft. */
+    thick_line(fb,width,height,cx-82,cy,cx-18,cy,RGB565_YELLOW,5);
+    thick_line(fb,width,height,cx+18,cy,cx+82,cy,RGB565_YELLOW,5);
+    thick_line(fb,width,height,cx-18,cy+10,cx+18,cy+10,RGB565_YELLOW,5);
+    thick_line(fb,width,height,cx,cy-8,cx,cy+12,RGB565_YELLOW,2);
 
     for(int d=-5;d<=5;d++){put_pixel(fb,width,height,cx+d,cy,RGB565_BLACK);put_pixel(fb,width,height,cx,cy+d,RGB565_BLACK);}
 }
