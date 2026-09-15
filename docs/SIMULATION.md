@@ -13,25 +13,25 @@ Simulation is for display, encoder, persistence and graphics testing only. It su
 - all simulated validity flags are true
 
 ## Enabling
-`firmware/main/app_main.c` currently contains:
+Bench simulation is controlled by the ESP-IDF Kconfig option `CONFIG_EFIS_BENCH_SIMULATION`, defined in `firmware/main/Kconfig.projbuild`.
 
-```c
-#define BENCH_SIMULATION true
-```
+The option defaults to **OFF**. This is deliberate: a normal build must never silently contain synthetic flight data.
 
-The serial log prints an explicit warning at boot when simulation is enabled.
+Enable it only for an explicit bench or emulator build, for example with `idf.py menuconfig` under **ESP32 EFIS development options → Enable synthetic bench flight data**, then rebuild. The serial log prints an explicit warning at boot when simulation is enabled.
+
+ESP-IDF boolean Kconfig symbols that are disabled are normally absent from `sdkconfig.h`; `app_main.c` therefore tests the symbol with `#ifdef CONFIG_EFIS_BENCH_SIMULATION` rather than assuming it expands to zero. This keeps the default-OFF configuration buildable and unambiguous.
 
 ## Mandatory flight-build rule
-Before any aircraft-use firmware build, set `BENCH_SIMULATION` to `false`. With simulation disabled, absent real sensor pipelines remain invalid. Synthetic values must never be used as a fallback for sensor failure.
+For any aircraft-use firmware build, `CONFIG_EFIS_BENCH_SIMULATION` must remain disabled. With simulation disabled, absent real sensor pipelines remain invalid. Synthetic values must never be used as a fallback for sensor failure.
 
-A later firmware cleanup should move this switch into a dedicated ESP-IDF Kconfig build option and make the production/aircraft configuration default OFF.
+Before loading firmware for aircraft use, verify the boot log reports `BENCH SIMULATION: OFF`.
 
 ## Bench test sequence
-1. flash the development build and verify the serial `BENCH SIMULATION: ENABLED` warning;
+1. enable `CONFIG_EFIS_BENCH_SIMULATION`, flash the development build and verify the serial `BENCH SIMULATION: ENABLED - SYNTHETIC DATA` warning;
 2. observe changing PFD test state;
 3. short-push to Altimeter and confirm all hands move smoothly and wrap correctly;
 4. long-push, rotate QNH, exit settings, power-cycle and verify persistence;
 5. short-push to Compass and verify the card rotates beneath the fixed aircraft/lubber line;
 6. set heading bug and verify persistence;
 7. cycle back to Horizon/PFD;
-8. rebuild with simulation disabled and verify unavailable real data becomes visibly invalid.
+8. rebuild with simulation disabled and verify the boot log reports `BENCH SIMULATION: OFF` and unavailable real data becomes visibly invalid.
