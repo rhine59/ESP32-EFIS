@@ -5,10 +5,43 @@ struct HorizonView: View {
     var body: some View { GeometryReader { g in
         let s=g.size.width
         ZStack {
-            ZStack { Rectangle().fill(.blue).offset(y:-s/2); Rectangle().fill(.brown).offset(y:s/2); Rectangle().fill(.white).frame(height:3) }
-                .frame(width:s*1.8,height:s*1.8).offset(y:pitch*s/45).rotationEffect(.degrees(-roll))
-            ForEach([-20,-10,10,20],id:\.self){p in HStack{Rectangle().frame(width:55,height:2);Text("\(abs(p))").font(.caption.bold()).foregroundStyle(.white);Rectangle().frame(width:55,height:2)}.foregroundStyle(.white).offset(y:CGFloat(p)*s/90)}
-            Path{p in p.move(to:CGPoint(x:s*.32,y:s*.5));p.addLine(to:CGPoint(x:s*.45,y:s*.5));p.addLine(to:CGPoint(x:s*.5,y:s*.54));p.addLine(to:CGPoint(x:s*.55,y:s*.5));p.addLine(to:CGPoint(x:s*.68,y:s*.5))}.stroke(.yellow,lineWidth:5)
+            ZStack {
+                Rectangle().fill(.blue).offset(y:-s/2)
+                Rectangle().fill(.brown).offset(y:s/2)
+                Rectangle().fill(.white).frame(height:4)
+                ForEach([-20,-15,-10,-5,5,10,15,20],id:\.self){ p in
+                    let major = abs(p) % 10 == 0
+                    HStack(spacing: major ? s*.075 : s*.05) {
+                        Rectangle().frame(width:major ? s*.10:s*.055,height:major ? 3:2)
+                        Rectangle().frame(width:major ? s*.10:s*.055,height:major ? 3:2)
+                    }
+                    .foregroundStyle(.white)
+                    .offset(y:CGFloat(p)*s/66.18)
+                }
+            }
+            .frame(width:s*1.8,height:s*1.8)
+            .offset(y:pitch*s/70.59)
+            .rotationEffect(.degrees(-roll))
+
+            Path{p in
+                p.move(to:CGPoint(x:s*.308,y:s*.5)); p.addLine(to:CGPoint(x:s*.45,y:s*.5))
+                p.move(to:CGPoint(x:s*.692,y:s*.5)); p.addLine(to:CGPoint(x:s*.55,y:s*.5))
+                p.move(to:CGPoint(x:s*.45,y:s*.5)); p.addLine(to:CGPoint(x:s*.479,y:s*.527))
+                p.move(to:CGPoint(x:s*.55,y:s*.5)); p.addLine(to:CGPoint(x:s*.521,y:s*.527))
+                p.move(to:CGPoint(x:s*.479,y:s*.527)); p.addLine(to:CGPoint(x:s*.521,y:s*.527))
+            }.stroke(.black,lineWidth:9)
+            Path{p in
+                p.move(to:CGPoint(x:s*.308,y:s*.5)); p.addLine(to:CGPoint(x:s*.45,y:s*.5))
+                p.move(to:CGPoint(x:s*.692,y:s*.5)); p.addLine(to:CGPoint(x:s*.55,y:s*.5))
+                p.move(to:CGPoint(x:s*.45,y:s*.5)); p.addLine(to:CGPoint(x:s*.479,y:s*.527))
+                p.move(to:CGPoint(x:s*.55,y:s*.5)); p.addLine(to:CGPoint(x:s*.521,y:s*.527))
+                p.move(to:CGPoint(x:s*.479,y:s*.527)); p.addLine(to:CGPoint(x:s*.521,y:s*.527))
+            }.stroke(.yellow,lineWidth:5)
+            Path{p in
+                p.move(to:CGPoint(x:s*.488,y:s*.5)); p.addLine(to:CGPoint(x:s*.512,y:s*.5))
+                p.move(to:CGPoint(x:s*.5,y:s*.488)); p.addLine(to:CGPoint(x:s*.5,y:s*.512))
+            }.stroke(.black,lineWidth:2)
+
             if let h=heading { Text(String(format:"%03.0f",h)).font(.title2.monospacedDigit().bold()).foregroundStyle(.white).position(x:s/2,y:s*.09) }
             if let a=altitude { Text("\(Int(a)) FT").font(.title3.monospacedDigit().bold()).foregroundStyle(.white).position(x:s*.82,y:s*.5) }
             if !valid { invalid(s,"ATT FAIL") }
@@ -60,9 +93,7 @@ struct CompassView: View {
             ForEach(0..<72,id:\.self){i in Capsule().fill(.white).frame(width:i%6==0 ? 3:1,height:i%6==0 ? s*.058:(i%2==0 ? s*.038:s*.022)).offset(y:-s*.405).rotationEffect(.degrees(Double(i)*5)) }
             ForEach(Array([(0,"N"),(90,"E"),(180,"S"),(270,"W")]),id:\.0){d,t in Text(t).font(.system(size:s*.065,weight:.bold,design:.rounded)).foregroundStyle(.white).offset(y:-s*.32).rotationEffect(.degrees(Double(d))).rotationEffect(.degrees(-Double(d))) }
         }.rotationEffect(.degrees(-hdg))
-        // Fixed aircraft/lubber reference.
         Path{p in p.move(to:CGPoint(x:s*.5,y:s*.038));p.addLine(to:CGPoint(x:s*.472,y:s*.10));p.addLine(to:CGPoint(x:s*.528,y:s*.10));p.closeSubpath()}.stroke(.yellow,lineWidth:3)
-        // Selected magnetic heading bug. Its screen angle is selected heading minus aircraft heading.
         Path{p in p.move(to:CGPoint(x:s*.5,y:s*.075));p.addLine(to:CGPoint(x:s*.475,y:s*.125));p.addLine(to:CGPoint(x:s*.525,y:s*.125));p.closeSubpath()}.stroke(.yellow,lineWidth:4).rotationEffect(.degrees(relative(bug,hdg)))
         Path{p in p.move(to:CGPoint(x:s*.34,y:s*.51));p.addLine(to:CGPoint(x:s*.66,y:s*.51));p.move(to:CGPoint(x:s*.5,y:s*.37));p.addLine(to:CGPoint(x:s*.5,y:s*.64));p.move(to:CGPoint(x:s*.43,y:s*.64));p.addLine(to:CGPoint(x:s*.5,y:s*.585));p.addLine(to:CGPoint(x:s*.57,y:s*.64))}.stroke(.yellow,lineWidth:5)
         Text(String(format:"%03.0f",hdg)).font(.system(size:s*.075,weight:.bold,design:.monospaced)).foregroundStyle(.green).padding(.horizontal,s*.025).padding(.vertical,s*.012).background(.black).overlay(Rectangle().stroke(.white,lineWidth:1)).offset(y:s*.23)
