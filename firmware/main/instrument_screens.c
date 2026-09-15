@@ -251,6 +251,82 @@ static void altitude_hatching(uint16_t *f, int w, int h, int altitude_ft) {
   radial(f, w, h, start_deg, inner, outer, WHITE);
   radial(f, w, h, start_deg + sweep_deg, inner, outer, WHITE);
 }
+/*
+ * Mechanical-style Kollsman pressure scale at 3 o'clock.
+ * Selected QNH remains integer hPa; 1013.25 is a reference datum only.
+ */
+static void kollsman_scale(uint16_t *f, int w, int h,
+                           const instrument_ui_t *u) {
+  const float degrees_per_hpa = 2.0f;
+  const float centre_deg = 90.0f;
+  const float half_window_deg = 8.0f;
+  const int cx = w / 2, cy = h / 2;
+  const int mask_inner = 124, mask_outer = 204;
+  const int label_radius = 151;
+  const int tick_inner = 174, tick_outer = 194;
+
+  /* Clear the local dial beneath the pressure scale. */
+  for (int y = cy - mask_outer; y <= cy + mask_outer; y++) {
+    for (int x = cx - mask_outer; x <= cx + mask_outer; x++) {
+      int dx = x - cx, dy = y - cy;
+      int r2 = dx * dx + dy * dy;
+
+      if (r2 < mask_inner * mask_inner || r2 > mask_outer * mask_outer)
+        continue;
+
+      float deg = atan2f((float)dy, (float)dx) * 180.0f / (float)M_PI + 90.0f;
+      if (deg < 0.0f)
+        deg += 360.0f;
+
+      if (deg >= centre_deg - half_window_deg &&
+          deg <= centre_deg + half_window_deg)
+        px(f, w, h, x, y, BLACK);
+    }
+  }
+
+  /* Moving integer pressure graduations; label every 5 hPa. */
+  for (int pressure = 950; pressure <= 1050; pressure++) {
+    float deg =
+        centre_deg + ((float)pressure - (float)u->qnh_hpa) * degrees_per_hpa;
+
+    if (deg < centre_deg - half_window_deg ||
+        deg > centre_deg + half_window_deg)
+      continue;
+
+    int major = (pressure % 5) == 0;
+    radial(f, w, h, deg, major ? tick_inner - 6 : tick_inner, tick_outer,
+           WHITE);
+
+    if (major) {
+      float a = (deg - 90.0f) * M_PI / 180.0f;
+      int digits = pressure >= 1000 ? 4 : 3;
+      int text_width = (digits - 1) * 8 + 6;
+      int x = cx + (int)(cosf(a) * label_radius) - text_width / 2;
+      int y = cy + (int)(sinf(a) * label_radius) - 5;
+
+      num(f, w, h, x, y, pressure, 2, WHITE);
+    }
+  }
+
+  /* Exact 1013.25 hPa standard-pressure datum. */
+  float std_deg = centre_deg + (1013.25f - (float)u->qnh_hpa) * degrees_per_hpa;
+
+  if (std_deg >= centre_deg - half_window_deg &&
+      std_deg <= centre_deg + half_window_deg) {
+    float a = (std_deg - 90.0f) * M_PI / 180.0f;
+    int x0 = cx + (int)(cosf(a) * (tick_inner - 10));
+    int y0 = cy + (int)(sinf(a) * (tick_inner - 10));
+    int x1 = cx + (int)(cosf(a) * tick_outer);
+    int y1 = cy + (int)(sinf(a) * tick_outer);
+
+    thick_ln(f, w, h, x0, y0, x1, y1, WHITE, 5);
+  }
+
+  /* Fixed selected-QNH index at exactly 3 o'clock. */
+  uint16_t index_colour = u->settings_active ? YELLOW : WHITE;
+  thick_ln(f, w, h, cx + 166, cy, cx + 202, cy, index_colour, 3);
+}
+
 static void alt_test_overlay(uint16_t *f, int w, int h,
                              const instrument_data_t *d) {
   if (!d->test_overlay)
@@ -279,6 +355,7 @@ static void altimeter(uint16_t *f, int w, int h, const instrument_ui_t *u,
     alt_number(f, w, h, n, n * 36.0f);
   text(f, w, h, 204, 151, "ALT", 3, WHITE);
   text(f, w, h, 208, 171, "FEET", 2, GREY);
+  kollsman_scale(f, w, h, u);
   if (d->altitude_valid) {
     int a = d->altitude_ft < 0 ? 0 : d->altitude_ft;
     altitude_hatching(f, w, h, a);
@@ -297,12 +374,6 @@ static void altimeter(uint16_t *f, int w, int h, const instrument_ui_t *u,
     rect(f, w, h, 142, 211, 338, 255, BLACK);
     text(f, w, h, 151, 220, "ALT FAIL", 5, RED);
   }
-  rect(f, w, h, 148, 347, 332, 398, BLACK);
-  box(f, w, h, 148, 347, 332, 398, u->settings_active ? YELLOW : WHITE);
-  text(f, w, h, 164, 355, "QNH", 2, u->settings_active ? YELLOW : WHITE);
-  num(f, w, h, 218, 352, u->qnh_hpa, 3, GREEN);
-  text(f, w, h, 274, 365, "HPA", 1, WHITE);
-  text(f, w, h, 178, 383, "KOLLSMAN", 1, GREY);
   alt_test_overlay(f, w, h, d);
 }
 static void compass_label(uint16_t *f, int w, int h, const char *s,
