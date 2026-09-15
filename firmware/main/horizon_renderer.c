@@ -26,7 +26,7 @@ static void thick_line(uint16_t *fb,int w,int h,int x0,int y0,int x1,int y1,uint
 {
     float dx=(float)(x1-x0),dy=(float)(y1-y0),len=sqrtf(dx*dx+dy*dy);
     float nx=len>0?-dy/len:0,ny=len>0?dx/len:1;
-    for(int i=-thickness/2;i<=thickness/2;i++)line(fb,w,h,x0+(int)(nx*i),y0+(int)(ny*i),x1+(int)(nx*i),y1+(int)(ny*i),c);
+    for(int i=-thickness/2;i<=thickness/2;i++)line(fb,w,h,x0+(int)lroundf(nx*i),y0+(int)lroundf(ny*i),x1+(int)lroundf(nx*i),y1+(int)lroundf(ny*i),c);
 }
 
 static void world_to_screen(float wx,float wy,float roll_rad,float pitch_px,int cx,int cy,int *sx,int *sy)
@@ -35,6 +35,22 @@ static void world_to_screen(float wx,float wy,float roll_rad,float pitch_px,int 
     float y=wy+pitch_px;
     *sx=cx+(int)lroundf(wx*c+y*s);
     *sy=cy+(int)lroundf(-wx*s+y*c);
+}
+
+static void pitch_mark(uint16_t *fb,int w,int h,float roll,float pitch_px,int cx,int cy,int deg)
+{
+    const float wy=-(float)deg*PITCH_PIXELS_PER_DEG;
+    const bool major=(abs(deg)%10)==0;
+    const int half=major?66:38;
+    const int gap=major?18:12;
+    int x0,y0,x1,y1;
+
+    world_to_screen(-half,wy,roll,pitch_px,cx,cy,&x0,&y0);
+    world_to_screen(-gap,wy,roll,pitch_px,cx,cy,&x1,&y1);
+    thick_line(fb,w,h,x0,y0,x1,y1,RGB565_WHITE,major?3:2);
+    world_to_screen(gap,wy,roll,pitch_px,cx,cy,&x0,&y0);
+    world_to_screen(half,wy,roll,pitch_px,cx,cy,&x1,&y1);
+    thick_line(fb,w,h,x0,y0,x1,y1,RGB565_WHITE,major?3:2);
 }
 
 void horizon_render(uint16_t *fb,int width,int height,float pitch_deg,float roll_deg)
@@ -53,17 +69,24 @@ void horizon_render(uint16_t *fb,int width,int height,float pitch_deg,float roll
     int x0,y0,x1,y1;
     world_to_screen(-360,0,roll,pitch_px,cx,cy,&x0,&y0);
     world_to_screen(360,0,roll,pitch_px,cx,cy,&x1,&y1);
-    thick_line(fb,width,height,x0,y0,x1,y1,RGB565_WHITE,5);
+    thick_line(fb,width,height,x0,y0,x1,y1,RGB565_WHITE,4);
 
-    for(int deg=-20;deg<=20;deg+=5){if(deg==0)continue;float wy=-(float)deg*PITCH_PIXELS_PER_DEG;int half=(abs(deg)%10)?42:62;world_to_screen(-half,wy,roll,pitch_px,cx,cy,&x0,&y0);world_to_screen(half,wy,roll,pitch_px,cx,cy,&x1,&y1);thick_line(fb,width,height,x0,y0,x1,y1,RGB565_WHITE,2);}
+    for(int deg=-20;deg<=20;deg+=5){if(deg!=0)pitch_mark(fb,width,height,roll,pitch_px,cx,cy,deg);}
 
-    /* Fixed aircraft reference is centred exactly on the zero-pitch horizon.
-       At LEVEL the wing bars and centre datum lie on y=cy. Pitch and bank move
-       the attitude sphere around this fixed reference, never the aircraft. */
-    thick_line(fb,width,height,cx-82,cy,cx-18,cy,RGB565_YELLOW,5);
-    thick_line(fb,width,height,cx+18,cy,cx+82,cy,RGB565_YELLOW,5);
-    thick_line(fb,width,height,cx-18,cy+10,cx+18,cy+10,RGB565_YELLOW,5);
-    thick_line(fb,width,height,cx,cy-8,cx,cy+12,RGB565_YELLOW,2);
+    /* Fixed aircraft reference. Accepted attitude mathematics are unchanged:
+       the sphere moves around this symbol; the symbol never follows pitch/bank. */
+    thick_line(fb,width,height,cx-92,cy,cx-24,cy,RGB565_BLACK,9);
+    thick_line(fb,width,height,cx+24,cy,cx+92,cy,RGB565_BLACK,9);
+    thick_line(fb,width,height,cx-92,cy,cx-24,cy,RGB565_YELLOW,5);
+    thick_line(fb,width,height,cx+24,cy,cx+92,cy,RGB565_YELLOW,5);
 
+    thick_line(fb,width,height,cx-24,cy,cx-10,cy+13,RGB565_BLACK,9);
+    thick_line(fb,width,height,cx+24,cy,cx+10,cy+13,RGB565_BLACK,9);
+    thick_line(fb,width,height,cx-24,cy,cx-10,cy+13,RGB565_YELLOW,5);
+    thick_line(fb,width,height,cx+24,cy,cx+10,cy+13,RGB565_YELLOW,5);
+    thick_line(fb,width,height,cx-10,cy+13,cx+10,cy+13,RGB565_YELLOW,5);
+
+    /* Small black centre datum preserves a precise visual reference against
+       the yellow aircraft symbol at all sphere colours and attitudes. */
     for(int d=-5;d<=5;d++){put_pixel(fb,width,height,cx+d,cy,RGB565_BLACK);put_pixel(fb,width,height,cx,cy+d,RGB565_BLACK);}
 }
