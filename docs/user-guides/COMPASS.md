@@ -1,29 +1,29 @@
 # Compass panel — user guide
 
 ## Purpose
-The Compass panel is a classic round heading presentation with a fixed lubber line and heading bug. It is a supplementary/non-primary display.
+The Compass page uses the familiar aircraft directional-gyro/HSI convention: the aircraft and top lubber line remain fixed while the compass card rotates beneath them. It is a supplementary/non-primary display.
+
+## Presentation
+The revised renderer uses a black round card, white 5-degree ticks, stronger major divisions, fixed yellow top lubber triangle and fixed yellow aircraft symbol. When a valid heading is available, the entire scale rotates opposite aircraft heading so the current heading is always read at 12 o'clock. A yellow heading bug is positioned on the rotating card.
 
 ## Controls
-- **Short press:** next panel (Horizon).
-- **Long press (~0.8 s):** enter/leave Compass settings.
-- **Rotate while settings are active:** move the heading bug one degree per detent, wrapping through 000/359 degrees.
-- **Short press while settings are active:** leave settings without changing panel.
+- **Short press:** Horizon/PFD.
+- **Long press (~0.8 s):** enter/leave HDG BUG setting.
+- **Rotate:** move the heading bug 1 degree per detent through 000–359°.
+- **Short press in settings:** accept/leave settings.
 
-## Display concept
-The renderer provides a circular compass card, 10-degree ticks, stronger 30-degree divisions, a yellow fixed lubber line and yellow heading bug. The final version should add large cardinal/intercardinal labels and numeric heading readout suitable for the round 2.1-inch display.
+Heading bug and last selected panel are stored in ESP32 NVS and restored after power cycling.
 
 ## Heading source required
-**BMI088 alone cannot provide a stable absolute compass heading.** Its gyro can propagate yaw for short periods but yaw will drift, and its accelerometer does not provide magnetic north.
+BMI088 alone cannot provide stable absolute heading. Gyro yaw drifts and the accelerometer cannot determine magnetic north, so the current page remains explicitly invalid until an absolute source is chosen.
 
-The current Compass panel therefore remains explicitly invalid rather than presenting integrated gyro yaw as a compass heading.
-
-A later design decision is required for the absolute heading source. Candidates include a properly installed/calibrated three-axis magnetometer, GNSS-derived track used explicitly as track rather than heading, or fusion of additional sources. A magnetometer inside an aircraft instrument panel must be evaluated carefully for magnetic interference from wiring, speakers, steel hardware, current-carrying conductors and other avionics.
+Candidate architecture includes a properly installed/calibrated three-axis magnetometer, or GNSS track presented explicitly as **TRK** rather than heading. Panel-mounted magnetometers require careful aircraft magnetic-interference testing.
 
 ## Heading versus track
-The final UI must not silently label GNSS course-over-ground as magnetic heading. If GNSS track is offered, it should be identified as **TRK**. A true magnetic compass presentation requires a heading source and appropriate magnetic calibration/variation handling.
+GNSS course over ground must never silently masquerade as magnetic heading. If GNSS track is later displayed, it is labelled TRK. Magnetic/true reference and variation handling must be explicit in the final design.
 
 ## Failure behaviour
-If the selected heading source is missing, stale or fails validity checks, the compass display must be visibly invalid rather than freezing the previous heading.
+Missing, stale or invalid heading data invalidates the card rather than freezing the last plausible heading.
 
 ## Bench/aircraft checks
-Verify 360-degree continuity, heading-bug wraparound, source freshness, invalid-state behaviour and magnetic installation effects before relying on the supplementary indication.
+Verify clockwise/counter-clockwise card sense, 000/359 continuity, heading-bug relationship to the rotating card, NVS persistence, source freshness, invalid-state behaviour and magnetic installation effects.
