@@ -49,10 +49,27 @@ struct AltimeterView: View {
         ForEach(0..<50,id:\.self){i in Capsule().fill(.white).frame(width:i%5==0 ? 3:1,height:i%5==0 ? s*.058:s*.026).offset(y:-s*.405).rotationEffect(.degrees(Double(i)*7.2)) }
         ForEach(0..<10,id:\.self){i in Text("\(i)").font(.system(size:s*.065,weight:.bold,design:.rounded)).foregroundStyle(.white).offset(y:-s*.33).rotationEffect(.degrees(Double(i)*36)).rotationEffect(.degrees(-Double(i)*36)) }
         Text("ALT").font(.system(size:s*.045,weight:.bold,design:.monospaced)).foregroundStyle(.white).offset(y:-s*.18); Text("FEET").font(.system(size:s*.027,weight:.bold,design:.monospaced)).foregroundStyle(.gray).offset(y:-s*.125)
+        kollsman(s)
         if valid { if a > 10000 { altitudeHatching(s, altitude:a) }; hand(s,a.truncatingRemainder(dividingBy:1000)*.36,s*.30,3); hand(s,a.truncatingRemainder(dividingBy:10000)*.036,s*.22,5); hand(s,a.truncatingRemainder(dividingBy:100000)*.0036,s*.145,7); Circle().fill(.white).frame(width:s*.03,height:s*.03); Text("\(Int(a))").font(.system(size:s*.052,weight:.bold,design:.monospaced)).foregroundStyle(.green).padding(.horizontal,s*.025).padding(.vertical,s*.012).background(.black).overlay(Rectangle().stroke(.white,lineWidth:1)).offset(y:s*.16) } else { invalid(s,"ALT FAIL") }
-        VStack(spacing:1){HStack(spacing:s*.018){Text("QNH").foregroundStyle(.white);Text("\(Int(qnh))").foregroundStyle(.green);Text("HPA").foregroundStyle(.white).font(.system(size:s*.022,weight:.bold,design:.monospaced))};Text("KOLLSMAN").font(.system(size:s*.018,weight:.bold,design:.monospaced)).foregroundStyle(.gray)}.font(.system(size:s*.034,weight:.bold,design:.monospaced)).padding(.horizontal,s*.025).padding(.vertical,s*.012).background(.black).overlay(Rectangle().stroke(.white,lineWidth:1)).offset(y:s*.31)
     } }}
     private func hand(_ s:CGFloat,_ deg:Double,_ length:CGFloat,_ width:CGFloat)->some View { Rectangle().fill(.white).frame(width:width,height:length).offset(y:-length/2).rotationEffect(.degrees(deg)) }
+    @ViewBuilder private func kollsman(_ s:CGFloat)->some View {
+        let degreesPerHpa = 2.0
+        let halfWindow = 8.0
+        let pressures = Array(950...1050).filter { abs((Double($0)-qnh)*degreesPerHpa) <= halfWindow }
+        ZStack {
+            AnnularSector(startDegrees:-halfWindow,endDegrees:halfWindow,innerFraction:0.61).fill(.black).frame(width:s*.85,height:s*.85)
+            ForEach(pressures,id:\.self){ p in
+                let delta=(Double(p)-qnh)*degreesPerHpa
+                let major=p%5==0
+                Capsule().fill(.white).frame(width:major ? 2:1,height:major ? s*.055:s*.042).offset(y:-s*.383).rotationEffect(.degrees(90+delta))
+                if major { Text("\(p)").font(.system(size:s*.025,weight:.bold,design:.monospaced)).foregroundStyle(.white).offset(x:s*.315).rotationEffect(.degrees(delta)).rotationEffect(.degrees(-delta)) }
+            }
+            let stdDelta=(1013.25-qnh)*degreesPerHpa
+            if abs(stdDelta) <= halfWindow { Capsule().fill(.white).frame(width:5,height:s*.065).offset(y:-s*.375).rotationEffect(.degrees(90+stdDelta)) }
+            Capsule().fill(.white).frame(width:3,height:s*.075).offset(y:-s*.383).rotationEffect(.degrees(90))
+        }
+    }
     @ViewBuilder private func altitudeHatching(_ s:CGFloat, altitude:Double)->some View {
         let fraction=min(1,max(0,(altitude-10000)/1000))
         let sweep=60.0*fraction
