@@ -118,6 +118,8 @@ void app_main(void)
 
 #ifdef CONFIG_EFIS_QEMU
     ESP_LOGW(TAG, "QEMU MODE: ENABLED - NO PHYSICAL SENSOR OR DISPLAY I/O");
+    ESP_LOGW(TAG, "QEMU TEST HARNESS: deterministic scenarios; 8 seconds per scenario");
+    ESP_LOGW(TAG, "QEMU SCENARIO: %s", instrument_sim_scenario_name(sim.scenario));
     esp_lcd_panel_handle_t panel = NULL;
     uint16_t *fb = NULL;
     ESP_ERROR_CHECK(init_qemu_panel(&panel, &fb));
@@ -125,14 +127,18 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_lcd_rgb_qemu_refresh(panel));
 
     unsigned ticks = 0;
-    unsigned page_ticks = 0;
+    unsigned scenario_ticks = 0;
     while (1) {
         if (++ticks >= 5) {
             ticks = 0;
             instrument_sim_step(&sim, .05f, &data);
-            if (++page_ticks >= 160) {
-                page_ticks = 0;
+            if (++scenario_ticks >= 160) {
+                scenario_ticks = 0;
+                instrument_sim_next_scenario(&sim);
+                instrument_sim_step(&sim, 0, &data);
                 ui.panel = (instrument_panel_t)((ui.panel + 1) % PANEL_COUNT);
+                ESP_LOGW(TAG, "QEMU SCENARIO: %s | PANEL: %d",
+                         instrument_sim_scenario_name(sim.scenario), (int)ui.panel);
             }
             instrument_render(fb, AH_DISPLAY_WIDTH, AH_DISPLAY_HEIGHT, &ui, &data);
             ESP_ERROR_CHECK(esp_lcd_rgb_qemu_refresh(panel));
