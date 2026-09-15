@@ -19,6 +19,9 @@ typedef struct {
     int brightness_percent;
 } instrument_ui_t;
 
+/* Loads defaults then restores last panel/settings from NVS when available. */
 void instrument_ui_init(instrument_ui_t *ui);
-/* Poll every ~10 ms. Returns true whenever the display needs redrawing. */
+/* Poll every ~10 ms. Short push cycles panels; long push enters/exits settings. */
 esp_err_t instrument_ui_poll(instrument_ui_t *ui, bool *redraw);
+/* Persist current panel, QNH, heading bug and brightness. */
+esp_err_t instrument_ui_save(const instrument_ui_t *ui);
