@@ -53,7 +53,23 @@ struct AltimeterView: View {
         VStack(spacing:1){HStack(spacing:s*.018){Text("QNH").foregroundStyle(.white);Text("\(Int(qnh))").foregroundStyle(.green);Text("HPA").foregroundStyle(.white).font(.system(size:s*.022,weight:.bold,design:.monospaced))};Text("KOLLSMAN").font(.system(size:s*.018,weight:.bold,design:.monospaced)).foregroundStyle(.gray)}.font(.system(size:s*.034,weight:.bold,design:.monospaced)).padding(.horizontal,s*.025).padding(.vertical,s*.012).background(.black).overlay(Rectangle().stroke(.white,lineWidth:1)).offset(y:s*.31)
     } }}
     private func hand(_ s:CGFloat,_ deg:Double,_ length:CGFloat,_ width:CGFloat)->some View { Rectangle().fill(.white).frame(width:width,height:length).offset(y:-length/2).rotationEffect(.degrees(deg)) }
-    @ViewBuilder private func altitudeHatching(_ s:CGFloat, altitude:Double)->some View { let fraction=min(1,max(0,(altitude-10000)/1000));let h=s*.095*CGFloat(fraction);ZStack{ForEach(-4...4,id:\.self){i in Rectangle().fill(.white).frame(width:2,height:s*.16).rotationEffect(.degrees(45)).offset(x:CGFloat(i)*s*.025)}}.frame(width:s*.18,height:max(2,h),alignment:.bottom).clipped().overlay(Rectangle().stroke(.white,lineWidth:1)).offset(y:-s*.045) }
+    @ViewBuilder private func altitudeHatching(_ s:CGFloat, altitude:Double)->some View {
+        let fraction=min(1,max(0,(altitude-10000)/1000))
+        let sweep=60.0*fraction
+        ZStack {
+            ForEach(-8...8,id:\.self){i in Rectangle().fill(.white).frame(width:2,height:s*.20).rotationEffect(.degrees(45)).offset(x:CGFloat(i)*s*.022) }
+        }
+        .frame(width:s*.31,height:s*.31).clipShape(AnnularSector(startDegrees:240,endDegrees:240+sweep,innerFraction:0.70)).offset(x:-s*.285)
+    }
+}
+
+private struct AnnularSector: Shape {
+    let startDegrees: Double; let endDegrees: Double; let innerFraction: CGFloat
+    func path(in rect:CGRect)->Path {
+        let c=CGPoint(x:rect.midX,y:rect.midY), r=min(rect.width,rect.height)/2, ir=r*innerFraction
+        var p=Path(); p.addArc(center:c,radius:r,startAngle:.degrees(startDegrees),endAngle:.degrees(endDegrees),clockwise:false)
+        p.addArc(center:c,radius:ir,startAngle:.degrees(endDegrees),endAngle:.degrees(startDegrees),clockwise:true); p.closeSubpath(); return p
+    }
 }
 
 struct CompassView: View {
