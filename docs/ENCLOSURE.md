@@ -1,102 +1,48 @@
 # Flight-development enclosure
 
-This document records the current 3D-printable enclosure design for the ESP32 supplementary multifunction flight instrument.
+This document records the current 3D-printable enclosure for the ESP32 supplementary/non-primary multifunction flight instrument.
 
-> The instrument is supplementary/non-primary. Geometry, materials, fasteners, vibration resistance, thermal performance, pressure plumbing and aircraft installation require physical verification.
+## Front geometry — unchanged
 
-## Front-panel geometry — unchanged
+Adding Altimeter and Compass does not enlarge the face. The design remains conventional 3 1/8-inch format: 80.30 mm reference panel opening, 79.60 mm locating body, 88 × 88 mm flange, 58 mm depth target, 62.9 mm four-hole pattern, Newhaven round LCD, 55 mm clear aperture and PEC09 front control.
 
-Adding Altimeter and Compass pages does **not** require a larger instrument face. The current design target remains:
+The front bezel, body, optical window, display carrier, BMI088 carrier and 68 mm PCB fit-gauge geometry therefore remain valid.
 
-- conventional 3 1/8-inch format
-- 80.30 mm reference panel opening
-- 79.60 mm cylindrical locating body
-- 88 × 88 mm rounded front flange
-- 58 mm body-depth target
-- 62.9 × 62.9 mm four-hole panel pattern
-- 4.4 mm front mounting holes
-- 55 mm optical clear aperture
-- Newhaven 2.1-inch round LCD
-- PEC09 front rotary/push control
+## Rear-cover multifunction revision
 
-The front bezel, display carrier, optical window and encoder pod therefore remain valid for the multifunction concept.
+The selected Bosch BMP581 pressure system and remote PNI RM3100-CB require two rear services. The OpenSCAD source now adds **two reinforced 12 mm diameter × 5 mm bosses**, each with an intentionally undersize **3 mm pilot hole**:
 
-## New rear/internal requirements
+- upper-left rear: `STATIC` service for static-pressure plumbing
+- upper-right rear: `MAG` service for the remote magnetometer harness
 
-The additional functions change the **rear/internal interfaces**, not the face:
+The final fitting and connector/gland are not guessed in CAD. Print with the pilot holes, then enlarge/machine only after the purchased hardware has been measured. This gives a mechanically useful revision now without locking the project to an arbitrary thread.
 
-1. **Altimeter:** provide a protected route for static-pressure tubing or a bulkhead fitting to the pressure sensor. Avoid sharp tube bends, heat sources and loads on a PCB-mounted pressure port.
-2. **Compass:** preferably mount the magnetometer remotely from the display electronics, power wiring, steel fasteners and aircraft magnetic sources. The enclosure therefore needs a locking cable connector/pass-through and strain relief rather than assuming the magnetometer belongs inside the instrument case.
-3. **Carrier PCB:** reserve connector and clearance zones for the pressure and heading-source interfaces before PCB layout resumes.
+At this stage only the **rear-cover geometry changes**. Regenerate its STL from the current SCAD before printing the multifunction cover.
 
-No STL dimensional change is being frozen yet because the exact sensor packages, pneumatic fitting and connector families have not been selected. Changing the STL now would manufacture guesses. The parametric CAD must be updated immediately after those physical interfaces are frozen.
+## Pressure installation
+
+The reference pressure IC is **Bosch BMP581**, ultimately mounted on the custom carrier. It has no hose barb, so the PCB/mechanical design must form a small sealed pressure plenum around its pressure opening and connect that chamber to the STATIC fitting.
+
+Requirements: do not obstruct the sensor opening with adhesive/coating/gasket debris; support the tubing independently of the sensor; leak-test chamber/fitting; prevent cabin-pressure leakage into the static chamber; avoid kinks and excessive pneumatic volume; select the final fitting to match the aircraft's actual static tubing.
+
+## Remote magnetometer
+
+The reference heading sensor is **PNI RM3100-CB** and is deliberately remote from the display/ESP32/DC-DC/backlight/steel panel hardware. The MAG boss is therefore a cable service only. The sensor needs a separate rigid non-magnetic bracket with permanent FWD/UP/lateral-axis markings and strain relief at both cable ends. Keep its harness away from high-current wiring.
 
 ## Existing internal stack
 
-Front to rear remains:
+Front to rear remains: bezel/PEC09 → 62 × 2 mm hard-coated AR window → LCD → removable display carrier → rigid BMI088 cradle → 68 mm custom carrier PCB on 60 mm PCD → rear cover. USB-C remains at the lower rear with its existing service slot and cable strain relief.
 
-1. bezel and PEC09 control
-2. 62 × 2 mm hard-coated AR optical window
-3. Newhaven LCD
-4. removable display carrier
-5. rigid BMI088 cradle, permanently marked FWD/UP/lateral axis
-6. 68 mm custom carrier PCB on 60 mm PCD rear standoffs
-7. locking internal harnesses
-8. removable rear cover
-9. USB service opening and cable strain relief
+The carrier PCB layout must now accommodate the bare BMP581/plenum and locking remote-magnetometer connector. The 58 mm depth remains the target until a physical fit test proves otherwise.
 
-The current custom PCB fit gauge remains useful because the nominal 68 mm PCB outline and mounting PCD have not changed.
+## CAD / STL status
 
-## Planned rear-cover revision
+Authoritative source: `enclosure/source/ESP32_Artificial_Horizon_Flight_Development_Case.scad`.
 
-When the pressure sensor and magnetometer connector are selected, the rear-cover SCAD/STL revision should add:
+Current targets are body, front bezel, display carrier, BMI088 carrier, custom PCB fit gauge, revised rear cover and USB strain-relief clamp. The **rear-cover STL must be regenerated** after this source change; older rear-cover STL files do not contain STATIC/MAG bosses.
 
-- configurable static-line entry/bulkhead location
-- minimum bend-radius/clearance volume for the pressure tube
-- remote-magnetometer cable connector opening
-- cable-jacket strain relief
-- labels for STATIC and HDG/MAG interfaces
-- optional blanking features for bench builds
+## Verification
 
-The 58 mm depth remains the target; increase it only if a physical interference check demonstrates a need.
+Before aircraft use: verify display/IMU/USB fit, leak-test static plumbing, check pressure response/lag/hysteresis, prove the RM3100-CB mount cannot move, characterize magnetic interference with electrical loads on/off, verify sensor-axis transforms, and deliberately disconnect/stale each source to confirm an unmistakable invalid indication.
 
-## Existing optical/display/PCB details
-
-- window: 62.0 mm diameter × 2.0 mm; 62.5 mm seat; 55.0 mm visible opening
-- display carrier: 67 mm OD, 49 mm opening, 2.5 mm thick, 64 mm mounting PCD
-- BMI088 cradle reference: 28 × 20 mm tray for 22 × 14 mm Shuttle Board
-- custom PCB: 68 mm diameter, 1.6 mm starting thickness, 60 mm mounting PCD
-- ESP32 antenna remains near 12 o'clock with required keepout
-- USB-C remains near 6 o'clock with 13 × 7 mm service-slot target
-- PCB fit gauge remains `enclosure/stl/ESP32_Artificial_Horizon_Custom_PCB_Fit_Gauge.stl`
-
-## Current STL status
-
-Existing generated targets remain current for the **front/display/IMU/PCB mechanical envelope**:
-
-- `ESP32_Artificial_Horizon_Flight_Development_Body.stl`
-- `ESP32_Artificial_Horizon_Flight_Development_Front_Bezel.stl`
-- `ESP32_Artificial_Horizon_Flight_Development_Display_Carrier.stl`
-- `ESP32_Artificial_Horizon_Flight_Development_IMU_Carrier.stl`
-- `ESP32_Artificial_Horizon_Custom_PCB_Fit_Gauge.stl`
-- `ESP32_Artificial_Horizon_Flight_Development_Rear_Cover.stl`
-- `ESP32_Artificial_Horizon_Flight_Development_USB_Strain_Relief_Clamp.stl`
-
-**Rear cover is now revision-pending** for static and remote-heading interfaces. Do not print a final flight-development rear cover until those parts are frozen. A bench rear cover can still be printed.
-
-## Verification before PCB/CAD freeze
-
-In addition to the existing display/IMU/USB fit checks:
-
-- select and measure the pressure sensor and its pneumatic port/fitting
-- decide whether pressure sensor is PCB-mounted or remotely connected
-- select the magnetometer and remote connector
-- survey magnetometer mounting location for magnetic interference
-- verify pressure tube cannot kink or rub
-- verify new harnesses cannot load sensor connectors
-- confirm 68 mm PCB still clears all connector bodies and bend radii
-- update SCAD, regenerate STLs, then print a revised fit article before PCB fabrication
-
-## Flight-development verification
-
-Perform powered vibration and thermal testing, optical sunlight testing, static-system leak/response checks, heading-source interference/calibration checks, and explicit stale/failed-sensor tests. No loose modules, unsupported connectors or Dupont wiring should remain.
+This remains a supplementary/non-primary instrument under flight development.
