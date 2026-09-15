@@ -1,6 +1,6 @@
 # Bill of Materials
 
-Evolving reference BOM for the ESP32 supplementary/non-primary multifunction flight instrument. Prices and stock are snapshots; recheck before ordering.
+Evolving reference BOM for the ESP32 supplementary/non-primary multifunction flight instrument. Prices/stock are snapshots; recheck before ordering.
 
 ## Core prototype
 
@@ -14,60 +14,45 @@ Evolving reference BOM for the ESP32 supplementary/non-primary multifunction fli
 | User control | **Bourns PEC09-2320F-T0015** | 1 | Rotate + push |
 | Prototype expander | **MCP23008-E/P** | 1 | Bench version; final PCB SMD |
 
-## Multifunction sensors — choices now frozen
+## Multifunction sensors — choices frozen
 
-| Function | Reference choice | Qty | UK prototype source | Notes |
+| Function | Reference choice | Qty | UK source / checked price | Notes |
 |---|---|---:|---|---|
-| Static pressure / altimeter | **Bosch BMP581** | 1 final | DigiKey/Mouser | Bare IC for final carrier; 300–1250 hPa, 3.3 V-compatible I2C/SPI |
-| Pressure bench module | **Adafruit BMP581 breakout PID 6407** | 1 | DigiKey UK, ~£7.45 ex VAT at 15 Sep 2026 check | Easy bench wiring; not final flight-development packaging |
-| Magnetic heading | **PNI RM3100-CB, P/N 14754** | 1 | Solsta UK, ~£46 ex VAT at 15 Sep 2026 check | Remote-mounted reference magnetometer; I2C/SPI; ruggedized compact board |
+| Static pressure / Altimeter | **Bosch BMP585** | 1 | DigiKey UK bare IC ~£3.34 ex VAT | Robust gel-filled BMP58x pressure sensor, 300–1250 hPa |
+| First pressure module | **Adafruit BMP585 Ported breakout PID 6413** | 1 | DigiKey UK ~£11.33 ex VAT at 15 Sep 2026 check | Preferred first plumbing/bench module because it is ported; I2C/SPI |
+| Magnetic heading | **PNI RM3100-CB, P/N 14754** | 1 | Solsta UK ~£46 ex VAT at 15 Sep 2026 check | Remote-mounted reference magnetometer; I2C/SPI; ruggedized compact board |
 
-The BMP581 is selected over the older BMP390/DPS310-class options because of its low noise, temperature behaviour, 300–1250 hPa range, modern active supply and strong UK availability. The RM3100-CB is selected because it is a higher-performance magneto-inductive three-axis sensor with documented vibration robustness and is suitable for remote mounting away from panel interference.
+BMP585 replaces the briefly considered BMP581 because its gel-filled robust construction and available **ported development board** are more useful for an aircraft static-system prototype. Bosch specifies ±6 Pa typical relative accuracy and 0.08 Pa RMS noise; maximum absolute accuracy is ±50 Pa, so correct QNH/reference pressure remains essential.
 
-## Still to freeze after physical installation survey
+## Still to freeze after physical fit
 
 | Item | Requirement |
 |---|---|
-| Static-line fitting | Must match the Skyranger's actual static tubing. Rear cover now has a reinforced 12 mm service boss with a 3 mm pilot hole; enlarge only to the purchased fitting. |
-| BMP581 pressure plenum/seal | Sealed chamber exposing the sensor pressure opening without adhesive, coating or debris obstructing it. |
-| Magnetometer connector/gland | Locking/strain-relieved and preferably non-magnetic. Rear cover has a second 12 mm service boss with a 3 mm pilot hole. |
-| RM3100-CB harness | 3.3 V/GND plus selected bus; routing and shielding/twisting frozen after cable/EMC tests. |
+| Static-line bulkhead/tube fitting | Match the Skyranger's actual static tubing. Rear cover has a 12 mm reinforced boss with 3 mm pilot hole. |
+| Pressure module mounting | First article may retain the ported Adafruit BMP585 module. After tests, decide whether final PCB uses bare BMP585 + engineered plenum or a separately mounted ported module. |
+| Magnetometer connector/gland | Locking/strain-relieved and preferably non-magnetic; second 12 mm rear boss has 3 mm pilot hole. |
+| RM3100-CB harness | 3.3 V/GND plus selected bus; routing/shield/twist after cable/EMC tests. |
 | Remote magnetometer bracket | Rigid non-magnetic mount with FWD/UP/lateral-axis marks. |
 
 ## Custom carrier PCB — parked / do not order yet
 
-Revision A now must include the original ESP32, USB-C, TPS62162-Q1, MCP23008, LCD FFC, BMI088, encoder and TPS61169 interfaces plus:
-
-- bare Bosch BMP581
-- sealed static-pressure plenum/interface
-- 3.3 V sensor power/ground and bus test points
-- locking connector for remote RM3100-CB
-- spare interrupt/input where practical
-
-The target remains about 68 mm diameter on a 60 mm mounting PCD. Connector placement must be revisited before fabrication.
+Revision A retains ESP32, USB-C, TPS62162-Q1, MCP23008, LCD FFC, BMI088, encoder and TPS61169 interfaces and must now reserve: BMP58x pressure interface/mounting strategy, 3.3 V sensor bus/test points, locking RM3100-CB connector and spare interrupt/input where practical. Target remains ~68 mm diameter on 60 mm mounting PCD.
 
 ## Mechanical / installation
 
-- ASA/ABS/engineering-filament enclosure; no PLA for cockpit article
-- ~62 mm × 2 mm hard-coated AR optical polycarbonate window
-- verified M5/M2/M2.5/M3 inserts and screws
-- thin window perimeter gasket only
-- USB-C data/power cable and regulated 5 V bench supply
-- proper locking wiring/strain relief; no loose Dupont wiring in assembled article
-- static tubing/fitting after aircraft tubing size is confirmed
-- non-magnetic remote RM3100-CB mounting hardware
+Use engineering filament (not PLA), hard-coated AR window, verified threaded hardware, locking wiring and strain relief. No loose Dupont wiring in assembled article. Static tubing/fitting is selected only after aircraft tubing is measured; RM3100-CB uses non-magnetic remote mounting hardware.
 
-The 3 1/8-inch front geometry and 58 mm depth remain the target. Only the rear cover currently changes: two adaptable service bosses are added for static pressure and the remote magnetometer harness.
+The 3 1/8-inch face and 58 mm depth remain the target. Current CAD changes only the rear cover by adding adaptable STATIC and MAG service bosses.
 
 ## Functional dependency map
 
 | Panel | Required source |
 |---|---|
 | Horizon/PFD | BMI088 + live quaternion AHRS |
-| Altimeter | BMP581 static pressure + QNH |
+| Altimeter | BMP585 static pressure + QNH |
 | Compass | remote RM3100-CB + BMI088 attitude for tilt-compensated magnetic heading |
 | Future PFD TRK/GS | GNSS, explicitly labelled TRK/GS |
 
-Bench simulation is permitted only when explicitly enabled. Aircraft-use firmware must have simulation disabled. Missing/stale/implausible attitude, pressure or heading data must invalidate the corresponding indication.
+Bench simulation is permitted only when explicitly enabled. Aircraft-use firmware must have simulation disabled. Missing/stale/implausible source data invalidates the corresponding indication.
 
 See `docs/SENSORS.md`, `docs/ENCLOSURE.md`, `docs/SIMULATION.md` and `docs/user-guides/`.
