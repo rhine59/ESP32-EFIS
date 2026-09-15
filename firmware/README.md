@@ -2,40 +2,41 @@
 
 Target: **ESP32-S3-WROOM-1-N16R2**, framework baseline **ESP-IDF v5.4.4**.
 
-The firmware is now structured as a **multi-panel supplementary flight instrument**. The Newhaven 480×480 RGB565 display and double PSRAM framebuffer architecture are unchanged, but the front-panel Bourns `PEC09-2320F-T0015` now controls three screens:
+The firmware is structured as a **multi-panel supplementary flight instrument** with three 480×480 pages:
 
-1. Artificial Horizon
+1. Artificial Horizon / PFD
 2. Classic Altimeter
 3. Compass
 
-A short encoder press advances to the next panel. A long press of about 0.8 seconds enters/leaves the current panel's settings. Rotation changes that panel's setting: Horizon brightness, Altimeter QNH, or Compass heading bug.
+A short PEC09 encoder press advances to the next panel. A long press of about 0.8 seconds enters/leaves the current panel's settings. Rotation changes Horizon brightness, Altimeter QNH or Compass heading bug. UI settings are persisted in NVS.
 
 Per-panel operating documentation is in [`../docs/user-guides/`](../docs/user-guides/README.md).
 
-## Important current limitation
+## Safety and data validity
 
-The new screen framework is implemented before all live sensors are available. The firmware therefore marks flight data **invalid** rather than inventing plausible values:
+`instrument_data_t` keeps values separate from their validity flags. Renderers must never treat stale, failed or absent sensor data as valid, and the system must not replace failed real data with synthetic values or freeze a plausible indication.
 
-- Horizon: BMI088 communication exists, but live quaternion AHRS is not yet connected.
-- Altimeter: a barometric/static-pressure sensor is not yet part of the hardware.
-- Compass: BMI088 has no magnetometer and cannot provide stable absolute heading by itself.
+Synthetic bench data is opt-in and defaults OFF. When it is enabled, the data model sets its `simulated` flag and every firmware-rendered page carries a permanent high-contrast red **SIM** marker.
 
-This is intentional fail-obvious behaviour for a supplementary/non-primary instrument.
+This remains a **supplementary/non-primary flight-development instrument**.
 
 ## Source layout
 
 ```text
 main/
-├── app_main.c              display/sensor startup and UI loop
-├── instrument_ui.c/.h      PEC09 short/long press and rotary settings
-├── instrument_screens.c/.h three-panel renderer and data-validity contract
+├── app_main.c              physical/QEMU startup and main UI loop
+├── instrument_ui.c/.h      PEC09 control and NVS-backed settings
+├── instrument_screens.c/.h three-panel renderer and validity contract
+├── instrument_sim.c/.h     explicit synthetic development data
 ├── horizon_renderer.c/.h   horizon graphics
 ├── bmi088.c/.h             BMI088 SPI bring-up
 ├── mcp23008.c/.h           LCD control plus encoder input I/O
-└── st7701s.c/.h            panel controller initialization
+├── st7701s.c/.h            physical panel controller initialization
+├── Kconfig.projbuild       simulation/QEMU development options
+└── idf_component.yml       managed QEMU RGB component dependency
 ```
 
-## Display configuration
+## Physical display configuration
 
 - Newhaven `NHD-2.1-480480AF-ASXP`
 - ST7701S
@@ -43,40 +44,62 @@ main/
 - 30 MHz pixel clock
 - HFP/HBP/HS = 50/50/4
 - VFP/VBP/VS = 50/50/2
-- two 460,800-byte framebuffers in 2 MB Quad PSRAM
+- two 460,800-byte framebuffers fit within the physical module's 2 MB Quad PSRAM
 
 The ST7701S is configured first over 3-wire/9-bit serial; the same GPIOs are then reused for BMI088 SPI. The project adapts Newhaven's panel sequence from 18-bit to the ST7701S 16-bit `VIPF=101` mode; physical-panel verification remains required.
 
-## Control implementation
+## QEMU backend
 
-MCP23008 GP2/GP3 read encoder A/B and GP4 reads the active-low push switch, all with pull-ups. `instrument_ui_poll()` runs approximately every 10 ms. A short released press cycles panels; holding for about 800 ms toggles settings. Encoder rotation is ignored outside settings to avoid accidental in-flight value changes.
+`CONFIG_EFIS_QEMU` is emulator-only and depends on `CONFIG_EFIS_BENCH_SIMULATION`. The QEMU path bypasses physical LCD, MCP23008, encoder, backlight and sensor initialization and renders to Espressif's `esp_lcd_qemu_rgb` virtual 480×480 RGB565 display.
 
-Settings are currently RAM-only. NVS persistence will be added once the settings/data-source design is frozen. Brightness is represented in the UI but still needs to be connected to TPS61169 PWM rather than the current simple on/off backlight output.
+The normal hardware defaults enable external Quad PSRAM for the N16R2. QEMU builds override this with `# CONFIG_SPIRAM is not set` in `sdkconfig.qemu.defaults`; otherwise ESP-IDF asserts in `esp_psram_init()` before `app_main()` because the emulated configuration does not provide the physical PSRAM device.
 
-## Data-source contract
+Keep QEMU in the separate `build-qemu` directory and never flash that image to aircraft hardware.
 
-`instrument_data_t` separates each value from its validity flag. A renderer must not treat a stale or absent value as valid. The future sensor tasks will update pitch/roll, altitude and heading independently with freshness/health checks.
+## macOS shell setup
 
-## Next implementation stages
-
-The attitude path remains first: configure BMI088 ranges/ODR, acquire at ~200 Hz, timestamp samples, calibrate gyro bias, apply aircraft-axis transform, run quaternion AHRS and acceleration-confidence logic, then feed live pitch/roll to the Horizon panel.
-
-The Altimeter additionally needs selection/integration of a suitable static-pressure sensor and pressure-to-altitude/QNH processing. The Compass needs a deliberate absolute-heading architecture; gyro yaw alone is not acceptable as a compass. A magnetometer or other aiding source must be evaluated for the aircraft installation.
-
-## Build/deploy
-
-See [DEPLOYMENT.md](DEPLOYMENT.md). Normal local build:
+After the one-time ESP-IDF/QEMU installation, use the repository environment script in every new shell:
 
 ```bash
-source ~/.espressif/tools/activate_idf_v5.4.4.sh
-cd firmware
+cd ~/Documents/Xcode/ESP32-EFIS
+git pull
+source scripts/efis-env.sh
+cd "$EFIS_FIRMWARE_DIR"
+```
+
+The script pins the known ESP-IDF v5.4.4 interpreter at `~/.espressif/tools/python/v5.4.4/venv/bin/python`, prevents a second ESP-IDF Python environment from silently taking over an existing CMake build, and adds the installed QEMU binary to PATH when Espressif's export step omits it.
+
+## Normal hardware build
+
+```bash
+cd "$EFIS_FIRMWARE_DIR"
+idf.py set-target esp32s3
 idf.py build
 ```
 
-GitHub Actions builds the same ESP32-S3 firmware automatically.
+Normal `sdkconfig.defaults` keeps physical PSRAM enabled and bench simulation disabled.
 
-## Safety behaviour
+## Clean QEMU build and run
 
-No panel may leave a plausible frozen flight indication after its source becomes stale or invalid. The final UI will use explicit textual invalid annunciations; the current screen framework uses a prominent invalid overlay until the font/annunciation renderer is added.
+```bash
+cd "$EFIS_FIRMWARE_DIR"
+rm -rf build-qemu
 
-This project remains a **supplementary/non-primary flight-development instrument**.
+idf.py -B build-qemu \
+  -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.qemu.defaults" \
+  set-target esp32s3
+
+idf.py -B build-qemu \
+  -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.qemu.defaults" \
+  build
+
+idf.py -B build-qemu qemu --graphics monitor
+```
+
+See [`../docs/MACOS_BUILD_AND_QEMU_SETUP.md`](../docs/MACOS_BUILD_AND_QEMU_SETUP.md), [`../docs/SIMULATION.md`](../docs/SIMULATION.md) and [DEPLOYMENT.md](DEPLOYMENT.md).
+
+## Current implementation direction
+
+The attitude path remains first: configure BMI088 ranges/ODR, acquire and timestamp samples, calibrate gyro bias, apply the aircraft-axis transform, run quaternion AHRS and acceleration-confidence logic, then feed validated live pitch/roll to the Horizon panel.
+
+The Altimeter path uses the selected ported BMP585 architecture and needs live pressure/QNH processing. The Compass architecture uses the selected remote PNI RM3100-CB as the absolute-heading source, with appropriate AHRS fusion and independent validity/freshness monitoring.
