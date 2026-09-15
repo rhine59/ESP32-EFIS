@@ -1,0 +1,12 @@
+menu "ESP32 EFIS development options"
+
+config EFIS_BENCH_SIMULATION
+    bool "Enable synthetic bench flight data"
+    default n
+    help
+        Development and emulator use only. Generates synthetic attitude,
+        altitude and heading data. Leave disabled for normal hardware and
+        aircraft-use builds. When enabled the display must clearly identify
+        the data as simulated.
+
+endmenu
