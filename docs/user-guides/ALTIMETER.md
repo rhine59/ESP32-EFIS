@@ -15,12 +15,12 @@ The renderer uses 50 circumference divisions with a long 100-ft hand, medium 1,0
 QNH defaults to 1013 hPa on a fresh instrument and is stored in ESP32 NVS.
 
 ## Pressure source
-The reference sensor is now **Bosch BMP581**. Bench development uses an Adafruit BMP581 breakout; the final carrier is intended to use the bare sensor connected to the aircraft static system through a sealed pressure plenum and rear STATIC fitting. The BMI088 is not used to manufacture altitude.
+The reference sensor is **Bosch BMP585**. First bench/static-plumbing development uses the **Adafruit BMP585 Ported breakout PID 6413**. The gel-filled BMP585 was chosen for environmental robustness while retaining low noise and good relative pressure accuracy. The BMI088 is never used to manufacture altitude.
 
-Until the BMP581 driver and plumbing are physically integrated and validated, the normal non-simulation build keeps altitude invalid. Bench simulation may exercise the graphics but is explicitly synthetic.
+Until the BMP585 driver and static plumbing are physically integrated and validated, normal non-simulation firmware keeps altitude invalid. Bench simulation is explicitly synthetic.
 
 ## Validity / failure
 Altitude becomes valid only after pressure-sensor startup, range, freshness and plausibility checks pass. Missing, stale or invalid pressure immediately invalidates the indication rather than freezing the last plausible altitude.
 
 ## Bench checks
-Compare against a trusted pressure reference over multiple pressures/altitudes; exercise all hand wrap points; test QNH and NVS; test rapid pressure changes, power cycles, static leaks/restrictions and disconnected/stale sensor conditions. See `../SENSORS.md`.
+Compare against a trusted pressure reference over multiple pressures/altitudes; exercise hand wrap points; test QNH/NVS; rapid pressure changes; power cycles; static leaks/restrictions; disconnected/stale sensor conditions. See `../SENSORS.md`.
