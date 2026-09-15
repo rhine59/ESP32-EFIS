@@ -38,7 +38,7 @@ esp_err_t instrument_ui_poll(instrument_ui_t *ui,bool *redraw)
 {
     static bool initialized;static uint8_t last_ab;static bool last_button=true;static unsigned held;static bool long_fired;
     uint8_t gpio;esp_err_t err=mcp23008_read_gpio(&gpio);if(err!=ESP_OK)return err;*redraw=false;
-    bool a=gpio&(1u<<IOX_ENCODER_A),b=gpio&(1u<<IOX_ENCODER_B),button=gpio&(1u<<IOX_ENCODER_PUSH);uint8_t ab=(a?2u:0u)|(b?1u:0u);
+    bool a=gpio&(1u<<IOX_ENCODER_A),b=gpio&(1u<<IOX_ENCODER_B),button=gpio&(1u<<IOX_ENCODER_SW);uint8_t ab=(a?2u:0u)|(b?1u:0u);
     if(!initialized){initialized=true;last_ab=ab;last_button=button;return ESP_OK;}
     if(ui->settings_active&&ab==3&&last_ab!=3){int d=last_ab==1?1:last_ab==2?-1:0;if(d){if(ui->panel==PANEL_ALTIMETER){ui->qnh_hpa+=d;if(ui->qnh_hpa<950)ui->qnh_hpa=950;if(ui->qnh_hpa>1050)ui->qnh_hpa=1050;}else if(ui->panel==PANEL_COMPASS){ui->heading_bug_deg=(ui->heading_bug_deg+d+360)%360;}else{ui->brightness_percent+=d*5;if(ui->brightness_percent<10)ui->brightness_percent=10;if(ui->brightness_percent>100)ui->brightness_percent=100;}*redraw=true;}}
     last_ab=ab;
