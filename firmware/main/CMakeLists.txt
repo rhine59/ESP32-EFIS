@@ -7,6 +7,7 @@ idf_component_register(
         "instrument_screens.c"
         "instrument_ui.c"
         "instrument_sim.c"
+        "baro_altitude.c"
         "bmi088.c"
     INCLUDE_DIRS
         "."
