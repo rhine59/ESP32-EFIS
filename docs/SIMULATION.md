@@ -4,7 +4,7 @@ Simulation is development-only and must never be used as a fallback for failed f
 
 ## Instrument acceptance status
 
-The **Artificial Horizon / PFD graphics pass is accepted and parked**. The Altimeter and Compass functional passes remain accepted; the active 480×480 graphics-quality stage is now the **Altimeter**.
+The **Artificial Horizon / PFD graphics pass and Altimeter graphics pass are accepted and parked**. The Compass functional pass remains accepted; the active 480×480 graphics-quality stage is now the **Compass**.
 
 Graphics work must preserve the accepted indication direction, mathematics and failure behaviour.
 
@@ -20,19 +20,17 @@ The native Swift simulator mirrors this accepted Horizon presentation. QEMU rema
 
 ## Altimeter acceptance record
 
-The Altimeter presentation and QNH/pressure calculation are functionally accepted. The accepted presentation uses the circular EFIS bezel, 0–9 dial numerals, differentiated hundreds/thousands/ten-thousands hands, digital altitude readout, conventional rectangular Kollsman/QNH window in hectopascals and fail-obvious `ALT FAIL` state.
+The Altimeter presentation and QNH/pressure calculation are accepted. The accepted presentation uses the circular EFIS bezel, 0–9 dial numerals, differentiated hundreds/thousands/ten-thousands hands, digital altitude readout, compact mechanical-style Kollsman pressure scale at 3 o'clock, the 9 o'clock >10,000-ft hatching sector and fail-obvious `ALT FAIL` state.
 
-The accepted above-10,000-ft logic has no hatching at or below 10,000 ft, progressively reveals hatching over the next 1,000 ft and remains fully exposed thereafter. The pressure-setting window is hPa only. The discarded slice-shaped Kollsman concept is not part of the design.
+The accepted Kollsman display replaces the former lower rectangular QNH box. It is a curved circumferential sector centred at **3 o'clock**, spanning approximately **8 hPa total** at 2° per hPa. The selected QNH is aligned with a fixed 3-o'clock index while the pressure graduations move around it. Pressure numbers and hatch marks are maintained at constant radii from the instrument centre and the window contains no `QNH`, `HPA` or `KOLLSMAN` text. The exact **1013.25 hPa** standard-pressure datum is represented by a substantially heavier radial tick. This datum is a presentation reference only: selected QNH remains 950–1050 hPa in integer 1 hPa increments and the accepted pressure/altitude mathematics are unchanged.
+
+The accepted above-10,000-ft logic has no hatching at or below 10,000 ft, progressively reveals hatching over the next 1,000 ft and remains fully exposed thereafter. The hatching is an **annular sector centred at the 9 o'clock position**. The sector occupies a 60° arc on the left side of the dial and sits inside the numeral ring. At or below 10,000 ft it is absent; from 10,000 to 11,000 ft the sector progressively grows through its 60° arc; at and above 11,000 ft the full sector remains visible. This is a presentation change only: the accepted 10,000/11,000-ft thresholds are unchanged.
 
 The accepted functional QNH test held simulated static pressure at 927.0 hPa while changing `ui.qnh_hpa` through 1013, 1003, 1023, 950 and 1050 hPa. Lower QNH produced lower indicated altitude, higher QNH produced higher indicated altitude, and invalid pressure produced `ALT FAIL`. The reusable `baro_altitude` module therefore remains the calculation path for static pressure plus selected QNH.
 
-### Active Altimeter graphics review
+The Altimeter graphics suite used fourteen six-second states: **0, 500, 1,000, 2,500, 5,000, 9,500, 9,900, 10,000, 10,100, 10,500 and 12,500 ft**, a moving altitude sweep, `ALT FAIL`, and explicit recovery to 2,500 ft. The final compact Kollsman geometry was visually accepted in QEMU.
 
-QEMU is locked to `PANEL_ALTIMETER` for visual review. It cycles fourteen six-second states: **0, 500, 1,000, 2,500, 5,000, 9,500, 9,900, 10,000, 10,100, 10,500 and 12,500 ft**, a moving altitude sweep, `ALT FAIL`, and explicit recovery to 2,500 ft.
-
-The former rectangular >10,000-ft hatched window has been replaced by an **annular hatched sector centred at the 9 o'clock position**. The sector occupies a 60° arc on the left side of the dial and sits inside the numeral ring so it does not obscure the digital altitude or Kollsman/QNH window. At or below 10,000 ft it is absent; from 10,000 to 11,000 ft the sector progressively grows through its 60° arc; at and above 11,000 ft the full sector remains visible. This is a presentation change only: the accepted 10,000/11,000-ft thresholds are unchanged.
-
-The native Swift simulator mirrors the 9 o'clock annular sector and progressive reveal. QEMU remains authoritative for the RGB565 implementation.
+The native Swift simulator mirrors both the accepted 9 o'clock altitude-hatching sector and the compact 3 o'clock Kollsman presentation. QEMU remains authoritative for the RGB565 implementation.
 
 Physical BMP585 acquisition, stale-data timing and rotary encoder direction/detent validation remain hardware-integration tests and are not simulated as real hardware in QEMU.
 
@@ -45,6 +43,12 @@ The accepted Compass renderer carries large **N, E, S and W** labels on the rota
 The accepted heading bug is a distinct outlined yellow triangular bug. It represents a selected magnetic heading and its screen position is calculated from `heading_bug_deg - heading_deg`; it is not a fixed screen pointer. The acceptance suite held the bug at 060° while aircraft heading changed. Physical encoder adjustment remains a hardware test because QEMU bypasses the MCP23008 and rotary encoder.
 
 `HEADING FAIL` is the accepted fail-obvious state and must not be replaced by a frozen plausible heading.
+
+### Active Compass graphics review
+
+QEMU is now locked to `PANEL_COMPASS` for the graphics-quality pass. The review preserves the accepted heading/card direction, north wrap, selected-heading bug mathematics and fail-obvious behaviour while allowing typography, spacing, line weights, primitive quality and failure-state presentation to be refined.
+
+The graphics suite exercises the eight cardinal/intercardinal headings, the 350°→010° north crossing, continuous rotation, `HEADING FAIL`, and recovery to north. Particular attention must be paid to the failure state: a failed heading must not leave a frozen or otherwise plausible usable compass presentation.
 
 ## Simulator synchronisation
 
@@ -72,4 +76,4 @@ The selected Newhaven NHD-2.1-480480AF-ASXP has a native resolution of **480×48
 
 The graphics pass may improve typography, primitive smoothness, line weights, spacing, alignment, clipping and bezel/failure presentation. It must not change accepted attitude, altitude/QNH or heading/bug mathematics.
 
-After Altimeter graphics acceptance, the next graphics stage is the Compass. After all graphics passes are accepted, development moves to the real sensor pipeline: BMI088 attitude, BMP585 pressure/QNH altitude and RM3100 heading, including explicit stale/invalid-data handling before physical prototype testing.
+The active graphics stage is now the Compass. After the Compass graphics pass is accepted, development moves to the real sensor pipeline: BMI088 attitude, BMP585 pressure/QNH altitude and RM3100 heading, including explicit stale/invalid-data handling before physical prototype testing.
