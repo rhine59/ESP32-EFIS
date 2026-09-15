@@ -1,312 +1,192 @@
 # macOS build and QEMU setup
 
-This document records the complete setup needed to build and run the ESP32 EFIS firmware on a new Apple Silicon Mac, including the problems encountered during the first working installation.
+This is the authoritative setup/runbook for building and running ESP32 EFIS firmware on the current Apple Silicon macOS development machine. The project targets **ESP32-S3** and is pinned to **ESP-IDF v5.4.4**.
 
-The project currently targets **ESP32-S3** and is built with **ESP-IDF v5.4.4**. QEMU is used only for development/simulation. The aircraft firmware must keep synthetic data disabled.
+QEMU and synthetic data are development-only. Aircraft-target builds must keep simulation disabled.
 
-## 1. Prerequisites
+## One-time prerequisites
 
-Install Apple's command-line developer tools if they are not already present:
+Install Apple's command-line tools and Homebrew as required. The Espressif QEMU installation used here requires the Homebrew runtime libraries `libgcrypt` and `sdl2`:
 
 ```bash
 xcode-select --install
-```
-
-Install Homebrew if required, then make sure `git` is available:
-
-```bash
-git --version
-brew --version
-```
-
-The Espressif QEMU binary used on Apple Silicon also required these Homebrew runtime libraries during the original installation:
-
-```bash
 brew install libgcrypt sdl2
 ```
 
-The missing-library failures that led to these dependencies were:
+The observed missing-library paths were `/opt/homebrew/opt/libgcrypt/lib/libgcrypt.20.dylib` and `/opt/homebrew/opt/sdl2/lib/libSDL2-2.0.0.dylib`.
+
+## Repository
+
+The working checkout is normally:
 
 ```text
-Library not loaded: /opt/homebrew/opt/libgcrypt/lib/libgcrypt.20.dylib
-Library not loaded: /opt/homebrew/opt/sdl2/lib/libSDL2-2.0.0.dylib
+~/Documents/Xcode/ESP32-EFIS
 ```
 
-They can be checked with:
+Clone/update with:
 
 ```bash
-ls -l /opt/homebrew/opt/libgcrypt/lib/libgcrypt.20.dylib
-ls -l /opt/homebrew/opt/sdl2/lib/libSDL2-2.0.0.dylib
-```
-
-## 2. Clone the ESP32 EFIS repository
-
-Clone the private repository using the GitHub authentication method configured on the Mac, then enter it:
-
-```bash
+cd ~/Documents/Xcode
 git clone https://github.com/rhine59/ESP32-EFIS.git
-cd ESP32-EFIS
 ```
 
-For an existing checkout:
+or, for an existing checkout:
 
 ```bash
-cd ~/ESP32-EFIS
+cd ~/Documents/Xcode/ESP32-EFIS
 git pull
 ```
 
-## 3. Install ESP-IDF v5.4.4
+## ESP-IDF v5.4.4
 
-This project is pinned to ESP-IDF **v5.4.4**. Keep that version rather than silently moving to a newer IDF release.
-
-The working installation used this location:
+The pinned installation is:
 
 ```text
 ~/.espressif/v5.4.4/esp-idf
 ```
 
-After ESP-IDF v5.4.4 has been placed there, install the ESP32-S3 toolchain and required packages:
+Install/repair the ESP32-S3 tool set with:
 
 ```bash
 ~/.espressif/v5.4.4/esp-idf/install.sh esp32s3
 ```
 
-This step is important. On the original machine an incomplete ESP-IDF installation caused activation to fail with:
+This also resolves an incomplete installation such as `tool esp-rom-elfs has no installed versions`.
 
-```text
-ERROR: tool esp-rom-elfs has no installed versions.
-Please run '/Users/.../.espressif/v5.4.4/esp-idf/install.sh' to install it.
-```
+## Standard new-shell setup
 
-Running `install.sh esp32s3` installed the missing ESP-IDF tools.
-
-## 4. Do not activate ESP-IDF from an unrelated Python venv
-
-If the shell prompt shows another Python environment, for example:
-
-```text
-(venv) user@Mac ...
-```
-
-leave it first:
+After the one-time installation, **do not manually assemble the environment each time**. Use the repository script:
 
 ```bash
-deactivate
-```
-
-ESP-IDF maintains its own Python environment under `~/.espressif/tools/python/`. Using the ESP-IDF environment avoids confusing project Python dependencies with the IDF toolchain.
-
-## 5. Activate ESP-IDF
-
-The repository now contains `scripts/efis-env.sh`, which is the preferred way to prepare a new Terminal session after the one-time installation is complete.
-
-From anywhere inside the repository:
-
-```bash
+cd ~/Documents/Xcode/ESP32-EFIS
 source scripts/efis-env.sh
 ```
 
-If the current directory is not the repository root, source it using its full checkout path, for example:
+It must be sourced because it modifies the current shell. The script:
+
+- activates the pinned ESP-IDF v5.4.4 tree;
+- forces the known interpreter `~/.espressif/tools/python/v5.4.4/venv/bin/python`;
+- removes competing Espressif Python environment bin directories from PATH;
+- defines `idf.py` through that pinned interpreter;
+- exports `EFIS_ROOT` and `EFIS_FIRMWARE_DIR`;
+- finds QEMU when Espressif installed it below `~/.espressif/tools/tools/qemu-xtensa/...` but omitted it from PATH;
+- fails early if the active Python does not match the project interpreter.
+
+This prevents the observed CMake failure where the current shell used `~/.espressif/python_env/idf5.4_py3.14_env/bin/python` but `build-qemu` had been configured with `~/.espressif/tools/python/v5.4.4/venv/bin/python`.
+
+If that mismatch has already occurred, source the latest script and delete/recreate the affected build directory. CMake build directories record their configuring interpreter.
+
+## Install QEMU once
+
+After ESP-IDF is available:
 
 ```bash
-source ~/Documents/Xcode/ESP32-EFIS/scripts/efis-env.sh
-```
-
-The script must be **sourced**, not simply executed, because `IDF_PATH` and `PATH` need to be changed in the current shell. It activates ESP-IDF v5.4.4, finds the repository root, exports `EFIS_ROOT` and `EFIS_FIRMWARE_DIR`, checks QEMU and works around the QEMU PATH issue encountered on the original Apple Silicon installation.
-
-The manual equivalent is:
-
-```bash
-source ~/.espressif/v5.4.4/esp-idf/export.sh
-```
-
-Check the environment with:
-
-```bash
-echo $IDF_PATH
-which idf.py
-```
-
-The expected `IDF_PATH` is:
-
-```text
-/Users/<username>/.espressif/v5.4.4/esp-idf
-```
-
-On this installation `idf.py` may appear as a shell function rather than a conventional executable path. That is normal; the function invokes ESP-IDF's own Python interpreter and `tools/idf.py`.
-
-If activation reports that an ESP-IDF tool has no installed version, run:
-
-```bash
-~/.espressif/v5.4.4/esp-idf/install.sh esp32s3
-```
-
-and activate again.
-
-## 6. Install Espressif QEMU
-
-With ESP-IDF activated:
-
-```bash
+source scripts/efis-env.sh
 python "$IDF_PATH/tools/idf_tools.py" install qemu-xtensa
+source scripts/efis-env.sh
 ```
 
-On the original Apple Silicon Mac this installed:
+The original installation selected `qemu-xtensa@esp_develop_9.2.2_20250817`. The project does not hard-code that version in the environment script; it searches installed QEMU versions.
 
-```text
-qemu-xtensa@esp_develop_9.2.2_20250817
-```
-
-Do not depend on that exact QEMU package version forever: `idf_tools.py` should select the QEMU version appropriate to the installed ESP-IDF tools manifest.
-
-If installation fails because `libgcrypt` is absent:
-
-```bash
-brew install libgcrypt
-python "$IDF_PATH/tools/idf_tools.py" install qemu-xtensa
-```
-
-If it then fails because SDL2 is absent:
-
-```bash
-brew install sdl2
-python "$IDF_PATH/tools/idf_tools.py" install qemu-xtensa
-```
-
-After QEMU installs successfully, refresh the environment:
-
-```bash
-source "$IDF_PATH/export.sh"
-```
-
-On the original machine `idf_tools.py` installed QEMU below:
-
-```text
-~/.espressif/tools/tools/qemu-xtensa/<version>/qemu/bin
-```
-
-but `idf_tools.py export` did not include that directory in `PATH`. `scripts/efis-env.sh` detects this condition and adds an installed `qemu-system-xtensa` automatically rather than requiring the long path to be entered for every shell.
-
-Verify QEMU with:
+Verify:
 
 ```bash
 which qemu-system-xtensa
 qemu-system-xtensa --version
 ```
 
-Do not proceed to QEMU testing until the version command runs without a dynamic-library error.
+The original Mac resolved QEMU under:
 
-## 7. Build the normal ESP32-S3 firmware
+```text
+~/.espressif/tools/tools/qemu-xtensa/esp_develop_9.2.2_20250817/qemu/bin/qemu-system-xtensa
+```
 
-The ordinary hardware build deliberately uses the project's normal defaults, in which bench simulation is OFF:
+## Normal hardware build
 
 ```bash
+source scripts/efis-env.sh
 cd "$EFIS_FIRMWARE_DIR"
 idf.py set-target esp32s3
 idf.py build
 ```
 
-The project also has GitHub Actions CI for the normal ESP-IDF firmware build. A successful local build and successful CI build are complementary checks.
+The normal defaults enable the physical N16R2's 2 MB Quad PSRAM and keep bench simulation OFF.
 
-## 8. Build the QEMU firmware separately
+## QEMU configuration
 
-Never reuse the normal hardware build directory for QEMU. The project provides `sdkconfig.qemu.defaults`, which explicitly enables both the QEMU backend and synthetic bench data.
-
-From the firmware directory:
-
-```bash
-cd "$EFIS_FIRMWARE_DIR"
-rm -rf build-qemu
-
-idf.py \
-  -B build-qemu \
-  -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.qemu.defaults" \
-  set-target esp32s3
-```
-
-Then build:
-
-```bash
-idf.py \
-  -B build-qemu \
-  -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.qemu.defaults" \
-  build
-```
-
-A successful build ends with ESP-IDF reporting that the project build is complete.
-
-Keeping `build-qemu` separate from the normal `build` directory is a safety feature: it reduces the risk of accidentally carrying emulator/synthetic-data configuration into a hardware build.
-
-## 9. Run the graphical EFIS in QEMU
-
-After the QEMU build has succeeded:
-
-```bash
-idf.py -B build-qemu qemu --graphics monitor
-```
-
-The QEMU build uses Espressif's virtual RGB LCD component rather than the physical ST7701S panel interface. The virtual display is 480 × 480 RGB565, matching the EFIS instrument framebuffer.
-
-The QEMU configuration intentionally enables synthetic pitch, roll, altitude and heading data. Simulated data is visibly marked **SIM** on the rendered instrument screens and the boot log warns that synthetic data is active.
-
-The emulator build can automatically exercise the Horizon/PFD, Altimeter and Compass screens without requiring the physical display, BMI088, MCP23008, encoder or other bench hardware.
-
-## 10. Safety rules
-
-QEMU and bench simulation are development facilities only. The ESP32 EFIS is a supplementary/non-primary instrument.
-
-`CONFIG_EFIS_BENCH_SIMULATION` defaults to OFF. Synthetic data must never be used as a fallback when a real sensor is absent, invalid or stale.
-
-Before putting firmware on aircraft hardware, use a clean normal build and confirm the boot log contains:
+QEMU uses a separate `build-qemu` directory and overlays `sdkconfig.qemu.defaults` on the normal defaults. The overlay enables `CONFIG_EFIS_BENCH_SIMULATION` and `CONFIG_EFIS_QEMU` but explicitly contains:
 
 ```text
-BENCH SIMULATION: OFF
+# CONFIG_SPIRAM is not set
 ```
 
-Do not flash a `build-qemu` image to aircraft hardware.
+That PSRAM override is essential. The physical ESP32-S3-WROOM-1-N16R2 has external Quad PSRAM, but this QEMU configuration does not provide that physical device. When QEMU inherited `CONFIG_SPIRAM=y`, boot failed before `app_main()` with:
 
-## 11. New-machine quick sequence
-
-Once Homebrew, Git and ESP-IDF v5.4.4 are available, the one-time installation is:
-
-```bash
-brew install libgcrypt sdl2
-
-~/.espressif/v5.4.4/esp-idf/install.sh esp32s3
-source ~/.espressif/v5.4.4/esp-idf/export.sh
-python "$IDF_PATH/tools/idf_tools.py" install qemu-xtensa
+```text
+assert failed ... s_psram_chip_init
+esp_psram_init
+Rebooting...
 ```
 
-After that, each new shell only needs:
+Disabling SPIRAM only in `sdkconfig.qemu.defaults` fixes the emulator configuration without changing the real-hardware configuration.
+
+## Clean QEMU build
+
+After any QEMU Kconfig/defaults change, or after an ESP-IDF Python mismatch, rebuild from scratch:
 
 ```bash
-cd ~/Documents/Xcode/ESP32-EFIS
-git pull
 source scripts/efis-env.sh
 cd "$EFIS_FIRMWARE_DIR"
-```
-
-For a clean QEMU build:
-
-```bash
 rm -rf build-qemu
+
 idf.py -B build-qemu \
   -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.qemu.defaults" \
   set-target esp32s3
+
 idf.py -B build-qemu \
   -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.qemu.defaults" \
   build
+```
+
+The generic ESP-IDF message after a successful build may suggest `idf.py flash`. **Do not flash `build-qemu` to hardware.**
+
+## Run QEMU graphics
+
+```bash
 idf.py -B build-qemu qemu --graphics monitor
 ```
 
-## 12. Troubleshooting checklist
+The emulator uses Espressif's `esp_lcd_qemu_rgb` virtual 480×480 RGB565 display. Physical LCD, MCP23008, encoder, backlight and sensor initialization are bypassed. Synthetic pitch/roll/altitude/heading are enabled and every page must display the red **SIM** marker.
 
-If `source .../export.sh` fails, read the first `ERROR:` line rather than reinstalling everything. A message such as `tool <name> has no installed versions` normally means the ESP-IDF tool installation is incomplete.
+To capture a fault:
 
-If `qemu-system-xtensa` is not found after ESP-IDF activation, use `source scripts/efis-env.sh`. It includes the workaround for the QEMU installation path seen on the original Mac.
+```bash
+rm -f qemu.log
+idf.py -B build-qemu qemu --graphics monitor 2>&1 | tee qemu.log
+```
 
-If QEMU is found but terminates immediately with `dyld: Library not loaded`, install the named Homebrew dependency and retry the QEMU installation/check. The two dependencies encountered on the original Apple Silicon installation were `libgcrypt` and `sdl2`.
+Then inspect it with:
 
-If a QEMU build behaves as though simulation is disabled, remove `build-qemu` and recreate it using both `sdkconfig.defaults` and `sdkconfig.qemu.defaults`. Do not modify the normal defaults to turn simulation on globally.
+```bash
+grep -B 60 -A 15 -E "Guru|panic|abort|assert|Backtrace|Rebooting" qemu.log | tail -200
+```
 
-If a normal aircraft-target build unexpectedly reports simulation enabled, stop: delete the build directory/configuration, rebuild from the normal defaults, and verify `BENCH SIMULATION: OFF` before proceeding.
+## Troubleshooting
+
+**`qemu-system-xtensa` not found:** source `scripts/efis-env.sh`. Espressif's `idf_tools.py export` was observed not to add the installed `~/.espressif/tools/tools/qemu-xtensa/.../qemu/bin` directory; the script handles it.
+
+**Python environment mismatch:** source `scripts/efis-env.sh`, confirm the summary shows `~/.espressif/tools/python/v5.4.4/venv/bin/python`, then delete/recreate the affected build directory.
+
+**QEMU reboots in `esp_psram_init`:** pull the current repository, confirm `sdkconfig.qemu.defaults` has `# CONFIG_SPIRAM is not set`, delete `build-qemu` and recreate it using both defaults files.
+
+**`dyld: Library not loaded`:** install the named Homebrew dependency. The observed requirements were `libgcrypt` and `sdl2`.
+
+**Simulation unexpectedly disabled in QEMU:** recreate `build-qemu` with both `sdkconfig.defaults` and `sdkconfig.qemu.defaults`.
+
+**Simulation unexpectedly enabled in a hardware build:** stop. Delete the normal build directory, rebuild from normal defaults and verify `BENCH SIMULATION: OFF` before any hardware/aircraft use.
+
+## Safety boundary
+
+QEMU and bench simulation are development facilities only. Synthetic data must never activate as a fallback for a missing, failed or stale real sensor. A real-source failure must produce an unmistakable invalid indication.
+
+Keep `build` and `build-qemu` separate. Never flash `build-qemu` to aircraft hardware. The ESP32 EFIS remains a supplementary/non-primary experimental instrument.
