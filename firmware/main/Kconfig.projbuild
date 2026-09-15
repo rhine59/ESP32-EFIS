@@ -6,7 +6,16 @@ config EFIS_BENCH_SIMULATION
     help
         Development and emulator use only. Generates synthetic attitude,
         altitude and heading data. Leave disabled for normal hardware and
-        aircraft-use builds. When enabled the display must clearly identify
+        aircraft-use builds. When enabled the display clearly identifies
         the data as simulated.
+
+config EFIS_QEMU
+    bool "Use Espressif QEMU virtual RGB display"
+    default n
+    depends on EFIS_BENCH_SIMULATION
+    help
+        Emulator development only. Replaces physical LCD, MCP23008, encoder,
+        backlight and BMI088 initialization with Espressif's QEMU virtual RGB
+        panel. Never enable this option for hardware or aircraft-use builds.
 
 endmenu
