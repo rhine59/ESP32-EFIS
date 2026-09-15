@@ -4,11 +4,23 @@ Experimental **supplementary/non-primary** multifunction electronic flight instr
 
 > **Safety:** experimental development hardware/software. It is not a certified or approved primary flight instrument and must not be relied upon as the sole source of attitude, altitude or heading information.
 
+## Current development status
+
+The project is being developed and accepted **one instrument at a time** using the real 480×480 geometry in Espressif QEMU before moving to physical-display integration.
+
+**Artificial Horizon / PFD:** functional geometry and the current presentation have been accepted and are parked. QEMU testing has verified level, ±10°/±20° pitch, ±30°/±60° bank, combined pitch/bank, attitude failure and recovery. The accepted presentation has a round EFIS-style bezel, fixed bank scale/pointer and fixed central aircraft reference. Its attitude mathematics should remain unchanged during the next stage.
+
+**Altimeter:** next active development stage. The plan is to redesign the current development artwork into a proper aircraft-style altimeter and then run a dedicated on-screen QEMU sequence at 0, 500, 1,000, 2,500, 5,000, 9,500 and 10,000 ft, followed by a deterministic sweep, altitude failure and recovery. QNH/encoder behaviour will be tested separately through the pressure-to-altitude calculation path.
+
+**Compass:** parked until Altimeter acceptance is complete.
+
+After all three instruments are functionally accepted, a common graphics-quality pass is planned for typography, line/circle smoothness, anti-aliasing/pre-rendering where practical, line weights and bezel shading.
+
 ## Instrument pages
 
 The EFIS has three round-instrument pages selected by the PEC09 rotary/push control:
 
-1. **Horizon/PFD** — BMI088-based AHRS, pitch/roll, roll scale and future validated auxiliary altitude/heading fields.
+1. **Horizon/PFD** — BMI088-based AHRS, pitch/roll, roll scale and validated auxiliary altitude/heading fields.
 2. **Altimeter** — classic three-pointer presentation using the selected ported BMP585 static-pressure sensor and adjustable QNH.
 3. **Compass** — rotating-card presentation using the selected remotely mounted PNI RM3100-CB absolute-heading source, fused with the AHRS as appropriate.
 
@@ -40,7 +52,27 @@ On macOS, the standard new-shell setup is:
 cd ~/Documents/Xcode/ESP32-EFIS
 git pull
 source scripts/efis-env.sh
-cd "$EFIS_FIRMWARE_DIR"
+```
+
+The normal scripted QEMU workflow is:
+
+```bash
+zsh scripts/build-qemu.sh
+zsh scripts/run-qemu.sh
+```
+
+For a completely clean emulator rebuild:
+
+```bash
+zsh scripts/build-qemu.sh --clean
+zsh scripts/run-qemu.sh
+```
+
+For physical ESP32-S3 hardware:
+
+```bash
+source scripts/efis-env.sh
+zsh scripts/build-hardware.sh
 ```
 
 `scripts/efis-env.sh` pins the project to the known ESP-IDF v5.4.4 Python environment and also finds the Espressif QEMU installation when its bin directory is not exported automatically. Do not mix ESP-IDF Python environments within one build directory.
@@ -57,7 +89,9 @@ See `simulator/README.md`.
 
 ## Display baseline
 
-The Newhaven panel uses 16-bit RGB565 with 9-bit serial controller initialization. Current RGB timing is 30 MHz PCLK, HFP/HBP 50/50, HS pulse 4, VFP/VBP 50/50 and VS pulse 2. Two 480×480 RGB565 framebuffers require 921,600 bytes, fitting in the N16R2's 2 MB Quad PSRAM on physical hardware.
+The Newhaven panel's **native and maximum display resolution is 480×480 pixels**. QEMU deliberately uses the same 480×480 framebuffer, so instrument geometry is developed at the real pixel dimensions. The panel uses 16-bit RGB565 with 9-bit serial controller initialization. Current RGB timing is 30 MHz PCLK, HFP/HBP 50/50, HS pulse 4, VFP/VBP 50/50 and VS pulse 2. Two 480×480 RGB565 framebuffers require 921,600 bytes, fitting in the N16R2's 2 MB Quad PSRAM on physical hardware.
+
+The desktop QEMU view is not a prediction of apparent physical sharpness when enlarged on a Mac display. The real 2.1-inch panel has a much higher apparent pixel density than an enlarged emulator window. Rendering quality can also be improved substantially within 480×480 through better typography, smoother primitives and refined artwork.
 
 ## Enclosure
 
@@ -75,7 +109,10 @@ The multifunction revision adds rear service provisions for the static-pressure 
 │   └── user-guides/
 ├── firmware/
 ├── scripts/
-│   └── efis-env.sh
+│   ├── efis-env.sh
+│   ├── build-qemu.sh
+│   ├── run-qemu.sh
+│   └── build-hardware.sh
 ├── simulator/
 ├── hardware/
 └── enclosure/
