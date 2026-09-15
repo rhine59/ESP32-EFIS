@@ -13,6 +13,12 @@ typedef struct {
     int heading_deg;
     bool heading_valid;
     bool simulated;
+    /* QEMU-only test metadata. Ignored by normal aircraft/bench presentation. */
+    bool test_overlay;
+    const char *test_name;
+    int test_index;
+    int test_count;
+    int test_seconds_left;
 } instrument_data_t;
 
 void instrument_render(uint16_t *fb, int width, int height,
