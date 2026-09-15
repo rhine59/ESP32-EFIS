@@ -28,6 +28,8 @@ QEMU mode is a separate Kconfig option, `CONFIG_EFIS_QEMU`, and depends on bench
 
 The managed component dependency is pinned to compatible major version `espressif/esp_lcd_qemu_rgb ^1.0.2`. Espressif documents the virtual framebuffer as supporting RGB565 and the ESP-IDF QEMU launcher can open the graphics window with `--graphics`.
 
+The physical ESP32-S3-WROOM-1-N16R2 target uses external Quad PSRAM, so `sdkconfig.defaults` enables `CONFIG_SPIRAM`. The QEMU target must override that hardware setting with `# CONFIG_SPIRAM is not set` in `sdkconfig.qemu.defaults`. Without this override the emulator reaches `esp_psram_init()` during CPU startup, asserts in `s_psram_chip_init`, and continuously reboots before `app_main()` can run. This is an emulator-only override; PSRAM remains enabled for normal hardware builds.
+
 ### First-time QEMU setup on macOS
 
 With ESP-IDF v5.4.4 installed, install the optional Xtensa QEMU tool if it is not already present:
@@ -39,6 +41,8 @@ python tools/idf_tools.py install qemu-xtensa
 ```
 
 If QEMU reports missing host libraries, install the documented macOS dependencies with Homebrew: `libgcrypt`, `glib`, `pixman`, `sdl2`, and `libslirp`.
+
+The repository's `scripts/efis-env.sh` is the preferred setup for subsequent shells; it also handles the QEMU PATH layout encountered on the original Apple Silicon development machine.
 
 ### Build the emulator configuration
 
@@ -52,7 +56,7 @@ idf.py -B build-qemu -D SDKCONFIG=build-qemu/sdkconfig \
   set-target esp32s3 build
 ```
 
-This keeps the emulator configuration separate from the normal hardware `sdkconfig` and prevents QEMU/synthetic settings leaking into an aircraft build.
+This keeps the emulator configuration separate from the normal hardware `sdkconfig` and prevents QEMU/synthetic settings leaking into an aircraft build. A clean reconfiguration is required after changing emulator-only Kconfig defaults such as the PSRAM override.
 
 ### Run with graphics
 
