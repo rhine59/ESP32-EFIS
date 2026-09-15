@@ -4,6 +4,8 @@ idf_component_register(
         "mcp23008.c"
         "st7701s.c"
         "horizon_renderer.c"
+        "instrument_screens.c"
+        "instrument_ui.c"
         "bmi088.c"
     INCLUDE_DIRS
         "."
