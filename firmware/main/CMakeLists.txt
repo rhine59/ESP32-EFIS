@@ -9,6 +9,7 @@ idf_component_register(
         "instrument_sim.c"
         "baro_altitude.c"
         "bmi088.c"
+        "attitude_estimator.c"
     INCLUDE_DIRS
         "."
         "../include"
