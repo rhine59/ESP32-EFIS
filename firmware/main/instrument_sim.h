@@ -2,7 +2,31 @@
 #include <stdbool.h>
 #include "instrument_screens.h"
 
-typedef struct { float t; bool enabled; } instrument_sim_t;
+typedef enum {
+    SIM_SCENARIO_LEVEL = 0,
+    SIM_SCENARIO_PITCH_UP,
+    SIM_SCENARIO_PITCH_DOWN,
+    SIM_SCENARIO_BANK_LEFT,
+    SIM_SCENARIO_BANK_RIGHT,
+    SIM_SCENARIO_ALTITUDE_SWEEP,
+    SIM_SCENARIO_HEADING_WRAP,
+    SIM_SCENARIO_ATTITUDE_FAIL,
+    SIM_SCENARIO_ALTITUDE_FAIL,
+    SIM_SCENARIO_HEADING_FAIL,
+    SIM_SCENARIO_ALL_FAIL,
+    SIM_SCENARIO_COUNT
+} instrument_sim_scenario_t;
+
+typedef struct {
+    float t;
+    float scenario_t;
+    bool enabled;
+    instrument_sim_scenario_t scenario;
+} instrument_sim_t;
+
 void instrument_sim_init(instrument_sim_t *sim, bool enabled);
 /* Bench-only synthetic data. Never enable in flight builds. */
 void instrument_sim_step(instrument_sim_t *sim, float dt_s, instrument_data_t *data);
+void instrument_sim_set_scenario(instrument_sim_t *sim, instrument_sim_scenario_t scenario);
+instrument_sim_scenario_t instrument_sim_next_scenario(instrument_sim_t *sim);
+const char *instrument_sim_scenario_name(instrument_sim_scenario_t scenario);
