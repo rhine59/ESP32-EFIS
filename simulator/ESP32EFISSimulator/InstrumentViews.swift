@@ -9,43 +9,65 @@ struct HorizonView: View {
                 .frame(width:s*1.8,height:s*1.8).offset(y:pitch*s/45).rotationEffect(.degrees(-roll))
             ForEach([-20,-10,10,20],id:\.self){p in HStack{Rectangle().frame(width:55,height:2);Text("\(abs(p))").font(.caption.bold()).foregroundStyle(.white);Rectangle().frame(width:55,height:2)}.foregroundStyle(.white).offset(y:CGFloat(p)*s/90)}
             Path{p in p.move(to:CGPoint(x:s*.32,y:s*.5));p.addLine(to:CGPoint(x:s*.45,y:s*.5));p.addLine(to:CGPoint(x:s*.5,y:s*.54));p.addLine(to:CGPoint(x:s*.55,y:s*.5));p.addLine(to:CGPoint(x:s*.68,y:s*.5))}.stroke(.yellow,lineWidth:5)
-            if let h=heading { Text(String(format:"%03.0f°",h)).font(.title2.monospacedDigit().bold()).foregroundStyle(.white).position(x:s/2,y:s*.09) }
+            if let h=heading { Text(String(format:"%03.0f",h)).font(.title2.monospacedDigit().bold()).foregroundStyle(.white).position(x:s/2,y:s*.09) }
             if let a=altitude { Text("\(Int(a)) FT").font(.title3.monospacedDigit().bold()).foregroundStyle(.white).position(x:s*.82,y:s*.5) }
-            if !valid { invalid(s,"ATTITUDE INVALID") }
+            if !valid { invalid(s,"ATT FAIL") }
         }
     }}
 }
 
 struct AltimeterView: View {
     let altitude,qnh: Double; let valid: Bool
-    var body: some View { GeometryReader { g in let s=g.size.width; ZStack {
-        Circle().fill(.black); Circle().stroke(.white,lineWidth:3).padding(18)
-        ForEach(0..<50,id:\.self){i in Capsule().fill(.white).frame(width:i%5==0 ? 3:1,height:i%5==0 ? 26:13).offset(y:-s*.42).rotationEffect(.degrees(Double(i)*7.2)) }
-        ForEach(0..<10,id:\.self){i in Text("\(i)").font(.system(size:s*.065,weight:.bold,design:.rounded)).foregroundStyle(.white).offset(y:-s*.34).rotationEffect(.degrees(Double(i)*36)).rotationEffect(.degrees(-Double(i)*36)) }
-        hand(s, altitude.truncatingRemainder(dividingBy:1000)*.36, s*.34, 4)
-        hand(s, altitude.truncatingRemainder(dividingBy:10000)*.036, s*.26, 7)
-        hand(s, altitude.truncatingRemainder(dividingBy:100000)*.0036, s*.18, 9)
-        Circle().fill(.white).frame(width:14,height:14)
-        Text("QNH \(Int(qnh))").font(.system(size:s*.045,weight:.bold,design:.monospaced)).foregroundStyle(.white).offset(y:s*.27)
-        if !valid { invalid(s,"ALTITUDE INVALID") }
+    var body: some View { GeometryReader { g in let s=g.size.width; let a=max(0,altitude); ZStack {
+        Circle().fill(.black)
+        Circle().stroke(.gray,lineWidth:s*.03).padding(s*.015)
+        Circle().stroke(.white,lineWidth:3).padding(s*.045)
+        ForEach(0..<50,id:\.self){i in Capsule().fill(.white).frame(width:i%5==0 ? 3:1,height:i%5==0 ? s*.058:s*.026).offset(y:-s*.405).rotationEffect(.degrees(Double(i)*7.2)) }
+        ForEach(0..<10,id:\.self){i in Text("\(i)").font(.system(size:s*.065,weight:.bold,design:.rounded)).foregroundStyle(.white).offset(y:-s*.33).rotationEffect(.degrees(Double(i)*36)).rotationEffect(.degrees(-Double(i)*36)) }
+        Text("ALT").font(.system(size:s*.045,weight:.bold,design:.monospaced)).foregroundStyle(.white).offset(y:-s*.18)
+        Text("FEET").font(.system(size:s*.027,weight:.bold,design:.monospaced)).foregroundStyle(.gray).offset(y:-s*.125)
+        if valid {
+            if a > 10000 { altitudeHatching(s, altitude:a) }
+            hand(s, a.truncatingRemainder(dividingBy:1000)*.36, s*.30, 3)
+            hand(s, a.truncatingRemainder(dividingBy:10000)*.036, s*.22, 5)
+            hand(s, a.truncatingRemainder(dividingBy:100000)*.0036, s*.145, 7)
+            Circle().fill(.white).frame(width:s*.03,height:s*.03)
+            Text("\(Int(a))").font(.system(size:s*.052,weight:.bold,design:.monospaced)).foregroundStyle(.green).padding(.horizontal,s*.025).padding(.vertical,s*.012).background(.black).overlay(Rectangle().stroke(.white,lineWidth:1)).offset(y:s*.16)
+        } else { invalid(s,"ALT FAIL") }
+        VStack(spacing:1) {
+            HStack(spacing:s*.018) { Text("QNH").foregroundStyle(.white); Text("\(Int(qnh))").foregroundStyle(.green); Text("HPA").foregroundStyle(.white).font(.system(size:s*.022,weight:.bold,design:.monospaced)) }
+            Text("KOLLSMAN").font(.system(size:s*.018,weight:.bold,design:.monospaced)).foregroundStyle(.gray)
+        }
+        .font(.system(size:s*.034,weight:.bold,design:.monospaced)).padding(.horizontal,s*.025).padding(.vertical,s*.012).background(.black).overlay(Rectangle().stroke(.white,lineWidth:1)).offset(y:s*.31)
     } }}
     private func hand(_ s:CGFloat,_ deg:Double,_ length:CGFloat,_ width:CGFloat)->some View { Rectangle().fill(.white).frame(width:width,height:length).offset(y:-length/2).rotationEffect(.degrees(deg)) }
+    @ViewBuilder private func altitudeHatching(_ s:CGFloat, altitude:Double)->some View {
+        let fraction=min(1,max(0,(altitude-10000)/1000))
+        let h=s*.095*CGFloat(fraction)
+        ZStack { ForEach(-4...4,id:\.self){i in Rectangle().fill(.white).frame(width:2,height:s*.16).rotationEffect(.degrees(45)).offset(x:CGFloat(i)*s*.025) } }
+            .frame(width:s*.18,height:max(2,h),alignment:.bottom).clipped().overlay(Rectangle().stroke(.white,lineWidth:1)).offset(y:-s*.045)
+    }
 }
 
 struct CompassView: View {
     let heading,bug: Double; let valid: Bool
-    var body: some View { GeometryReader { g in let s=g.size.width; ZStack {
-        Circle().fill(.black); Circle().stroke(.white,lineWidth:3).padding(18)
+    private func relative(_ selected:Double,_ heading:Double)->Double { var d=(selected-heading).truncatingRemainder(dividingBy:360); if d < 0 { d += 360 }; return d }
+    var body: some View { GeometryReader { g in let s=g.size.width; let hdg=((heading.truncatingRemainder(dividingBy:360))+360).truncatingRemainder(dividingBy:360); ZStack {
+        Circle().fill(.black)
+        Circle().stroke(.gray,lineWidth:s*.03).padding(s*.015)
+        Circle().stroke(.white,lineWidth:3).padding(s*.045)
         ZStack {
-            ForEach(0..<72,id:\.self){i in Capsule().fill(.white).frame(width:i%6==0 ? 3:1,height:i%6==0 ? 26:12).offset(y:-s*.42).rotationEffect(.degrees(Double(i)*5)) }
-            ForEach(Array([(0,"N"),(90,"E"),(180,"S"),(270,"W")]),id:\.0){d,t in Text(t).font(.system(size:s*.075,weight:.bold)).foregroundStyle(.white).offset(y:-s*.32).rotationEffect(.degrees(Double(d))).rotationEffect(.degrees(-Double(d))) }
-            Image(systemName:"triangle.fill").font(.title).foregroundStyle(.yellow).offset(y:-s*.34).rotationEffect(.degrees(bug))
-        }.rotationEffect(.degrees(-heading))
-        Image(systemName:"triangle.fill").foregroundStyle(.yellow).rotationEffect(.degrees(180)).offset(y:-s*.43)
-        Path{p in p.move(to:CGPoint(x:s*.3,y:s*.5));p.addLine(to:CGPoint(x:s*.7,y:s*.5));p.move(to:CGPoint(x:s*.5,y:s*.36));p.addLine(to:CGPoint(x:s*.5,y:s*.65))}.stroke(.yellow,lineWidth:5)
-        Text(String(format:"%03.0f°",heading)).font(.title.monospacedDigit().bold()).foregroundStyle(.white).offset(y:s*.27)
-        if !valid { invalid(s,"HEADING INVALID") }
+            ForEach(0..<72,id:\.self){i in Capsule().fill(.white).frame(width:i%6==0 ? 3:1,height:i%6==0 ? s*.058:(i%2==0 ? s*.038:s*.022)).offset(y:-s*.405).rotationEffect(.degrees(Double(i)*5)) }
+            ForEach(Array([(0,"N"),(90,"E"),(180,"S"),(270,"W")]),id:\.0){d,t in Text(t).font(.system(size:s*.065,weight:.bold,design:.rounded)).foregroundStyle(.white).offset(y:-s*.32).rotationEffect(.degrees(Double(d))).rotationEffect(.degrees(-Double(d))) }
+        }.rotationEffect(.degrees(-hdg))
+        // Fixed aircraft/lubber reference.
+        Path{p in p.move(to:CGPoint(x:s*.5,y:s*.038));p.addLine(to:CGPoint(x:s*.472,y:s*.10));p.addLine(to:CGPoint(x:s*.528,y:s*.10));p.closeSubpath()}.stroke(.yellow,lineWidth:3)
+        // Selected magnetic heading bug. Its screen angle is selected heading minus aircraft heading.
+        Path{p in p.move(to:CGPoint(x:s*.5,y:s*.075));p.addLine(to:CGPoint(x:s*.475,y:s*.125));p.addLine(to:CGPoint(x:s*.525,y:s*.125));p.closeSubpath()}.stroke(.yellow,lineWidth:4).rotationEffect(.degrees(relative(bug,hdg)))
+        Path{p in p.move(to:CGPoint(x:s*.34,y:s*.51));p.addLine(to:CGPoint(x:s*.66,y:s*.51));p.move(to:CGPoint(x:s*.5,y:s*.37));p.addLine(to:CGPoint(x:s*.5,y:s*.64));p.move(to:CGPoint(x:s*.43,y:s*.64));p.addLine(to:CGPoint(x:s*.5,y:s*.585));p.addLine(to:CGPoint(x:s*.57,y:s*.64))}.stroke(.yellow,lineWidth:5)
+        Text(String(format:"%03.0f",hdg)).font(.system(size:s*.075,weight:.bold,design:.monospaced)).foregroundStyle(.green).padding(.horizontal,s*.025).padding(.vertical,s*.012).background(.black).overlay(Rectangle().stroke(.white,lineWidth:1)).offset(y:s*.23)
+        if !valid { invalid(s,"HDG FAIL") }
     } }}
 }
 
-@ViewBuilder private func invalid(_ s:CGFloat,_ text:String)->some View { ZStack { Path{p in p.move(to:CGPoint(x:s*.22,y:s*.22));p.addLine(to:CGPoint(x:s*.78,y:s*.78));p.move(to:CGPoint(x:s*.78,y:s*.22));p.addLine(to:CGPoint(x:s*.22,y:s*.78))}.stroke(.red,lineWidth:10); Text(text).font(.headline.bold()).foregroundStyle(.red).padding(8).background(.black.opacity(.8)) } }
+@ViewBuilder private func invalid(_ s:CGFloat,_ text:String)->some View { ZStack { Path{p in p.move(to:CGPoint(x:s*.22,y:s*.22));p.addLine(to:CGPoint(x:s*.78,y:s*.78));p.move(to:CGPoint(x:s*.78,y:s*.22));p.addLine(to:CGPoint(x:s*.22,y:s*.78))}.stroke(.red,lineWidth:10); Text(text).font(.headline.bold()).foregroundStyle(.red).padding(8).background(.black.opacity(.9)).overlay(Rectangle().stroke(.red,lineWidth:2)) } }
