@@ -4,23 +4,23 @@
 The Altimeter page deliberately resembles a classic round aircraft altimeter: black face, high-contrast white circumference scale and three analogue hands. It remains supplementary/non-primary and does not replace the aircraft's required altimeter.
 
 ## Presentation
-The revised renderer uses 50 circumference divisions with stronger major divisions and three hands: a long **100-ft** hand, medium **1,000-ft** hand and short **10,000-ft** hand. A lower Kollsman/QNH setting window is reserved on the face. The electronic implementation may later add a small digital altitude confirmation without displacing the classic analogue presentation.
+The renderer uses 50 circumference divisions with a long 100-ft hand, medium 1,000-ft hand and short 10,000-ft hand. A lower Kollsman/QNH setting area is provided.
 
 ## Controls
 - **Short press:** Compass.
 - **Long press (~0.8 s):** enter/leave BARO/QNH setting.
-- **Rotate:** change QNH by 1 hPa per detent, currently 950–1050 hPa.
+- **Rotate:** QNH by 1 hPa per detent, currently 950–1050 hPa.
 - **Short press in settings:** accept/leave settings.
 
-QNH defaults to 1013 hPa on a fresh instrument. QNH and the last selected panel are now stored in ESP32 NVS and restored after power cycling.
+QNH defaults to 1013 hPa on a fresh instrument and is stored in ESP32 NVS.
 
-## Pressure source required
-The current hardware specification still has no static/barometric pressure sensor. BMI088 cannot measure pressure. Consequently the altimeter remains explicitly invalid until a suitable pressure sensor and static installation are integrated.
+## Pressure source
+The reference sensor is now **Bosch BMP581**. Bench development uses an Adafruit BMP581 breakout; the final carrier is intended to use the bare sensor connected to the aircraft static system through a sealed pressure plenum and rear STATIC fitting. The BMI088 is not used to manufacture altitude.
 
-The future pressure implementation must define sensor range, resolution, temperature compensation, filtering, startup validity, stale-data timeout and static-pressure plumbing. QNH must be applied to the measured static pressure rather than used to manufacture an altitude without pressure data.
+Until the BMP581 driver and plumbing are physically integrated and validated, the normal non-simulation build keeps altitude invalid. Bench simulation may exercise the graphics but is explicitly synthetic.
 
-## Failure behaviour
-Missing, stale or invalid pressure data invalidates the indication. The instrument must never freeze the last plausible altitude.
+## Validity / failure
+Altitude becomes valid only after pressure-sensor startup, range, freshness and plausibility checks pass. Missing, stale or invalid pressure immediately invalidates the indication rather than freezing the last plausible altitude.
 
 ## Bench checks
-Compare against a trusted pressure reference over multiple pressures/altitudes, exercise all three hands through their wrap points, test QNH adjustment and NVS persistence, rapid pressure changes, power cycles and disconnected/stale pressure data.
+Compare against a trusted pressure reference over multiple pressures/altitudes; exercise all hand wrap points; test QNH and NVS; test rapid pressure changes, power cycles, static leaks/restrictions and disconnected/stale sensor conditions. See `../SENSORS.md`.
