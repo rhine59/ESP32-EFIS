@@ -2,7 +2,32 @@
 
 Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifunction flight instrument. Stock and prices change; recheck before ordering. Quantities below are prototype quantities, not production quantities.
 
-## Order now — core prototype
+## Purchasing status
+
+Use this table as the project procurement record. Update **Ordered** items to **Received** as deliveries arrive; items not yet purchased remain **Needed**.
+
+| Item | Exact/reference choice | Qty needed | Qty ordered | Status | Supplier / order note |
+|---|---|---:|---:|---|---|
+| MCU module | **Espressif ESP32-S3-WROOM-1-N16R2** | 2 | 2 | **Ordered** | Digi-Key, order dated 14-Sep-2026 |
+| Attitude IMU | **Bosch SHUTTLE BOARD 3.0 BMI088** | 1 | 1 | **Ordered** | Digi-Key, P/N 828-SHUTTLEBOARD3.0BMI088-ND, order dated 14-Sep-2026 |
+| Round display | **Newhaven NHD-2.1-480480AF-ASXP** | 1 | 0 | **Needed** | 2.1-inch 480 x 480 ST7701S display |
+| Display bench adapter | **Newhaven NHD-FFC40 breakout board** | 1 | 1 | **Ordered** | RS Components |
+| Display FFC | **40-position, 0.5 mm pitch FFC/FPC cable**, compatible orientation | 2 | 0 | **Needed** | Verify contact orientation/length physically |
+| Backlight driver | **Adafruit TPS61169 breakout, PID 6354** | 1 | 1 | **Ordered** | Digi-Key, P/N 1528-6354-ND, order dated 14-Sep-2026 |
+| Rotary/push control | **Bourns PEC09-2320F-T0015** | 1 | 1 | **Ordered** | Digi-Key, P/N PEC09-2320F-T0015-ND, order dated 14-Sep-2026 |
+| Bench GPIO expander | **Microchip MCP23008-E/P** | 1 | 1 | **Ordered** | Digi-Key, P/N MCP23008-E/P-ND, order dated 14-Sep-2026 |
+| Pressure module | **Adafruit BMP585 Ported I2C breakout, PID 6413** | 1 | 0 | **Needed** | First static-pressure/altimeter development sensor |
+| Pressure-sensor cable | **STEMMA QT / Qwiic JST-SH 4-pin cable**, 100–200 mm | 2 | 0 | **Needed** | BMP585 bench connection plus spare |
+| QT breadboard adapter | **Adafruit Qwiic / STEMMA QT breakout PID 5961** or equivalent | 1 | 0 | **Needed** | JST-SH-to-0.1-inch breakout |
+| Magnetic heading sensor | **PNI RM3100-CB, P/N 14754** | 1 | 0 | **Needed** | Remote three-axis magnetometer |
+| USB-C bench cable/supply | Regulated **5 V USB-C**, >=1 A | 1 | 0 | **Needed** | Development power only |
+| Solderless breadboard | Good-quality full-size board | 1 | 0 | **Needed** | Initial integration |
+| Prototyping wire | 22–26 AWG solid-core hookup wire assortment | 1 set | 0 | **Needed** | Bench only |
+| Header pins | 2.54 mm breakaway male/female headers | 1 set | 0 | **Needed** | Bench breakouts and MCP23008 |
+
+The procurement status above records only purchases explicitly confirmed for this project. Having an item already available in the workshop can be recorded separately when confirmed rather than assuming it has been purchased.
+
+## Order now — core prototype reference
 
 | Item | Exact/reference choice | Qty | Purpose / notes |
 |---|---|---:|---|
@@ -97,7 +122,7 @@ The RM3100-CB should be remote from the ESP32, LCD/backlight currents, power con
 
 ## Purchase sequence
 
-**Stage 1 — buy now:** display + FFC adapter/cables, BMI088, BMP585 ported module + QT cables/breakout, RM3100-CB, TPS61169, PEC09, MCP23008 and normal bench materials.
+**Stage 1 — buy now:** display + FFC adapter/cables, BMI088, BMP585 ported module + QT cables/breakout, RM3100-CB, TPS61169, PEC09, MCP23008 and normal bench materials. Track actual orders and deliveries in the purchasing-status table at the top of this file.
 
 **Stage 2 — bench integration:** prove display, controls, BMI088, pressure and magnetic sensor interfaces; develop AHRS/altimeter/compass firmware; test invalid/stale-data behavior.
 
