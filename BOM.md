@@ -2,7 +2,7 @@
 
 Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifunction flight instrument. Stock and prices change; recheck before ordering. Quantities below are prototype quantities, not production quantities.
 
-**Procurement status updated:** 16 September 2026 from RS and DigiKey delivery paperwork supplied by the project owner. Supplier links remain purchasing aids; exact part number remains authoritative.
+**Procurement status updated:** 16 September 2026 from RS and DigiKey delivery paperwork and subsequent delivery-status updates supplied by the project owner. Supplier links remain purchasing aids; exact part number remains authoritative.
 
 ## Project stages
 
@@ -19,7 +19,7 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 |---|---|---|---:|---:|---|
 | MCU module | **ESP32-S3-WROOM-1-N16R2** | 1 | 2 purchased (**1 installed + 1 spare**) | 2 | **RECEIVED** — DigiKey 5402-ESP32-S3-WROOM-1-N16R2CT-ND; prototype hosts one ESP32 only |
 | Temporary MCU carrier/programmer | **Espressif ESP-Module-Prog-1** — manufacturer P/N `ESP-MODULE-PROG-1`; specifically the **Prog-1**, not Prog-1R. Solderless spring-pin carrier/programmer suitable for bench use with ESP32-S3-WROOM-1; exposes module signals for temporary development | 1 | 1 | 0 | **NEEDED — SOURCE IDENTIFIED:** Mouser UK # `356-ESPMODULEPROG1`, £9.79 ex VAT, 53 in stock when checked 16-Sep-2026. Alternate: DigiKey UK # `1965-ESP-MODULE-PROG-1-ND`, £9.76 ex VAT / £11.712 inc VAT, 51 in stock when checked. |
-| Round display | **Newhaven NHD-2.1-480480AF-ASXP**, one physical display | 1 | 1 | 0 confirmed | **ORDERED / SHIPPED** — current delivery paperwork does not evidence receipt |
+| Round display | **Newhaven NHD-2.1-480480AF-ASXP**, one physical display | 1 | 1 | 0 | **ORDERED / IN TRANSIT** — project owner confirms display is on the way; mark RECEIVED only after physical arrival |
 | Display bench adapter | **Newhaven NHD-FFC40** | 1 | 1 | 1 | **RECEIVED** — RS stock 723891 |
 | Display FFC | 40-position 0.5 mm FFC/FPC, compatible orientation | 1 | 2 | 0 | **NEEDED — verify orientation/length** |
 | Backlight driver | **Adafruit TPS61169 PID 6354** | 1 | 1 | 1 | **RECEIVED** — DigiKey 1528-6354-ND |
@@ -54,11 +54,11 @@ Order **one only**. The Stage-1 prototype uses one of the two received ESP32-S3-
 
 RS paperwork confirms **NHD-FFC40**, RS stock 723891, quantity 1. DigiKey paperwork confirms **ESP32-S3-WROOM-1-N16R2 quantity 2**, **TPS61169 PID 6354 quantity 1**, **PEC09-2320F-T0015 quantity 1**, **MCP23008-E/P quantity 1**, and **Bosch Shuttle Board 3.0 BMI088 quantity 1**.
 
-The supplied photographs do not provide delivery evidence for the separately ordered Newhaven display, so it remains ordered/shipped until receipt is confirmed.
+The project owner subsequently confirmed that the **Newhaven NHD-2.1-480480AF-ASXP display is on the way**. It is therefore recorded as **ORDERED / IN TRANSIT**, not yet RECEIVED.
 
 ## Stage 1 — immediate purchase/verification list
 
-1. Confirm whether the **Newhaven NHD-2.1-480480AF-ASXP** has physically arrived.
+1. Await physical arrival of the **Newhaven NHD-2.1-480480AF-ASXP** and then mark it RECEIVED after inspection.
 2. Buy the correct **40-position 0.5 mm FFC/FPC cable(s)** only after verifying contact orientation and length against the display and NHD-FFC40.
 3. Buy **1 × Espressif ESP-Module-Prog-1**, preferably Mouser UK `356-ESPMODULEPROG1`; DigiKey UK `1965-ESP-MODULE-PROG-1-ND` is the identified alternate. The second N16R2 remains a spare.
 4. Buy **one** current-limited bench PSU. Current preference: Korad KA3005P for the economical route; Siglent SPD3303X-E if the extra outputs/features are wanted.
