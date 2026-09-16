@@ -1,85 +1,62 @@
 # ESP32 EFIS iPhone/iPad Simulator
 
-Native SwiftUI design/bench simulator for ESP32 EFIS. It is not a flight-navigation application; displayed flight data is synthetic.
+Native SwiftUI design/bench simulator for ESP32 EFIS. It is not a flight-navigation application; displayed flight data and OTA operations are synthetic/simulated.
 
-## Synchronisation with the ESP32/QEMU emulator
+## Scope
 
-The Swift simulator is maintained in step with the accepted ESP32/QEMU instrument behaviour. It is not an independent instrument design. QEMU remains authoritative for the actual 480×480 RGB565 firmware renderer; Swift provides interactive/manual testing on iPhone/iPad.
+QEMU remains authoritative for the actual 480×480 RGB565 instrument renderer. Swift provides interactive instrument controls plus software-only rehearsal of maintenance networking and OTA user behaviour.
 
-Current synchronised behaviour includes:
+The simulator currently provides three areas:
 
-- accepted Artificial Horizon pitch/bank direction, 5°/10° pitch ladder hierarchy, fixed aircraft symbol, bank-angle scale/pointer and fail-obvious `ATT FAIL`
-- accepted three-pointer Altimeter, digital altitude and `ALT FAIL`
-- accepted 9-o'clock progressive >10,000-ft annular hatching sector
-- accepted compact curved **3-o'clock Kollsman pressure scale**, approximately 8 hPa total visible span, fixed selected-QNH index and heavy 1013.25 hPa datum; the obsolete rectangular QNH/Kollsman box is not part of the accepted design
-- accepted Compass rotating card with N/E/S/W references, three-digit heading, continuous north wrap and fail-obvious `HDG FAIL`
-- heading bug screen angle calculated as selected heading minus current aircraft heading
-- permanent red `SIM` marking on synthetic displays
-- QNH range 950–1050 hPa
-- heading-bug range 000–359°
+- **Instruments** — accepted Horizon/PFD, Altimeter and Compass representations, manual controls, AUTO FLIGHT, validity/failure injection and deterministic acceptance sequences.
+- **Network** — phone-hotspot SSID/password and HTTPS manifest configuration plus a simulated Phone → Internet → TLS/OTA-server connection test.
+- **Software Update** — definitive staged-release consumption flow, persistent auto-download preference, manual download, `ACTIVATE & REBOOT`, first-boot verification and rollback simulation.
 
-The Swift drawing is a native SwiftUI representation, not a pixel-for-pixel copy of the RGB565 framebuffer.
+Every synthetic instrument display retains conspicuous simulation marking. The OTA page is explicitly labelled **OTA USER-FLOW SIMULATION**.
 
-## Acceptance sequences
+## OTA behaviour represented
 
-The firmware/QEMU scenario engine contains deterministic acceptance states for all three instruments. The Swift simulator supports the same manual data ranges and failure injection, and includes the exact current twelve-state Compass acceptance sequence as an automated switch. The accepted firmware sequences are documented in `../docs/SIMULATION.md` and the project validation matrix in `../docs/PROJECT_STATUS.md`.
+The Docker administrator, not the EFIS user, controls what release is **PUBLISHED**. The simulator assumes it discovers only that published manifest.
 
-### QEMU Compass acceptance sequence
+`Automatically download next update` defaults ON. In the production design this permits download/verification to the inactive OTA slot only while the EFIS is in the appropriate maintenance/network-update context. It never permits automatic activation.
 
-The **QEMU COMPASS TEST** switch locks the simulator to the Compass, fixes the selected heading bug at 060°, disables conflicting manual controls and repeats the same twelve six-second states used by the accepted QEMU firmware harness:
+With auto-download ON:
 
-1. 000° / north
-2. 045° / north-east
-3. 090° / east
-4. 135° / south-east
-5. 180° / south
-6. 225° / south-west
-7. 270° / west
-8. 315° / north-west
-9. 350° through 010° north-wrap movement
-10. continuous heading rotation
-11. heading failure
-12. recovery to 000° north
+```text
+Check published release -> Download/verify -> UPDATE READY -> ACTIVATE & REBOOT -> self-test -> accept/rollback
+```
 
-At 000° the 060° heading bug is 60° clockwise from the lubber line; at 060° it is at the top; at 090° it is 30° counter-clockwise from the top.
+With auto-download OFF:
 
-## Features
+```text
+Check -> UPDATE AVAILABLE -> Download -> verify -> UPDATE READY -> ACTIVATE & REBOOT -> self-test -> accept/rollback
+```
 
-- adaptive layout based on the actual available window size
-- iPhone and iPad portrait/landscape support, including compact and multitasking widths
-- automatic side-by-side or stacked layouts
-- scrollable compact layout rather than clipped controls
-- accepted Horizon/PFD, three-pointer Altimeter and rotating-card Compass presentations
-- tap the round instrument or use the panel selector to change pages when an automated sequence is off
-- manual pitch, roll, altitude, heading, QNH and heading-bug controls
-- AUTO FLIGHT for general continuous exercising
-- QEMU COMPASS TEST for exact accepted Compass sequencing
-- independent attitude/altitude/heading validity switches for manual failure testing
-- prominent synthetic-data indications
+The simulator includes `Later` and a deliberate first-boot-failure switch. No real network request, ESP32 flash write, boot partition change or reboot occurs.
 
-## Generate and run the Xcode project
+## Instrument synchronisation
 
-The repository includes an XcodeGen `project.yml`, so no manual Xcode target creation is required.
+The accepted instrument behaviour includes Horizon pitch/bank direction and fail-obvious `ATT FAIL`; classic three-pointer Altimeter with digital altitude, progressive >10,000-ft hatching, curved 3-o'clock Kollsman scale and `ALT FAIL`; rotating-card Compass with N/E/S/W, north wrap, heading bug and `HDG FAIL`; QNH 950–1050 hPa; heading bug 000–359°; and permanent red `SIM` marking for synthetic data.
+
+The Swift drawing is a native SwiftUI representation, not a pixel-for-pixel copy of the RGB565 framebuffer. Firmware/QEMU acceptance details remain in `../docs/SIMULATION.md` and `../docs/PROJECT_STATUS.md`.
+
+## Generate and run
 
 ```bash
-cd ~/Documents/Xcode/ESP32-EFIS/simulator
-brew install xcodegen       # only if xcodegen is not already installed
+cd ~/Documents/Xcode/ESP32-EFIS
+git pull
+cd simulator
+brew install xcodegen       # only if needed
 xcodegen generate
 open ESP32EFISSimulator.xcodeproj
 ```
 
-In Xcode select any available iPhone or iPad simulator and press **Run**. The generated `.xcodeproj` is a build product; `project.yml` and the Swift sources are the maintained project definition. The app targets iPhone and iPad (`TARGETED_DEVICE_FAMILY = 1,2`) and iOS 17 or later.
+Select an iPhone/iPad simulator and Run. The generated `.xcodeproj` is a build product; `project.yml` and Swift sources are maintained artefacts. Target is iOS 17+.
 
-## Relationship to QEMU and physical hardware
+## OTA scenario checks
 
-**Swift simulator** — interactive design and manual failure-injection environment. It mirrors accepted presentation and test behaviour but is not a real sensor source.
+Exercise auto-download ON, auto-download OFF/manual Download, `Later`, successful `ACTIVATE & REBOOT`, and first-boot failure/rollback. Also exercise Network configuration independently. A successful Swift scenario validates wording/state logic only; it does not validate ESP32 Wi-Fi, TLS, flash, power-loss recovery or bootloader rollback.
 
-**ESP32/QEMU emulator** — executes the ESP32 firmware and actual RGB565 renderer at the display's native 480×480 geometry. This is authoritative for firmware presentation acceptance while physical hardware is unavailable.
+## Safety and validation boundary
 
-**Physical prototype** — eventually authoritative for the Newhaven panel, sensor acquisition, MCP23008/PEC09 controls, brightness, timing, electrical integration and real-world sensor validity/staleness behaviour. Physical validation is currently paused because hardware is unavailable.
-
-When presentation or scenario behaviour changes in QEMU, the corresponding Swift simulator behaviour and documentation must be updated in the same development stage.
-
-## Safety
-
-Simulator values must never become fallback values in an aircraft build. ESP32 aircraft-use firmware retains independent fail-obvious validity handling and must have bench simulation disabled. A Swift or QEMU acceptance result is never recorded as physical sensor or aircraft validation.
+Simulator values must never become fallback values in an aircraft build. Aircraft firmware retains independent fail-obvious validity handling and must have bench simulation disabled. Swift/QEMU results are never physical sensor or aircraft validation. See `../docs/OTA_USER_SCENARIO.md`, `../docs/OTA_IMAGE_ADMIN.md` and `../docs/REMOTE_UPDATES.md`.
