@@ -10,6 +10,7 @@ idf_component_register(
         "baro_altitude.c"
         "bmi088.c"
         "attitude_estimator.c"
+        "gnss_quality.c"
     INCLUDE_DIRS
         "."
         "../include"
