@@ -4,7 +4,9 @@ services:
     container_name: esp32-efis-ota
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      # Origin is intentionally loopback-only. Public access terminates TLS on
+      # the Synology reverse proxy; never forward Internet traffic to 8080.
+      - "127.0.0.1:8080:8080"
     read_only: true
     tmpfs:
       - /var/cache/nginx
