@@ -18,7 +18,7 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 | Item | Exact/reference choice | Stage | Needed | Received | Status |
 |---|---|---|---:|---:|---|
 | MCU module | **ESP32-S3-WROOM-1-N16R2** | 1 | 2 purchased (**1 installed + 1 spare**) | 2 | **RECEIVED** — DigiKey 5402-ESP32-S3-WROOM-1-N16R2CT-ND; prototype hosts one ESP32 only |
-| Temporary MCU carrier/programmer | **Espressif ESP-Module-Prog-1** (not Prog-1R), for one ESP32-S3-WROOM-1-N16R2 at a time; spring-pin module mounting, 2.54 mm GPIO headers, USB-C/UART programming/power, BOOT/RESET | 1 | 1 | 0 | **NEEDED — selected**; Mouser Mfr. # ESP-Module-Prog-1 / Mouser # 356-ESPMODULEPROG1; 52 in stock and US$13.03 each when checked 16-Sep-2026 |
+| Temporary MCU carrier/programmer | **Espressif ESP-Module-Prog-1** — manufacturer P/N `ESP-MODULE-PROG-1`; specifically the **Prog-1**, not Prog-1R. Solderless spring-pin carrier/programmer suitable for bench use with ESP32-S3-WROOM-1; exposes module signals for temporary development | 1 | 1 | 0 | **NEEDED — SOURCE IDENTIFIED:** Mouser UK # `356-ESPMODULEPROG1`, £9.79 ex VAT, 53 in stock when checked 16-Sep-2026. Alternate: DigiKey UK # `1965-ESP-MODULE-PROG-1-ND`, £9.76 ex VAT / £11.712 inc VAT, 51 in stock when checked. |
 | Round display | **Newhaven NHD-2.1-480480AF-ASXP**, one physical display | 1 | 1 | 0 confirmed | **ORDERED / SHIPPED** — current delivery paperwork does not evidence receipt |
 | Display bench adapter | **Newhaven NHD-FFC40** | 1 | 1 | 1 | **RECEIVED** — RS stock 723891 |
 | Display FFC | 40-position 0.5 mm FFC/FPC, compatible orientation | 1 | 2 | 0 | **NEEDED — verify orientation/length** |
@@ -40,11 +40,15 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 | GNSS receiver | Must report lat/lon, fix type/validity, freshness and explicit horizontal-accuracy estimate | 2 | 1 | 0 | **SELECTION REQUIRED before order** |
 | GNSS bench antenna | Compatible with selected receiver | 2 | 1 | 0 | **BLOCKED by receiver selection** |
 
-### ESP-Module-Prog-1 selection note
+### Temporary ESP32-S3 carrier/programmer — exact purchasing reference
 
-The Stage-1 prototype uses **one** ESP32-S3-WROOM-1-N16R2. The second received N16R2 is a spare. Espressif lists **ESP32-S3-WROOM-1** as compatible with **ESP-Module-Prog-1**. The fixture holds the bare module without soldering it into the temporary bench build and exposes the module through 2.54 mm female headers while providing USB-C/UART programming/power, BOOT and RESET controls. **ESP-Module-Prog-1R is a different spring-pin layout and is not the selected fixture.**
+For the bare **ESP32-S3-WROOM-1-N16R2**, use **Espressif ESP-Module-Prog-1**. This replaces any generic or unspecified temporary breakout/carrier in the purchasing plan. It is preferable to an unverified third-party breakout because it provides a solderless module mounting arrangement for temporary bench development and can be used as a small development/programming board.
 
-Preferred purchasing reference: **Espressif ESP-Module-Prog-1**, manufacturer part number `ESP-Module-Prog-1`, Mouser part number `356-ESPMODULEPROG1`. Mouser showed **52 in stock / can ship immediately at US$13.03 for quantity 1** when checked on 16-Sep-2026. Check the UK checkout price, VAT and freight before ordering.
+**Primary UK source:** Mouser UK — manufacturer part `ESP-MODULE-PROG-1`, Mouser part `356-ESPMODULEPROG1`. Checked 16-Sep-2026: **53 in stock, can dispatch immediately, £9.79 each ex VAT**.
+
+**Alternate UK source:** DigiKey UK — manufacturer part `ESP-MODULE-PROG-1`, DigiKey part `1965-ESP-MODULE-PROG-1-ND`. Checked 16-Sep-2026: **51 in stock, £9.76 ex VAT / £11.712 inc VAT**.
+
+Order **one only**. The Stage-1 prototype uses one of the two received ESP32-S3-WROOM-1-N16R2 modules; the second remains an untouched spare. Do **not** substitute `ESP-Module-Prog-1R` without rechecking its spring-pin layout against the module.
 
 ### Delivery evidence — 16 September 2026
 
@@ -56,7 +60,7 @@ The supplied photographs do not provide delivery evidence for the separately ord
 
 1. Confirm whether the **Newhaven NHD-2.1-480480AF-ASXP** has physically arrived.
 2. Buy the correct **40-position 0.5 mm FFC/FPC cable(s)** only after verifying contact orientation and length against the display and NHD-FFC40.
-3. Buy **1 × Espressif ESP-Module-Prog-1** for the single N16R2 used in the prototype. The second N16R2 remains a spare; do not buy a second programmer/carrier.
+3. Buy **1 × Espressif ESP-Module-Prog-1**, preferably Mouser UK `356-ESPMODULEPROG1`; DigiKey UK `1965-ESP-MODULE-PROG-1-ND` is the identified alternate. The second N16R2 remains a spare.
 4. Buy **one** current-limited bench PSU. Current preference: Korad KA3005P for the economical route; Siglent SPD3303X-E if the extra outputs/features are wanted.
 5. Obtain PSU leads, USB-C cable, breadboard, prototype wire and headers where not already in the workshop.
 
