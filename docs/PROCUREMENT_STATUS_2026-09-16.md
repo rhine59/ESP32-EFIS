@@ -1,42 +1,52 @@
 # Prototype procurement status — 16 September 2026
 
-This checkpoint records delivery evidence supplied for Stage 1 and Stage 2 prototype parts. `BOM.md` remains the authoritative purchasing checklist; this note records the evidence and the immediate remaining purchase list.
+This checkpoint records delivery evidence supplied for Stage 1 and Stage 2 prototype parts. `BOM.md` remains the authoritative purchasing checklist and now includes explicit purchase locations/references for all items that are ready to buy.
 
-## Confirmed received
+## Receipt-evidence rule
 
-The supplied RS delivery note confirms **Newhaven NHD-FFC40 40-pin FFC-to-through-hole adapter**, RS stock 723891, quantity 1.
+A supplied photograph of a delivery note that clearly identifies a BOM part and delivered quantity is accepted as evidence that the stated quantity has **arrived**. `BOM.md` should then be updated to `RECEIVED` without requiring a second confirmation. Order/dispatch evidence or a statement that an item is on the way is recorded as `ORDERED / IN TRANSIT`, not RECEIVED.
 
-The supplied DigiKey paperwork confirms receipt of:
+## Confirmed received from delivery-note photographs
 
-- **ESP32-S3-WROOM-1-N16R2**, DigiKey P/N 5402-ESP32-S3-WROOM-1-N16R2CT-ND, quantity 2.
-- **Adafruit TPS61169 LED driver**, DigiKey P/N 1528-6354-ND, quantity 1.
-- **Bourns PEC09-2320F-T0015 rotary encoder**, quantity 1.
-- **Microchip MCP23008-E/P I/O expander**, quantity 1.
-- **Bosch Shuttle Board 3.0 BMI088**, DigiKey P/N 828-SHUTTLEBOARD3.0BMI088-ND, quantity 1.
+The supplied **RS delivery-note photograph** confirms:
 
-The photographs supplied at this checkpoint do **not** show delivery paperwork for the separately ordered Newhaven NHD-2.1-480480AF-ASXP display, so it remains `ORDERED / SHIPPED` until physical receipt is confirmed.
+- **Newhaven NHD-FFC40 40-pin FFC-to-through-hole adapter**, RS stock `723891`, quantity **1 RECEIVED**.
+
+The supplied **DigiKey delivery-note photograph/paperwork** confirms:
+
+- **ESP32-S3-WROOM-1-N16R2**, quantity **2 RECEIVED**.
+- **Adafruit TPS61169 LED driver PID 6354**, DigiKey `1528-6354-ND`, quantity **1 RECEIVED**.
+- **Bourns PEC09-2320F-T0015 rotary encoder**, quantity **1 RECEIVED**.
+- **Microchip MCP23008-E/P I/O expander**, quantity **1 RECEIVED**.
+- **Bosch Shuttle Board 3.0 BMI088**, DigiKey `828-SHUTTLEBOARD3.0BMI088-ND`, quantity **1 RECEIVED**.
+
+## In transit
+
+The project owner confirms the **Newhaven NHD-2.1-480480AF-ASXP display is on the way**. It is therefore **ORDERED / IN TRANSIT**. It will move to RECEIVED after physical-arrival evidence/confirmation.
 
 ## Stage 1 — still required
 
-1. Confirm receipt of the **Newhaven NHD-2.1-480480AF-ASXP** single display.
-2. **40-position 0.5 mm FFC/FPC cable(s)** compatible with the display and NHD-FFC40; verify contact orientation and length before ordering.
-3. A **temporary carrier/breakout for the bare ESP32-S3-WROOM-1-N16R2** providing usable GPIO and programming/power access. Do not assume a generic ESP32-S3 development board accepts the bare module.
-4. One current-limited bench PSU: **Korad KA3005P** is the economical preferred option; **Siglent SPD3303X-E** remains the premium alternative. Only one is required.
-5. Bench PSU leads, a suitable USB-C power/data cable, solderless breadboard, 22–26 AWG prototype wire and 2.54 mm headers, unless already available in the workshop.
+1. Await the **Newhaven NHD-2.1-480480AF-ASXP** display. Source/reference retained in BOM: RS UK stock `286-351`; DigiKey is the alternate.
+2. After the display arrives, verify contact orientation and length and buy **2 × 40-position 0.5 mm FFC/FPC cables**. Do not freeze a supplier part until that physical check is complete.
+3. Buy **1 × Espressif ESP-Module-Prog-1** temporary solderless module carrier/programmer. Preferred source: **Mouser UK `356-ESPMODULEPROG1`**. Do not substitute Prog-1R without checking the spring-pin layout.
+4. Buy one current-limited bench PSU: **Korad KA3005P** preferred economical option or **Siglent SPD3303X-E** premium alternative.
+5. Obtain bench PSU leads, USB-C data/power cable, solderless breadboard, 22–26 AWG prototype wire and 2.54 mm headers unless already available.
 
-Stage 1 is not ready for physical bring-up until the processor can be safely mounted/programmed, the display can be connected through the correct FFC, and a current-limited 5 V bench supply/interconnect arrangement is available.
+Stage 1 is ready for physical bring-up once the processor can be safely mounted/programmed, the display is present and connected through the verified FFC arrangement, and a current-limited 5 V bench supply/interconnect arrangement is available.
 
 ## Stage 2 — still required
 
 1. A verified **1.27 mm-pitch mating adapter/interposer for the Bosch BMI088 Shuttle Board 3.0**. Do not buy a guessed 2.54 mm adapter.
-2. **Adafruit BMP585 Ported I2C breakout, PID 6413**, quantity 1.
-3. **STEMMA QT/Qwiic JST-SH 4-pin cables**, 100–200 mm, quantity 2.
-4. **Adafruit Qwiic/STEMMA QT breakout PID 5961** or verified equivalent, quantity 1.
-5. **PNI RM3100-CB, P/N 14754**, quantity 1.
-6. **GNSS receiver**, exact part still to be selected. It must provide latitude, longitude, fix validity/type, freshness and an explicit horizontal-accuracy estimate suitable for the adopted colour-coded position-quality display.
-7. A **GNSS bench antenna** compatible with the selected receiver; do not order it before the receiver RF interface and active/passive antenna requirement are known.
+2. **Adafruit BMP585 Ported I2C/SPI PID 6413**, quantity 1. Preferred source: DigiKey UK; UK alternates The Pi Hut/Pimoroni when stocked.
+3. **STEMMA QT/Qwiic JST-SH 4-pin cables**, 100–200 mm, quantity 2. Adafruit PID 4397 (150 mm) is a suitable length candidate subject to connector verification.
+4. **Adafruit Qwiic/STEMMA QT breakout PID 5961**, quantity 1; DigiKey UK `1528-5961-ND`.
+5. **PNI RM3100-CB P/N/SKU 14754**, quantity 1; source: PNI Sensor direct, subject to UK shipping/import-cost check.
+6. **GNSS receiver**, exact part still to be selected. It must provide latitude, longitude, fix validity/type, freshness and an explicit horizontal-accuracy estimate.
+7. **GNSS bench antenna** compatible with the selected receiver; do not order before the receiver RF interface and active/passive antenna requirement are known.
 
-The GNSS receiver and antenna remain a selection task rather than an immediate blind purchase. `TRK`/`GS` remain GNSS-derived and separate from magnetic `HDG` and air-data indications.
+## Source-retention rule
+
+Purchase locations are part of the BOM, not temporary research notes. When a part is selected, `BOM.md` should retain the preferred supplier, supplier stock/order number where known, and an alternate source where useful. Receiving a part does **not** remove its purchase source; the source remains for traceability and replacement/spare ordering.
 
 ## Do not buy yet
 
