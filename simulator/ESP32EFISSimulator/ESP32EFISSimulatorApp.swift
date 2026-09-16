@@ -8,6 +8,9 @@ struct ESP32EFISSimulatorApp: App {
                 ContentView()
                     .tabItem { Label("Instruments", systemImage: "airplane") }
 
+                NetworkSetupView()
+                    .tabItem { Label("Network", systemImage: "iphone.and.arrow.forward") }
+
                 OTAFlowView()
                     .tabItem { Label("Software Update", systemImage: "arrow.triangle.2.circlepath") }
             }
