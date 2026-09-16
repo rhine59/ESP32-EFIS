@@ -1,178 +1,64 @@
 # ESP32 EFIS — phone network pairing and public OTA access
 
-**Status:** user workflow and simulator implemented; physical ESP32 Wi-Fi client and public Synology deployment not yet validated  
+**Status:** workflow/simulator implemented; physical ESP32 Wi-Fi and public Synology deployment unvalidated  
 **Date:** 16 September 2026
 
-## Purpose
-
-Provide the ESP32 EFIS with a temporary Internet path for maintenance without adding a cellular modem to the instrument. The intended field path is:
+## Network path
 
 ```text
-ESP32 EFIS
-  │ Wi-Fi station mode
-  ▼
-iPhone Personal Hotspot
-  │ cellular / Internet
-  ▼
-public DNS
-  │ HTTPS :443
-  ▼
-Synology reverse proxy + valid TLS certificate
-  │ HTTP on NAS loopback only
-  ▼
-127.0.0.1:8080
-  │
-  ▼
-esp32-efis-ota nginx container
-  ├── /healthz
-  ├── /efis/manifest.json
-  └── /efis/releases/<version>/esp32-efis-<version>.bin
+ESP32 EFIS --Wi-Fi--> iPhone Personal Hotspot --cellular--> Internet
+   -> public HTTPS :443 -> Synology TLS reverse proxy -> 127.0.0.1:8080 -> read-only OTA nginx
 ```
 
-The phone is a network gateway, not an OTA controller. The EFIS itself retrieves the manifest and firmware over HTTPS after the user explicitly enters maintenance/update mode. No automatic installation is permitted merely because the hotspot becomes available.
+The phone is only a network gateway. It does not receive/flash firmware. The private OTA administrator is a separate service on `127.0.0.1:8090` and is never part of the EFIS device path.
 
 ## Instrument connection configuration
 
-The physical 480×480 instrument must provide a maintenance-only **Network Connection** dialog. It is not shown during normal flight display operation.
+The physical 480×480 maintenance UI provides **Network Connection** with hotspot SSID, masked password, HTTPS update-server profile/manifest URL, Test, Save and Forget. The production rotary encoder will provide character entry; Swift uses native text entry to test workflow.
 
-Recommended top-level sequence:
-
-```text
-MAINTENANCE
-  └── NETWORK CONNECTION
-        ├── Phone hotspot
-        ├── Update server
-        ├── Test connection
-        ├── Save
-        └── Forget network
-```
-
-### Phone hotspot page
-
-The user enables Personal Hotspot on the iPhone, then the EFIS scans for Wi-Fi networks. The rotary encoder selects the phone SSID. The password is entered with a rotary character editor: rotate to choose a character, press to accept, long-press for back/delete, and select DONE to finish. Password characters are masked by default with a temporary reveal option.
-
-The final instrument presentation should be compact and explicit:
-
-```text
-NETWORK CONNECTION
-
-Phone hotspot
-  SSID      Richard’s iPhone
-  Password  ••••••••••••
-
-Update server
-  efis-updates.example.net
-
-[ TEST ]     [ SAVE ]
-
-Wi-Fi: OFF / CONNECTING / CONNECTED
-Server: NOT TESTED / REACHABLE / FAILED
-```
-
-The simulator implements the same logical fields using native text entry because it is intended to test the workflow rather than emulate rotary text entry.
-
-### Configuration stored on the EFIS
-
-Production firmware should persist in NVS:
-
-- hotspot SSID;
-- hotspot password;
-- OTA manifest HTTPS URL or approved hostname/profile;
-- configuration schema version.
-
-The password must never be logged, rendered unmasked by default, included in diagnostics, committed to Git, placed in the OTA manifest, or sent to the OTA server. A **Forget Phone Configuration** action must erase the stored SSID/password.
-
-For the first hardware implementation, use WPA2/WPA3 Personal as supported by ESP-IDF and the selected iPhone hotspot mode. Do not support open Wi-Fi for OTA maintenance.
+Persist in NVS: SSID, password, approved manifest URL/profile and schema version. Password must never be logged, included in diagnostics/manifest, committed, sent to OTA server or shown unmasked by default. Forget erases stored credentials. Support secured WPA2/WPA3 Personal as available; do not use open Wi-Fi for OTA.
 
 ## Connection test
 
-`TEST` is deliberately separate from `SAVE` and from `INSTALL`.
+Test is separate from Save, Download and Activate. Report layers independently: phone association/IP, Internet/DNS, TLS certificate/hostname validation, and OTA `/healthz` + syntactically compatible manifest. Failure messages must identify the layer without exposing credentials.
 
-The production test should report each layer separately:
+The Test action itself never downloads or activates firmware.
 
-1. **Phone** — ESP32 associates with the configured hotspot and receives an IP address.
-2. **Internet/DNS** — DNS for the configured OTA hostname resolves.
-3. **TLS** — HTTPS connection validates the server certificate chain and hostname.
-4. **OTA server** — `/healthz` returns success and the manifest endpoint returns syntactically valid metadata for `ESP32-EFIS`.
+## Maintenance/network policy
 
-A failed test must identify the failing layer without exposing secrets. Typical messages are `PHONE NOT FOUND`, `HOTSPOT PASSWORD REJECTED`, `NO INTERNET`, `DNS FAILED`, `TLS CERTIFICATE FAILED`, `SERVER UNREACHABLE`, and `INVALID MANIFEST`.
+Wi-Fi remains maintenance-oriented and normally off during flight presentation. Entering the network/update maintenance context permits association and, if the user preference **Automatically download next update** is ON, discovery/download/verification of the administrator-published release.
 
-The test must not download or install firmware.
+This is the only intended automatic OTA activity. **Auto-download never selects the boot partition, activates firmware or reboots the EFIS.** A completed candidate remains dormant until local `ACTIVATE & REBOOT`.
 
-## Maintenance-only Wi-Fi policy
+With auto-download OFF, the user explicitly selects Download. Loss of hotspot/cellular service during transfer leaves the running known-good application untouched and the incomplete inactive-slot candidate unusable.
 
-Wi-Fi is normally OFF. It may be enabled only after explicit entry into maintenance/network/update mode. Leaving maintenance mode stops Wi-Fi unless an update is already in a protected transfer/verification state. The EFIS must not silently reconnect to the phone during normal instrument operation.
+## Public Synology endpoint
 
-A lost phone/cellular connection during download is handled as a failed transfer to the inactive OTA slot; the currently running known-good application remains untouched. A completed image is not selected for boot until all transport/image checks pass.
+`ota-server/compose.yml` binds nginx to NAS loopback `127.0.0.1:8080`. Create a public DNS hostname (for example `efis-updates.example.net`), a valid TLS certificate, and a DSM HTTPS :443 reverse proxy to `http://127.0.0.1:8080`. Router/firewall exposes only TCP 443 where inbound hosting is possible. Never expose 8080, 8090, DSM admin or Docker management.
 
-## Public Synology OTA endpoint
+If behind CGNAT, use a deliberately configured trusted HTTPS tunnel/reverse proxy while preserving the stable trusted device-facing hostname.
 
-The OTA origin container is intentionally not public itself. `ota-server/compose.yml` binds nginx to:
-
-```text
-127.0.0.1:8080:8080
-```
-
-Only the Synology reverse proxy should expose the service.
-
-### Required public infrastructure
-
-1. Own/control a DNS hostname, for example `efis-updates.example.net`.
-2. Create a public DNS A/AAAA record pointing to the Internet-facing address used by the Synology site.
-3. Obtain a valid TLS certificate for that exact hostname in DSM (Let's Encrypt or another trusted CA).
-4. In DSM **Control Panel → Login Portal → Advanced → Reverse Proxy**, create:
-   - source protocol: `HTTPS`
-   - source hostname: `efis-updates.example.net`
-   - source port: `443`
-   - destination protocol: `HTTP`
-   - destination hostname: `127.0.0.1`
-   - destination port: `8080`
-5. Attach the hostname's TLS certificate to the reverse-proxy virtual host.
-6. Router/firewall: allow/forward TCP 443 to the Synology HTTPS service as appropriate for the installation. **Do not expose or forward 8080.**
-7. Keep DSM administration ports and Docker management interfaces out of this public path.
-
-If the ISP uses CGNAT or inbound 443 cannot be forwarded, use a deliberately configured HTTPS tunnel/reverse-proxy service instead. The security invariant remains the same: the device sees a stable trusted HTTPS hostname, while the container itself has no public management interface.
-
-### External validation
-
-Test from a device that is **not on the home LAN** (for example a phone using cellular with Wi-Fi disabled):
+External test from outside the LAN:
 
 ```bash
 curl -fsS https://efis-updates.example.net/healthz
 curl -fsS https://efis-updates.example.net/efis/manifest.json
-curl -fI https://efis-updates.example.net/efis/releases/0.4.1/esp32-efis-0.4.1.bin
 ```
 
-Also verify that `http://PUBLIC-IP:8080` is not reachable from the Internet.
+Also verify public `:8080` and `:8090` are unreachable.
 
-## Public versus private firmware files
+## Public versus private
 
-The initial distribution service is read-only and can safely be designed so manifest and approved firmware binaries are publicly downloadable. Public readability is not the trust mechanism. The production trust chain must be HTTPS certificate validation plus signed application-image verification on the EFIS. Knowledge of the URL must never be treated as proof that an image is genuine.
+Published manifest/binaries may be publicly readable. URL secrecy is not trust. Production trust is TLS certificate validation plus signed application verification. Never embed GitHub PATs or signing private keys in the EFIS. Private admin access should use LAN/VPN/SSH or a properly authenticated private reverse proxy.
 
-If private download authorization is added later, use short-lived/device-scoped credentials. Never embed a GitHub personal access token or signing private key in the EFIS.
+## Simulator
 
-## Simulator implementation
+`NetworkSetupView.swift` models SSID/password, password masking, manifest URL, staged Phone → Internet → OTA Server test, Save/Forget and persistence. `OTAFlowView.swift` separately models auto/manual download and explicit activation. Neither performs real networking/flashing.
 
-`simulator/ESP32EFISSimulator/NetworkSetupView.swift` now provides a software model of:
+## Physical implementation boundary
 
-- hotspot SSID/password configuration;
-- masked/reveal password UI;
-- HTTPS manifest URL;
-- staged Phone → Internet → OTA Server test;
-- Save and Forget actions;
-- persistent simulator configuration using `@AppStorage`;
-- unmistakable simulator-only warning.
+ESP32 firmware still requires maintenance Wi-Fi station scanning/association, NVS credential storage, connection reporting/shutdown, HTTPS manifest/download handling and integration with the A/B update manager. Network state must never alter attitude/altitude/heading validity.
 
-The simulator intentionally performs no real Wi-Fi association or HTTP request. It validates the user interaction and state model only.
+## Validation
 
-## Production firmware implementation boundary
-
-Physical firmware still needs `maintenance_wifi.c/.h` (or equivalent) to implement ESP-IDF station-mode scanning/association, NVS credential storage, connection-state reporting and shutdown on leaving maintenance mode. OTA HTTPS remains the responsibility of the update manager described in `REMOTE_UPDATES.md`.
-
-The network module must expose state to the UI and updater but must not alter attitude, altitude or heading validity. Loss of Internet connectivity is an update/maintenance fault, not a flight-data source.
-
-## Validation status
-
-**USER WORKFLOW IMPLEMENTED IN SWIFT SIMULATOR / NETWORK ARCHITECTURE DOCUMENTED / PHYSICAL NETWORKING NOT IMPLEMENTED OR VALIDATED.**
-
-Before this can be marked operational, validate on real ESP32-S3 hardware with an actual iPhone hotspot, cellular Internet, public DNS/TLS endpoint, hotspot loss, cellular loss, wrong password, TLS failure, DNS failure, server outage, power interruption and recovery. Public Synology exposure must also be externally tested from outside the LAN.
+**SWIFT WORKFLOW IMPLEMENTED / PHYSICAL NETWORKING AND PUBLIC DEPLOYMENT UNVALIDATED.** Bench validation requires real ESP32-S3 + iPhone hotspot + cellular Internet + public DNS/TLS, plus wrong password, hotspot/cellular loss, DNS/TLS/server failure, interrupted downloads and recovery. See `OTA_USER_SCENARIO.md`, `OTA_IMAGE_ADMIN.md` and `REMOTE_UPDATES.md`.
