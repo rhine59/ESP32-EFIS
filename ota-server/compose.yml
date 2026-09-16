@@ -4,8 +4,7 @@ services:
     container_name: esp32-efis-ota
     restart: unless-stopped
     ports:
-      # Origin is intentionally loopback-only. Public access terminates TLS on
-      # the Synology reverse proxy; never forward Internet traffic to 8080.
+      # Public device downloads terminate TLS on the Synology reverse proxy.
       - "127.0.0.1:8080:8080"
     read_only: true
     tmpfs:
@@ -22,3 +21,20 @@ services:
       - SETUID
     volumes:
       - ./public:/usr/share/nginx/html:ro
+
+  efis-ota-admin:
+    build: ./admin
+    container_name: esp32-efis-ota-admin
+    restart: unless-stopped
+    # Administration is LAN/NAS-only by default. Do not put this endpoint on
+    # the public EFIS update hostname. Access via DSM/VPN/private reverse proxy.
+    ports:
+      - "127.0.0.1:8090:8090"
+    environment:
+      OTA_PUBLIC_ROOT: /data
+      OTA_PUBLIC_BASE_URL: ${OTA_PUBLIC_BASE_URL:-https://CHANGE-ME.example}
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:?set ADMIN_SESSION_SECRET in .env}
+    volumes:
+      - ./public:/data
+    security_opt:
+      - no-new-privileges:true
