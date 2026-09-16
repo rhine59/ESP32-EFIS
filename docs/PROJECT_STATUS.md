@@ -1,6 +1,6 @@
 # ESP32 EFIS — Project activity and validation status
 
-**Status date:** 15 September 2026
+**Status date:** 16 September 2026
 
 This document is the project-level record of what has been implemented, what has actually been validated, and what remains. It deliberately distinguishes **implemented**, **compile-validated**, **QEMU/simulator-validated**, and **physically validated**. A successful build is not evidence that a sensor, display, control, electrical interface or mechanical installation works on hardware.
 
@@ -10,7 +10,7 @@ The project remains an experimental **supplementary/non-primary** flight instrum
 
 **Physical hardware activities are PAUSED because no physical prototype hardware is currently available.** Do not schedule routine hardware builds, flashing, sensor commissioning, display bring-up, encoder testing, enclosure fit checks or aircraft integration until hardware is available. Software may continue to compile for the ESP32-S3 target where useful, but the result is recorded only as **compile validation**.
 
-Active work while paused: QEMU regression, Swift simulator parity, documentation, pure calculation/estimator tests, code review and safety/failure-path development that does not depend on claiming physical behaviour.
+Active work while paused: QEMU regression, Swift simulator parity, documentation, pure calculation/estimator tests, code review and safety/failure-path design that does not depend on claiming physical behaviour. A resilient remote-update architecture has now been designed/documented but is intentionally not implemented yet; see `REMOTE_UPDATES.md`.
 
 ## Validation vocabulary
 
@@ -20,6 +20,7 @@ Active work while paused: QEMU regression, Swift simulator parity, documentation
 | **SYNCED — SWIFT** | Native Swift simulator represents the accepted emulator behaviour for interactive testing; it is not the authoritative pixel renderer. |
 | **COMPILE-VALIDATED** | ESP32-S3 firmware configuration compiled successfully. No physical operation is implied. |
 | **IMPLEMENTED — UNVALIDATED** | Code/design exists but the required validation has not yet been performed. |
+| **DESIGNED / NOT IMPLEMENTED** | Architecture and validation requirements are documented but no operational code is enabled. |
 | **PLANNED / PENDING HARDWARE** | Work requires physical hardware or installation and is deliberately deferred. |
 | **PARKED** | Design/work intentionally held until prerequisites are available. |
 
@@ -48,6 +49,7 @@ Active work while paused: QEMU regression, Swift simulator parity, documentation
 | Attitude estimator | Gyro propagation plus gravity correction, acceleration plausibility gate, timing/non-finite rejection, 250 ms stale invalidation | **IMPLEMENTED; COMPILE-VALIDATED; PHYSICAL AXIS/DYNAMIC VALIDATION PENDING** |
 | BMI088-to-display safety gate | Live attitude connection intentionally withheld until physical axis/sign mapping is demonstrated | **IMPLEMENTED SAFETY GATE** |
 | Swift simulator | Adaptive iPhone/iPad layout, manual controls, AUTO FLIGHT, failures, accepted instrument artwork | **SOFTWARE OPERATIONAL; PARITY MAINTAINED** |
+| Remote firmware update/fallback architecture | Dual OTA slots + `otadata`, explicit maintenance Wi-Fi/HTTPS, application-controlled first-boot confirmation, automatic previous-image rollback, signed-image recommendation, persistent-schema rollback rules and staged validation plan | **DESIGNED / NOT IMPLEMENTED** |
 | Enclosure CAD | Flight-development case, bezel, display carrier, IMU carrier, rear cover, strain relief and fit gauge | **DESIGNED / CI-CHECKED WHERE APPLICABLE; PHYSICAL FIT PENDING** |
 | Carrier PCB | Architecture/pin allocation and design work | **PARKED pending physical-interface decisions** |
 | BOM/procurement record | Selected core components and ordered-part tracking | **DOCUMENTED; receipt/bench validation separate** |
@@ -71,6 +73,9 @@ Level; pitch +10°, -10°, +20°, -20°; left/right bank 30° and 60°; combined
 | Priority / function | Work still required | Required validation | Current status |
 |---|---|---|---|
 | Swift parity regression | Keep all three native simulator pages/scenarios aligned with accepted firmware/QEMU behaviour | Compare Swift states with QEMU acceptance states after renderer changes | **ACTIVE SOFTWARE TASK** |
+| Remote update Phase 1 | Freeze A/B partition sizes after measuring image; implement manifest/parser, state machine and maintenance UI with simulated outcomes | Unit/QEMU tests of compatibility, state transitions, malformed input, migration and rollback decisions | **DESIGNED / SOFTWARE-ONLY CANDIDATE** |
+| Remote update Phase 2 | Implement maintenance Wi-Fi + HTTPS OTA to inactive slot and application-controlled boot confirmation | Real A→B/B→A updates, network/power interruption, corrupt image, crash/self-test rollback, NVS compatibility and USB recovery | **PENDING HARDWARE** |
+| Remote update security | Add signed-release procedure and image verification; evaluate Secure Boot/flash encryption; defer eFuse anti-rollback until recovery is proven | Wrong-signature rejection, key/release procedure review, recovery compatibility | **DESIGNED / LATER HARDENING** |
 | BMI088 axis mapping | Determine Shuttle Board axes/signs relative to aircraft +X forward, +Y right, +Z down | Stationary ±1 g orientations plus positive pitch/roll/yaw hand rotations | **PENDING HARDWARE** |
 | BMI088 gyro bias | Characterise stationary bias/noise and startup stability | Logged stationary datasets at representative temperatures | **PENDING HARDWARE** |
 | Attitude estimator tuning | Tune complementary correction and potentially evolve algorithm after real data | Known static angles, dynamic fixture motion, acceleration rejection, vibration | **PENDING HARDWARE** |
@@ -98,7 +103,7 @@ Level; pitch +10°, -10°, +20°, -20°; left/right bank 30° and 60°; combined
 
 ## Hardware-resumption gate
 
-When physical parts become available, resume in this order: inventory/visual inspection → ESP32/display/power bench bring-up → BMI088 diagnostic axis mapping → estimator static/dynamic validation → BMP585 acquisition/static plumbing → MCP23008/encoder → RM3100 remote acquisition/calibration → integrated failure/staleness tests → enclosure/thermal/vibration → aircraft ground testing. Do not skip directly from successful compilation or emulator graphics to airborne use.
+When physical parts become available, resume in this order: inventory/visual inspection → ESP32/display/power bench bring-up → BMI088 diagnostic axis mapping → estimator static/dynamic validation → BMP585 acquisition/static plumbing → MCP23008/encoder → RM3100 remote acquisition/calibration → integrated failure/staleness tests → remote-update interruption/rollback bench validation → enclosure/thermal/vibration → aircraft ground testing. Do not skip directly from successful compilation or emulator graphics to airborne use.
 
 ## Documentation rule
 
