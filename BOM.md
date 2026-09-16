@@ -17,8 +17,8 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 
 | Item | Exact/reference choice | Stage | Needed | Received | Status |
 |---|---|---|---:|---:|---|
-| MCU module | **ESP32-S3-WROOM-1-N16R2** | 1 | 2 | 2 | **RECEIVED** — DigiKey 5402-ESP32-S3-WROOM-1-N16R2CT-ND |
-| Temporary MCU carrier/breakout | Suitable for bare N16R2, with GPIO and programming/power access | 1 | 1 | 0 | **NEEDED — select/verify** |
+| MCU module | **ESP32-S3-WROOM-1-N16R2** | 1 | 2 purchased (**1 installed + 1 spare**) | 2 | **RECEIVED** — DigiKey 5402-ESP32-S3-WROOM-1-N16R2CT-ND; prototype hosts one ESP32 only |
+| Temporary MCU carrier/programmer | **Espressif ESP-Module-Prog-1** (not Prog-1R), for one ESP32-S3-WROOM-1-N16R2 at a time; spring-pin module mounting, 2.54 mm GPIO headers, USB-C/UART programming/power, BOOT/RESET | 1 | 1 | 0 | **NEEDED — selected**; Mouser Mfr. # ESP-Module-Prog-1 / Mouser # 356-ESPMODULEPROG1; 52 in stock and US$13.03 each when checked 16-Sep-2026 |
 | Round display | **Newhaven NHD-2.1-480480AF-ASXP**, one physical display | 1 | 1 | 0 confirmed | **ORDERED / SHIPPED** — current delivery paperwork does not evidence receipt |
 | Display bench adapter | **Newhaven NHD-FFC40** | 1 | 1 | 1 | **RECEIVED** — RS stock 723891 |
 | Display FFC | 40-position 0.5 mm FFC/FPC, compatible orientation | 1 | 2 | 0 | **NEEDED — verify orientation/length** |
@@ -40,6 +40,12 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 | GNSS receiver | Must report lat/lon, fix type/validity, freshness and explicit horizontal-accuracy estimate | 2 | 1 | 0 | **SELECTION REQUIRED before order** |
 | GNSS bench antenna | Compatible with selected receiver | 2 | 1 | 0 | **BLOCKED by receiver selection** |
 
+### ESP-Module-Prog-1 selection note
+
+The Stage-1 prototype uses **one** ESP32-S3-WROOM-1-N16R2. The second received N16R2 is a spare. Espressif lists **ESP32-S3-WROOM-1** as compatible with **ESP-Module-Prog-1**. The fixture holds the bare module without soldering it into the temporary bench build and exposes the module through 2.54 mm female headers while providing USB-C/UART programming/power, BOOT and RESET controls. **ESP-Module-Prog-1R is a different spring-pin layout and is not the selected fixture.**
+
+Preferred purchasing reference: **Espressif ESP-Module-Prog-1**, manufacturer part number `ESP-Module-Prog-1`, Mouser part number `356-ESPMODULEPROG1`. Mouser showed **52 in stock / can ship immediately at US$13.03 for quantity 1** when checked on 16-Sep-2026. Check the UK checkout price, VAT and freight before ordering.
+
 ### Delivery evidence — 16 September 2026
 
 RS paperwork confirms **NHD-FFC40**, RS stock 723891, quantity 1. DigiKey paperwork confirms **ESP32-S3-WROOM-1-N16R2 quantity 2**, **TPS61169 PID 6354 quantity 1**, **PEC09-2320F-T0015 quantity 1**, **MCP23008-E/P quantity 1**, and **Bosch Shuttle Board 3.0 BMI088 quantity 1**.
@@ -50,11 +56,11 @@ The supplied photographs do not provide delivery evidence for the separately ord
 
 1. Confirm whether the **Newhaven NHD-2.1-480480AF-ASXP** has physically arrived.
 2. Buy the correct **40-position 0.5 mm FFC/FPC cable(s)** only after verifying contact orientation and length against the display and NHD-FFC40.
-3. Select a **temporary carrier/breakout for the bare N16R2 module**. The received WROOM parts are modules, not complete development boards.
+3. Buy **1 × Espressif ESP-Module-Prog-1** for the single N16R2 used in the prototype. The second N16R2 remains a spare; do not buy a second programmer/carrier.
 4. Buy **one** current-limited bench PSU. Current preference: Korad KA3005P for the economical route; Siglent SPD3303X-E if the extra outputs/features are wanted.
 5. Obtain PSU leads, USB-C cable, breadboard, prototype wire and headers where not already in the workshop.
 
-Stage 1 gate: safe/current-limited 5 V power, programmable/mounted MCU, working single-display connection/backlight and encoder/GPIO-expander bring-up.
+Stage 1 gate: safe/current-limited 5 V power, programmable/mounted single MCU, working single-display connection/backlight and encoder/GPIO-expander bring-up.
 
 ## Stage 2 — immediate purchase/selection list
 
