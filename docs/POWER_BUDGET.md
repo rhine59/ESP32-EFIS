@@ -8,9 +8,49 @@ This document records the preliminary electrical power/current budget for the ES
 
 For the current single-display EFIS architecture, a reasonable preliminary expectation is approximately **250–350 mA from the 5 V rail in normal operation** with Wi-Fi inactive, or about **1.25–1.75 W**.
 
-Wi-Fi activity, particularly OTA operation/transmission, can create substantially higher short-duration ESP32-S3 demand. The prototype therefore uses a **good regulated 5 V supply rated for at least 2 A**. This is intentional engineering margin and is **not** a prediction that the EFIS continuously consumes 2 A.
+Wi-Fi activity, particularly OTA operation/transmission, can create substantially higher short-duration ESP32-S3 demand. The prototype therefore uses a **good regulated 5 V source with at least 2 A capability** during integrated bench work. This is intentional engineering margin and is **not** a prediction that the EFIS continuously consumes 2 A.
 
 The final aircraft input stage should likewise not be tightly sized around the expected average consumption. A preliminary design allowance of **at least 1 A continuous capability from the nominal 12 V aircraft supply** leaves substantial margin for startup, converter losses, full backlight, Wi-Fi/OTA transients and future peripherals. Final converter/fuse/wiring choices require measured prototype data and aircraft electrical-system requirements.
+
+## Bench power supply selection
+
+Two bench-supply options are recorded in `BOM.md`. They are **alternatives; only one is required**.
+
+### Option A — Korad KA3005P
+
+**Preferred economical choice:** `Korad KA3005P`, adjustable 0–30 V / 0–5 A, single-output programmable linear bench supply.
+
+This is sufficient for most EFIS work because normal integration should power the instrument from its intended single input rather than independently forcing every internal rail. Its adjustable current limit is especially valuable for first power-up and fault finding.
+
+Typical use:
+
+| Test | Suggested starting setup |
+|---|---|
+| First 5 V subassembly power-up | 5.00 V with a deliberately low current limit appropriate to the connected load; increase only after checking for shorts/heating |
+| Integrated EFIS prototype | 5.00 V; current limit raised progressively with measured consumption, while retaining margin for transients |
+| Direct 3.3 V subassembly test | 3.30 V only where the circuit is explicitly intended for direct 3.3 V input |
+| Aircraft-input-stage development | Sweep roughly 10–15 V initially, later extending only to the formally defined aircraft input range |
+
+Never apply the supply directly to a rail merely because the voltage is available: first confirm the specific module/connector pinout and permissible voltage.
+
+### Option B — Siglent SPD3303X-E
+
+**Premium multi-output choice:** `Siglent SPD3303X-E`, triple-output programmable bench supply.
+
+Choose this instead when simultaneous independent rails materially improve development—for example, when characterising a regulator stage separately from a load or investigating interactions between subsystems. It is more capable than required for ordinary EFIS operation, but gives useful flexibility for a general electronics bench.
+
+During end-to-end EFIS testing, prefer powering the instrument through the intended input architecture. Simultaneously forcing internal rails can hide regulator, sequencing, grounding or transient problems that the integrated design needs to expose.
+
+### Interchangeable bench leads
+
+Use 4 mm banana terminals as the common PSU interface and maintain clearly identified leads/adapters for:
+
+- banana to crocodile clips;
+- banana to bare wire/test header;
+- suitable low-voltage PCB/header connections;
+- USB-C **power** breakout/adaptor where appropriate.
+
+Keep low-voltage leads short and polarity-marked. A passive USB-C breakout is not automatically a USB Power Delivery source/sink controller; only use voltage arrangements supported by the actual breakout and target hardware.
 
 ## Preliminary 5 V budget
 
@@ -58,13 +98,14 @@ This is **not yet a measured or validated aircraft current specification**. The 
 
 For bench development use:
 
-- regulated **5 V DC**;
-- **2 A minimum supply rating**;
-- good-quality short USB-C/power wiring;
-- common ground for processor, display/backlight and sensors;
+- regulated **5 V DC** for normal integrated prototype operation;
+- supply capability of **at least 2 A** for comfortable development/transient margin;
+- adjustable current limiting for staged bring-up;
+- good-quality short power wiring;
+- common ground for processor, display/backlight and sensors unless a specific isolated test requires otherwise;
 - do not introduce the aircraft 12 V supply until the 5 V prototype is stable and instrumented.
 
-A 2 A-rated source provides useful margin for development. It does not remove the need to check voltage at the electronics during worst-case load.
+A 2 A-capable source provides useful margin for development. It does not remove the need to check voltage at the electronics during worst-case load.
 
 ## Hardware commissioning measurements
 
@@ -84,8 +125,9 @@ Record current and rail voltage for at least these states:
 | OTA download | Peak/average current while Wi-Fi and flash operations are active. |
 | OTA activation/reboot | Startup transient and rail stability. |
 | Sensor fault/disconnect tests | Confirm electrical faults do not destabilise common rails. |
+| Aircraft-input sweep (later power stage) | Record current, 5 V/3.3 V regulation and temperature across defined input range. |
 
-Measurements should preferably include both average current and captured transient peaks. A slow USB power display alone may miss ESP32 Wi-Fi peaks; use suitable instrumentation if unexplained resets or rail disturbances appear.
+Measurements should preferably include both average current and captured transient peaks. A slow bench-supply display alone may miss ESP32 Wi-Fi peaks; use suitable instrumentation if unexplained resets or rail disturbances appear.
 
 ## Acceptance before final aircraft power design
 
