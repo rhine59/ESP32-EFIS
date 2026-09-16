@@ -1,6 +1,6 @@
 # Reference Parts Selection and Sourcing
 
-Checked: 14 September 2026.
+Checked: 16 September 2026.
 
 This document records the reference hardware selected for the ESP32 artificial-horizon prototype. Availability and prices are time-sensitive and should be rechecked before ordering.
 
@@ -8,16 +8,20 @@ This document records the reference hardware selected for the ESP32 artificial-h
 
 Use the **manufacturer part number** as the authoritative identifier before ordering.
 
-| Part | Preferred purchase link | Status when checked |
+| Part | Preferred purchase link | Procurement status |
 |---|---|---|
-| ESP32 module | [DigiKey UK — ESP32-S3-WROOM-1-N16R2](https://www.digikey.co.uk/en/products/detail/espressif-systems/ESP32-S3-WROOM-1-N16R2/16162644) | **Active; 7,000+ in stock when checked** |
-| Bosch BMI088 Shuttle Board 3.0 | [DigiKey UK — SHUTTLE BOARD 3.0 BMI088](https://www.digikey.co.uk/en/products/detail/bosch-sensortec/SHUTTLE-BOARD-3-0-BMI088/14617528) | In stock when checked |
-| Newhaven NHD-2.1-480480AF-ASXP | [DigiKey UK — NHD-2.1-480480AF-ASXP](https://www.digikey.co.uk/en/products/detail/newhaven-display-intl/NHD-2-1-480480AF-ASXP/25724289) | Listed; stock should be rechecked before ordering |
-| Newhaven NHD-FFC40 adapter | [RS UK — NHD-FFC40](https://uk.rs-online.com/web/p/display-interface-kits/0723891) | Listed; availability should be checked at order time |
-| Adafruit TPS61169 PID 6354 | [Pimoroni UK — TPS61169 constant-current boost converter](https://shop.pimoroni.com/products/adafruit-tps61169-constant-current-boost-converter-for-leds) | UK product listing |
-| Microchip MCP23008-E/P | [DigiKey UK — MCP23008-E/P](https://www.digikey.co.uk/en/products/detail/microchip-technology/MCP23008-E-P/735951) | In stock when checked |
-| Optical front window | [Diamond Coatings — hard-coated AR polycarbonate](https://diamondcoatings.co.uk/product/hard-coated-polycarbonate-anti-reflective-coating-on-both-sides-and-afp-coating-one-side/) | Preferred final window source |
-| Compact rotary encoder | [Bourns PEC09 family](https://www.bourns.com/products/encoders/product-detail/contacting-encoders/pec09) | Reference family selected |
+| ESP32 module | DigiKey UK — ESP32-S3-WROOM-1-N16R2 | **Ordered — 2 units, 14 Sep 2026** |
+| Bosch BMI088 Shuttle Board 3.0 | DigiKey UK — SHUTTLE BOARD 3.0 BMI088 | **Ordered — 14 Sep 2026** |
+| Newhaven NHD-2.1-480480AF-ASXP | Mouser — MFG P/N NHD-2.1-480480AF-ASXP | **Ordered and shipped — 1 unit; ordered 14 Sep, shipped 15 Sep 2026** |
+| Newhaven NHD-FFC40 adapter | RS UK — NHD-FFC40 | **Ordered** |
+| Adafruit TPS61169 PID 6354 | DigiKey order | **Ordered — 14 Sep 2026** |
+| Microchip MCP23008-E/P | DigiKey order | **Ordered — 14 Sep 2026** |
+| Optical front window | Diamond Coatings — hard-coated AR polycarbonate | Preferred final window source; not recorded as ordered |
+| Compact rotary encoder | Bourns PEC09-2320F-T0015 | **Ordered — 14 Sep 2026** |
+
+## Procurement evidence — display
+
+Mouser invoice 92509947 records one `NHD-2.1-480480AF-ASXP`, quantity ordered 1, shipped 1, pending 0. Order date was 14 September 2026 and ship date 15 September 2026. The merchandise price was £18.37 before freight/VAT. This confirms the selected display is already in transit and must not be treated as an outstanding purchase.
 
 ## MCU — Espressif ESP32-S3-WROOM-1-N16R2
 
@@ -80,6 +84,8 @@ The rigid IMU cradle is based on the approximately 22 × 14 mm external PCB enve
 
 ## Display — Newhaven NHD-2.1-480480AF-ASXP
 
+**Procurement:** one display is ordered and shipped from Mouser.
+
 Key characteristics:
 
 - 2.1-inch round IPS
@@ -96,25 +102,25 @@ The project uses **16-bit RGB565** for pixels and 9-bit serial initialization fo
 
 ## Display adapter
 
-**Prototype adapter:** Newhaven `NHD-FFC40`.
+**Prototype adapter:** Newhaven `NHD-FFC40` — ordered.
 
 For the final compact PCB, Newhaven's datasheet names **Molex 54104-4031** as the example 40-pin 0.5 mm FFC connector.
 
 ## Backlight driver — Adafruit TPS61169 PID 6354
 
-Selected for the prototype because it accepts the 5 V rail, regulates LED current and supports PWM dimming.
+Selected for the prototype because it accepts the 5 V rail, regulates LED current and supports PWM dimming. **Ordered 14 September 2026.**
 
 ## GPIO expander — Microchip MCP23008-E/P
 
-An 8-bit I²C GPIO expander is used for low-speed controls and LCD reset/chip-select handling.
+An 8-bit I²C GPIO expander is used for low-speed controls and LCD reset/chip-select handling. **Ordered 14 September 2026.**
 
 ## Rotary encoder — Bourns PEC09 reference
 
 Reference family: **Bourns PEC09**, incremental encoder with push switch.
 
-Reference prototype part: `PEC09-2320F-T0015`.
+Reference prototype part: `PEC09-2320F-T0015` — **ordered 14 September 2026.**
 
-The front control pod is sized around the compact 9 mm class body and 7.2 mm mounting-hole requirement. Exact shaft length and suffix should be confirmed before final printing.
+The front control pod is sized around the compact 9 mm class body and 7.2 mm mounting-hole requirement. Exact physical dimensions should be confirmed when the ordered part arrives before final printing.
 
 ## Rear electronics carrier and USB-C strain relief
 
@@ -139,10 +145,19 @@ The processor carrier geometry will be revised around the final **custom N16R2 P
            +--> Newhaven backlight (~100 mA)
 ```
 
+## Still required / not recorded as ordered
+
+- Adafruit BMP585 Ported breakout, PID 6413, for the first static-pressure prototype
+- PNI RM3100-CB P/N 14754 remote magnetometer (can follow the initial display/attitude/altitude bench bring-up)
+- a practical temporary carrier/breakout for the bare ESP32-S3-WROOM-1-N16R2, unless a suitable board is already available
+- prototype interconnect materials as required: headers/sockets, short harness leads/perfboard and suitable connectors
+- 5 V USB-C bench supply/cable if not already available
+- optical front window can wait for enclosure/optical evaluation
+
 ## Remaining hardware choices
 
 - freeze the custom MCU carrier PCB outline and connector placement
-- physically measure the chosen PEC09 encoder before final print
+- physically measure the chosen PEC09 encoder when received before final print
 - select the exact USB-C cable and set the strain-relief groove diameter
 - replace prototype MCP23008 wiring with the compact project carrier PCB
 - verify actual aircraft-panel spacing around the front control pod
