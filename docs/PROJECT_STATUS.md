@@ -2,109 +2,80 @@
 
 **Status date:** 16 September 2026
 
-This document is the project-level record of what has been implemented, what has actually been validated, and what remains. It deliberately distinguishes **implemented**, **compile-validated**, **QEMU/simulator-validated**, and **physically validated**. A successful build is not evidence that a sensor, display, control, electrical interface or mechanical installation works on hardware.
-
-The project remains an experimental **supplementary/non-primary** flight instrument. Missing, invalid or stale real data must fail obviously; synthetic data must never become an automatic fallback.
+This is the project-level validation record. The project remains experimental **supplementary/non-primary**. Missing/invalid/stale real data fails obviously; synthetic data is never an automatic fallback. Build/simulation success is not physical validation.
 
 ## Current development gate
 
-**Physical hardware activities are PAUSED because no physical prototype hardware is currently available.** Do not schedule routine hardware builds, flashing, sensor commissioning, display bring-up, encoder testing, enclosure fit checks or aircraft integration until hardware is available. Software may continue to compile for the ESP32-S3 target where useful, but the result is recorded only as **compile validation**.
-
-Active work while paused: QEMU regression, Swift simulator parity, documentation, pure calculation/estimator tests, code review and safety/failure-path design that does not depend on claiming physical behaviour. A resilient remote-update architecture has now been designed/documented but is intentionally not implemented yet; see `REMOTE_UPDATES.md`.
+Physical hardware activity remains paused until prototype hardware is available. Active software work includes QEMU regression, Swift parity, documentation, pure estimator/calculation tests, static safety review, and the OTA server/user-flow work described below.
 
 ## Validation vocabulary
 
 | Status | Meaning |
 |---|---|
-| **ACCEPTED — QEMU** | Deterministic firmware/emulator behaviour has been visually/functionally reviewed and accepted at 480×480. |
-| **SYNCED — SWIFT** | Native Swift simulator represents the accepted emulator behaviour for interactive testing; it is not the authoritative pixel renderer. |
-| **COMPILE-VALIDATED** | ESP32-S3 firmware configuration compiled successfully. No physical operation is implied. |
-| **IMPLEMENTED — UNVALIDATED** | Code/design exists but the required validation has not yet been performed. |
-| **DESIGNED / NOT IMPLEMENTED** | Architecture and validation requirements are documented but no operational code is enabled. |
-| **PLANNED / PENDING HARDWARE** | Work requires physical hardware or installation and is deliberately deferred. |
-| **PARKED** | Design/work intentionally held until prerequisites are available. |
+| **ACCEPTED — QEMU** | Deterministic firmware/emulator behaviour reviewed at 480×480. |
+| **SYNCED — SWIFT** | Swift represents accepted behaviour/scenario; not authoritative pixel renderer. |
+| **COMPILE-VALIDATED** | ESP32 target compiled; no physical operation implied. |
+| **IMPLEMENTED — UNVALIDATED** | Code exists; required runtime/physical validation not performed. |
+| **DESIGNED / NOT IMPLEMENTED** | Architecture documented but operational target code absent. |
+| **PLANNED / PENDING HARDWARE** | Requires physical hardware. |
+| **PARKED** | Intentionally held. |
 
-## Completed activities and validation
+## Completed / current activities
 
-| Function / activity | Work completed | Validation status |
+| Function | State | Validation |
 |---|---|---|
-| Project safety model | Supplementary/non-primary role; explicit simulation marking; no plausible fallback for invalid real sources | **DOCUMENTED / DESIGN RULE** |
-| ESP-IDF environment | ESP-IDF v5.4.4 environment script; separate hardware and QEMU build directories/configuration | **USED / QEMU VALIDATED** |
-| QEMU display backend | Espressif virtual RGB display at native 480×480 RGB565; physical PSRAM disabled only in QEMU config | **ACCEPTED — QEMU** |
-| Synthetic scenario engine | Deterministic attitude, altitude, heading, failure and recovery scenarios | **ACCEPTED — QEMU** |
-| Artificial Horizon geometry | Pitch/roll direction, pitch ladder, fixed aircraft symbol, bank scale and roll pointer | **ACCEPTED — QEMU; SYNCED — SWIFT** |
-| Horizon validity | `ATT FAIL` and explicit recovery | **ACCEPTED — QEMU; SYNCED — SWIFT** |
-| Altimeter presentation | Three pointers, 0–9 scale, digital altitude | **ACCEPTED — QEMU; SYNCED — SWIFT** |
-| >10,000-ft warning | 9-o'clock 60° annular hatching, progressive 10,000→11,000 ft then full | **ACCEPTED — QEMU; SYNCED — SWIFT** |
-| Kollsman presentation | Compact 3-o'clock curved scale, ~8 hPa total visible span, fixed selected-QNH index, 1013.25 datum, no units/labels | **ACCEPTED — QEMU; SYNCED — SWIFT** |
-| QNH UI/storage | 950–1050 hPa integer range, 1 hPa increments, NVS-backed UI setting | **SOFTWARE IMPLEMENTED; QEMU/UI BEHAVIOUR ACCEPTED; PHYSICAL ENCODER PENDING** |
-| Pressure-to-altitude calculation | Reusable ISA pressure/QNH calculation with input validation | **IMPLEMENTED / SIMULATION-TESTED; REAL BMP585 INPUT PENDING** |
-| Altimeter validity | `ALT FAIL` and recovery | **ACCEPTED — QEMU; SYNCED — SWIFT** |
-| Compass presentation | Rotating card, N/E/S/W, 3-digit heading, conventional rotation | **ACCEPTED — QEMU; SYNCED — SWIFT** |
-| Heading wrap/rotation | 000/359 crossing and continuous rotation | **ACCEPTED — QEMU; SYNCED — SWIFT** |
-| Heading bug | Selected magnetic heading displayed at `bug - heading`; 060° held during acceptance sequence | **ACCEPTED — QEMU; SYNCED — SWIFT** |
-| Compass validity | `HEADING FAIL` and recovery | **ACCEPTED — QEMU; SYNCED — SWIFT** |
-| BMI088 SPI driver | Separate accel/gyro CS, chip-ID checks, ±6 g and ±500 dps ranges, six-axis engineering-unit reads, timestamp | **IMPLEMENTED; COMPILE-VALIDATED; PENDING HARDWARE** |
-| BMI088 commissioning diagnostics | Optional ~5 Hz X/Y/Z accel, magnitude and X/Y/Z gyro logging; disabled by default; never feeds display | **IMPLEMENTED; COMPILE-VALIDATED; PENDING HARDWARE** |
-| Attitude estimator | Gyro propagation plus gravity correction, acceleration plausibility gate, timing/non-finite rejection, 250 ms stale invalidation | **IMPLEMENTED; COMPILE-VALIDATED; PHYSICAL AXIS/DYNAMIC VALIDATION PENDING** |
-| BMI088-to-display safety gate | Live attitude connection intentionally withheld until physical axis/sign mapping is demonstrated | **IMPLEMENTED SAFETY GATE** |
-| Swift simulator | Adaptive iPhone/iPad layout, manual controls, AUTO FLIGHT, failures, accepted instrument artwork | **SOFTWARE OPERATIONAL; PARITY MAINTAINED** |
-| Remote firmware update/fallback architecture | Dual OTA slots + `otadata`, explicit maintenance Wi-Fi/HTTPS, application-controlled first-boot confirmation, automatic previous-image rollback, signed-image recommendation, persistent-schema rollback rules and staged validation plan | **DESIGNED / NOT IMPLEMENTED** |
-| Enclosure CAD | Flight-development case, bezel, display carrier, IMU carrier, rear cover, strain relief and fit gauge | **DESIGNED / CI-CHECKED WHERE APPLICABLE; PHYSICAL FIT PENDING** |
-| Carrier PCB | Architecture/pin allocation and design work | **PARKED pending physical-interface decisions** |
-| BOM/procurement record | Selected core components and ordered-part tracking | **DOCUMENTED; receipt/bench validation separate** |
+| Safety model | supplementary/non-primary; explicit simulation; fail-obvious validity | **DOCUMENTED** |
+| QEMU RGB565 backend | native 480×480 virtual display | **ACCEPTED — QEMU** |
+| Horizon | accepted pitch/bank geometry, ladder, bank scale, `ATT FAIL` | **ACCEPTED — QEMU; SYNCED — SWIFT** |
+| Altimeter | three pointers, digital altitude, >10k hatch, Kollsman, `ALT FAIL` | **ACCEPTED — QEMU; SYNCED — SWIFT** |
+| Compass | rotating card, wrap, heading bug, `HEADING FAIL` | **ACCEPTED — QEMU; SYNCED — SWIFT** |
+| QNH/storage | 950–1050 hPa, 1 hPa, NVS-backed setting | **SOFTWARE/QEMU ACCEPTED; ENCODER PENDING** |
+| Pressure calculation | validated calculation path | **SIMULATION-TESTED; BMP585 INPUT PENDING** |
+| BMI088 SPI/diagnostics | engineering-unit acquisition + commissioning log path | **COMPILE-VALIDATED; HARDWARE PENDING** |
+| Attitude estimator | gyro/gravity complementary estimator, plausibility/staleness gates | **COMPILE-VALIDATED; PHYSICAL TUNING PENDING** |
+| BMI088 live display gate | withheld until physical axes/signs verified | **IMPLEMENTED SAFETY GATE** |
+| Swift instrument simulator | adaptive instruments/manual/AUTO/failure/acceptance scenarios | **SOFTWARE OPERATIONAL; PARITY MAINTAINED** |
+| Phone/network simulator | hotspot credentials, HTTPS manifest config and staged connectivity UI | **IMPLEMENTED — SWIFT; REAL ESP32 NETWORK PENDING** |
+| OTA user simulator | auto-download preference, manual Download, verified Ready, explicit `ACTIVATE & REBOOT`, success/rollback | **IMPLEMENTED — SWIFT; PHYSICAL OTA PENDING** |
+| OTA Docker origin | loopback nginx read-only public-origin backend | **IMPLEMENTED — SYNLOGY DEPLOYMENT UNVALIDATED** |
+| OTA Docker admin | private dashboard, staged releases, per-release metadata/hash, explicit Publish/republish/delete | **IMPLEMENTED — SYNLOGY DEPLOYMENT UNVALIDATED** |
+| OTA CLI staging helper | versioned binary copy + SHA-256 + metadata; cannot publish | **IMPLEMENTED — RUNTIME UNVALIDATED** |
+| OTA A/B ESP32 client | dual-slot/write/boot/self-test/rollback design | **DESIGNED / NOT IMPLEMENTED ON ESP32** |
+| OTA security | HTTPS + signed-image design; Secure Boot/flash encryption later | **DESIGNED / LATER HARDENING** |
+| Enclosure CAD | development case/carriers/fit gauge | **DESIGNED; PHYSICAL FIT PENDING** |
+| Carrier PCB | architecture/pins | **PARKED** |
+
+## Definitive OTA policy
+
+**Stage → Publish → Download → Activate.** Admin upload/stage never publishes. Publish changes the public manifest. EFIS auto-download may download/verify only in maintenance context. **Activation/reboot is always explicit.** First boot must self-test and either mark the candidate known-good or rollback. See `OTA_IMAGE_ADMIN.md`, `OTA_USER_SCENARIO.md`, `PHONE_NETWORK_AND_PUBLIC_OTA.md`, `REMOTE_UPDATES.md` and `../ota-server/README.md`.
 
 ## Accepted emulator sequences
 
-### Artificial Horizon
+Horizon: level, ±10/±20 pitch, ±30/±60 bank, combined attitude, failure/recovery. Altimeter: representative 0–12,500 ft values, sweep, failure/recovery and QNH exercises. Compass: cardinal/intercardinal headings, 350→010 wrap, rotation, failure/recovery with deterministic 060° bug. Full details remain in `SIMULATION.md`.
 
-Level; pitch +10°, -10°, +20°, -20°; left/right bank 30° and 60°; combined +10° pitch/right 30° bank; attitude failure; recovery. Accepted graphics include 6.8 px/degree pitch scaling, 5°/10° ladder hierarchy, fixed aircraft datum and fixed bank scale.
+## Remaining work
 
-### Altimeter
-
-0, 500, 1,000, 2,500, 5,000, 9,500, 9,900, 10,000, 10,100, 10,500 and 12,500 ft; moving sweep; altitude failure; recovery. QNH pressure calculation was separately exercised with fixed simulated pressure and QNH changes. Final 9-o'clock hatching and compact 3-o'clock Kollsman geometry were visually accepted.
-
-### Compass
-
-000°, 045°, 090°, 135°, 180°, 225°, 270°, 315°; moving 350°→010° crossing; continuous rotation; heading failure; recovery to north. Heading bug held at 060° for deterministic geometry checking.
-
-## Remaining work and required validation
-
-| Priority / function | Work still required | Required validation | Current status |
-|---|---|---|---|
-| Swift parity regression | Keep all three native simulator pages/scenarios aligned with accepted firmware/QEMU behaviour | Compare Swift states with QEMU acceptance states after renderer changes | **ACTIVE SOFTWARE TASK** |
-| Remote update Phase 1 | Freeze A/B partition sizes after measuring image; implement manifest/parser, state machine and maintenance UI with simulated outcomes | Unit/QEMU tests of compatibility, state transitions, malformed input, migration and rollback decisions | **DESIGNED / SOFTWARE-ONLY CANDIDATE** |
-| Remote update Phase 2 | Implement maintenance Wi-Fi + HTTPS OTA to inactive slot and application-controlled boot confirmation | Real A→B/B→A updates, network/power interruption, corrupt image, crash/self-test rollback, NVS compatibility and USB recovery | **PENDING HARDWARE** |
-| Remote update security | Add signed-release procedure and image verification; evaluate Secure Boot/flash encryption; defer eFuse anti-rollback until recovery is proven | Wrong-signature rejection, key/release procedure review, recovery compatibility | **DESIGNED / LATER HARDENING** |
-| BMI088 axis mapping | Determine Shuttle Board axes/signs relative to aircraft +X forward, +Y right, +Z down | Stationary ±1 g orientations plus positive pitch/roll/yaw hand rotations | **PENDING HARDWARE** |
-| BMI088 gyro bias | Characterise stationary bias/noise and startup stability | Logged stationary datasets at representative temperatures | **PENDING HARDWARE** |
-| Attitude estimator tuning | Tune complementary correction and potentially evolve algorithm after real data | Known static angles, dynamic fixture motion, acceleration rejection, vibration | **PENDING HARDWARE** |
-| Live attitude connection | Map validated body-frame samples into estimator and `instrument_data_t` | Direction checks, stale/disconnect injection, comparison to independent reference | **BLOCKED BY AXIS VALIDATION** |
-| BMP585 driver | Implement physical acquisition, startup/configuration, pressure/temperature samples and timestamps | Chip identity/status, reference pressure comparison, range/stale/disconnect tests | **PLANNED / PENDING HARDWARE** |
-| Static system | Final pressure fitting/tube arrangement | Leak/blockage testing and aircraft static comparison | **PENDING HARDWARE** |
-| Live altitude pipeline | Feed validated BMP585 pressure through QNH calculation into `altitude_ft` | Reference pressure/altitude points over QNH range plus failure tests | **PENDING HARDWARE** |
-| RM3100 driver | Implement remote magnetometer acquisition and freshness/error handling | Identity/communication, field-vector plausibility, cable robustness | **PLANNED / PENDING HARDWARE** |
-| Magnetometer calibration | Hard-iron offset, soft-iron matrix, installation alignment | Multi-orientation calibration dataset and residual-error analysis | **PENDING HARDWARE** |
-| Tilt-compensated heading | Fuse calibrated magnetic vector with validated attitude | Known headings at level and bank/pitch, north-wrap and failure tests | **PENDING HARDWARE** |
-| Magnetic reference | Freeze magnetic/true variation policy and user presentation | Documentation and comparison to independent reference | **OPEN DESIGN ITEM** |
-| MCP23008/PEC09 | Validate panel selection, QNH and heading-bug control, detents/direction/push behaviour | Physical interaction and persistence tests | **PENDING HARDWARE** |
-| NVS persistence on target | Confirm settings survive power cycles and corruption handling is safe | Repeated hardware restart/power interruption | **PENDING HARDWARE** |
-| Newhaven LCD | Validate ST7701S init, RGB timing, colour order, brightness and double buffering | Physical panel bring-up and long-run display test | **PENDING HARDWARE** |
-| Backlight | Validate TPS61169 drive, brightness, current and thermal behaviour | Electrical/thermal measurement | **PENDING HARDWARE** |
-| ESP32-S3 PSRAM | Validate real N16R2 2 MB PSRAM with two framebuffers | Hardware boot/stress test | **PENDING HARDWARE** |
-| Power integrity | Validate 5 V input, 3.3 V rail, brownout margin and display/backlight transients | Bench electrical measurements | **PENDING HARDWARE** |
-| Enclosure fit | Print/assemble development enclosure and carriers | Physical dimensional/clearance/strain-relief check | **PENDING HARDWARE** |
-| EMI/magnetic installation | Establish RM3100 location and interference from ESP32, regulator, display/backlight and aircraft | Powered ground tests with engine/equipment states | **PENDING HARDWARE** |
-| Vibration | Characterise sensor/display/connector behaviour over representative vibration | Ground vibration/engine-RPM tests with logging | **PENDING HARDWARE** |
-| Thermal/sunlight | Validate display readability and sensor/electronics stability | Elevated temperature/direct sunlight tests | **PENDING HARDWARE** |
-| Aircraft ground integration | Wiring, static line, axes, magnetic effects, engine-running operation | Independent references and recorded ground test | **PENDING HARDWARE** |
-| Airborne comparison | Experimental non-primary evaluation only after ground gates pass | Logged comparison against independent trusted instruments | **FUTURE / BLOCKED** |
-| Carrier PCB | Resume/freeze connector placement and manufacture only after prototype interfaces are proven | Electrical review, PCB validation, assembled-board bench test | **PARKED** |
+| Function | Work / validation required | Status |
+|---|---|---|
+| Swift parity | keep instrument/network/OTA scenarios aligned with firmware policy | **ACTIVE SOFTWARE TASK** |
+| OTA server deployment | build/run both containers on Synology; private admin access; public TLS/DNS/reverse-proxy external test | **IMPLEMENTED / DEPLOYMENT PENDING** |
+| OTA ESP32 Phase 1 | freeze A/B partition sizes; manifest/parser/state machine; persisted auto-download policy | **DESIGNED / SOFTWARE CANDIDATE** |
+| OTA ESP32 Phase 2 | maintenance Wi-Fi + HTTPS writer + explicit activation + boot confirmation | **PENDING HARDWARE** |
+| OTA interruption/rollback | A↔B, Wi-Fi/power loss, corrupt image, crash/self-test rollback, NVS compatibility, USB recovery | **PENDING HARDWARE** |
+| OTA security | signed releases/verification; later Secure Boot/flash encryption; eFuse anti-rollback deferred | **DESIGNED / LATER HARDENING** |
+| BMI088 axes/bias/tuning/live connection | physical orientation, stationary/dynamic data, estimator tuning | **PENDING HARDWARE** |
+| BMP585/static/live altitude | physical driver, pressure validation, plumbing, failure/staleness | **PENDING HARDWARE** |
+| RM3100/calibration/heading | acquisition, hard/soft iron, installation alignment, tilt compensation | **PENDING HARDWARE** |
+| MCP23008/PEC09/NVS | physical interaction/persistence | **PENDING HARDWARE** |
+| LCD/backlight/PSRAM/power | physical bring-up, stress, thermal/electrical checks | **PENDING HARDWARE** |
+| Enclosure/EMI/vibration/thermal | physical and powered installation tests | **PENDING HARDWARE** |
+| Aircraft ground/airborne comparison | only after all preceding gates | **FUTURE / BLOCKED** |
+| Carrier PCB | resume after prototype interfaces proven | **PARKED** |
 
 ## Hardware-resumption gate
 
-When physical parts become available, resume in this order: inventory/visual inspection → ESP32/display/power bench bring-up → BMI088 diagnostic axis mapping → estimator static/dynamic validation → BMP585 acquisition/static plumbing → MCP23008/encoder → RM3100 remote acquisition/calibration → integrated failure/staleness tests → remote-update interruption/rollback bench validation → enclosure/thermal/vibration → aircraft ground testing. Do not skip directly from successful compilation or emulator graphics to airborne use.
+Inventory/inspection → ESP32/display/power → BMI088 axis mapping → estimator validation → BMP585/static → encoder → RM3100/calibration → integrated failure/staleness → **real OTA download/activation/interruption/rollback** → enclosure/thermal/vibration → aircraft ground testing. Never infer airborne readiness from compilation, Docker, Swift or QEMU results.
 
 ## Documentation rule
 
-Every functional change must update the relevant code documentation and project status in the same development stage. Any statement of validation must name the validation layer: compile, QEMU, Swift simulator, electronics bench, physical fixture, aircraft ground or airborne comparison. This prevents emulator success from being mistaken for hardware or flight validation.
+Every functional change updates relevant code documentation/project status in the same stage. Validation statements must identify the layer: compile, QEMU, Swift, Docker runtime, electronics bench, physical fixture, aircraft ground or airborne.
