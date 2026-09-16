@@ -1,0 +1,94 @@
+[0;33mRunning qemu on socket://localhost:5555[0m
+Adding "qemu"'s dependency "all" to list of commands with default set of options.
+Executing action: all (aliases: build)
+Running ninja in directory /Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware/build-qemu
+Executing "ninja all"...
+[1/4] cd /Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware/build-qemu/esp-idf/esptool_py && /Users/richardhine/.espressif/tools/python/v5.4.4/venv/bin/python /Users/richardhine/.espressif/v5.4.4/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware/build-qemu/partition_table/partition-table.bin /Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware/build-qemu/esp32_efis.bin
+esp32_efis.bin binary size 0x34c60 bytes. Smallest app partition is 0x100000 bytes. 0xcb3a0 bytes (79%) free.
+[2/4] Performing build step for 'bootloader'
+[1/1] cd /Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware/build-qemu/bootloader/esp-idf/esptool_py && /Users/richardhine/.espressif/tools/python/v5.4.4/venv/bin/python /Users/richardhine/.espressif/v5.4.4/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x0 /Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware/build-qemu/bootloader/bootloader.bin
+Bootloader binary size 0x51c0 bytes. 0x2e40 bytes (36%) free.
+[3/4] No install step for 'bootloader'
+[4/4] Completed 'bootloader'
+[0;33mGenerating flash image: /Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware/build-qemu/qemu_flash.bin[0m
+esptool.py --chip=esp32s3 merge_bin --output=/Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware/build-qemu/qemu_flash.bin --fill-flash-size=16MB --flash_mode dio --flash_freq 80m --flash_size 16MB 0x0 bootloader/bootloader.bin 0x10000 esp32_efis.bin 0x8000 partition_table/partition-table.bin
+esptool.py v4.12.0
+SHA digest in image updated
+Wrote 0x1000000 bytes to file /Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware/build-qemu/qemu_flash.bin, ready to flash to offset 0x0
+[0;33mGenerating efuse image: /Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware/build-qemu/qemu_efuse.bin[0m
+[0;33mRunning qemu (bg): qemu-system-xtensa -M esp32s3 -m 32M -drive file=/Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware/build-qemu/qemu_flash.bin,if=mtd,format=raw -drive file=/Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware/build-qemu/qemu_efuse.bin,if=none,format=raw,id=efuse -global driver=nvram.esp32s3.efuse,property=drive,value=efuse -global driver=timer.esp32s3.timg,property=wdt_disable,value=true -nic user,model=open_eth -display sdl -serial tcp::5555,server[0m
+--- esp-idf-monitor 1.10.0 on socket://localhost:5555 115200
+--- Quit: Ctrl+] | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H
+Executing action: qemu
+Executing action: monitor
+Running idf_monitor in directory /Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware
+Executing "/Users/richardhine/.espressif/tools/python/v5.4.4/venv/bin/python /Users/richardhine/.espressif/v5.4.4/esp-idf/tools/idf_monitor.py -p socket://localhost:5555 -b 115200 --toolchain-prefix xtensa-esp32s3-elf- --target esp32s3 --revision 0 /Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware/build-qemu/esp32_efis.elf -m '/Users/richardhine/.espressif/tools/python/v5.4.4/venv/bin/python' '/Users/richardhine/.espressif/v5.4.4/esp-idf/tools/idf.py' '-B' 'build-qemu'"...
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x1 (POWERON),boot:0x4 (SPI_FLASH_BOOT)
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce2810,len:0x1564
+load:0x403c8700,len:0x4
+load:0x403c8704,len:0xd24
+load:0x403cb700,len:0x2ed4
+entry 0x403c8928
+[0;32mI (130) boot: ESP-IDF v5.4.4 2nd stage bootloader[0m
+[0;32mI (130) boot: compile time Sep 15 2026 16:55:47[0m
+[0;32mI (131) boot: Multicore bootloader[0m
+[0;32mI (133) boot: chip revision: v0.3[0m
+[0;32mI (134) boot: efuse block revision: v0.0[0m
+[0;32mI (134) boot.esp32s3: Boot SPI Speed : 80MHz[0m
+[0;32mI (135) boot.esp32s3: SPI Mode       : SLOW READ[0m
+[0;32mI (135) boot.esp32s3: SPI Flash Size : 16MB[0m
+[0;32mI (136) boot: Enabling RNG early entropy source...[0m
+[0;32mI (140) boot: Partition Table:[0m
+[0;32mI (140) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (140) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (140) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (141) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (141) boot: End of partition table[0m
+[0;32mI (142) esp_image: segment 0: paddr=00010020 vaddr=3c020020 size=0abc4h ( 43972) map[0m
+[0;32mI (148) esp_image: segment 1: paddr=0001abec vaddr=3fc91f00 size=02e6ch ( 11884) load[0m
+[0;32mI (150) esp_image: segment 2: paddr=0001da60 vaddr=40374000 size=025b8h (  9656) load[0m
+[0;32mI (152) esp_image: segment 3: paddr=00020020 vaddr=42000020 size=1938ch (103308) map[0m
+[0;32mI (162) esp_image: segment 4: paddr=000393b4 vaddr=403765b8 size=0b85ch ( 47196) load[0m
+[0;32mI (167) esp_image: segment 5: paddr=00044c18 vaddr=50000000 size=0001ch (    28) load[0m
+[0;32mI (168) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (168) boot: Disabling RNG early entropy source...[0m
+[0;33mW (358) rtcinit: o_code calibration fail[0m
+
+[0;32mI (181) cpu_start: Multicore app[0m
+[0;32mI (191) cpu_start: GPIO 44 and 43 are used as console UART I/O pins[0m
+[0;32mI (192) cpu_start: Pro cpu start user code[0m
+[0;32mI (192) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (192) app_init: Application information:[0m
+[0;32mI (192) app_init: Project name:     esp32_efis[0m
+[0;32mI (192) app_init: App version:      bd53289[0m
+[0;32mI (192) app_init: Compile time:     Sep 15 2026 16:55:31[0m
+[0;32mI (192) app_init: ELF file SHA256:  e275a61d6...[0m
+[0;32mI (192) app_init: ESP-IDF:          v5.4.4[0m
+[0;32mI (192) efuse_init: Min chip rev:     v0.0[0m
+[0;32mI (192) efuse_init: Max chip rev:     v0.99 [0m
+[0;32mI (192) efuse_init: Chip rev:         v0.3[0m
+[0;32mI (192) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (193) heap_init: At 3FC95650 len 000540C0 (336 KiB): RAM[0m
+[0;32mI (193) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM[0m
+[0;32mI (193) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM[0m
+[0;32mI (193) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM[0m
+[0;32mI (196) spi_flash: detected chip: issi[0m
+[0;32mI (196) spi_flash: flash io: dio[0m
+[0;32mI (196) sleep_gpio: Configure to isolate all GPIO pins in sleep state[0m
+[0;32mI (196) sleep_gpio: Enable automatic switching of GPIO sleep configuration[0m
+[0;32mI (199) main_task: Started on CPU0[0m
+[0;32mI (208) main_task: Calling app_main()[0m
+[0;33mW (208) esp32_efis: ESP32 EFIS - SUPPLEMENTARY/NON-PRIMARY instrument[0m
+[0;33mW (209) esp32_efis: BENCH SIMULATION: ENABLED - SYNTHETIC DATA[0m
+[0;33mW (225) esp32_efis: QEMU MODE: COMPASS ONLY - 12 tests[0m
+[0;33mW (7614) esp32_efis: QEMU COMPASS TEST 2/12: HDG NE heading=45 bug=60[0m
+[0;33mW (14995) esp32_efis: QEMU COMPASS TEST 3/12: HDG EAST heading=90 bug=60[0m
+[0;33mW (22355) esp32_efis: QEMU COMPASS TEST 4/12: HDG SE heading=135 bug=60[0m
+[0;33mW (29723) esp32_efis: QEMU COMPASS TEST 5/12: HDG SOUTH heading=180 bug=60[0m
+[0;33mW (37089) esp32_efis: QEMU COMPASS TEST 6/12: HDG SW heading=225 bug=60[0m
+
+Done

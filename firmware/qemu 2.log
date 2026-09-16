@@ -1,0 +1,4 @@
+[0;33mRunning qemu on socket://localhost:5555[0m
+'/Users/richardhine/.espressif/python_env/idf5.4_py3.14_env/bin/python' is currently active in the environment while the project was configured with '/Users/richardhine/.espressif/tools/python/v5.4.4/venv/bin/python'. Run 'idf.py fullclean' to start again.
+Adding "qemu"'s dependency "all" to list of commands with default set of options.
+Executing action: all (aliases: build)

@@ -1,0 +1,2 @@
+source /Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware/build-qemu/gdbinit/symbols
+source /Users/richardhine/Documents/Xcode/ESP32-EFIS/firmware/build-qemu/gdbinit/connect
