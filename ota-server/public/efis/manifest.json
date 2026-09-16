@@ -1,0 +1,11 @@
+{
+  "product": "ESP32-EFIS",
+  "version": "0.0.0",
+  "build": 0,
+  "hardware_profile": "s3-n16r2-v1",
+  "idf": "5.4.4",
+  "image_url": "https://CHANGE-ME.example/efis/releases/0.0.0/esp32-efis-0.0.0.bin",
+  "sha256": "REPLACE_WITH_64_HEX_SHA256",
+  "minimum_allowed_version": "0.0.0",
+  "release_notes": "Placeholder manifest. Do not deploy until image_url and sha256 identify an approved release."
+}
