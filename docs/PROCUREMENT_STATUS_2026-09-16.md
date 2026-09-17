@@ -1,28 +1,34 @@
-# Prototype procurement status — 16 September 2026
+# Prototype procurement status — updated 17 September 2026
 
-This checkpoint records delivery evidence supplied for Stage 1 and Stage 2 prototype parts. `BOM.md` remains the authoritative purchasing checklist and now includes explicit purchase locations/references for all items that are ready to buy.
+This checkpoint records delivery evidence supplied for Stage 1 and Stage 2 prototype parts. `BOM.md` remains the authoritative purchasing checklist and includes explicit purchase locations/references for all items that are ready to buy.
 
 ## Receipt-evidence rule
 
 A supplied photograph of a delivery note that clearly identifies a BOM part and delivered quantity is accepted as evidence that the stated quantity has **arrived**. `BOM.md` should then be updated to `RECEIVED` without requiring a second confirmation. Order/dispatch evidence or a statement that an item is on the way is recorded as `ORDERED / IN TRANSIT`, not RECEIVED.
 
-## Confirmed received from delivery-note photographs
+## Confirmed received — photographic evidence 17 September 2026
 
-The supplied **RS delivery-note photograph** confirms:
+The newly supplied photographs show the actual component packages together with the supplier paperwork, confirming physical arrival of the following parts.
 
-- **Newhaven NHD-FFC40 40-pin FFC-to-through-hole adapter**, RS stock `723891`, quantity **1 RECEIVED**.
+### DigiKey UK order 101607569 / invoice 132701189
 
-The supplied **DigiKey delivery-note photograph/paperwork** confirms:
+- **Adafruit TPS61169 constant-current LED driver, PID 6354**, DigiKey P/N `1528-6354-ND`, quantity **1 RECEIVED**. The component bag and packing list are both visible.
+- **Bourns PEC09-2320F-T0015 rotary encoder**, DigiKey P/N `PEC09-2320F-T0015-ND`, quantity **1 RECEIVED**. The labelled component bag and packing list are both visible.
+- **Microchip MCP23008-E/P I/O expander**, DigiKey P/N `MCP23008-E/P-ND`, quantity **1 RECEIVED**. The labelled antistatic bag and packing list are both visible.
+- **Bosch Shuttle Board 3.0 BMI088**, DigiKey P/N `828-SHUTTLEBOARD3.0-BMI088-ND` / manufacturer `SHUTTLE_BOARD_3_0_BMI088`, quantity **1 RECEIVED**. The labelled antistatic bag and packing list are both visible.
+- **Espressif ESP32-S3-WROOM-1-N16R2**, DigiKey cut-tape P/N `5407-ESP32-S3-WROOM-1-N16R2CT-ND`, quantity **2 RECEIVED**. Page 2 of the packing list and the labelled antistatic package both show quantity 2.
 
-- **ESP32-S3-WROOM-1-N16R2**, quantity **2 RECEIVED**.
-- **Adafruit TPS61169 LED driver PID 6354**, DigiKey `1528-6354-ND`, quantity **1 RECEIVED**.
-- **Bourns PEC09-2320F-T0015 rotary encoder**, quantity **1 RECEIVED**.
-- **Microchip MCP23008-E/P I/O expander**, quantity **1 RECEIVED**.
-- **Bosch Shuttle Board 3.0 BMI088**, DigiKey `828-SHUTTLEBOARD3.0BMI088-ND`, quantity **1 RECEIVED**.
+The photographs also confirm that the DigiKey order states **THE ORDER IS COMPLETE**.
+
+### RS UK
+
+- **Newhaven NHD-FFC40 40-pin FFC-to-through-hole adapter**, RS stock `723891` / displayed stock format `723-891`, manufacturer P/N `NHD-FFC40`, quantity **1 RECEIVED**. The RS delivery note and labelled package are both visible.
+
+These receipt confirmations agree with the RECEIVED quantities already carried in `BOM.md`. The DigiKey MCU purchasing reference is retained as `5407-ESP32-S3-WROOM-1-N16R2CT-ND`, matching the supplied packing-list/package photographs.
 
 ## In transit
 
-The project owner confirms the **Newhaven NHD-2.1-480480AF-ASXP display is on the way**. It is therefore **ORDERED / IN TRANSIT**. It will move to RECEIVED after physical-arrival evidence/confirmation.
+The project owner confirms the **Newhaven NHD-2.1-480480AF-ASXP display is on the way**. It remains **ORDERED / IN TRANSIT** and will move to RECEIVED after physical-arrival evidence/confirmation.
 
 ## Stage 1 — still required
 
@@ -46,7 +52,7 @@ Stage 1 is ready for physical bring-up once the processor can be safely mounted/
 
 ## Source-retention rule
 
-Purchase locations are part of the BOM, not temporary research notes. When a part is selected, `BOM.md` should retain the preferred supplier, supplier stock/order number where known, and an alternate source where useful. Receiving a part does **not** remove its purchase source; the source remains for traceability and replacement/spare ordering.
+Purchase locations are part of the BOM, not temporary research notes. When a part is selected, `BOM.md` retains the preferred supplier, supplier stock/order number where known, and an alternate source where useful. Receiving a part does **not** remove its purchase source; the source remains for traceability and replacement/spare ordering.
 
 ## Do not buy yet
 
