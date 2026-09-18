@@ -2,7 +2,7 @@
 
 Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifunction flight instrument. Stock and prices change; recheck before ordering. Quantities below are prototype quantities, not production quantities.
 
-**Procurement status updated:** 17 September 2026 from RS and DigiKey delivery-note photographs supplied by the project owner, subsequent delivery-status updates, The Pi Hut invoice evidence, and refreshed supplier checks. `RECEIVED` is used when arrival is confirmed by a supplied delivery-note photograph or other explicit physical-arrival confirmation.
+**Procurement status updated:** 18 September 2026 from RS and DigiKey delivery-note photographs, subsequent delivery-status updates, The Pi Hut invoice evidence, and photographic confirmation of the delivered breadboard. `RECEIVED` is used when arrival is confirmed by a supplied delivery-note photograph or other explicit physical-arrival confirmation.
 
 ## Procurement rules
 
@@ -37,7 +37,7 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 | Bench PSU | **Korad KA3005P** preferred; **Siglent SPD3303X-E** premium alternative | 1 | 1 | 0 | **NEEDED** | UK test-equipment supplier / authorised Siglent distributor |
 | Bench PSU lead kit | Banana leads plus croc/bare-wire/header leads | 1 | 1 set | 0 | **NEEDED unless owned** | RS UK / CPC Farnell |
 | USB-C bench cable | Data + power USB-C cable | 1 | 1 | 0 | **NEEDED unless owned** | RS UK / CPC Farnell |
-| Solderless breadboard | **Mounted full-size breadboard, aluminium plate & binding posts** | 1 | 1 | 0 | **ORDERED — invoice confirmed 17 Sep 2026** | **The Pi Hut product `103521`, invoice `#1622980`**; item £7.00; order total £10.80 inc shipping/VAT |
+| Solderless breadboard | **Mounted full-size breadboard, aluminium plate & binding posts** | 1 | 1 | 1 | **RECEIVED — item photo confirmed 18 Sep 2026** | **The Pi Hut product `103521`, invoice `#1622980`**; item £7.00; order total £10.80 inc shipping/VAT |
 | Prototyping wire | 22–26 AWG solid-core assortment | 1 | 1 set | 0 | **NEEDED unless owned** | RS UK / CPC Farnell |
 | Header pins | 2.54 mm breakaway male/female | 1 | 1 set | 0 | **NEEDED unless owned** | RS UK / The Pi Hut / Pimoroni |
 | Attitude IMU | **Bosch Shuttle Board 3.0 BMI088** | 2 | 1 | 1 | **RECEIVED** | DigiKey UK `828-SHUTTLEBOARD3.0BMI088-ND` |
@@ -52,18 +52,17 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 ## Order / delivery evidence
 
 ### Received
-RS and DigiKey delivery-note photographs confirm receipt of the NHD-FFC40, two ESP32-S3-WROOM-1-N16R2 modules, TPS61169 board, Bourns encoder, MCP23008 and BMI088 Shuttle Board.
+RS and DigiKey delivery-note photographs confirm receipt of the NHD-FFC40, two ESP32-S3-WROOM-1-N16R2 modules, TPS61169 board, Bourns encoder, MCP23008 and BMI088 Shuttle Board. A photograph supplied on 18 September 2026 confirms physical receipt of The Pi Hut mounted full-size breadboard, product `103521`, quantity 1.
 
 ### Ordered / in transit
 - **Newhaven NHD-2.1-480480AF-ASXP**, quantity 1 — confirmed on the way.
-- **The Pi Hut mounted full-size breadboard with aluminium plate and binding posts**, product `103521`, quantity 1 — invoice `#1622980`, dated **17 September 2026**. Invoice confirms purchase, not physical receipt; move to RECEIVED when arrival is confirmed.
 
 ## Stage 1 — immediate purchase/verification list
 
 1. Await the Newhaven display; after arrival verify FFC contact orientation and length and buy 2 suitable FFC cables.
 2. Buy 1 × **ESP-Module-Prog-1**, preferably Mouser UK `356-ESPMODULEPROG1`.
 3. Buy one current-limited bench PSU: Korad KA3005P or Siglent SPD3303X-E.
-4. **Breadboard is ordered**; await delivery. Obtain PSU leads, USB-C data cable, prototype wire and headers where not already owned.
+4. **Breadboard received.** Obtain PSU leads, USB-C data cable, prototype wire and headers where not already owned.
 
 Stage 1 gate: safe/current-limited 5 V power, programmable/mounted single MCU, working single-display connection/backlight and encoder/GPIO-expander bring-up.
 
