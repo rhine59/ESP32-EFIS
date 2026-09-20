@@ -5,7 +5,7 @@ The OTA server has two deliberately separate services: a **public read-only firm
 ## Services and trust boundary
 
 ```text
-EFIS -> Internet HTTPS :443 -> Synology reverse proxy -> 127.0.0.1:8180 -> nginx read-only origin
+EFIS -> Internet HTTPS :8448 -> Synology reverse proxy -> 127.0.0.1:8180 -> nginx read-only origin
 Admin -> LAN/VPN/SSH/private proxy -> 127.0.0.1:8090 -> OTA Admin -> public/ read-write
 ```
 
@@ -76,12 +76,12 @@ A retained older release may be republished if the advertised release must be wi
 
 ## Public deployment
 
-Create public DNS such as `efis-updates.example.net`, attach a valid certificate in DSM, and reverse proxy HTTPS :443 to `http://127.0.0.1:8180`. Forward only TCP 443 where inbound hosting is available. If behind CGNAT use a deliberately configured trusted HTTPS tunnel/reverse proxy. Do not expose DSM/Docker administration.
+The validated public endpoint is `https://granvillehouse.synology.me:8448`. Synology reverse proxy forwards HTTPS :8448 to `http://127.0.0.1:8180`; the router forwards TCP 8448 to the Synology. Do not expose the private admin port 8447. If behind CGNAT use a deliberately configured trusted HTTPS tunnel/reverse proxy. Do not expose DSM/Docker administration.
 
 Field path:
 
 ```text
-ESP32 EFIS -> iPhone Personal Hotspot -> Internet -> HTTPS :443 -> Synology -> nginx OTA origin
+ESP32 EFIS -> iPhone Personal Hotspot -> Internet -> HTTPS :8448 -> Synology -> nginx OTA origin
 ```
 
 The phone is a network gateway only. Hotspot credentials stay in EFIS NVS and are never sent to the OTA server.
@@ -89,8 +89,8 @@ The phone is a network gateway only. Hotspot credentials stay in EFIS NVS and ar
 ## Verify public consumption
 
 ```bash
-curl -fsS https://efis-updates.example.net/healthz
-curl -fsS https://efis-updates.example.net/efis/manifest.json
+curl -fsS https://granvillehouse.synology.me:8448/healthz
+curl -fsS https://granvillehouse.synology.me:8448/efis/manifest.json
 ```
 
 Test from outside the LAN as well. A published release may be automatically **downloaded** by an EFIS configured for auto-download, but activation/reboot always requires explicit `ACTIVATE & REBOOT` on the instrument.
@@ -114,4 +114,4 @@ The current admin application relies on LAN/VPN/private-proxy access as its auth
 
 ## Validation status
 
-**IMPLEMENTED / SYNOLOGY LOCAL RUNTIME + PRIVATE ADMIN REVERSE PROXY VALIDATED.** Static origin, private admin container, deployable Compose stack, staged release metadata, explicit Publish and stage-only CLI helper are in source control. Both images have been built and started on the Synology. Local health checks pass on the read-only origin (`127.0.0.1:8180`) and admin (`127.0.0.1:8090`). The private Synology HTTPS reverse proxy on source port 8447 has also been verified to return the OTA Admin dashboard. Public OTA DNS/TLS/reverse-proxy and physical ESP32 OTA validation remain pending. Real ESP32 HTTPS download, A/B flash, activation and rollback remain hardware-unvalidated. See `../docs/OTA_IMAGE_ADMIN.md`, `../docs/OTA_USER_SCENARIO.md`, `../docs/PHONE_NETWORK_AND_PUBLIC_OTA.md` and `../docs/REMOTE_UPDATES.md`.
+**IMPLEMENTED / SYNOLOGY RUNTIME + PRIVATE ADMIN + PUBLIC OTA NETWORK PATH VALIDATED.** Static origin, private admin container, deployable Compose stack, staged release metadata, explicit Publish and stage-only CLI helper are in source control. Both images have been built and started on the Synology. Local health checks pass on the read-only origin (`127.0.0.1:8180`) and admin (`127.0.0.1:8090`). The private Synology HTTPS reverse proxy on source port 8447 has been verified to return the OTA Admin dashboard. The public read-only endpoint `https://granvillehouse.synology.me:8448` has been configured through Synology reverse proxy/router forwarding and externally health-checked. Physical ESP32 OTA validation remains pending. Real ESP32 HTTPS download, A/B flash, activation and rollback remain hardware-unvalidated. See `../docs/OTA_IMAGE_ADMIN.md`, `../docs/OTA_USER_SCENARIO.md`, `../docs/PHONE_NETWORK_AND_PUBLIC_OTA.md` and `../docs/REMOTE_UPDATES.md`.
