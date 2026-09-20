@@ -36,7 +36,7 @@ button{border:0;border-radius:9px;padding:9px 12px;font:inherit;font-weight:750;
 </div>
 <section class="card manifest"><h2>Currently published manifest</h2>{% if manifest %}<dl class="manifest-grid"><dt>Product</dt><dd>{{manifest.get('product','—')}}</dd><dt>Version</dt><dd><b>{{manifest.get('version','—')}}</b> · build {{manifest.get('build','—')}}</dd><dt>Hardware</dt><dd>{{manifest.get('hardware_profile','—')}}</dd><dt>ESP-IDF</dt><dd>{{manifest.get('idf','—')}}</dd><dt>Image</dt><dd><code>{{manifest.get('image_url','—')}}</code></dd><dt>SHA-256</dt><dd><code>{{manifest.get('sha256','—')}}</code></dd><dt>Minimum version</dt><dd>{{manifest.get('minimum_allowed_version','—')}}</dd><dt>Release notes</dt><dd>{{manifest.get('release_notes','—')}}</dd></dl>{% else %}<p class="hint">No published manifest is available.</p>{% endif %}</section>
 <div class="footer">Private administration interface · Publishing changes the public OTA manifest; activation on an EFIS remains a separate local action.</div>
-</div></body></html>'''port hashlib, json, os, re, shutil, tempfile
+</div></body></html>'''
 from pathlib import Path
 from flask import Flask, abort, flash, redirect, render_template_string, request, url_for
 
