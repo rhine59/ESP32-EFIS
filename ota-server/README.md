@@ -44,6 +44,49 @@ Expected local health responses are `ok` from the read-only origin and JSON cont
 
 Set `OTA_PUBLIC_BASE_URL` to the stable public HTTPS hostname and generate `ADMIN_SESSION_SECRET` with `openssl rand -hex 32`. Do not commit the real `.env`.
 
+## Rebuild from scratch and functional test
+
+The deployment is reproducible from a clean Git checkout. Preserve the Synology `.env` separately because it contains the private admin session secret and is deliberately not committed.
+
+Fresh deployment:
+
+```bash
+git clone <repository-url> ESP32-EFIS
+cd ESP32-EFIS/ota-server
+cp .env.example .env
+openssl rand -hex 32
+# Put that value in ADMIN_SESSION_SECRET and verify:
+# OTA_PUBLIC_BASE_URL=https://granvillehouse.synology.me:8448
+
+sudo docker compose config --quiet
+sudo docker compose build --pull
+sudo docker compose up -d
+sudo docker compose ps
+```
+
+For an existing checkout, pull the current source and run the repeatable harness:
+
+```bash
+cd /volume1/docker/ESP32-EFIS
+git pull
+cd ota-server
+chmod +x scripts/rebuild-and-test.sh
+./scripts/rebuild-and-test.sh
+```
+
+The runner validates Compose, rebuilds both images, recreates the stack, checks both local health endpoints, runs the isolated admin functional harness, and fetches the locally served public manifest.
+
+The Python harness uses a temporary repository rather than `public/`. It proves that the dashboard renders, upload creates a staged release, staging leaves the published manifest unchanged, the staged binary hash is correct, Publish atomically changes version/build/image URL/SHA-256, and the current published release cannot be deleted. Test version `9.9.9-test` never enters the production repository.
+
+A successful run ends with:
+
+```text
+ALL OTA ADMIN FUNCTIONAL TESTS PASSED
+PASS: rebuild, local health and isolated OTA admin workflow completed.
+```
+
+This harness validates server-side release mechanics only. It does not prove Synology external routing/TLS, ESP32 download, A/B flashing, activation, first-boot confirmation or rollback.
+
 ## Stage a newly built EFIS binary
 
 **Staging and publishing are separate.** The historical helper filename `publish-release.sh` is retained for compatibility, but it now stages only and prints `STAGED ONLY — NOT PUBLISHED`.
