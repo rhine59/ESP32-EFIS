@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     ports:
       # Public device downloads terminate TLS on the Synology reverse proxy.
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8180:8080"
     read_only: true
     tmpfs:
       - /var/cache/nginx
