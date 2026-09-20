@@ -44,8 +44,8 @@ Physical hardware activity remains paused until prototype hardware is available.
 | Swift instrument simulator | adaptive instruments/manual/AUTO/failure/acceptance scenarios | **SOFTWARE OPERATIONAL; PARITY MAINTAINED** |
 | Phone/network simulator | hotspot credentials, HTTPS manifest config and staged connectivity UI | **IMPLEMENTED — SWIFT; REAL ESP32 NETWORK PENDING** |
 | OTA user simulator | auto-download preference, manual Download, verified Ready, explicit `ACTIVATE & REBOOT`, success/rollback | **IMPLEMENTED — SWIFT; PHYSICAL OTA PENDING** |
-| OTA Docker origin | loopback nginx read-only public-origin backend | **IMPLEMENTED — SYNOLOGY DEPLOYMENT UNVALIDATED** |
-| OTA Docker admin | private dashboard, staged releases, per-release metadata/hash, explicit Publish/republish/delete | **IMPLEMENTED — SYNOLOGY DEPLOYMENT UNVALIDATED** |
+| OTA Docker origin | loopback nginx read-only public-origin backend on host 127.0.0.1:8180 | **VALIDATED — SYNOLOGY CONTAINER RUNTIME + LOCAL HEALTH** |
+| OTA Docker admin | private dashboard on host 127.0.0.1:8090, staged releases, per-release metadata/hash, explicit Publish/republish/delete | **VALIDATED — SYNOLOGY CONTAINER RUNTIME + LOCAL HEALTH; UI WORKFLOW PENDING** |
 | OTA CLI staging helper | versioned binary copy + SHA-256 + metadata; cannot publish | **IMPLEMENTED — RUNTIME UNVALIDATED** |
 | OTA A/B ESP32 client | dual-slot/write/boot/self-test/rollback design | **ADOPTED / NOT IMPLEMENTED ON ESP32** |
 | OTA security | HTTPS + signed-image design; Secure Boot/flash encryption later | **ADOPTED; LATER HARDENING** |
@@ -129,7 +129,7 @@ This register records material alternatives as well as the chosen design. A late
 | D100 | GitHub `main` as a directly installable firmware feed | **DISMISSED** | Development source should not automatically become installable firmware; releases need an approval/publication boundary. |
 | D101 | ESP32 download directly from private GitHub using a PAT | **DISMISSED** | Would place repository credentials on the instrument and couple OTA to GitHub authentication. |
 | D102 | GitHub as authoritative source/build/release history + separate HTTPS distribution origin | **ADOPTED** | Separates development/release history from simple device-facing distribution and avoids GitHub credentials on EFIS. |
-| D103 | Synology-hosted Docker/nginx OTA origin | **ADOPTED / IMPLEMENTED, DEPLOYMENT UNVALIDATED** | Suitable controlled prototype distribution server; public access terminates TLS at trusted reverse proxy. |
+| D103 | Synology-hosted Docker/nginx OTA origin | **ADOPTED / IMPLEMENTED; SYNOLOGY LOCAL RUNTIME VALIDATED** | Both OTA containers build/start on the DS918+ and local health endpoints pass; public TLS/reverse-proxy validation remains pending. |
 | D104 | Expose Docker nginx port 8080 directly to Internet | **DISMISSED** | Origin remains loopback-only; public path is HTTPS :443 via reverse proxy. |
 | D105 | Publicly readable approved manifest/binaries | **ADOPTED** | URL secrecy is not the trust boundary; TLS plus signed-image verification is the intended production trust model. |
 | D106 | Put signing private key/GitHub token/Wi-Fi credentials in OTA container | **DISMISSED** | Distribution server should not hold development credentials or signing secrets. |
@@ -198,7 +198,7 @@ Horizon: level, ±10/±20 pitch, ±30/±60 bank, combined attitude, failure/reco
 |---|---|---|
 | Decision-register maintenance | record every material new proposal, adoption, supersession, dismissal or parked item with reason | **ONGOING DOCUMENTATION RULE** |
 | Swift parity | keep instrument/network/OTA scenarios aligned with firmware policy | **ACTIVE SOFTWARE TASK** |
-| OTA server deployment | build/run both containers on Synology; private admin access; public TLS/DNS/reverse-proxy external test | **IMPLEMENTED / DEPLOYMENT PENDING** |
+| OTA server deployment | containers build/run on Synology and local health checks pass; private admin browser access and public TLS/DNS/reverse-proxy external test remain | **LOCAL RUNTIME VALIDATED / NETWORK EXPOSURE PENDING** |
 | OTA ESP32 Phase 1 | freeze A/B partition sizes; manifest/parser/state machine; persisted auto-download policy | **ADOPTED / SOFTWARE CANDIDATE** |
 | OTA ESP32 Phase 2 | maintenance Wi-Fi + HTTPS writer + explicit activation + boot confirmation | **PENDING HARDWARE** |
 | OTA interruption/rollback | A↔B, Wi-Fi/power loss, corrupt image, crash/self-test rollback, NVS compatibility, USB recovery | **PENDING HARDWARE** |
