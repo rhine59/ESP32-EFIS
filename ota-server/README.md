@@ -5,11 +5,11 @@ The OTA server has two deliberately separate services: a **public read-only firm
 ## Services and trust boundary
 
 ```text
-EFIS -> Internet HTTPS :443 -> Synology reverse proxy -> 127.0.0.1:8080 -> nginx read-only origin
+EFIS -> Internet HTTPS :443 -> Synology reverse proxy -> 127.0.0.1:8180 -> nginx read-only origin
 Admin -> LAN/VPN/SSH/private proxy -> 127.0.0.1:8090 -> OTA Admin -> public/ read-write
 ```
 
-Never expose ports 8080 or 8090 directly to the Internet. Public TLS terminates at Synology (or another trusted HTTPS proxy). The admin endpoint requires a private/authenticated access boundary.
+Never expose host ports 8180 or 8090 directly to the Internet. Public TLS terminates at Synology (or another trusted HTTPS proxy). The admin endpoint requires a private/authenticated access boundary.
 
 ## Persistent repository
 
@@ -24,7 +24,7 @@ The nginx container mounts this read-only. The admin container mounts it read/wr
 
 ## Build and start on Synology
 
-The repository now includes `docker-compose.yml` for the complete two-container stack. Run these commands from an SSH session on the Synology after cloning/pulling the repository:
+The repository includes `compose.yml` for the complete two-container stack. Run these commands from an SSH session on the Synology after cloning/pulling the repository:
 
 ```bash
 cd ESP32-EFIS/ota-server
@@ -32,11 +32,11 @@ cp .env.example .env              # first deployment only
 openssl rand -hex 32               # copy result into ADMIN_SESSION_SECRET in .env
 # edit OTA_PUBLIC_BASE_URL in .env to the final HTTPS update hostname
 
-docker compose config
-docker compose build --pull
-docker compose up -d
-docker compose ps
-curl -fsS http://127.0.0.1:8080/healthz
+sudo docker compose config
+sudo docker compose build --pull
+sudo docker compose up -d
+sudo docker compose ps
+curl -fsS http://127.0.0.1:8180/healthz
 curl -fsS http://127.0.0.1:8090/healthz
 ```
 
@@ -76,7 +76,7 @@ A retained older release may be republished if the advertised release must be wi
 
 ## Public deployment
 
-Create public DNS such as `efis-updates.example.net`, attach a valid certificate in DSM, and reverse proxy HTTPS :443 to `http://127.0.0.1:8080`. Forward only TCP 443 where inbound hosting is available. If behind CGNAT use a deliberately configured trusted HTTPS tunnel/reverse proxy. Do not expose DSM/Docker administration.
+Create public DNS such as `efis-updates.example.net`, attach a valid certificate in DSM, and reverse proxy HTTPS :443 to `http://127.0.0.1:8180`. Forward only TCP 443 where inbound hosting is available. If behind CGNAT use a deliberately configured trusted HTTPS tunnel/reverse proxy. Do not expose DSM/Docker administration.
 
 Field path:
 
@@ -98,11 +98,11 @@ Test from outside the LAN as well. A published release may be automatically **do
 ## Diagnostics
 
 ```bash
-docker compose ps
-docker compose logs --tail=100 efis-ota
-docker compose logs --tail=100 efis-ota-admin
+sudo docker compose ps
+sudo docker compose logs --tail=100 efis-ota
+sudo docker compose logs --tail=100 efis-ota-admin
 docker inspect --format='{{json .State.Health}}' esp32-efis-ota
-curl -v http://127.0.0.1:8080/healthz
+curl -v http://127.0.0.1:8180/healthz
 curl -v http://127.0.0.1:8090/healthz
 ```
 
@@ -114,4 +114,4 @@ The current admin application relies on LAN/VPN/private-proxy access as its auth
 
 ## Validation status
 
-**IMPLEMENTED / DEPLOYMENT UNVALIDATED.** Static origin, private admin container, deployable Compose stack, staged release metadata, explicit Publish and stage-only CLI helper are in source control. They have not yet been built/exercised on the Synology. Real ESP32 HTTPS download, A/B flash, activation and rollback remain hardware-unvalidated. See `../docs/OTA_IMAGE_ADMIN.md`, `../docs/OTA_USER_SCENARIO.md`, `../docs/PHONE_NETWORK_AND_PUBLIC_OTA.md` and `../docs/REMOTE_UPDATES.md`.
+**IMPLEMENTED / BUILD VALIDATED ON SYNOLOGY; RUNTIME START PENDING PORT-CHANGE RETEST.** Static origin, private admin container, deployable Compose stack, staged release metadata, explicit Publish and stage-only CLI helper are in source control. Both images have been built on the Synology; the first runtime start identified a host port 8080 collision with an existing Synology nginx service, so the OTA origin host binding was moved to loopback port 8180. Health/runtime validation remains pending. Real ESP32 HTTPS download, A/B flash, activation and rollback remain hardware-unvalidated. See `../docs/OTA_IMAGE_ADMIN.md`, `../docs/OTA_USER_SCENARIO.md`, `../docs/PHONE_NETWORK_AND_PUBLIC_OTA.md` and `../docs/REMOTE_UPDATES.md`.
