@@ -45,7 +45,8 @@ Physical hardware activity remains paused until prototype hardware is available.
 | Phone/network simulator | hotspot credentials, HTTPS manifest config and staged connectivity UI | **IMPLEMENTED — SWIFT; REAL ESP32 NETWORK PENDING** |
 | OTA user simulator | auto-download preference, manual Download, verified Ready, explicit `ACTIVATE & REBOOT`, success/rollback | **IMPLEMENTED — SWIFT; PHYSICAL OTA PENDING** |
 | OTA Docker origin | loopback nginx read-only public-origin backend on host 127.0.0.1:8180 | **VALIDATED — SYNOLOGY RUNTIME + PUBLIC HTTPS HEALTH PATH** |
-| OTA Docker admin | private responsive maintenance dashboard on host 127.0.0.1:8090; release inventory/status, structured manifest summary, staging form, explicit Publish/delete | **UI REDESIGNED / DEPLOYMENT RETEST PENDING; RELEASE WORKFLOW PENDING** |
+| OTA Docker admin | private responsive maintenance dashboard on host 127.0.0.1:8090; release inventory/status, structured manifest summary, staging form, explicit Publish/delete | **UI REDESIGNED; ISOLATED FUNCTIONAL HARNESS IMPLEMENTED / SYNology RETEST PENDING** |
+| OTA rebuild/test harness | clean Compose validation/rebuild/recreate, local health checks and isolated Stage → Publish integrity tests | **IMPLEMENTED — SYNOLOGY RUN PENDING** |
 | OTA CLI staging helper | versioned binary copy + SHA-256 + metadata; cannot publish | **IMPLEMENTED — RUNTIME UNVALIDATED** |
 | OTA A/B ESP32 client | dual-slot/write/boot/self-test/rollback design | **ADOPTED / NOT IMPLEMENTED ON ESP32** |
 | OTA security | HTTPS + signed-image design; Secure Boot/flash encryption later | **ADOPTED; LATER HARDENING** |
