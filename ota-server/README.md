@@ -70,7 +70,7 @@ The exact command supplied for each future EFIS binary should substitute the rea
 
 ## Publish for EFIS consumption
 
-Open the **private OTA Admin dashboard** on port 8090 through LAN/VPN/SSH/private authenticated reverse proxy. Review the staged version/build/hash/release notes, then select **Publish**. Publish atomically changes the public manifest. Upload/stage alone never makes a release consumable by EFIS units.
+Open the **private OTA Admin dashboard** through the Synology LAN-only HTTPS reverse proxy on source port **8447**, forwarding to `http://127.0.0.1:8090`. Review the staged version/build/hash/release notes, then select **Publish**. Publish atomically changes the public manifest. Upload/stage alone never makes a release consumable by EFIS units.
 
 A retained older release may be republished if the advertised release must be withdrawn. The currently published release cannot be deleted.
 
@@ -114,4 +114,4 @@ The current admin application relies on LAN/VPN/private-proxy access as its auth
 
 ## Validation status
 
-**IMPLEMENTED / BUILD VALIDATED ON SYNOLOGY; RUNTIME START PENDING PORT-CHANGE RETEST.** Static origin, private admin container, deployable Compose stack, staged release metadata, explicit Publish and stage-only CLI helper are in source control. Both images have been built on the Synology; the first runtime start identified a host port 8080 collision with an existing Synology nginx service, so the OTA origin host binding was moved to loopback port 8180. Health/runtime validation remains pending. Real ESP32 HTTPS download, A/B flash, activation and rollback remain hardware-unvalidated. See `../docs/OTA_IMAGE_ADMIN.md`, `../docs/OTA_USER_SCENARIO.md`, `../docs/PHONE_NETWORK_AND_PUBLIC_OTA.md` and `../docs/REMOTE_UPDATES.md`.
+**IMPLEMENTED / SYNOLOGY LOCAL RUNTIME + PRIVATE ADMIN REVERSE PROXY VALIDATED.** Static origin, private admin container, deployable Compose stack, staged release metadata, explicit Publish and stage-only CLI helper are in source control. Both images have been built and started on the Synology. Local health checks pass on the read-only origin (`127.0.0.1:8180`) and admin (`127.0.0.1:8090`). The private Synology HTTPS reverse proxy on source port 8447 has also been verified to return the OTA Admin dashboard. Public OTA DNS/TLS/reverse-proxy and physical ESP32 OTA validation remain pending. Real ESP32 HTTPS download, A/B flash, activation and rollback remain hardware-unvalidated. See `../docs/OTA_IMAGE_ADMIN.md`, `../docs/OTA_USER_SCENARIO.md`, `../docs/PHONE_NETWORK_AND_PUBLIC_OTA.md` and `../docs/REMOTE_UPDATES.md`.
