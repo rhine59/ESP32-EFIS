@@ -22,17 +22,25 @@ public/efis/
 
 The nginx container mounts this read-only. The admin container mounts it read/write.
 
-## Start on Synology
+## Build and start on Synology
+
+The repository now includes `docker-compose.yml` for the complete two-container stack. Run these commands from an SSH session on the Synology after cloning/pulling the repository:
 
 ```bash
 cd ESP32-EFIS/ota-server
-cp .env.example .env              # first deployment only; fill real values
-docker compose build
+cp .env.example .env              # first deployment only
+openssl rand -hex 32               # copy result into ADMIN_SESSION_SECRET in .env
+# edit OTA_PUBLIC_BASE_URL in .env to the final HTTPS update hostname
+
+docker compose config
+docker compose build --pull
 docker compose up -d
 docker compose ps
 curl -fsS http://127.0.0.1:8080/healthz
 curl -fsS http://127.0.0.1:8090/healthz
 ```
+
+Expected local health responses are `ok` from the read-only origin and JSON containing `status: ok` from the admin service. Both published ports are deliberately bound to `127.0.0.1`; do not change them to public interfaces. Synology reverse proxy should expose only the read-only origin through HTTPS.
 
 Set `OTA_PUBLIC_BASE_URL` to the stable public HTTPS hostname and generate `ADMIN_SESSION_SECRET` with `openssl rand -hex 32`. Do not commit the real `.env`.
 
@@ -106,4 +114,4 @@ The current admin application relies on LAN/VPN/private-proxy access as its auth
 
 ## Validation status
 
-**IMPLEMENTED / DEPLOYMENT UNVALIDATED.** Static origin, private admin container, staged release metadata, explicit Publish and stage-only CLI helper are in source control. They have not yet been built/exercised on the Synology. Real ESP32 HTTPS download, A/B flash, activation and rollback remain hardware-unvalidated. See `../docs/OTA_IMAGE_ADMIN.md`, `../docs/OTA_USER_SCENARIO.md`, `../docs/PHONE_NETWORK_AND_PUBLIC_OTA.md` and `../docs/REMOTE_UPDATES.md`.
+**IMPLEMENTED / DEPLOYMENT UNVALIDATED.** Static origin, private admin container, deployable Compose stack, staged release metadata, explicit Publish and stage-only CLI helper are in source control. They have not yet been built/exercised on the Synology. Real ESP32 HTTPS download, A/B flash, activation and rollback remain hardware-unvalidated. See `../docs/OTA_IMAGE_ADMIN.md`, `../docs/OTA_USER_SCENARIO.md`, `../docs/PHONE_NETWORK_AND_PUBLIC_OTA.md` and `../docs/REMOTE_UPDATES.md`.
