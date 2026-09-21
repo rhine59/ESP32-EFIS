@@ -2,7 +2,7 @@
 
 Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifunction flight instrument. Stock and prices change; recheck before ordering. Quantities below are prototype quantities, not production quantities.
 
-**Procurement status updated:** 18 September 2026 from RS and DigiKey delivery-note photographs, subsequent delivery-status updates, The Pi Hut invoice evidence, and photographic confirmation of the delivered breadboard. `RECEIVED` is used when arrival is confirmed by a supplied delivery-note photograph or other explicit physical-arrival confirmation.
+**Procurement status updated:** 21 September 2026 from RS, DigiKey and Mouser delivery-note/packaging photographs, subsequent delivery-status updates, The Pi Hut invoice evidence, and photographic confirmation of delivered parts. `RECEIVED` is used when arrival is confirmed by a supplied delivery-note photograph or other explicit physical-arrival confirmation.
 
 ## Procurement rules
 
@@ -28,7 +28,7 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 |---|---|---:|---:|---:|---|---|
 | MCU module | **ESP32-S3-WROOM-1-N16R2** | 1 | 2 | 2 | **RECEIVED — delivery-note photo confirmed** | DigiKey UK — `5407-ESP32-S3-WROOM-1-N16R2CT-ND` |
 | Temporary MCU carrier/programmer | **Espressif ESP-Module-Prog-1**, specifically Prog-1 not Prog-1R | 1 | 1 | 0 | **NEEDED — source identified** | Preferred Mouser UK `356-ESPMODULEPROG1`; alternate DigiKey UK |
-| Round display | **Newhaven NHD-2.1-480480AF-ASXP** | 1 | 1 | 0 | **ORDERED / IN TRANSIT** | RS UK stock `286-351`; alternate DigiKey `757-NHD-2.1-480480AF-ASXP-ND` |
+| Round display | **Newhaven NHD-2.1-480480AF-ASXP** | 1 | 1 | 1 | **RECEIVED — Mouser packaging/delivery document photo confirmed 21 Sep 2026** | Mouser P/N `763-2.1-480480AFASXP`; manufacturer P/N `NHD-2.1-480480AF-ASXP` |
 | Display bench adapter | **Newhaven NHD-FFC40** | 1 | 1 | 1 | **RECEIVED — RS delivery-note photo confirmed** | RS UK stock `723-891` |
 | Display FFC | **40-position, 0.5 mm FFC/FPC**, orientation/length to verify | 1 | 2 | 0 | **NEEDED — verify first** | RS UK or DigiKey UK after display inspection |
 | Backlight driver | **Adafruit TPS61169 PID 6354** | 1 | 1 | 1 | **RECEIVED** | DigiKey UK `1528-6354-ND` |
@@ -52,14 +52,15 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 ## Order / delivery evidence
 
 ### Received
-RS and DigiKey delivery-note photographs confirm receipt of the NHD-FFC40, two ESP32-S3-WROOM-1-N16R2 modules, TPS61169 board, Bourns encoder, MCP23008 and BMI088 Shuttle Board. A photograph supplied on 18 September 2026 confirms physical receipt of The Pi Hut mounted full-size breadboard, product `103521`, quantity 1.
+RS and DigiKey delivery-note photographs confirm receipt of the NHD-FFC40, two ESP32-S3-WROOM-1-N16R2 modules, TPS61169 board, Bourns encoder, MCP23008 and BMI088 Shuttle Board. A photograph supplied on 18 September 2026 confirms physical receipt of The Pi Hut mounted full-size breadboard, product `103521`, quantity 1. Photographs supplied on 21 September 2026 confirm receipt of 1 × Newhaven `NHD-2.1-480480AF-ASXP` display from Mouser (Mouser P/N `763-2.1-480480AFASXP`, quantity 1).
 
 ### Ordered / in transit
-- **Newhaven NHD-2.1-480480AF-ASXP**, quantity 1 — confirmed on the way.
+
+No specifically tracked BOM item is currently recorded here as in transit.
 
 ## Stage 1 — immediate purchase/verification list
 
-1. Await the Newhaven display; after arrival verify FFC contact orientation and length and buy 2 suitable FFC cables.
+1. **Newhaven display received.** Inspect the physical 40-pin FFC interface/contact orientation against the received NHD-FFC40 before selecting and buying 2 suitable FFC cables.
 2. Buy 1 × **ESP-Module-Prog-1**, preferably Mouser UK `356-ESPMODULEPROG1`.
 3. Buy one current-limited bench PSU: Korad KA3005P or Siglent SPD3303X-E.
 4. **Breadboard received.** Obtain PSU leads, USB-C data cable, prototype wire and headers where not already owned.
