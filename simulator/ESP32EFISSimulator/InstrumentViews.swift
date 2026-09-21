@@ -14,7 +14,7 @@ struct GNSSPositionView: View {
  var body: some View {
   let q=GNSSQuality.classify(accuracy:accuracy,valid:valid,stale:stale)
   Text(q == .invalid ? (stale ? "GPS STALE" : "GPS NO FIX") : String(format:"%0.5f  %0.5f",latitude,longitude))
-   .font(.system(size:11,weight:.bold,design:.monospaced))
+   .font(.system(size:15,weight:.bold,design:.monospaced))
    .foregroundStyle(q.colour)
    .padding(.horizontal,6).padding(.vertical,4)
    .background(.black.opacity(0.82))
@@ -61,9 +61,9 @@ struct HorizonView: View {
                 .overlay {
                     if major {
                         HStack {
-                            Text("\\(p)").frame(width:s * 0.08,alignment:.trailing)
+                            Text(String(p)).frame(width:s * 0.08,alignment:.trailing)
                             Spacer()
-                            Text("\\(p)").frame(width:s * 0.08,alignment:.leading)
+                            Text(String(p)).frame(width:s * 0.08,alignment:.leading)
                         }
                         .font(.system(size:s * 0.032,weight:.bold,design:.rounded))
                         .foregroundStyle(.white)
@@ -87,9 +87,9 @@ struct HorizonView: View {
         Capsule().fill(.white).frame(width:4,height:s * 0.062).offset(y:-s * 0.39)
         Text("0°").font(.system(size:s * 0.027,weight:.bold)).foregroundStyle(.white).offset(y:-s * 0.455)
         ForEach(bankMarks,id:\.self) { d in
-            Text("\\(d)°").font(.system(size:s * 0.026,weight:.bold)).foregroundStyle(.white)
+            Text(String(format:"%d°",d)).font(.system(size:s * 0.026,weight:.bold)).foregroundStyle(.white)
                 .offset(y:-s * 0.455).rotationEffect(.degrees(Double(d))).rotationEffect(.degrees(Double(-d)))
-            Text("-\\(d)°").font(.system(size:s * 0.026,weight:.bold)).foregroundStyle(.white)
+            Text(String(format:"-%d°",d)).font(.system(size:s * 0.026,weight:.bold)).foregroundStyle(.white)
                 .offset(y:-s * 0.455).rotationEffect(.degrees(Double(-d))).rotationEffect(.degrees(Double(d)))
         }
         Path { p in
@@ -140,7 +140,7 @@ struct HorizonView: View {
                     .background(.black.opacity(0.88))
                     .overlay(Rectangle().stroke(.white,lineWidth:1))
             }
-            .foregroundStyle(.white).position(x:s * 0.79,y:s * 0.35)
+            .foregroundStyle(.white).position(x:s * 0.80,y:s * 0.34)
         }
         GNSSPositionView(latitude:gpsLatitude,longitude:gpsLongitude,accuracy:gpsAccuracy,valid:gpsValid,stale:gpsStale)
             .position(x:s * 0.5,y:s * 0.79)
