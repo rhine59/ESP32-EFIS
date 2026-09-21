@@ -93,12 +93,12 @@ struct HorizonView: View {
             p.move(to:CGPoint(x:s * 0.29,y:s * 0.5)); p.addLine(to:CGPoint(x:s * 0.44,y:s * 0.5))
             p.addLine(to:CGPoint(x:s * 0.475,y:s * 0.535)); p.addLine(to:CGPoint(x:s * 0.525,y:s * 0.535))
             p.addLine(to:CGPoint(x:s * 0.56,y:s * 0.5)); p.addLine(to:CGPoint(x:s * 0.71,y:s * 0.5))
-        }.stroke(.black,lineWidth:10,lineCap:.square,lineJoin:.miter)
+        }.stroke(.black, style: StrokeStyle(lineWidth:10, lineCap:.square, lineJoin:.miter))
         Path { p in
             p.move(to:CGPoint(x:s * 0.29,y:s * 0.5)); p.addLine(to:CGPoint(x:s * 0.44,y:s * 0.5))
             p.addLine(to:CGPoint(x:s * 0.475,y:s * 0.535)); p.addLine(to:CGPoint(x:s * 0.525,y:s * 0.535))
             p.addLine(to:CGPoint(x:s * 0.56,y:s * 0.5)); p.addLine(to:CGPoint(x:s * 0.71,y:s * 0.5))
-        }.stroke(.yellow,lineWidth:5,lineCap:.square,lineJoin:.miter)
+        }.stroke(.yellow, style: StrokeStyle(lineWidth:5, lineCap:.square, lineJoin:.miter))
     }
 
     @ViewBuilder private func dataOverlays(_ s: CGFloat) -> some View {
