@@ -6,20 +6,18 @@ enum GNSSQuality: String, CaseIterable {
  guard valid, !stale, accuracy >= 0 else { return .invalid }
  if accuracy <= 1 { return .excellent }; if accuracy <= 3 { return .good }; if accuracy <= 10 { return .fair }; if accuracy <= 30 { return .weak }; return .poor
  }
- var colour: Color { switch self { case .excellent: return .green; case .good: return Color(red:0.55,green:1,blue:0.55); case .fair: return .yellow; case .weak: return .orange; case .poor,.invalid: return .red } }
+ var colour: Color { switch self { case .excellent,.good: return .green; case .fair,.weak: return .yellow; case .poor,.invalid: return .red } }
 }
 
 struct GNSSPositionView: View {
  let latitude, longitude, accuracy: Double; let valid, stale: Bool
  var body: some View {
- let q=GNSSQuality.classify(accuracy:accuracy,valid:valid,stale:stale)
- VStack(spacing:2) {
- if q == .invalid { Text(stale ? "GPS STALE" : "GPS NO FIX").foregroundStyle(.red) }
- else {
- Text(String(format:"%0.5f %0.5f",latitude,longitude)).foregroundStyle(q.colour)
- Text(String(format:"GPS %@ ±%0.1fm",q.rawValue,accuracy)).foregroundStyle(q.colour)
- }
- }.font(.system(size:11,weight:.bold,design:.monospaced)).padding(.horizontal,6).padding(.vertical,3).background(.black.opacity(0.82))
+  let q=GNSSQuality.classify(accuracy:accuracy,valid:valid,stale:stale)
+  Text(q == .invalid ? (stale ? "GPS STALE" : "GPS NO FIX") : String(format:"%0.5f  %0.5f",latitude,longitude))
+   .font(.system(size:11,weight:.bold,design:.monospaced))
+   .foregroundStyle(q.colour)
+   .padding(.horizontal,6).padding(.vertical,4)
+   .background(.black.opacity(0.82))
  }
 }
 
@@ -59,6 +57,18 @@ struct HorizonView: View {
                     Rectangle().frame(width:major ? s * 0.15:s * 0.075,height:major ? 3:2)
                 }
                 .foregroundStyle(.white)
+                .overlay {
+                    if major {
+                        HStack {
+                            Text("\\(p)").frame(width:s * 0.08,alignment:.trailing)
+                            Spacer()
+                            Text("\\(p)").frame(width:s * 0.08,alignment:.leading)
+                        }
+                        .font(.system(size:s * 0.032,weight:.bold,design:.rounded))
+                        .foregroundStyle(.white)
+                        .frame(width:s * 0.48)
+                    }
+                }
                 .offset(y:CGFloat(-p) * s / 40)
             }
         }
@@ -74,6 +84,13 @@ struct HorizonView: View {
             Capsule().fill(.white).frame(width:major ? 4:3,height:major ? s * 0.052:s * 0.04).offset(y:-s * 0.395).rotationEffect(.degrees(Double(-d)))
         }
         Capsule().fill(.white).frame(width:4,height:s * 0.062).offset(y:-s * 0.39)
+        Text("0°").font(.system(size:s * 0.027,weight:.bold)).foregroundStyle(.white).offset(y:-s * 0.455)
+        ForEach(bankMarks,id:\\.self) { d in
+            Text("\\(d)°").font(.system(size:s * 0.026,weight:.bold)).foregroundStyle(.white)
+                .offset(y:-s * 0.455).rotationEffect(.degrees(Double(d))).rotationEffect(.degrees(Double(-d)))
+            Text("-\\(d)°").font(.system(size:s * 0.026,weight:.bold)).foregroundStyle(.white)
+                .offset(y:-s * 0.455).rotationEffect(.degrees(Double(-d))).rotationEffect(.degrees(Double(d)))
+        }
         Path { p in
             p.move(to:CGPoint(x:s * 0.5,y:s * 0.14))
             p.addLine(to:CGPoint(x:s * 0.475,y:s * 0.19))
@@ -108,12 +125,21 @@ struct HorizonView: View {
                 .foregroundStyle(.white).position(x:s * 0.5,y:s * 0.085)
         }
         if let a=altitude {
-            VStack(spacing:0) {
-                Text(String(format:"%0.0f",a)).font(.system(size:s * 0.05,weight:.bold,design:.monospaced))
-                Text("FT").font(.system(size:s * 0.03,weight:.bold,design:.monospaced))
+            VStack(spacing:2) {
+                Text(String(format:"%0.0f",a))
+                    .font(.system(size:s * 0.05,weight:.bold,design:.monospaced))
+                    .padding(.horizontal,8).padding(.vertical,5)
+                    .frame(minWidth:s * 0.22)
+                    .background(.black.opacity(0.88))
+                    .overlay(Rectangle().stroke(.white,lineWidth:1))
+                Text(String(format:"%0.0f",qnh))
+                    .font(.system(size:s * 0.035,weight:.bold,design:.monospaced))
+                    .padding(.horizontal,8).padding(.vertical,4)
+                    .frame(minWidth:s * 0.22)
+                    .background(.black.opacity(0.88))
+                    .overlay(Rectangle().stroke(.white,lineWidth:1))
             }
-            .foregroundStyle(.white).padding(.horizontal,8).padding(.vertical,5)
-            .background(.black.opacity(0.85)).position(x:s * 0.79,y:s * 0.35)
+            .foregroundStyle(.white).position(x:s * 0.79,y:s * 0.35)
         }
         GNSSPositionView(latitude:gpsLatitude,longitude:gpsLongitude,accuracy:gpsAccuracy,valid:gpsValid,stale:gpsStale)
             .position(x:s * 0.5,y:s * 0.79)
