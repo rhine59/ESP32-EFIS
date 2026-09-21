@@ -85,7 +85,7 @@ struct HorizonView: View {
         }
         Capsule().fill(.white).frame(width:4,height:s * 0.062).offset(y:-s * 0.39)
         Text("0°").font(.system(size:s * 0.027,weight:.bold)).foregroundStyle(.white).offset(y:-s * 0.455)
-        ForEach(bankMarks,id:\\.self) { d in
+        ForEach(bankMarks,id:\.self) { d in
             Text("\\(d)°").font(.system(size:s * 0.026,weight:.bold)).foregroundStyle(.white)
                 .offset(y:-s * 0.455).rotationEffect(.degrees(Double(d))).rotationEffect(.degrees(Double(-d)))
             Text("-\\(d)°").font(.system(size:s * 0.026,weight:.bold)).foregroundStyle(.white)
