@@ -24,24 +24,100 @@ struct GNSSPositionView: View {
 }
 
 struct HorizonView: View {
- let pitch, roll: Double; let valid: Bool; let altitude, heading: Double?
- let gpsLatitude, gpsLongitude, gpsAccuracy: Double; let gpsValid, gpsStale: Bool
- private let bankMarks = [10,20,30,45,60]
- var body: some View { GeometryReader { g in let s=g.size.width; ZStack {
- ZStack { Rectangle().fill(.blue).offset(y:-s/2); Rectangle().fill(.brown).offset(y:s/2); Rectangle().fill(.white).frame(height:4)
- ForEach([-20,-15,-10,-5,5,10,15,20],id:\.self){ p in let major=abs(p)%10==0; HStack(spacing:major ? s * 0.075:s * 0.05){Rectangle().frame(width:major ? s * 0.10:s * 0.055,height:major ? 3:2);Rectangle().frame(width:major ? s * 0.10:s * 0.055,height:major ? 3:2)}.foregroundStyle(.white).offset(y:CGFloat(p) * s/66.18) }
- }.frame(width:s * 1.8,height:s * 1.8).offset(y:pitch * s/70.59).rotationEffect(.degrees(-roll))
- ForEach(bankMarks,id:\.self){d in let major=d==30 || d==60; Capsule().fill(.white).frame(width:major ? 4:3,height:major ? s * 0.052:s * 0.04).offset(y:-s * 0.395).rotationEffect(.degrees(Double(d)));Capsule().fill(.white).frame(width:major ? 4:3,height:major ? s * 0.052:s * 0.04).offset(y:-s * 0.395).rotationEffect(.degrees(Double(-d)))}
- Capsule().fill(.white).frame(width:4,height:s * 0.062).offset(y:-s * 0.39)
- Path{p in p.move(to:CGPoint(x:s * 0.5,y:s * 0.148));p.addLine(to:CGPoint(x:s * 0.481,y:s * 0.188));p.addLine(to:CGPoint(x:s * 0.519,y:s * 0.188));p.closeSubpath()}.stroke(.black,lineWidth:7).rotationEffect(.degrees(roll))
- Path{p in p.move(to:CGPoint(x:s * 0.5,y:s * 0.148));p.addLine(to:CGPoint(x:s * 0.481,y:s * 0.188));p.addLine(to:CGPoint(x:s * 0.519,y:s * 0.188));p.closeSubpath()}.stroke(.white,lineWidth:3).rotationEffect(.degrees(roll))
- Path{p in p.move(to:CGPoint(x:s * 0.308,y:s * 0.5));p.addLine(to:CGPoint(x:s * 0.45,y:s * 0.5));p.move(to:CGPoint(x:s * 0.692,y:s * 0.5));p.addLine(to:CGPoint(x:s * 0.55,y:s * 0.5));p.move(to:CGPoint(x:s * 0.45,y:s * 0.5));p.addLine(to:CGPoint(x:s * 0.479,y:s * 0.527));p.move(to:CGPoint(x:s * 0.55,y:s * 0.5));p.addLine(to:CGPoint(x:s * 0.521,y:s * 0.527));p.move(to:CGPoint(x:s * 0.479,y:s * 0.527));p.addLine(to:CGPoint(x:s * 0.521,y:s * 0.527))}.stroke(.black,lineWidth:9)
- Path{p in p.move(to:CGPoint(x:s * 0.308,y:s * 0.5));p.addLine(to:CGPoint(x:s * 0.45,y:s * 0.5));p.move(to:CGPoint(x:s * 0.692,y:s * 0.5));p.addLine(to:CGPoint(x:s * 0.55,y:s * 0.5));p.move(to:CGPoint(x:s * 0.45,y:s * 0.5));p.addLine(to:CGPoint(x:s * 0.479,y:s * 0.527));p.move(to:CGPoint(x:s * 0.55,y:s * 0.5));p.addLine(to:CGPoint(x:s * 0.521,y:s * 0.527));p.move(to:CGPoint(x:s * 0.479,y:s * 0.527));p.addLine(to:CGPoint(x:s * 0.521,y:s * 0.527))}.stroke(.yellow,lineWidth:5)
- if let h=heading { Text(String(format:"%03.0f",h)).font(.title2.monospacedDigit().bold()).foregroundStyle(.white).position(x:s/2,y:s * 0.09) }
- if let a=altitude { Text("\(Int(a)) FT").font(.title3.monospacedDigit().bold()).foregroundStyle(.white).position(x:s * 0.82,y:s * 0.5) }
- GNSSPositionView(latitude:gpsLatitude,longitude:gpsLongitude,accuracy:gpsAccuracy,valid:gpsValid,stale:gpsStale).position(x:s/2,y:s * 0.79)
- if !valid { invalid(s,"ATT FAIL") }
- } }}
+    let pitch, roll: Double
+    let valid: Bool
+    let altitude, heading: Double?
+    let gpsLatitude, gpsLongitude, gpsAccuracy: Double
+    let gpsValid, gpsStale: Bool
+    private let bankMarks = [10,20,30,45,60]
+
+    var body: some View {
+        GeometryReader { g in
+            let s = min(g.size.width, g.size.height)
+            ZStack {
+                ZStack {
+                    Rectangle().fill(.blue).frame(width: s * 1.8, height: s * 0.9).offset(y: -s * 0.45)
+                    Rectangle().fill(.brown).frame(width: s * 1.8, height: s * 0.9).offset(y: s * 0.45)
+                    Rectangle().fill(.white).frame(width: s * 1.8, height: 4)
+
+                    ForEach([-20,-15,-10,-5,5,10,15,20], id: \.self) { p in
+                        let major = abs(p) % 10 == 0
+                        HStack(spacing: major ? s * 0.075 : s * 0.05) {
+                            Rectangle().frame(width: major ? s * 0.10 : s * 0.055, height: major ? 3 : 2)
+                            Rectangle().frame(width: major ? s * 0.10 : s * 0.055, height: major ? 3 : 2)
+                        }
+                        .foregroundStyle(.white)
+                        .offset(y: CGFloat(p) * s / 66.18)
+                    }
+                }
+                .frame(width: s * 1.8, height: s * 1.8)
+                .offset(y: pitch * s / 70.59)
+                .rotationEffect(.degrees(-roll))
+
+                ForEach(bankMarks, id: \.self) { d in
+                    let major = d == 30 || d == 60
+                    Capsule().fill(.white)
+                        .frame(width: major ? 4 : 3, height: major ? s * 0.052 : s * 0.04)
+                        .offset(y: -s * 0.395).rotationEffect(.degrees(Double(d)))
+                    Capsule().fill(.white)
+                        .frame(width: major ? 4 : 3, height: major ? s * 0.052 : s * 0.04)
+                        .offset(y: -s * 0.395).rotationEffect(.degrees(Double(-d)))
+                }
+                Capsule().fill(.white).frame(width: 4, height: s * 0.062).offset(y: -s * 0.39)
+
+                Path { p in
+                    p.move(to: CGPoint(x: s * 0.5, y: s * 0.148))
+                    p.addLine(to: CGPoint(x: s * 0.481, y: s * 0.188))
+                    p.addLine(to: CGPoint(x: s * 0.519, y: s * 0.188))
+                    p.closeSubpath()
+                }.stroke(.black, lineWidth: 7).rotationEffect(.degrees(roll))
+                Path { p in
+                    p.move(to: CGPoint(x: s * 0.5, y: s * 0.148))
+                    p.addLine(to: CGPoint(x: s * 0.481, y: s * 0.188))
+                    p.addLine(to: CGPoint(x: s * 0.519, y: s * 0.188))
+                    p.closeSubpath()
+                }.stroke(.white, lineWidth: 3).rotationEffect(.degrees(roll))
+
+                Path { p in
+                    p.move(to: CGPoint(x: s * 0.308, y: s * 0.5)); p.addLine(to: CGPoint(x: s * 0.45, y: s * 0.5))
+                    p.move(to: CGPoint(x: s * 0.692, y: s * 0.5)); p.addLine(to: CGPoint(x: s * 0.55, y: s * 0.5))
+                    p.move(to: CGPoint(x: s * 0.45, y: s * 0.5)); p.addLine(to: CGPoint(x: s * 0.479, y: s * 0.527))
+                    p.move(to: CGPoint(x: s * 0.55, y: s * 0.5)); p.addLine(to: CGPoint(x: s * 0.521, y: s * 0.527))
+                    p.move(to: CGPoint(x: s * 0.479, y: s * 0.527)); p.addLine(to: CGPoint(x: s * 0.521, y: s * 0.527))
+                }.stroke(.black, lineWidth: 9)
+                Path { p in
+                    p.move(to: CGPoint(x: s * 0.308, y: s * 0.5)); p.addLine(to: CGPoint(x: s * 0.45, y: s * 0.5))
+                    p.move(to: CGPoint(x: s * 0.692, y: s * 0.5)); p.addLine(to: CGPoint(x: s * 0.55, y: s * 0.5))
+                    p.move(to: CGPoint(x: s * 0.45, y: s * 0.5)); p.addLine(to: CGPoint(x: s * 0.479, y: s * 0.527))
+                    p.move(to: CGPoint(x: s * 0.55, y: s * 0.5)); p.addLine(to: CGPoint(x: s * 0.521, y: s * 0.527))
+                    p.move(to: CGPoint(x: s * 0.479, y: s * 0.527)); p.addLine(to: CGPoint(x: s * 0.521, y: s * 0.527))
+                }.stroke(.yellow, lineWidth: 5)
+
+                if let h = heading {
+                    Text(String(format: "%03.0f", h))
+                        .font(.system(size: s * 0.055, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.white)
+                        .position(x: s * 0.5, y: s * 0.09)
+                }
+                if let a = altitude {
+                    Text("\(Int(a)) FT")
+                        .font(.system(size: s * 0.045, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 5).padding(.vertical, 2)
+                        .background(.black.opacity(0.65))
+                        .position(x: s * 0.78, y: s * 0.27)
+                }
+
+                GNSSPositionView(latitude: gpsLatitude, longitude: gpsLongitude, accuracy: gpsAccuracy,
+                                 valid: gpsValid, stale: gpsStale)
+                    .position(x: s * 0.5, y: s * 0.73)
+
+                if !valid { invalid(s, "ATT FAIL") }
+            }
+            .frame(width: s, height: s)
+            .clipShape(Circle())
+        }
+    }
 }
 
 struct AltimeterView: View {
