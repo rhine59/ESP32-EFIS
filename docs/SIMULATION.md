@@ -56,6 +56,11 @@ The native Swift iPhone/iPad simulator mirrors the accepted Horizon, Altimeter a
 
 The Swift simulator is a regression companion, not an independent instrument design. Any ESP32 renderer presentation change must trigger review of the corresponding Swift view and acceptance scenarios in the same development change. All simulator overlays must remain clipped to the 480×480 circular display and must not obscure the fixed aircraft symbol, pitch ladder, bank scale or each other.
 
+
+### Approved Swift PFD presentation
+
+The Swift Horizon/PFD reference presentation now includes numeric pitch labels on the 10-degree ladder, numeric roll labels at 0, ±10, ±20, ±30, ±45 and ±60 degrees, a fixed centred yellow aircraft symbol, altitude without a unit suffix, and a separate bare barometric-pressure value in hPa (the display intentionally omits the text labels “QNH” and “hPa”). The GNSS overlay is a single latitude/longitude line: no qualitative word or separate GPS-accuracy line is shown. Its text colour alone indicates horizontal accuracy: green for good/excellent, yellow for fair/weak, and red for poor, stale or invalid. The simulator control panel may continue to show units and detailed synthetic test-state names for bench operation.
+
 ## Build, run and record
 
 From the repository root:
