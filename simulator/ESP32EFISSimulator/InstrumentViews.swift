@@ -79,13 +79,13 @@ struct HorizonView: View {
             p.addLine(to:CGPoint(x:s * 0.475,y:s * 0.19))
             p.addLine(to:CGPoint(x:s * 0.525,y:s * 0.19))
             p.closeSubpath()
-        }.stroke(.black,lineWidth:7).rotationEffect(.degrees(roll))
+        }.stroke(.black,lineWidth:7).frame(width:s,height:s).rotationEffect(.degrees(roll))
         Path { p in
             p.move(to:CGPoint(x:s * 0.5,y:s * 0.14))
             p.addLine(to:CGPoint(x:s * 0.475,y:s * 0.19))
             p.addLine(to:CGPoint(x:s * 0.525,y:s * 0.19))
             p.closeSubpath()
-        }.stroke(.white,lineWidth:3).rotationEffect(.degrees(roll))
+        }.stroke(.white,lineWidth:3).frame(width:s,height:s).rotationEffect(.degrees(roll))
     }
 
     @ViewBuilder private func aircraftSymbol(_ s: CGFloat) -> some View {
@@ -93,12 +93,12 @@ struct HorizonView: View {
             p.move(to:CGPoint(x:s * 0.29,y:s * 0.5)); p.addLine(to:CGPoint(x:s * 0.44,y:s * 0.5))
             p.addLine(to:CGPoint(x:s * 0.475,y:s * 0.535)); p.addLine(to:CGPoint(x:s * 0.525,y:s * 0.535))
             p.addLine(to:CGPoint(x:s * 0.56,y:s * 0.5)); p.addLine(to:CGPoint(x:s * 0.71,y:s * 0.5))
-        }.stroke(.black, style: StrokeStyle(lineWidth:10, lineCap:.square, lineJoin:.miter))
+        }.stroke(.black, style: StrokeStyle(lineWidth:10, lineCap:.square, lineJoin:.miter)).frame(width:s,height:s)
         Path { p in
             p.move(to:CGPoint(x:s * 0.29,y:s * 0.5)); p.addLine(to:CGPoint(x:s * 0.44,y:s * 0.5))
             p.addLine(to:CGPoint(x:s * 0.475,y:s * 0.535)); p.addLine(to:CGPoint(x:s * 0.525,y:s * 0.535))
             p.addLine(to:CGPoint(x:s * 0.56,y:s * 0.5)); p.addLine(to:CGPoint(x:s * 0.71,y:s * 0.5))
-        }.stroke(.yellow, style: StrokeStyle(lineWidth:5, lineCap:.square, lineJoin:.miter))
+        }.stroke(.yellow, style: StrokeStyle(lineWidth:5, lineCap:.square, lineJoin:.miter)).frame(width:s,height:s)
     }
 
     @ViewBuilder private func dataOverlays(_ s: CGFloat) -> some View {
