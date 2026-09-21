@@ -25,6 +25,7 @@ struct HorizonView: View {
     let pitch, roll: Double
     let valid: Bool
     let altitude, heading: Double?
+    let qnh: Double
     let gpsLatitude, gpsLongitude, gpsAccuracy: Double
     let gpsValid, gpsStale: Bool
     private let bankMarks = [10,20,30,45,60]
