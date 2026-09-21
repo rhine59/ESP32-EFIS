@@ -54,6 +54,8 @@ This concise demonstration does not replace the formal acceptance records above;
 
 The native Swift iPhone/iPad simulator mirrors the accepted Horizon, Altimeter and Compass presentation. It also provides automated selectors for the complete 12-state Horizon, 14-state Altimeter and 12-state Compass acceptance suites. QEMU remains authoritative for the actual ESP32 RGB565 renderer.
 
+The Swift simulator is a regression companion, not an independent instrument design. Any ESP32 renderer presentation change must trigger review of the corresponding Swift view and acceptance scenarios in the same development change. All simulator overlays must remain clipped to the 480×480 circular display and must not obscure the fixed aircraft symbol, pitch ladder, bank scale or each other.
+
 ## Build, run and record
 
 From the repository root:
