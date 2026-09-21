@@ -30,16 +30,16 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 | Temporary MCU carrier/programmer | **Espressif ESP-Module-Prog-1**, specifically Prog-1 not Prog-1R | 1 | 1 | 0 | **NEEDED — source identified** | Preferred Mouser UK `356-ESPMODULEPROG1`; alternate DigiKey UK |
 | Round display | **Newhaven NHD-2.1-480480AF-ASXP** | 1 | 1 | 1 | **RECEIVED — Mouser packaging/delivery document photo confirmed 21 Sep 2026** | Mouser P/N `763-2.1-480480AFASXP`; manufacturer P/N `NHD-2.1-480480AF-ASXP` |
 | Display bench adapter | **Newhaven NHD-FFC40** | 1 | 1 | 1 | **RECEIVED — RS delivery-note photo confirmed** | RS UK stock `723-891` |
-| Display FFC | **40-position, 0.5 mm FFC/FPC**, orientation/length to verify | 1 | 2 | 0 | **NEEDED — verify first** | RS UK or DigiKey UK after display inspection |
+| Display interconnect | **Integral 40-way display flex tail into NHD-FFC40** | 1 | 1 | 1 | **RECEIVED / PHYSICALLY IDENTIFIED — no separate FFC required** | Supplied as part of Newhaven display; verify orientation/continuity before power |
 | Backlight driver | **Adafruit TPS61169 PID 6354** | 1 | 1 | 1 | **RECEIVED** | DigiKey UK `1528-6354-ND` |
 | Rotary/push control | **Bourns PEC09-2320F-T0015** | 1 | 1 | 1 | **RECEIVED** | DigiKey UK `PEC09-2320F-T0015-ND` |
 | GPIO expander | **Microchip MCP23008-E/P** | 1 | 1 | 1 | **RECEIVED** | DigiKey UK `MCP23008-E/P-ND` |
-| Bench PSU | **Korad KA3005P** preferred; **Siglent SPD3303X-E** premium alternative | 1 | 1 | 0 | **NEEDED** | UK test-equipment supplier / authorised Siglent distributor |
-| Bench PSU lead kit | Banana leads plus croc/bare-wire/header leads | 1 | 1 set | 0 | **NEEDED unless owned** | RS UK / CPC Farnell |
+| Bench PSU | Current-limited regulated bench PSU suitable for prototype bring-up | 1 | 1 | 1 | **AVAILABLE / USER CONFIRMED 21 Sep 2026** | Already owned |
+| Bench PSU lead kit | Banana leads plus croc/bare-wire/header leads | 1 | 1 set | 1 set | **AVAILABLE / USER CONFIRMED 21 Sep 2026** | Already owned |
 | USB-C bench cable | Data + power USB-C cable | 1 | 1 | 0 | **NEEDED unless owned** | RS UK / CPC Farnell |
 | Solderless breadboard | **Mounted full-size breadboard, aluminium plate & binding posts** | 1 | 1 | 1 | **RECEIVED — item photo confirmed 18 Sep 2026** | **The Pi Hut product `103521`, invoice `#1622980`**; item £7.00; order total £10.80 inc shipping/VAT |
-| Prototyping wire | 22–26 AWG solid-core assortment | 1 | 1 set | 0 | **NEEDED unless owned** | RS UK / CPC Farnell |
-| Header pins | 2.54 mm breakaway male/female | 1 | 1 set | 0 | **NEEDED unless owned** | RS UK / The Pi Hut / Pimoroni |
+| Prototyping wire | 22–26 AWG solid-core assortment | 1 | 1 set | 1 set | **AVAILABLE / USER CONFIRMED 21 Sep 2026** | Already owned |
+| Header pins | 2.54 mm breakaway male/female | 1 | 1 set | 1 set | **AVAILABLE / USER CONFIRMED 21 Sep 2026** | Already owned |
 | Attitude IMU | **Bosch Shuttle Board 3.0 BMI088** | 2 | 1 | 1 | **RECEIVED** | DigiKey UK `828-SHUTTLEBOARD3.0BMI088-ND` |
 | BMI088 bench interposer | Verified **1.27 mm-pitch** mating solution | 2 | 1 | 0 | **NEEDED — verify connector** | Supplier/part to freeze after physical verification |
 | Pressure module | **Adafruit BMP585 Ported I2C/SPI PID 6413** | 2 | 1 | 0 | **NEEDED** | DigiKey UK `1528-6413-ND`; The Pi Hut/Pimoroni alternate |
@@ -60,10 +60,10 @@ No specifically tracked BOM item is currently recorded here as in transit.
 
 ## Stage 1 — immediate purchase/verification list
 
-1. **Newhaven display received.** Inspect the physical 40-pin FFC interface/contact orientation against the received NHD-FFC40 before selecting and buying 2 suitable FFC cables.
+1. **Newhaven display and NHD-FFC40 received.** The display has an integral 40-way flex tail; no separate FFC cable is required. Verify connector orientation, pin numbering and continuity before applying power.
 2. Buy 1 × **ESP-Module-Prog-1**, preferably Mouser UK `356-ESPMODULEPROG1`.
-3. Buy one current-limited bench PSU: Korad KA3005P or Siglent SPD3303X-E.
-4. **Breadboard received.** Obtain PSU leads, USB-C data cable, prototype wire and headers where not already owned.
+3. **Current-limited PSU, leads, headers, hookup wire and breadboard are available.**
+4. Confirm a suitable USB-C data cable is available before MCU programming.
 
 Stage 1 gate: safe/current-limited 5 V power, programmable/mounted single MCU, working single-display connection/backlight and encoder/GPIO-expander bring-up.
 
