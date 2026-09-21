@@ -1,12 +1,27 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var panel=0, acceptanceSuite=0
-    @State private var pitch=3.0, roll=12.0, altitude=2450.0, heading=72.0, qnh=1013.0, bug=60.0
-    @State private var gpsLatitude=54.0015413, gpsLongitude = -2.1407870, gpsAccuracy=0.8
-    @State private var auto=false, attitudeValid=true, altitudeValid=true, headingValid=true, gpsValid=true, gpsStale=false
-    @State private var phase=0.0, suiteElapsed=0.0
-    @State private var demoRunning=false, demoElapsed=0.0
+    @State private var panel = 0
+    @State private var acceptanceSuite = 0
+    @State private var pitch = 3.0
+    @State private var roll = 12.0
+    @State private var altitude = 2450.0
+    @State private var heading = 72.0
+    @State private var qnh = 1013.0
+    @State private var bug = 60.0
+    @State private var gpsLatitude = 54.0015413
+    @State private var gpsLongitude = -2.1407870
+    @State private var gpsAccuracy = 0.8
+    @State private var auto = false
+    @State private var attitudeValid = true
+    @State private var altitudeValid = true
+    @State private var headingValid = true
+    @State private var gpsValid = true
+    @State private var gpsStale = false
+    @State private var phase = 0.0
+    @State private var suiteElapsed = 0.0
+    @State private var demoRunning = false
+    @State private var demoElapsed = 0.0
     private let timer=Timer.publish(every:0.05,on:.main,in:.common).autoconnect()
     private let horizonTests=["LEVEL","PITCH +10","PITCH -10","PITCH +20","PITCH -20","BANK LEFT 30","BANK RIGHT 30","BANK LEFT 60","BANK RIGHT 60","PITCH +10 BANK R30","ATTITUDE FAIL","RECOVERY LEVEL"]
     private let altimeterTests=["ALT 0","ALT 500","ALT 1000","ALT 2500","ALT 5000","ALT 9500","ALT 9900","ALT 10000","ALT 10100","ALT 10500","ALT 12500","ALT SWEEP","ALT FAIL","RECOVERY ALT"]
