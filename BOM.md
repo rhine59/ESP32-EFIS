@@ -2,7 +2,7 @@
 
 Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifunction flight instrument. Stock and prices change; recheck before ordering. Quantities below are prototype quantities, not production quantities.
 
-**Procurement status updated:** 21 September 2026 from RS, DigiKey and Mouser delivery-note/packaging photographs, subsequent delivery-status updates, The Pi Hut invoice evidence, and photographic confirmation of delivered parts. `RECEIVED` is used when arrival is confirmed by a supplied delivery-note photograph or other explicit physical-arrival confirmation.
+**Procurement status updated:** 22 September 2026 from RS, DigiKey and Mouser delivery-note/packaging photographs, subsequent delivery-status updates, The Pi Hut invoice evidence, and photographic confirmation of delivered parts. `RECEIVED` is used when arrival is confirmed by a supplied delivery-note photograph or other explicit physical-arrival confirmation.
 
 ## Procurement rules
 
@@ -42,7 +42,7 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 | Header pins | 2.54 mm breakaway male/female | 1 | 1 set | 1 set | **AVAILABLE / USER CONFIRMED 21 Sep 2026** | Already owned |
 | Attitude IMU | **Bosch Shuttle Board 3.0 BMI088** | 2 | 1 | 1 | **RECEIVED** | DigiKey UK `828-SHUTTLEBOARD3.0BMI088-ND` |
 | BMI088 bench interposer | Verified **1.27 mm-pitch** mating solution | 2 | 1 | 0 | **NEEDED — verify connector** | Supplier/part to freeze after physical verification |
-| Pressure module | **Adafruit BMP585 Ported I2C/SPI PID 6413** | 2 | 1 | 0 | **NEEDED** | DigiKey UK `1528-6413-ND`; The Pi Hut/Pimoroni alternate |
+| Pressure module | **Adafruit BMP585 Baro+Temp Sensor PID 6413** | 2 | 1 | 1 | **RECEIVED — packaging/photo confirmed 22 Sep 2026** | Adafruit PID `6413`; DigiKey UK `1528-6413-ND`; The Pi Hut/Pimoroni alternate |
 | Pressure cable | STEMMA QT/Qwiic JST-SH 4-pin, 100–200 mm | 2 | 2 | 0 | **NEEDED** | DigiKey / The Pi Hut / Pimoroni; PID 4397 candidate |
 | QT breadboard adapter | **Adafruit PID 5961** | 2 | 1 | 0 | **NEEDED** | DigiKey UK `1528-5961-ND` |
 | Magnetic heading sensor | **PNI RM3100-CB P/N 14754** | 2 | 1 | 0 | **NEEDED** | PNI Sensor direct SKU `14754` |
@@ -52,7 +52,7 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 ## Order / delivery evidence
 
 ### Received
-RS and DigiKey delivery-note photographs confirm receipt of the NHD-FFC40, two ESP32-S3-WROOM-1-N16R2 modules, TPS61169 board, Bourns encoder, MCP23008 and BMI088 Shuttle Board. A photograph supplied on 18 September 2026 confirms physical receipt of The Pi Hut mounted full-size breadboard, product `103521`, quantity 1. Photographs supplied on 21 September 2026 confirm receipt of 1 × Newhaven `NHD-2.1-480480AF-ASXP` display from Mouser (Mouser P/N `763-2.1-480480AFASXP`, quantity 1).
+RS and DigiKey delivery-note photographs confirm receipt of the NHD-FFC40, two ESP32-S3-WROOM-1-N16R2 modules, TPS61169 board, Bourns encoder, MCP23008 and BMI088 Shuttle Board. A photograph supplied on 18 September 2026 confirms physical receipt of The Pi Hut mounted full-size breadboard, product `103521`, quantity 1. Photographs supplied on 21 September 2026 confirm receipt of 1 × Newhaven `NHD-2.1-480480AF-ASXP` display from Mouser (Mouser P/N `763-2.1-480480AFASXP`, quantity 1). A photograph supplied on 22 September 2026 confirms physical receipt of 1 × Adafruit BMP585 Baro+Temp Sensor, product/PID `6413`, including loose header strip.
 
 ### Ordered / in transit
 
@@ -70,7 +70,7 @@ Stage 1 gate: safe/current-limited 5 V power, programmable/mounted single MCU, w
 ## Stage 2 — immediate purchase/selection list
 
 1. Verify and obtain the 1.27 mm mating adapter/interposer for the BMI088 Shuttle Board 3.0.
-2. Buy Adafruit BMP585 Ported I2C/SPI PID 6413.
+2. **Adafruit BMP585 PID 6413 received.** Retain for Stage 2 pressure/temperature bench integration.
 3. Buy 2 × STEMMA QT/Qwiic JST-SH 4-pin cables, 100–200 mm.
 4. Buy 1 × Adafruit PID 5961 QT breadboard adapter.
 5. Buy 1 × PNI RM3100-CB P/N 14754.
