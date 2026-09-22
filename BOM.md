@@ -29,7 +29,7 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 | MCU module | **ESP32-S3-WROOM-1-N16R2** | 1 | 2 | 2 | **RECEIVED — delivery-note photo confirmed** | DigiKey UK — `5407-ESP32-S3-WROOM-1-N16R2CT-ND` |
 | Temporary MCU carrier/programmer | **Espressif ESP-Module-Prog-1**, specifically Prog-1 not Prog-1R | 1 | 1 | 0 | **NEEDED — source identified** | Preferred Mouser UK `356-ESPMODULEPROG1`; alternate DigiKey UK |
 | Round display | **Newhaven NHD-2.1-480480AF-ASXP** | 1 | 1 | 1 | **RECEIVED — Mouser packaging/delivery document photo confirmed 21 Sep 2026** | Mouser P/N `763-2.1-480480AFASXP`; manufacturer P/N `NHD-2.1-480480AF-ASXP` |
-| Display bench adapter | **Newhaven NHD-FFC40** | 1 | 1 | 1 | **RECEIVED — RS delivery-note photo confirmed** | RS UK stock `723-891` |
+| Display bench adapter | **Newhaven NHD-FFC40** | 1 | 1 | 1 | **RECEIVED — RS invoice/photo confirmed; invoice dated 15 Sep 2026** | RS UK stock `723-891`; invoice line: “40 pin FFC to thru hole adapter”; £9.01 ex VAT |
 | Display interconnect | **Integral 40-way display flex tail into NHD-FFC40** | 1 | 1 | 1 | **RECEIVED / PHYSICALLY IDENTIFIED — no separate FFC required** | Supplied as part of Newhaven display; verify orientation/continuity before power |
 | Backlight driver | **Adafruit TPS61169 PID 6354** | 1 | 1 | 1 | **RECEIVED** | DigiKey UK `1528-6354-ND` |
 | Rotary/push control | **Bourns PEC09-2320F-T0015** | 1 | 1 | 1 | **RECEIVED** | DigiKey UK `PEC09-2320F-T0015-ND` |
@@ -52,7 +52,7 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 ## Order / delivery evidence
 
 ### Received
-RS and DigiKey delivery-note photographs confirm receipt of the NHD-FFC40, two ESP32-S3-WROOM-1-N16R2 modules, TPS61169 board, Bourns encoder, MCP23008 and BMI088 Shuttle Board. A photograph supplied on 18 September 2026 confirms physical receipt of The Pi Hut mounted full-size breadboard, product `103521`, quantity 1. Photographs supplied on 21 September 2026 confirm receipt of 1 × Newhaven `NHD-2.1-480480AF-ASXP` display from Mouser (Mouser P/N `763-2.1-480480AFASXP`, quantity 1). A photograph supplied on 22 September 2026 confirms physical receipt of 1 × Adafruit BMP585 Baro+Temp Sensor, product/PID `6413`, including loose header strip.
+RS and DigiKey delivery-note photographs confirm receipt of the NHD-FFC40, two ESP32-S3-WROOM-1-N16R2 modules, TPS61169 board, Bourns encoder, MCP23008 and BMI088 Shuttle Board. Additional RS invoice evidence supplied on 22 September 2026 confirms the NHD-FFC40 adapter as RS stock `723-891`, described as “40 pin FFC to thru hole adapter”, quantity 1, invoiced 15 September 2026 at £9.01 ex VAT. A photograph supplied on 18 September 2026 confirms physical receipt of The Pi Hut mounted full-size breadboard, product `103521`, quantity 1. Photographs supplied on 21 September 2026 confirm receipt of 1 × Newhaven `NHD-2.1-480480AF-ASXP` display from Mouser (Mouser P/N `763-2.1-480480AFASXP`, quantity 1). A photograph supplied on 22 September 2026 confirms physical receipt of 1 × Adafruit BMP585 Baro+Temp Sensor, product/PID `6413`, including loose header strip.
 
 ### Ordered / in transit
 
