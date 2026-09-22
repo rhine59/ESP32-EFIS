@@ -27,7 +27,7 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 | Item | Exact/reference choice | Stage | Needed | Received | Status | Purchase source / reference |
 |---|---|---:|---:|---:|---|---|
 | MCU module | **ESP32-S3-WROOM-1-N16R2** | 1 | 2 | 2 | **RECEIVED — delivery-note photo confirmed** | DigiKey UK — `5407-ESP32-S3-WROOM-1-N16R2CT-ND` |
-| Temporary MCU carrier/programmer | **Espressif ESP-Module-Prog-1**, specifically Prog-1 not Prog-1R | 1 | 1 | 0 | **NEEDED — source identified** | Preferred Mouser UK `356-ESPMODULEPROG1`; alternate DigiKey UK |
+| Temporary MCU carrier/programmer | **Espressif ESP-Module-Prog-1**, specifically Prog-1 not Prog-1R | 1 | 1 | 0 | **ORDERED / SHIPPED — DigiKey invoice evidence 21 Sep 2026** | DigiKey UK `1965-ESP-MODULE-PROG-1-ND`; manufacturer `ESP-MODULE-PROG-1` |
 | Round display | **Newhaven NHD-2.1-480480AF-ASXP** | 1 | 1 | 1 | **RECEIVED — Mouser packaging/delivery document photo confirmed 21 Sep 2026** | Mouser P/N `763-2.1-480480AFASXP`; manufacturer P/N `NHD-2.1-480480AF-ASXP` |
 | Display bench adapter | **Newhaven NHD-FFC40** | 1 | 1 | 1 | **RECEIVED — RS invoice/photo confirmed; invoice dated 15 Sep 2026** | RS UK stock `723-891`; invoice line: “40 pin FFC to thru hole adapter”; £9.01 ex VAT |
 | Display interconnect | **Integral 40-way display flex tail into NHD-FFC40** | 1 | 1 | 1 | **RECEIVED / PHYSICALLY IDENTIFIED — no separate FFC required** | Supplied as part of Newhaven display; verify orientation/continuity before power |
@@ -43,8 +43,8 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 | Attitude IMU | **Bosch Shuttle Board 3.0 BMI088** | 2 | 1 | 1 | **RECEIVED** | DigiKey UK `828-SHUTTLEBOARD3.0BMI088-ND` |
 | BMI088 bench interposer | Verified **1.27 mm-pitch** mating solution | 2 | 1 | 0 | **NEEDED — verify connector** | Supplier/part to freeze after physical verification |
 | Pressure module | **Adafruit BMP585 Baro+Temp Sensor PID 6413** | 2 | 1 | 1 | **RECEIVED — packaging/photo confirmed 22 Sep 2026** | Adafruit PID `6413`; DigiKey UK `1528-6413-ND`; The Pi Hut/Pimoroni alternate |
-| Pressure cable | STEMMA QT/Qwiic JST-SH 4-pin, 100–200 mm | 2 | 2 | 0 | **NEEDED** | DigiKey / The Pi Hut / Pimoroni; PID 4397 candidate |
-| QT breadboard adapter | **Adafruit PID 5961** | 2 | 1 | 0 | **NEEDED** | DigiKey UK `1528-5961-ND` |
+| Pressure cable | **Adafruit STEMMA QT/Qwiic JST-SH 4-pin, 150 mm, PID 4397** | 2 | 2 | 0 | **ORDERED / SHIPPED — qty 2, DigiKey invoice evidence 21 Sep 2026** | DigiKey UK `1528-4397-ND` |
+| QT breadboard adapter | **Adafruit PID 5961** | 2 | 1 | 0 | **ORDERED / SHIPPED — qty 1, DigiKey invoice evidence 21 Sep 2026** | DigiKey UK `1528-5961-ND` |
 | Magnetic heading sensor | **PNI RM3100-CB P/N 14754** | 2 | 1 | 0 | **NEEDED** | PNI Sensor direct SKU `14754` |
 | GNSS receiver | Position/fix/freshness + explicit horizontal accuracy | 2 | 1 | 0 | **SELECTION REQUIRED** | Source after receiver selection |
 | GNSS bench antenna | Compatible with selected receiver | 2 | 1 | 0 | **BLOCKED by receiver selection** | Select with receiver |
@@ -56,12 +56,12 @@ RS and DigiKey delivery-note photographs confirm receipt of the NHD-FFC40, two E
 
 ### Ordered / in transit
 
-No specifically tracked BOM item is currently recorded here as in transit.
+**DigiKey order dated 21 Sep 2026, invoice evidence supplied 22 Sep 2026:** 1 × Espressif `ESP-MODULE-PROG-1` (`1965-ESP-MODULE-PROG-1-ND`), 2 × Adafruit STEMMA QT/Qwiic 150 mm cables PID 4397 (`1528-4397-ND`), and 1 × Adafruit QT/STEMMA QT breadboard adapter PID 5961 (`1528-5961-ND`) are recorded as ordered/shipped. The same invoice also shows 1 × BMP585 PID 6413, which is already separately confirmed RECEIVED by physical photo. Hook-up wire and jumper kit on the invoice are bench consumables and are not separately tracked as outstanding BOM items.
 
 ## Stage 1 — immediate purchase/verification list
 
 1. **Newhaven display and NHD-FFC40 received.** The display has an integral 40-way flex tail; no separate FFC cable is required. Verify connector orientation, pin numbering and continuity before applying power.
-2. Buy 1 × **ESP-Module-Prog-1**, preferably Mouser UK `356-ESPMODULEPROG1`.
+2. **ESP-Module-Prog-1 ordered/shipped from DigiKey** (`1965-ESP-MODULE-PROG-1-ND`); await physical receipt.
 3. **Current-limited PSU, leads, headers, hookup wire and breadboard are available.**
 4. Confirm a suitable USB-C data cable is available before MCU programming.
 
@@ -71,8 +71,8 @@ Stage 1 gate: safe/current-limited 5 V power, programmable/mounted single MCU, w
 
 1. Verify and obtain the 1.27 mm mating adapter/interposer for the BMI088 Shuttle Board 3.0.
 2. **Adafruit BMP585 PID 6413 received.** Retain for Stage 2 pressure/temperature bench integration.
-3. Buy 2 × STEMMA QT/Qwiic JST-SH 4-pin cables, 100–200 mm.
-4. Buy 1 × Adafruit PID 5961 QT breadboard adapter.
+3. **2 × STEMMA QT/Qwiic 150 mm cables PID 4397 ordered/shipped from DigiKey**; await physical receipt.
+4. **Adafruit PID 5961 QT breadboard adapter ordered/shipped from DigiKey**; await physical receipt.
 5. Buy 1 × PNI RM3100-CB P/N 14754.
 6. Select the GNSS receiver, then its compatible bench antenna.
 
