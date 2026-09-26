@@ -88,3 +88,9 @@ The 3 1/8-inch flight-development enclosure is for the single round display and 
 ## Development principles
 
 The BMI088 is rigidly mounted with physically verified aircraft-axis alignment. Pressure, heading, attitude and GNSS have independent validity/freshness handling. GNSS `TRK` is never magnetic `HDG`; `GS` is never IAS. Receiver-reported accuracy is an estimate, not a guarantee, and poor/stale/no-fix position must fail visibly rather than freezing plausible coordinates.
+
+## Boot, maintenance and diagnostics — 26 September 2026
+
+The production interaction model now starts with a **rotary/push-controlled boot menu**. `START EFIS` is the default selection; `FULL TEST` launches the electrical/component diagnostic harness; `FIRMWARE UPDATE` enters the maintenance networking/OTA workflow. Rotation changes selection and a short press selects. Long-press Back/Cancel remains subject to physical encoder validation.
+
+Firmware update first opens an explicit Wi-Fi connection dialog. Saved SSID/credentials persist in ESP-IDF NVS; production units require encrypted NVS for credentials and provide **Forget network**. Wi-Fi failure never blocks startup of the known-good EFIS. See `docs/OTA_USER_SCENARIO.md`, `docs/PHONE_NETWORK_AND_PUBLIC_OTA.md` and `docs/ELECTRICAL_TEST_HARNESS.md`.
