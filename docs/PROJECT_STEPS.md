@@ -83,6 +83,7 @@ See `GNSS_DISPLAY.md`, `PROJECT_STATUS.md`, `TESTING.md`, `SENSORS.md`, `WIRING.
 - keep activation explicit after download/verification and validate A/B first-boot rollback.
 
 
-## Airspeed/pitot-static workstream — 26 September 2026
 
-Stage 2 now includes differential-pressure IAS development through the **180 kt minimum capability**. Stage 3 must measure both PITOT and STATIC tube dimensions/material, routing, tee possibilities and enclosure clearance. Stage 4 freezes two labelled enclosure bulkheads and internal plumbing: STATIC feeds BMP585 plus differential P-minus; PITOT feeds differential P-plus. Stage 5 incorporates the validated differential sensor/interface; Stage 6 includes pneumatic leak and pressure-response ground tests before any supplementary airborne comparison.
+## Airspeed scope decision — 26 September 2026
+
+ASI/IAS development has been removed. Stage 3 surveys only the STATIC pressure plumbing required by the BMP585; Stage 4 freezes only the STATIC enclosure fitting/plumbing. No PITOT connection or differential-pressure sensor is required.
