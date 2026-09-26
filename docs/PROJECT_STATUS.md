@@ -343,3 +343,8 @@ The apps are not flight instruments. They must never store raw payment PAN/CVV o
 ### Device ownership and licence transfer — 26 September 2026
 
 **ADOPTED / IMPLEMENTATION PENDING.** Customer account architecture now requires controlled transfer of an EFIS when sold. Supported policy model includes device + transferable licence, device-only transfer where entitlement policy permits, and audited administrative recovery. Seller initiates, buyer accepts using a short-lived single-use transfer credential, ownership changes atomically, payment instruments never transfer, and accepted transfers produce a fresh signed licence for the unchanged EFIS Device ID. Web/iOS/Android clients will expose Sell / Transfer EFIS and Accept transferred EFIS workflows. Ownership-transfer licence grace is now ADOPTED: default 30 days from buyer acceptance, configurable server-side, with the old installed licence remaining usable while the buyer installs a replacement signed licence. Installing the replacement ends transfer grace early. Subscription, refund/chargeback and non-transferable entitlement policies remain to be frozen.
+
+
+### Device ID boot display — 26 September 2026
+
+**ADOPTED / FIRMWARE + SIMULATOR IMPLEMENTATION PENDING.** Every normal boot menu must display the permanent provisioned EFIS Device ID above the menu. It is available offline, survives resets/licensing/ownership transfer, and is sourced from authoritative provisioned identity rather than MAC. Missing/corrupt identity is fail-obvious and logged; no placeholder identity may be invented.
