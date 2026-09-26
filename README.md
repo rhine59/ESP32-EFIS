@@ -94,3 +94,8 @@ The BMI088 is rigidly mounted with physically verified aircraft-axis alignment. 
 The production interaction model now starts with a **rotary/push-controlled boot menu**. `START EFIS` is the default selection; `FULL TEST` launches the electrical/component diagnostic harness; `FIRMWARE UPDATE` enters the maintenance networking/OTA workflow. Rotation changes selection and a short press selects. Long-press Back/Cancel remains subject to physical encoder validation.
 
 Firmware update first opens an explicit Wi-Fi connection dialog. Saved SSID/credentials persist in ESP-IDF NVS; production units require encrypted NVS for credentials and provide **Forget network**. Wi-Fi failure never blocks startup of the known-good EFIS. See `docs/OTA_USER_SCENARIO.md`, `docs/PHONE_NETWORK_AND_PUBLIC_OTA.md` and `docs/ELECTRICAL_TEST_HARNESS.md`.
+
+
+### Persistent fault history
+
+Detected software and hardware faults during normal operation are an adopted persistent-diagnostics requirement. A bounded, flash-wear-conscious non-volatile fault log will survive power cycles and be accessible through **FAULT LOG** on the rotary boot menu. It records stable fault identifiers and useful non-secret diagnostic context while immediate on-screen fail-obvious indications remain authoritative during operation. See `docs/ELECTRICAL_TEST_HARNESS.md` and `docs/PROJECT_STATUS.md`.
