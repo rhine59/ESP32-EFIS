@@ -263,3 +263,12 @@ The boot-time firmware-update option must invoke an explicit **Wi-Fi Connection*
 ### Persistent Wi-Fi credential storage — 26 September 2026
 
 Wi-Fi SSID and credentials are stored persistently in ESP32 flash using ESP-IDF NVS in a dedicated namespace. The saved password is never redisplayed after entry and must never appear in logs, diagnostics, test-harness output or OTA-server requests. The boot/update UI provides **Forget network**, which erases the saved credentials. Production units require **NVS encryption** for stored Wi-Fi credentials; ordinary NVS is permitted only during early prototype bring-up. Non-secret configuration such as the OTA server URL may remain ordinary configuration.
+
+
+### Persistent operational fault log — 26 September 2026
+
+**ADOPTED / IMPLEMENTATION PENDING.** Hardware and software faults detected during normal EFIS operation must be written to a persistent fault/event log in ESP32 non-volatile storage and remain available after power loss or reboot. The rotary-controlled boot menu gains **FAULT LOG** for review.
+
+The log must be bounded/wear-conscious rather than an unlimited stream of flash writes. Record fault transitions and significant events, not every repeated polling failure. Each entry should include a stable fault code, subsystem/source, severity, occurrence count, first/most-recent occurrence information where a trustworthy time source is available, firmware/build identity, and useful non-secret diagnostic context. Never store Wi-Fi passwords or other credentials in the fault log.
+
+Critical runtime faults must still produce immediate fail-obvious indications during operation; persistent logging is diagnostic history and must never substitute for live validity/failure annunciation. Clearing the log requires an explicit user action from the maintenance/boot UI and must not happen automatically on reboot or firmware update.
