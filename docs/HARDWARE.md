@@ -138,3 +138,11 @@ The existing electronics carrier was deliberately designed with edge-location ra
 The 1000-nit LCD backlight is likely to dominate heat generation. The complete assembly must be tested at elevated ambient temperature and under representative solar loading.
 
 Electronics that affect attitude measurement must not move relative to the airframe. IMU reference alignment is more important than cosmetic display alignment.
+
+## Boot control, diagnostic testability and production networking
+
+The PEC09 rotary/push control is the normal physical controller for the boot menu and maintenance dialogs: rotate to move selection and short-press to enter/confirm. The boot menu offers **START EFIS**, **FULL TEST** and **FIRMWARE UPDATE**, with START EFIS selected by default.
+
+Production hardware should be designed for the bootable electrical test harness: preserve labelled rail/test points and, where practical, permit safe identity, rail and protected-interface diagnostics. Display/backlight testing still requires visual confirmation. External aircraft-connected interfaces must never be driven into an unsafe state by test mode.
+
+Wi-Fi credentials are persistent in ESP-IDF NVS. Production configuration requires NVS encryption for stored credentials. Wi-Fi remains maintenance-only and is explicitly entered from the firmware-update path; it is not silently enabled during normal flight presentation.
