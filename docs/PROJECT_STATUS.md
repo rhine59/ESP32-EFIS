@@ -353,3 +353,8 @@ The apps are not flight instruments. They must never store raw payment PAN/CVV o
 ### Authoritative licensing process — 26 September 2026
 
 **DOCUMENTED / IMPLEMENTATION PARTIAL.** `docs/LICENSING.md` is now the authoritative end-to-end licensing specification. It covers trust boundaries, immutable Device ID provisioning/display, signed payload requirements, purchase/entitlement flow, online and offline installation, local boot verification, firmware compatibility, reset/replacement, ownership transfer, default 30-day transfer grace, lifecycle/audit/failure behaviour, production security gates and required tests. Existing account/web/mobile artefacts are staged; signer, cryptographic format, device challenge/API, payment adapters and physical ESP32 implementation remain pending.
+
+
+### Licence cryptography and format — 26 September 2026
+
+**ADOPTED / IMPLEMENTATION PENDING.** Licence signing is frozen on **Ed25519** over a **deterministic CBOR** payload, wrapped in a versioned CBOR envelope carrying algorithm ID, key ID, payload bytes and signature. Base64url is permitted only as outer text transport. EFIS holds public verification keys only; private keys remain isolated in the licence signer/key-storage boundary. Key rotation uses an explicit key ID and overlapping trusted public keys. Parsers require strict bounds and hostile-input handling. Cross-platform signer/ESP32 test vectors are mandatory before production.
