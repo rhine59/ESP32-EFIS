@@ -10,7 +10,7 @@ The front bezel, body, optical window, display carrier, BMI088 carrier and 68 mm
 
 ## Rear-cover multifunction revision
 
-The Bosch BMP585 pressure system and remote PNI RM3100-CB require two rear services. The OpenSCAD source now adds **two reinforced 12 mm diameter × 5 mm bosses**, each with an intentionally undersize **3 mm pilot hole**: upper-left `STATIC` and upper-right `MAG`.
+The Bosch BMP585 static-pressure system and remote PNI RM3100-CB require rear services. The OpenSCAD source now adds **two reinforced 12 mm diameter × 5 mm bosses**, each with an intentionally undersize **3 mm pilot hole**: upper-left `STATIC` and upper-right `MAG`.
 
 The final fitting/gland is not guessed in CAD. Enlarge the pilot only after purchased hardware is measured. At this stage only rear-cover geometry changes; regenerate its STL from the current SCAD before printing the multifunction cover.
 
@@ -45,10 +45,7 @@ The production concept places the EFIS body **behind the binnacle**. A minimal n
 Production power is nominal **12 V aircraft input** through an appropriate protected/filtering conversion stage to internal 5 V and 3.3 V rails; USB-C becomes primarily a service/programming interface. The rear/interface concept also reserves GNSS and protected DATA/EXPANSION connectivity. Exact connector families, mounting pattern and dimensions remain unfrozen pending physical validation. Earlier renders/CAD remain conceptual where they conflict with these later requirements.
 
 
-## Pitot/static enclosure revision — 26 September 2026
 
-The previous single-STATIC rear pneumatic concept is superseded. The enclosure now requires two clearly labelled pneumatic bulkhead connections: **PITOT** and **STATIC**. STATIC tees internally to the BMP585 and differential-sensor P-minus; PITOT connects to differential-sensor P-plus. Exact fitting family, barb diameter, tubing, tee and spacing remain unfrozen until the Skyranger pneumatic installation is measured.
+## Airspeed scope decision — 26 September 2026
 
-Keep internal tubing short, supported and unkinked, with no mechanical load on sensor ports. PITOT and STATIC must be permanently labelled and made difficult to interchange. The front design remains unchanged: established round Newhaven display/front bezel, PEC09 rotary control, behind-binnacle body and front-entered bolts into recessed captive nuts.
-
-The rectangular multi-button enclosure image generated on 26 September 2026 is **REJECTED / NOT A DESIGN REFERENCE**. Future enclosure visuals must start from the latest accepted round-display enclosure concept and add agreed features rather than invent a replacement enclosure.
+**ASI/IAS capability is removed from the EFIS scope.** The enclosure requires only the **STATIC** pneumatic connection for the BMP585 altitude/barometric-pressure system. There is no PITOT connection and no differential-pressure sensor. Preserve the established round-display/front-bezel/PEC09/behind-binnacle/captive-nut enclosure concept. The previously generated rectangular multi-button image remains rejected and is not a design reference.
