@@ -322,3 +322,12 @@ The account/licensing portal must use a payment-provider abstraction rather than
 Preferred first implementation is a hosted/tokenized checkout from a PCI-compliant payment provider so card data is submitted directly to the provider and never traverses or persists in `efis-account`, its logs or database. Store only provider customer/payment/transaction identifiers, payment status, amount/currency and entitlement/audit metadata needed for reconciliation.
 
 The server payment adapter must allow provider replacement/addition (for example Stripe, PayPal/Braintree or Adyen) without changing device licensing. Verified provider webhooks update the entitlement state; only then may the private licence signer issue/refresh the corresponding signed licence.
+
+
+### Account-service prototype — 26 September 2026
+
+**IMPLEMENTED IN REPOSITORY / BUILD AND SECURITY VALIDATION PENDING.** `account-service/` now contains a Dockerized FastAPI + PostgreSQL prototype for customer accounts, provisioned EFIS Device IDs, secondary MAC fingerprints and licence entitlements. It binds to loopback port 8091 and includes build/health-test scripts.
+
+The prototype intentionally does not store payment-card PAN/CVV and does not hold the private licence-signing key. The internal normalized payment-event endpoint is scaffolding only: production Stripe/PayPal/Braintree/Adyen adapters require provider webhook signature verification. Authentication/session management, email verification/reset/MFA, admin RBAC, device challenge authentication, signer integration, migrations/backups, privacy controls and security tests remain pending.
+
+No claim of a successful Synology build/deployment is made until the supplied harness is run there.
