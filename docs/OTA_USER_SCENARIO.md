@@ -83,3 +83,51 @@ open ESP32EFISSimulator.xcodeproj
 ```
 
 Exercise: auto-download ON success, auto-download OFF/manual Download, `Later`, successful Activate & Reboot, and simulated first-boot failure/rollback. Repository implementation is not by itself an Xcode compile/runtime validation claim.
+
+
+## Boot-time Wi-Fi connection dialog
+
+When boot offers **Check for update**, the update path must include an explicit Wi-Fi connection dialog before any network request. The EFIS must not silently enable/reconnect Wi-Fi during normal instrument operation.
+
+Recommended boot/update sequence:
+
+```text
+EFIS BOOT
+   |
+   +-- Start EFIS
+   +-- Full electrical test
+   +-- Check for firmware update
+             |
+             v
+       WI-FI CONNECTION
+       Saved network: <SSID>       [Connect]
+       Scan for networks           [Scan]
+       Enter network manually      [Manual]
+       Forget saved network        [Forget]
+       Cancel / Continue without update
+             |
+             v
+       CONNECTING...
+       Wi-Fi -> DNS/Internet -> TLS -> OTA server
+             |
+          success?
+          /    \
+        no      yes
+        |        |
+   show fault   CHECK FOR UPDATE
+   + Retry          |
+   + Change Wi-Fi   +-- Up to date -> Start EFIS
+   + Start EFIS     +-- Update available
+                             |
+                         Download
+                             |
+                    verify inactive slot
+                             |
+                    ACTIVATE & REBOOT
+```
+
+The dialog shall support an iPhone Personal Hotspot and ordinary WPA2/WPA3 Personal networks supported by the ESP32. It should show SSID and connection state but never display a stored password after entry. Credentials may be stored in NVS only after deliberate connection/save behaviour and must never be logged or sent to the OTA server.
+
+Failure must be recoverable: inability to establish Wi-Fi, Internet, TLS or OTA-server connectivity must **not prevent the existing known-good EFIS firmware from starting**. The dialog should identify the failed layer and offer **Retry**, **Change Wi-Fi**, and **Start EFIS**.
+
+Firmware activation remains separate from networking. A successful Wi-Fi connection only permits Check/Download; a verified candidate still requires the explicit local **ACTIVATE & REBOOT** action.
