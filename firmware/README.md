@@ -116,3 +116,12 @@ Wi-Fi SSID/credentials persist in a dedicated ESP-IDF NVS namespace. Production 
 Normal-operation hardware and software faults must be captured in a persistent, bounded ESP32 non-volatile fault/event log. The boot menu includes **FAULT LOG**, navigated with the PEC09 rotary/push control. Repeated instances of the same continuing fault are coalesced/count-incremented where practical to limit flash wear rather than written on every poll.
 
 Records include stable fault code, source/subsystem, severity, occurrence information, firmware/build identity and safe diagnostic context. Valid timestamps may be added when a trustworthy time source is available. Wi-Fi credentials and other secrets must never be logged. Log clearing is explicit and confirmed; reboot/update must not erase the history. Runtime failure indications remain immediate and independent of the persistent log.
+
+
+## Product licence subsystem — planned
+
+Provision a local/offline licence verifier using signed licence payloads. Production units have a stable provisioned device/product ID; an authorised off-device tool signs licences with a private key while firmware contains only the corresponding public verification key. Verified licence state is persisted in protected non-volatile storage.
+
+The rotary boot/maintenance menu gains **LICENSE** for Status, Install/Replace and Reset. USB/service installation is the baseline; a later authenticated network path may be added. Reset is explicit/confirmed, clears installed licence state, is logged, and does not alter Wi-Fi credentials. Firmware updates normally preserve the licence. Licence and OTA signing keys are separate.
+
+Licensing must not create plausible-but-invalid flight indications or suppress required failure annunciation. Core versus optionally licensed functions must be explicitly defined before production.
