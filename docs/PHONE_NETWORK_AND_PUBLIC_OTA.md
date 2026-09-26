@@ -62,3 +62,9 @@ ESP32 firmware still requires maintenance Wi-Fi station scanning/association, NV
 ## Validation
 
 **SWIFT WORKFLOW IMPLEMENTED / PHYSICAL NETWORKING AND PUBLIC DEPLOYMENT UNVALIDATED.** Bench validation requires real ESP32-S3 + iPhone hotspot + cellular Internet + public DNS/TLS, plus wrong password, hotspot/cellular loss, DNS/TLS/server failure, interrupted downloads and recovery. See `OTA_USER_SCENARIO.md`, `OTA_IMAGE_ADMIN.md` and `REMOTE_UPDATES.md`.
+
+## Boot integration and credential persistence — 26 September 2026
+
+The maintenance network flow is entered from the rotary-controlled boot menu by selecting **FIRMWARE UPDATE**. Before manifest access, the EFIS presents a Wi-Fi dialog operable using rotate + press: connect to saved network, scan, manual entry, Forget, retry/change network, or Start EFIS without updating. A failed Wi-Fi/Internet/DNS/TLS/OTA-server step never prevents normal startup.
+
+SSID and credentials persist in a dedicated ESP-IDF NVS namespace. Production units require **NVS encryption** for Wi-Fi credentials; ordinary NVS is acceptable only during early prototype bring-up. The password is never redisplayed after entry, logged, included in diagnostics/test-harness output or transmitted to the OTA server. **Forget network** erases the stored credentials.
