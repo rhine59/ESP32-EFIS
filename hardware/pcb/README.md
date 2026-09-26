@@ -133,8 +133,9 @@ Do **not** integrate these yet:
 
 - bare TPS61169 LED driver
 - BMI088 sensor IC directly on the main PCB
-- aircraft 12 V input/transient protection
-- GNSS
+- aircraft 12 V input/transient protection (production requirement now defined; still excluded from Revision A bench PCB)
+- GNSS (production architecture must allow active/powered GNSS and USB GNSS receiver options; receiver not yet selected)
+- protected external avionics interfaces (production PCB to reserve resources/footprints for RS-232 and optional RS-485/CAN)
 - ambient light sensor
 
 Those can follow once the display, USB, regulator and AHRS paths are proven.
@@ -156,3 +157,23 @@ Before releasing Gerbers:
 - inspect GPIO35–37 remain free from internal-memory conflicts by confirming the exact `N16R2` module
 
 The first PCB should be treated as a bench prototype until electrical, thermal, vibration and failure-mode testing are complete.
+
+
+## Production-interface reservations (post-Revision-A)
+
+Revision A remains a bench-development PCB. The eventual production carrier should reserve routing, GPIO/UART resources and board area for:
+
+- nominal 12 V aircraft input with reverse-polarity, transient/surge, filtering and DC/DC conversion;
+- separate regulated 5 V and 3.3 V rails;
+- GNSS connection supporting the selected active/powered GNSS solution and/or USB GNSS receiver;
+- at least one protected RS-232 RX/TX channel for external avionics data;
+- optional unpopulated RS-485 and CAN transceiver footprints;
+- separate UART allocation for GNSS and external avionics;
+- USB-C service/programming;
+- internal low-level I2C/GPIO service access rather than exposing unprotected MCU GPIO to aircraft wiring.
+
+A future PilotAware/traffic integration should normally be a **listener/data-consumer** arrangement. Do not place the EFIS in series with, or make it necessary for, an existing transponder/control-head data path.
+
+## Production mechanical direction
+
+The current enclosure direction is rear-of-binnacle installation with panel bolts inserted from the front into recessed stainless captive nuts in the enclosure. Minimise enclosure assembly fasteners and use small cap-head Allen hardware where practical. Exact hole pattern, thread size, connector family, enclosure depth and panel geometry remain subject to physical prototype validation.
