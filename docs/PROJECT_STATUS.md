@@ -149,7 +149,7 @@ This register records material alternatives as well as the chosen design. A late
 | D131 | iPhone Personal Hotspot as temporary EFIS Internet gateway | **ADOPTED** | Phone supplies network only; EFIS remains the HTTPS OTA client. |
 | D132 | Phone itself downloads/flashes EFIS firmware | **DISMISSED** | Adds an unnecessary phone-side update protocol; adopted design keeps update verification/flash/rollback on ESP32. |
 | D133 | Maintenance-only Network Connection dialog on instrument | **ADOPTED; SWIFT SIMULATED** | User needs explicit hotspot credentials/server/test controls without networking silently appearing during normal operation. |
-| D134 | Store hotspot SSID/password in NVS with Forget action | **ADOPTED / ESP32 IMPLEMENTATION PENDING** | Enables repeat maintenance use while keeping credentials local to the instrument. Password must not be logged/server-sent. |
+| D134 | Store hotspot SSID/password persistently in a dedicated NVS namespace, with Forget action; use NVS encryption for production units | **ADOPTED / ESP32 IMPLEMENTATION PENDING** | Enables repeat maintenance use while keeping credentials local to the instrument. Prototype may initially use ordinary NVS; production credentials must use encrypted NVS. Password must never be displayed after entry, logged or server-sent. |
 | D135 | Open Wi-Fi for OTA maintenance | **DISMISSED** | Use authenticated WPA2/WPA3 Personal as supported; no reason to accept an open maintenance network. |
 | D136 | Wi-Fi silently reconnects during normal instrument operation | **DISMISSED** | Network/OTA activity is maintenance-only and should not unexpectedly alter operational behaviour. |
 | D137 | Layered connection test: Phone → DNS/Internet → TLS → OTA server | **ADOPTED; SWIFT SIMULATED** | Produces useful fault isolation without downloading/installing firmware. |
@@ -258,3 +258,8 @@ The harness is intended for bench commissioning, manufacturing, installation and
 ### Boot/update Wi-Fi interaction — 26 September 2026
 
 The boot-time firmware-update option must invoke an explicit **Wi-Fi Connection** dialog before checking the OTA manifest. It supports saved-network connection, network scan/manual entry, changing/forgetting credentials, retry and **Start EFIS without update**. Connection diagnostics remain layered (Wi-Fi -> Internet/DNS -> TLS -> OTA server). Network failure must never block startup of the existing known-good firmware. Wi-Fi is maintenance-only and must not silently reconnect during normal instrument operation. See `OTA_USER_SCENARIO.md`.
+
+
+### Persistent Wi-Fi credential storage — 26 September 2026
+
+Wi-Fi SSID and credentials are stored persistently in ESP32 flash using ESP-IDF NVS in a dedicated namespace. The saved password is never redisplayed after entry and must never appear in logs, diagnostics, test-harness output or OTA-server requests. The boot/update UI provides **Forget network**, which erases the saved credentials. Production units require **NVS encryption** for stored Wi-Fi credentials; ordinary NVS is permitted only during early prototype bring-up. Non-secret configuration such as the OTA server URL may remain ordinary configuration.
