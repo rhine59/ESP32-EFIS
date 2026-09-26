@@ -71,3 +71,13 @@ Every functional change updates code, relevant documentation, `PROJECT_STATUS.md
 No missing/stale source may leave a plausible frozen indication. Simulation is conspicuously marked and is never an automatic fallback. PCB and irreversible aircraft-interface decisions remain parked until their prerequisite measurements and bench validations are complete.
 
 See `GNSS_DISPLAY.md`, `PROJECT_STATUS.md`, `TESTING.md`, `SENSORS.md`, `WIRING.md`, `ENCLOSURE.md`, `POWER_BUDGET.md` and `../BOM.md`.
+
+## Added boot/maintenance workstream — 26 September 2026
+
+- implement rotary-controlled boot menu with START EFIS (default), FULL TEST and FIRMWARE UPDATE;
+- implement simulated electrical-test result model and documented failure codes before physical test claims;
+- integrate physical component tests as each hardware interface is commissioned;
+- implement boot-time Wi-Fi dialog and persistent NVS credentials;
+- enable encrypted NVS for production Wi-Fi credentials;
+- preserve a Start EFIS escape path for every network/update failure;
+- keep activation explicit after download/verification and validate A/B first-boot rollback.
