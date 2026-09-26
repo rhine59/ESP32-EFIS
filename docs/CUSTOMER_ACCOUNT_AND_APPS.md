@@ -57,3 +57,30 @@ The exact duration is configurable server-side and shown clearly to seller and b
 Web, iOS and Android instrument-detail pages should expose **Sell / Transfer EFIS**. The seller sees the Device ID, transferable entitlements, exclusions and consequences before confirming. The buyer uses **Accept transferred EFIS**, entering/scanning the one-time code or following an authenticated invitation. Both receive a final transfer receipt/status.
 
 This workflow is account/licensing administration only; it must never alter flight data, calibration or instrument safety configuration as a side effect.
+
+
+## Device ID at boot
+
+The permanent provisioned **EFIS Device ID must be displayed during every boot** so an owner can identify/register the instrument without entering a maintenance screen.
+
+Boot presentation requirement:
+
+```text
+        EFIS BOOT
+     EFIS-00001247
+
+      > START EFIS
+        FULL TEST
+        FAULT LOG
+        LICENSE
+        FIRMWARE UPDATE
+```
+
+Rules:
+- show the Device ID on the normal boot menu, before any account/network/licence action;
+- keep it visible while the boot menu is displayed and readable at normal installed viewing distance;
+- the Device ID is not a secret and may also appear in LICENSE, diagnostics and customer registration workflows;
+- it is immutable under normal customer operations, licence reset, Wi-Fi reset, factory reset and ownership transfer;
+- it must come from the authoritative provisioned device identity, never a generated UI placeholder or MAC address;
+- if device identity is missing/corrupt, display a clear identity fault rather than inventing an ID, and record the fault in the persistent fault log;
+- displaying the ID must not require Wi-Fi, account access or a valid licence.
