@@ -109,3 +109,10 @@ The Altimeter path uses the selected ported BMP585 architecture and needs live p
 The adopted physical boot UI is controlled by the PEC09 rotary/push encoder and offers **START EFIS** (default), **FULL TEST**, and **FIRMWARE UPDATE**. FULL TEST will run the staged electrical/component harness documented in `../docs/ELECTRICAL_TEST_HARNESS.md`. FIRMWARE UPDATE will first establish Wi-Fi through a rotary-operated connection dialog before any OTA manifest request.
 
 Wi-Fi SSID/credentials persist in a dedicated ESP-IDF NVS namespace. Production firmware requires encrypted NVS for credentials; credentials must not be redisplayed after entry or emitted in logs/diagnostics. These boot/test/network functions are design requirements until their firmware implementation and validation status is explicitly advanced.
+
+
+## Persistent operational fault log
+
+Normal-operation hardware and software faults must be captured in a persistent, bounded ESP32 non-volatile fault/event log. The boot menu includes **FAULT LOG**, navigated with the PEC09 rotary/push control. Repeated instances of the same continuing fault are coalesced/count-incremented where practical to limit flash wear rather than written on every poll.
+
+Records include stable fault code, source/subsystem, severity, occurrence information, firmware/build identity and safe diagnostic context. Valid timestamps may be added when a trustworthy time source is available. Wi-Fi credentials and other secrets must never be logged. Log clearing is explicit and confirmed; reboot/update must not erase the history. Runtime failure indications remain immediate and independent of the persistent log.
