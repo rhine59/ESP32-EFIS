@@ -368,3 +368,8 @@ The apps are not flight instruments. They must never store raw payment PAN/CVV o
 ### Pitot/static airspeed architecture — 26 September 2026
 
 **ADOPTED / IMPLEMENTATION PENDING.** Minimum IAS capability is **180 kt**. BMP585 is STATIC-only; airspeed uses PITOT-to-P-plus and STATIC-to-P-minus differential sensing. SDP31 500 Pa is **SUPERSEDED** as under-range. Development baseline is the 1 psi TE Connectivity / MEAS MS4525DO family; exact suffix pending review. Production enclosure direction requires labelled PITOT/STATIC pneumatic bulkheads, with exact fittings/tubing decided after Stage 3 survey. The established round-display/PEC09/behind-binnacle/captive-nut enclosure concept remains authoritative. The rectangular multi-button image generated on 26 September is **REJECTED / NOT A DESIGN REFERENCE**.
+
+
+### Production parts cost model — 26 September 2026
+
+**PLANNING TARGET / NOT A QUOTATION.** Current one-off completed-instrument parts estimate is approximately **£250–£365**, with **£300** used as the working planning figure and £350 as a contingency target while major selections remain open. Aim for a repeatable production BOM of **£300 or less at approximately 10–25 units** where engineering requirements permit. Development equipment/labour and commercial/certification costs are excluded. `docs/COST_MODEL.md` is the maintained cost model; `BOM.md` remains authoritative for components/procurement.
