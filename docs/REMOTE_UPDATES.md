@@ -133,3 +133,10 @@ Implemented in source control: Docker read-only origin, private image admin, sta
 OTA is entered deliberately from the physical rotary boot menu: **FIRMWARE UPDATE** -> **Wi-Fi Connection** -> Check -> Download/Verify -> explicit **ACTIVATE & REBOOT**. The rotary/push control must operate the complete instrument-side flow. START EFIS remains available if networking fails.
 
 Saved Wi-Fi credentials persist in ESP-IDF NVS and require encrypted NVS in production. Wi-Fi/network failure must not alter the current known-good application or prevent it starting. Auto-download, where enabled, still applies only inside maintenance/update context and never implies automatic activation.
+
+
+## Licence compatibility
+
+Firmware/OTA and product licensing are separate trust domains. OTA image signing and licence signing must use separate keys. Firmware updates must preserve a valid installed licence unless an explicit migration is required and tested. Licence verification is local/offline using a public verification key embedded/provisioned in the EFIS; the private licence-generation key must never be present on the instrument or OTA public server.
+
+Licence schema/version compatibility must be checked during update testing so an otherwise valid update cannot silently strand a licensed instrument.
