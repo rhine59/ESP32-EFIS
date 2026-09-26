@@ -43,3 +43,12 @@ This remains a supplementary/non-primary instrument under flight development.
 The production concept places the EFIS body **behind the binnacle**. A minimal number of small cap-head Allen mounting bolts enter from the front of the binnacle and engage recessed stainless captive nuts in the enclosure; loose rear mounting nuts are not intended. Enclosure assembly hardware should also be minimised.
 
 Production power is nominal **12 V aircraft input** through an appropriate protected/filtering conversion stage to internal 5 V and 3.3 V rails; USB-C becomes primarily a service/programming interface. The rear/interface concept also reserves GNSS and protected DATA/EXPANSION connectivity. Exact connector families, mounting pattern and dimensions remain unfrozen pending physical validation. Earlier renders/CAD remain conceptual where they conflict with these later requirements.
+
+
+## Pitot/static enclosure revision — 26 September 2026
+
+The previous single-STATIC rear pneumatic concept is superseded. The enclosure now requires two clearly labelled pneumatic bulkhead connections: **PITOT** and **STATIC**. STATIC tees internally to the BMP585 and differential-sensor P-minus; PITOT connects to differential-sensor P-plus. Exact fitting family, barb diameter, tubing, tee and spacing remain unfrozen until the Skyranger pneumatic installation is measured.
+
+Keep internal tubing short, supported and unkinked, with no mechanical load on sensor ports. PITOT and STATIC must be permanently labelled and made difficult to interchange. The front design remains unchanged: established round Newhaven display/front bezel, PEC09 rotary control, behind-binnacle body and front-entered bolts into recessed captive nuts.
+
+The rectangular multi-button enclosure image generated on 26 September 2026 is **REJECTED / NOT A DESIGN REFERENCE**. Future enclosure visuals must start from the latest accepted round-display enclosure concept and add agreed features rather than invent a replacement enclosure.
