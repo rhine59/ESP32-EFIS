@@ -119,3 +119,8 @@ Offline flow: show Device ID and short registration code/QR-capable text; user o
 Payment integration is provider-adapter based. The account service creates checkout/customer-management requests and consumes verified payment webhooks; payment card data is handled by the payment provider, not stored by EFIS services. Payment status changes entitlements; a separate private signing worker/service generates signed licence payloads. Define explicit grace/revocation policy before subscriptions are enabled.
 
 Suggested containers: `efis-account` API/web portal; PostgreSQL account/device/entitlement store; private `efis-license-signer` with tightly restricted signing-key access; existing `efis-ota` and `efis-ota-admin`. Payment provider secrets live only in server-side secret storage.
+
+
+## Pitot/static and IAS direction — 26 September 2026
+
+The EFIS now has an **at least 180 kt IAS measurement/display design requirement**. BMP585 remains connected to STATIC for barometric altitude. Airspeed uses a separate 1 psi differential sensor: PITOT to P-plus, STATIC to P-minus. The enclosure therefore requires two permanently labelled rear pneumatic connections, **PITOT** and **STATIC**; exact fittings/tubing await aircraft measurement.
