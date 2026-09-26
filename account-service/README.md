@@ -30,3 +30,10 @@ The service binds to NAS loopback only. Publish it only through an authenticated
 ## Still required before production
 
 Login/session or OIDC, email verification/password reset/MFA, CSRF/rate limiting, admin RBAC, migrations/backups, verified payment-provider webhook adapters, device challenge authentication, private licence signer integration, privacy/retention controls, tests and security review.
+
+
+## Customer web portal
+
+The container now includes a responsive owner portal at `/` with account registration/sign-in, session-backed dashboard, registered-instrument display and EFIS Device ID registration. Payment and licence-generation controls remain deliberately inactive until verified provider-webhook and private signer integrations are implemented.
+
+Production hardening still requires CSRF protection, rate limiting, email verification/password reset/MFA, session expiry/revocation, admin RBAC and end-to-end security tests before public exposure.
