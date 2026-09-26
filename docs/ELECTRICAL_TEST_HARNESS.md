@@ -136,3 +136,12 @@ The final screen remains displayed until acknowledged and the full structured re
 6. **Stage F:** regression harness and manufacturing/maintenance test procedure.
 
 Every implemented test requires both a known-good PASS case and an injected/realistic FAIL case before being marked validated.
+
+
+## Persistent runtime fault history
+
+The electrical test code registry also provides stable identifiers for faults detected during normal operation where applicable. Runtime hardware/software faults are persisted in a bounded, wear-conscious non-volatile fault log and reviewed from **FAULT LOG** on the rotary boot menu.
+
+Store fault transitions/significant events rather than continuously rewriting the same active fault. Entries retain fault code, subsystem/source, severity, occurrence count, firmware/build identity and non-secret diagnostic context. Add trustworthy timestamps only when a valid time source exists; do not invent a wall-clock time when it does not. Credentials are prohibited from the log.
+
+The boot viewer must allow scrolling through entries, viewing details and deliberately clearing the log with confirmation. Power cycling, normal boot and firmware update do not silently erase fault history. Persistent logging supplements, but never delays or replaces, immediate fail-obvious runtime annunciation.
