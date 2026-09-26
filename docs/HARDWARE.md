@@ -146,3 +146,8 @@ The PEC09 rotary/push control is the normal physical controller for the boot men
 Production hardware should be designed for the bootable electrical test harness: preserve labelled rail/test points and, where practical, permit safe identity, rail and protected-interface diagnostics. Display/backlight testing still requires visual confirmation. External aircraft-connected interfaces must never be driven into an unsafe state by test mode.
 
 Wi-Fi credentials are persistent in ESP-IDF NVS. Production configuration requires NVS encryption for stored credentials. Wi-Fi remains maintenance-only and is explicitly entered from the firmware-update path; it is not silently enabled during normal flight presentation.
+
+
+## Pitot/static and airspeed hardware — 26 September 2026
+
+BMP585 remains the STATIC/barometric sensor. A separate **1 psi TE Connectivity / MEAS MS4525DO differential sensor** is the development baseline for IAS: PITOT/total pressure connects to P-plus and STATIC to P-minus. The EFIS requirement is **at least 180 kt IAS capability**. At standard sea-level density this is approximately 5.25 kPa differential pressure; 1 psi is about 6.895 kPa. Exact MS4525DO suffix/ports/interface remain to be frozen. The earlier SDP31 500 Pa proposal is superseded as under-range.
