@@ -42,6 +42,63 @@ Every normal boot displays the Device ID:
         FIRMWARE UPDATE
 ```
 
+## 2A. Frozen licence cryptography and wire format
+
+**ADOPTED design choice:** use **Ed25519** digital signatures over a **deterministic CBOR** licence payload.
+
+Rationale:
+- Ed25519 gives compact 32-byte public keys and 64-byte signatures, strong modern asymmetric authentication and straightforward offline verification.
+- CBOR is compact, binary, implementation-friendly on embedded systems and can be encoded deterministically so the exact bytes being signed are reproducible.
+- The EFIS stores only the Ed25519 public verification key. The private signing key exists only in the isolated licence-signer/key-storage boundary.
+- This choice keeps licensing independent of HTTPS and OTA image signing.
+
+### Signed envelope v1
+
+The transport artefact is a CBOR map containing:
+- `v`: envelope version, initially 1;
+- `alg`: fixed algorithm identifier `Ed25519`;
+- `kid`: verification-key identifier supporting controlled key rotation;
+- `payload`: byte string containing the complete deterministic-CBOR licence payload;
+- `sig`: 64-byte Ed25519 signature over exactly the `payload` bytes.
+
+The payload v1 contains integer-keyed fields for compactness and deterministic encoding:
+1. schema version;
+2. product ID;
+3. immutable EFIS Device ID;
+4. unique licence ID;
+5. monotonically useful issuance sequence/identifier;
+6. issued-at timestamp where server time is authoritative;
+7. licence class;
+8. enabled feature/entitlement set;
+9. optional not-before;
+10. optional expiry;
+11. optional transfer/grace metadata;
+12. optional support/maintenance metadata.
+
+Unknown optional fields must be safely ignored only where the schema explicitly permits forward compatibility. Unknown mandatory schema versions are rejected.
+
+### Canonicalization and verification
+
+The signer serializes the payload using deterministic CBOR and signs those exact bytes. The verifier never reconstructs a JSON/string representation for signature verification; it verifies the original payload byte string. After a valid signature, firmware parses the payload and validates schema, product, Device ID, entitlement and applicable time/grace policy.
+
+Base64url may be used only as an outer text transport representation for portals/manual tooling. It is not the signed representation.
+
+### Key management
+
+- Initial signing algorithm is Ed25519 only; algorithm agility is explicit through `alg` and schema version, not automatic fallback.
+- `kid` selects a trusted public key. Firmware contains a small trusted-key set so keys can be rotated without immediately invalidating licences signed by a previous still-trusted key.
+- Private keys are generated and retained in controlled server-side key storage accessible only to `efis-license-signer`; never Git, Docker images, database rows, customer apps or EFIS.
+- Key rotation uses overlap: ship new public key in validated firmware first, then begin signing with the new private key, retain old public key for the defined compatibility window, and remove it only after migration policy allows.
+- A compromised signing key requires an explicit incident/recovery process; do not silently accept an alternate algorithm or unsigned licence.
+
+### Implementation libraries
+
+Use maintained, widely reviewed implementations rather than custom cryptography. Server-side Python should use a mature Ed25519 implementation from a mainstream cryptographic library and a CBOR library supporting deterministic/canonical encoding. ESP32 firmware should use an audited Ed25519 implementation compatible with the selected ESP-IDF baseline and a bounded CBOR decoder. Exact libraries and versions are pinned during implementation and validated with cross-platform test vectors.
+
+### Size and parser limits
+
+Define strict maximum envelope/payload sizes, collection lengths, string lengths and feature counts before firmware parsing. Reject duplicate map keys, malformed/non-deterministic encodings where required, excessive nesting and trailing/unexpected data. Treat all downloaded/imported licence bytes as hostile until signature and structural checks succeed.
+
 ## 3. Licence payload
 
 A signed licence should contain, at minimum:
@@ -59,7 +116,7 @@ A signed licence should contain, at minimum:
 
 Do not put customer passwords, payment credentials, private signing material or unnecessary personal data into the licence.
 
-The exact serialization and cryptographic algorithm are implementation decisions to be frozen before signer development. Use a modern asymmetric signature scheme supported reliably on ESP32; private key never leaves controlled signer/key storage.
+Serialization/signature are frozen above: deterministic CBOR payload in a versioned envelope signed with Ed25519. Private key never leaves controlled signer/key storage.
 
 ## 4. Customer purchase and entitlement
 
