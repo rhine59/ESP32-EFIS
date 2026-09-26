@@ -3,6 +3,7 @@ import hashlib, os, secrets
 from fastapi import FastAPI, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel, EmailStr
 from pwdlib import PasswordHash
@@ -21,6 +22,7 @@ async def lifespan(app):
     yield
 app=FastAPI(title="EFIS Account Service",version="0.2.0",lifespan=lifespan)
 app.add_middleware(SessionMiddleware,secret_key=SESSION_SECRET,https_only=os.getenv("COOKIE_SECURE","1")=="1",same_site="lax")
+app.mount("/static",StaticFiles(directory="app/static"),name="static")
 class Register(BaseModel): email:EmailStr; password:str
 class DeviceRegister(BaseModel): user_id:int; device_id:str; mac:str|None=None
 class PaymentEvent(BaseModel): provider:str; provider_reference:str; device_id:str; product:str; paid:bool
