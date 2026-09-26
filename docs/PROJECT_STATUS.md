@@ -272,3 +272,22 @@ Wi-Fi SSID and credentials are stored persistently in ESP32 flash using ESP-IDF 
 The log must be bounded/wear-conscious rather than an unlimited stream of flash writes. Record fault transitions and significant events, not every repeated polling failure. Each entry should include a stable fault code, subsystem/source, severity, occurrence count, first/most-recent occurrence information where a trustworthy time source is available, firmware/build identity, and useful non-secret diagnostic context. Never store Wi-Fi passwords or other credentials in the fault log.
 
 Critical runtime faults must still produce immediate fail-obvious indications during operation; persistent logging is diagnostic history and must never substitute for live validity/failure annunciation. Clearing the log requires an explicit user action from the maintenance/boot UI and must not happen automatically on reboot or firmware update.
+
+
+### Product licence provisioning — 26 September 2026
+
+**ADOPTED / DESIGN PENDING IMPLEMENTATION.** The EFIS must provide for product licence **generation, installation, inspection and reset/re-provisioning** without making normal instrument safety functions dependent on a live Internet connection.
+
+Design direction:
+- each production instrument has a stable device identity derived from a provisioned product/device identifier; do not use a Wi-Fi MAC address alone as the commercial identity;
+- licences are generated off-device by an authorised licence-generation/admin tool and are **digitally signed**;
+- the EFIS contains only the public verification key, never the private licence-signing key;
+- a licence payload can carry licence/schema version, product/device ID, enabled feature set, issue information and optional expiry/support metadata;
+- installation is a deliberate maintenance action available through the rotary-controlled boot/maintenance UI, with USB/service provisioning as the baseline and an authenticated network method possible later;
+- verified licence state is stored persistently in protected non-volatile storage and remains usable offline;
+- **LICENSE** in the boot menu shows non-secret licence/device status and supports Install/Replace and Reset;
+- Reset requires deliberate confirmation, removes the installed licence/activation state, records the action in the persistent event/fault history, and returns the unit to an unlicensed/provisioning state; it must not reveal or regenerate private signing material;
+- licence reset is separate from Wi-Fi credential reset and from general factory reset;
+- licence corruption/signature failure must be fail-obvious in the licence UI and logged.
+
+**Safety boundary:** licensing must not disable or corrupt essential fail-obvious behaviour in a way that could create misleading flight indications. The exact distinction between always-available core instrument functions and licensable optional features must be frozen before commercialisation.
