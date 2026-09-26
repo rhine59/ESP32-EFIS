@@ -331,3 +331,10 @@ The server payment adapter must allow provider replacement/addition (for example
 The prototype intentionally does not store payment-card PAN/CVV and does not hold the private licence-signing key. The internal normalized payment-event endpoint is scaffolding only: production Stripe/PayPal/Braintree/Adyen adapters require provider webhook signature verification. Authentication/session management, email verification/reset/MFA, admin RBAC, device challenge authentication, signer integration, migrations/backups, privacy controls and security tests remain pending.
 
 No claim of a successful Synology build/deployment is made until the supplied harness is run there.
+
+
+### Customer mobile applications — 26 September 2026
+
+**ADOPTED / NATIVE SKELETONS STAGED / BUILD VALIDATION PENDING.** Native customer companion applications are now staged under `customer-app/`: SwiftUI for iPhone/iPad and Kotlin/Jetpack Compose for Android. Both are clients of the same future versioned `efis-account` HTTPS API and cover account access, registered instruments, Device ID registration, licence/entitlement status, provider-hosted payment, signed licence retrieval/offline activation and reset/re-provisioning.
+
+The apps are not flight instruments. They must never store raw payment PAN/CVV or licence-signing private keys. Account/session tokens will use Keychain on Apple platforms and Keystore-backed storage on Android. Current screens are prototypes with payment/licence actions disabled until the authenticated API, verified payment adapters and private signer are implemented. No iOS/Android build success is claimed yet.
