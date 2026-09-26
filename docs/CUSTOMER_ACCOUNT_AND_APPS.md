@@ -46,7 +46,9 @@ A registered EFIS must support a controlled transfer when the aircraft/instrumen
 - Payment-provider customer/payment instruments never transfer to the buyer.
 - Historical invoices/payment records remain with the original purchaser subject to retention/privacy rules.
 - Installed signed licence remains usable during a reasonable sale/transfer window; normal EFIS startup must not require Internet access.
-- After acceptance, issue a fresh signed licence bound to the same Device ID and the buyer's current entitlement state. Define whether the old licence is immediately superseded or expires after a bounded grace period before production.
+- After acceptance, issue a fresh signed licence bound to the same Device ID and the buyer's current entitlement state. The old installed licence enters a **bounded ownership-transfer grace period** rather than being invalidated immediately. During the grace period the EFIS remains fully usable offline while the buyer completes account registration and installs the replacement signed licence. At grace expiry, the superseded licence follows the product's defined post-expiry behaviour; safety/fail-obvious core instrument behaviour must never be corrupted or misleading.
+
+The exact duration is configurable server-side and shown clearly to seller and buyer. Initial product default: **30 days from buyer acceptance of the transfer**. Installing the buyer's replacement signed licence ends the transfer grace state early. The grace period must not be shortened retrospectively for an already accepted transfer.
 - Refund, chargeback, subscription and non-transferable-feature policy must be explicit per entitlement.
 - A factory reset or licence reset does not itself change registered ownership.
 
