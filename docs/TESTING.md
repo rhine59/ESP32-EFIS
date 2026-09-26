@@ -73,3 +73,9 @@ Only after the preceding stages are satisfactory and only as a non-primary exper
 Deliberately test disconnected/stale/corrupt BMI088 data, pressure-sensor failure, magnetometer failure, display task slowdown, processor restart, power interruption and invalid calibration data. Synthetic simulation must never activate automatically as a fallback for a failed real sensor.
 
 The required response to a real-source failure is a conspicuous invalid indication, not synthetic substitution and not a frozen plausible value.
+
+## Bootable full electrical test harness — 26 September 2026
+
+A rotary-selectable **FULL TEST** boot option is now an adopted requirement. It runs deterministic electrical/component checks and reports PASS / FAIL / NOT TESTED plus stable documented `ECCC-NN` failure codes. Tests continue after non-dangerous failures to collect a complete fault list. Optional/unfitted hardware must not be reported as failed. Display/backlight tests include a human visual check.
+
+Implementation/validation proceeds from simulated PASS/FAIL cases through Phase-1 hardware, BMI088/BMP585, RM3100/GNSS and eventual production power/serial-interface tests. Each implemented test requires both a known-good PASS and an injected or realistic FAIL case. See `ELECTRICAL_TEST_HARNESS.md` for the code registry and staged implementation plan.
