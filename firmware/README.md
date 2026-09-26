@@ -125,3 +125,18 @@ Provision a local/offline licence verifier using signed licence payloads. Produc
 The rotary boot/maintenance menu gains **LICENSE** for Status, Install/Replace and Reset. USB/service installation is the baseline; a later authenticated network path may be added. Reset is explicit/confirmed, clears installed licence state, is logged, and does not alter Wi-Fi credentials. Firmware updates normally preserve the licence. Licence and OTA signing keys are separate.
 
 Licensing must not create plausible-but-invalid flight indications or suppress required failure annunciation. Core versus optionally licensed functions must be explicitly defined before production.
+
+
+### Licence account service architecture — 26 September 2026
+
+**ADOPTED / DESIGN STAGED.** Add a separate Docker service (working name `efis-account`) alongside OTA/admin services. It owns customer accounts, registered EFIS devices, licence entitlements and payment-provider linkage; it does not hold the licence-signing private key in the public web tier.
+
+Device identity uses a provisioned immutable **EFIS Device ID / serial number** as the primary key. The ESP32 factory/eFuse base MAC may be recorded as a secondary hardware fingerprint and registration aid, but MAC address alone is not the licence identity because interface MACs can be derived/changed and MAC exposure is unnecessary for manual licensing.
+
+Online boot-maintenance flow: LICENSE -> Connect Wi-Fi -> identify device -> authenticated account/licence endpoint -> fetch signed licence entitlement -> verify locally -> store in protected NVS -> continue offline. The EFIS must not send a user password; device authentication uses a provisioned device credential/challenge mechanism to be specified. Normal flight startup must not depend on account/payment/network availability.
+
+Offline flow: show Device ID and short registration code/QR-capable text; user obtains a signed licence from the account portal on another device and enters/imports it manually or via USB service. The licence is verified locally with the embedded public verification key.
+
+Payment integration is provider-adapter based. The account service creates checkout/customer-management requests and consumes verified payment webhooks; payment card data is handled by the payment provider, not stored by EFIS services. Payment status changes entitlements; a separate private signing worker/service generates signed licence payloads. Define explicit grace/revocation policy before subscriptions are enabled.
+
+Suggested containers: `efis-account` API/web portal; PostgreSQL account/device/entitlement store; private `efis-license-signer` with tightly restricted signing-key access; existing `efis-ota` and `efis-ota-admin`. Payment provider secrets live only in server-side secret storage.
