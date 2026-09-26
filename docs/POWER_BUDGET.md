@@ -141,3 +141,20 @@ Do not freeze the aircraft DC/DC converter, input fuse/protection or final PCB p
 6. adequate design margin after measurement.
 
 The resulting measured figures become the authoritative power budget and should be recorded in this file with the test configuration and date.
+
+
+## Completed-EFIS design allowance — 26 September 2026
+
+Until physical measurements replace the estimates above, use the following **system-level design allowance** for the completed production architecture, including the nominal 12 V aircraft input conversion stage, GNSS and protected external avionics interfaces:
+
+| Condition | Preliminary system allowance |
+|---|---:|
+| Expected normal operation, Wi-Fi inactive | **~1.5–2 W** |
+| Worst sustained design allowance | **~3–4 W** |
+| Short transient capability to provide | **at least 5 W** |
+
+The 5 W figure is **power-system headroom, not predicted continuous consumption**. It provides margin for full display backlight, ESP32 Wi-Fi transmission, OTA flash activity, GNSS, conversion losses and future protected interfaces.
+
+These allowances do not supersede the present estimated normal prototype consumption of **250–350 mA at 5 V (1.25–1.75 W)**. They are sizing targets for the completed system until commissioning provides measured maximum steady-state, startup/inrush, Wi-Fi/OTA transient and thermal data.
+
+The FULL TEST/commissioning programme should measure power with the backlight at 0/25/50/75/100%, normal sensor acquisition, Wi-Fi association and OTA activity. Those measurements will replace these estimates before the aircraft DC/DC converter, fuse/protection and final thermal design are frozen.
