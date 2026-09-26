@@ -37,3 +37,9 @@ Authoritative source: `enclosure/source/ESP32_Artificial_Horizon_Flight_Developm
 Before aircraft use: verify display/IMU/USB fit; leak-test static plumbing; check pressure response/lag/hysteresis; prove RM3100-CB mounting cannot move; characterize magnetic interference with electrical loads on/off; verify sensor-axis transforms; deliberately disconnect/stale each source and confirm unmistakable invalid indication.
 
 This remains a supplementary/non-primary instrument under flight development.
+
+## Current production mechanical direction — 26 September 2026
+
+The production concept places the EFIS body **behind the binnacle**. A minimal number of small cap-head Allen mounting bolts enter from the front of the binnacle and engage recessed stainless captive nuts in the enclosure; loose rear mounting nuts are not intended. Enclosure assembly hardware should also be minimised.
+
+Production power is nominal **12 V aircraft input** through an appropriate protected/filtering conversion stage to internal 5 V and 3.3 V rails; USB-C becomes primarily a service/programming interface. The rear/interface concept also reserves GNSS and protected DATA/EXPANSION connectivity. Exact connector families, mounting pattern and dimensions remain unfrozen pending physical validation. Earlier renders/CAD remain conceptual where they conflict with these later requirements.
