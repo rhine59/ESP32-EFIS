@@ -12,7 +12,6 @@ This document records the current approximate parts-cost target for one complete
 | ESP32-S3-WROOM-1-N16R2 | £5–6 |
 | BMI088 IMU | £20–30 |
 | BMP585 static/barometric pressure sensor | £15–20 |
-| MS4525DO-family 1 psi differential/pitot sensor | £45–80 |
 | RM3100 magnetometer | £35–50 |
 | GNSS receiver + antenna | £20–35 |
 | Backlight driver + control electronics | £10–15 |
@@ -21,13 +20,13 @@ This document records the current approximate parts-cost target for one complete
 | Connectors, PITOT/STATIC fittings, USB/data etc. | £15–25 |
 | PEC09 encoder, passives and internal wiring | £10–15 |
 | Enclosure, optical window and hardware | £20–35 |
-| **Estimated total** | **approximately £250–£365** |
+| **Estimated total** | **approximately £205–£285** |
 
-Use **approximately £300 per finished EFIS** as the present planning figure and **£350 as a useful contingency target** until the remaining major items are frozen.
+Use **approximately £250 per finished EFIS** as the present planning figure and **£300 as a useful contingency target** until the remaining major items are frozen.
 
 ## Cost target
 
-**Design target:** aim for a repeatable production BOM of **£300 or less at modest quantities (approximately 10–25 units)** where this can be achieved without compromising the adopted supplementary-instrument safety, reliability, environmental or serviceability requirements.
+**Design target:** aim for a repeatable production BOM of **£250 or less at modest quantities (approximately 10–25 units)** where this can be achieved without compromising the adopted supplementary-instrument safety, reliability, environmental or serviceability requirements.
 
 The cost target is subordinate to correct engineering. A cheaper component must not replace a validated component merely to meet the target.
 
@@ -53,15 +52,14 @@ Do not assume a volume saving until supplier quotations and the production BOM a
 ## Major remaining cost uncertainties
 
 The current estimate should be revisited when these are frozen:
-1. exact MS4525DO differential-pressure sensor variant;
-2. GNSS receiver and antenna;
-3. RM3100 production implementation;
-4. custom carrier PCB and assembly method;
-5. protected aircraft 12 V power input;
-6. PITOT/STATIC bulkhead fittings and tubing;
-7. final enclosure/window manufacturing process;
-8. connectors and external data interfaces;
-9. production test/calibration hardware allocation.
+1. GNSS receiver and antenna;
+2. RM3100 production implementation;
+3. custom carrier PCB and assembly method;
+4. protected aircraft 12 V power input;
+5. STATIC bulkhead fitting and tubing;
+6. final enclosure/window manufacturing process;
+7. connectors and external data interfaces;
+8. production test/calibration hardware allocation.
 
 ## Exclusions
 
