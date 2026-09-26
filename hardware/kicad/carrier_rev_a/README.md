@@ -12,3 +12,7 @@ KiCad 8-compatible project for the ESP32 Artificial Horizon custom carrier.
 - 60 mm mounting-hole PCD
 
 This is a prototype hardware revision for bench validation. It is not flight-qualified hardware.
+
+## Testability and production follow-on
+
+Revision A remains a bench PCB, but bring-up should preserve access needed by the bootable electrical test harness: power rails, reset/boot, display/backlight controls, MCP23008/encoder and sensor interfaces. The later production carrier adds protected nominal 12 V aircraft power conversion, encrypted-NVS-capable firmware configuration, GNSS and protected external DATA/EXPANSION interfaces. Do not expose raw ESP32 GPIO as aircraft-voltage-tolerant connections.
