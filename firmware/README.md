@@ -103,3 +103,9 @@ See [`../docs/MACOS_BUILD_AND_QEMU_SETUP.md`](../docs/MACOS_BUILD_AND_QEMU_SETUP
 The attitude path remains first: configure BMI088 ranges/ODR, acquire and timestamp samples, calibrate gyro bias, apply the aircraft-axis transform, run quaternion AHRS and acceleration-confidence logic, then feed validated live pitch/roll to the Horizon panel.
 
 The Altimeter path uses the selected ported BMP585 architecture and needs live pressure/QNH processing. The Compass architecture uses the selected remote PNI RM3100-CB as the absolute-heading source, with appropriate AHRS fusion and independent validity/freshness monitoring.
+
+## Planned boot state machine and maintenance functions
+
+The adopted physical boot UI is controlled by the PEC09 rotary/push encoder and offers **START EFIS** (default), **FULL TEST**, and **FIRMWARE UPDATE**. FULL TEST will run the staged electrical/component harness documented in `../docs/ELECTRICAL_TEST_HARNESS.md`. FIRMWARE UPDATE will first establish Wi-Fi through a rotary-operated connection dialog before any OTA manifest request.
+
+Wi-Fi SSID/credentials persist in a dedicated ESP-IDF NVS namespace. Production firmware requires encrypted NVS for credentials; credentials must not be redisplayed after entry or emitted in logs/diagnostics. These boot/test/network functions are design requirements until their firmware implementation and validation status is explicitly advanced.
