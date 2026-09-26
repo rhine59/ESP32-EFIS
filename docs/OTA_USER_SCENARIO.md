@@ -131,3 +131,35 @@ The dialog shall support an iPhone Personal Hotspot and ordinary WPA2/WPA3 Perso
 Failure must be recoverable: inability to establish Wi-Fi, Internet, TLS or OTA-server connectivity must **not prevent the existing known-good EFIS firmware from starting**. The dialog should identify the failed layer and offer **Retry**, **Change Wi-Fi**, and **Start EFIS**.
 
 Firmware activation remains separate from networking. A successful Wi-Fi connection only permits Check/Download; a verified candidate still requires the explicit local **ACTIVATE & REBOOT** action.
+
+
+## Physical boot-menu control
+
+The **Bourns PEC09 rotary encoder with push switch is the sole normal control for the boot menu**. No touchscreen is assumed.
+
+At boot the round display presents a high-contrast menu such as:
+
+```text
+        EFIS BOOT
+
+      > START EFIS
+        FULL TEST
+        FIRMWARE UPDATE
+
+     Rotate = select
+      Press = enter
+```
+
+Control semantics:
+
+- rotate clockwise/counter-clockwise: move the highlight one menu item;
+- short press: select/enter the highlighted item;
+- in sub-dialogs, rotation moves between fields/options and short press confirms/edits;
+- long press is reserved for **Back/Cancel** where required, subject to physical encoder validation;
+- firmware update enters the Wi-Fi Connection dialog, which is also completely operable using rotate + press;
+- Full Test enters the documented electrical/component test harness;
+- Start EFIS immediately continues normal startup.
+
+The default highlighted item is **START EFIS**. A configurable boot-menu timeout may later auto-select Start EFIS, but no timeout value is frozen until physical usability testing. Firmware update and Full Test must never start merely because of a timeout.
+
+The UI must remain usable if networking is absent. A failed update/network attempt always provides a rotary-selectable **Start EFIS** escape path.
