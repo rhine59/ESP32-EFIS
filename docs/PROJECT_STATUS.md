@@ -253,3 +253,8 @@ Concept renders generated during this design iteration are retained separately a
 A complete selectable-at-boot electrical/component test harness is **ADOPTED / SPECIFICATION STAGED**. It will provide deterministic component tests, PASS / FAIL / NOT TESTED results and stable documented failure codes. Full specification and initial code registry: `ELECTRICAL_TEST_HARNESS.md`.
 
 The harness is intended for bench commissioning, manufacturing, installation and maintenance diagnosis. It must not imply airworthiness from a PASS result. Tests should continue after non-dangerous failures so all detected faults are reported in one run. Display/backlight tests include explicit human visual confirmation because successful bus writes cannot prove correct visible output. Optional/unfitted hardware is distinguished from failed hardware. Implementation begins with a simulated harness, then follows actual Phase-1 component bring-up.
+
+
+### Boot/update Wi-Fi interaction — 26 September 2026
+
+The boot-time firmware-update option must invoke an explicit **Wi-Fi Connection** dialog before checking the OTA manifest. It supports saved-network connection, network scan/manual entry, changing/forgetting credentials, retry and **Start EFIS without update**. Connection diagnostics remain layered (Wi-Fi -> Internet/DNS -> TLS -> OTA server). Network failure must never block startup of the existing known-good firmware. Wi-Fi is maintenance-only and must not silently reconnect during normal instrument operation. See `OTA_USER_SCENARIO.md`.
