@@ -7,6 +7,8 @@ The service binds to loopback port 8092 by default and must not be exposed throu
 
 The bearer token is initial service-to-service scaffolding. Production must additionally restrict network access and use hardened key custody.
 
+For the complete Synology build, deployment, isolation, recovery and validation procedure see [`BUILD-AND-DEPLOY.md`](BUILD-AND-DEPLOY.md).
+
 ## Development bring-up
 Copy .env.example to .env, replace CHANGE-ME with a strong random service token, then:
 
