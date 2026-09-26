@@ -358,3 +358,8 @@ The apps are not flight instruments. They must never store raw payment PAN/CVV o
 ### Licence cryptography and format — 26 September 2026
 
 **ADOPTED / IMPLEMENTATION PENDING.** Licence signing is frozen on **Ed25519** over a **deterministic CBOR** payload, wrapped in a versioned CBOR envelope carrying algorithm ID, key ID, payload bytes and signature. Base64url is permitted only as outer text transport. EFIS holds public verification keys only; private keys remain isolated in the licence signer/key-storage boundary. Key rotation uses an explicit key ID and overlapping trusted public keys. Parsers require strict bounds and hostile-input handling. Cross-platform signer/ESP32 test vectors are mandatory before production.
+
+
+### Licence-signer container — 26 September 2026
+
+**IMPLEMENTED IN REPOSITORY / SYNOLOGY BUILD VALIDATION PENDING.** `license-signer/` now contains a private FastAPI signer using the adopted Ed25519 + deterministic-CBOR envelope. Docker deployment binds to loopback port 8092, runs non-root/read-only, drops capabilities, uses no-new-privileges and mounts the signing key at runtime rather than baking it into the image. Development key generation and build scripts are included; key files/secrets are Git-ignored. Initial bearer-token service authentication is scaffolding pending stronger production service/network controls. Account-service integration, production key custody/rotation, cross-platform test vectors and ESP32 verification remain pending. The signer must never be exposed by the public reverse proxy/router.
