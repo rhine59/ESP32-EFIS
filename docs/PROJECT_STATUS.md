@@ -348,3 +348,8 @@ The apps are not flight instruments. They must never store raw payment PAN/CVV o
 ### Device ID boot display — 26 September 2026
 
 **ADOPTED / FIRMWARE + SIMULATOR IMPLEMENTATION PENDING.** Every normal boot menu must display the permanent provisioned EFIS Device ID above the menu. It is available offline, survives resets/licensing/ownership transfer, and is sourced from authoritative provisioned identity rather than MAC. Missing/corrupt identity is fail-obvious and logged; no placeholder identity may be invented.
+
+
+### Authoritative licensing process — 26 September 2026
+
+**DOCUMENTED / IMPLEMENTATION PARTIAL.** `docs/LICENSING.md` is now the authoritative end-to-end licensing specification. It covers trust boundaries, immutable Device ID provisioning/display, signed payload requirements, purchase/entitlement flow, online and offline installation, local boot verification, firmware compatibility, reset/replacement, ownership transfer, default 30-day transfer grace, lifecycle/audit/failure behaviour, production security gates and required tests. Existing account/web/mobile artefacts are staged; signer, cryptographic format, device challenge/API, payment adapters and physical ESP32 implementation remain pending.
