@@ -306,3 +306,19 @@ Offline flow: show Device ID and short registration code/QR-capable text; user o
 Payment integration is provider-adapter based. The account service creates checkout/customer-management requests and consumes verified payment webhooks; payment card data is handled by the payment provider, not stored by EFIS services. Payment status changes entitlements; a separate private signing worker/service generates signed licence payloads. Define explicit grace/revocation policy before subscriptions are enabled.
 
 Suggested containers: `efis-account` API/web portal; PostgreSQL account/device/entitlement store; private `efis-license-signer` with tightly restricted signing-key access; existing `efis-ota` and `efis-ota-admin`. Payment provider secrets live only in server-side secret storage.
+
+
+### Payment-method requirements — 26 September 2026
+
+The account/licensing portal must use a payment-provider abstraction rather than hard-code one gateway. Initial customer-facing methods should include:
+
+- major credit/debit cards (customer enters card details into provider-hosted/tokenized fields; EFIS services never store raw PAN/CVV);
+- PayPal;
+- Apple Pay;
+- Google Pay;
+- optional Pay Later/BNPL only if commercially appropriate;
+- regional methods can be enabled later without changing the EFIS licence protocol.
+
+Preferred first implementation is a hosted/tokenized checkout from a PCI-compliant payment provider so card data is submitted directly to the provider and never traverses or persists in `efis-account`, its logs or database. Store only provider customer/payment/transaction identifiers, payment status, amount/currency and entitlement/audit metadata needed for reconciliation.
+
+The server payment adapter must allow provider replacement/addition (for example Stripe, PayPal/Braintree or Adyen) without changing device licensing. Verified provider webhooks update the entitlement state; only then may the private licence signer issue/refresh the corresponding signed licence.
