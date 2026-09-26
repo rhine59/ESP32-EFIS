@@ -226,3 +226,23 @@ Every **material design idea** must also be represented in the Design Decision a
 ### Phase 1 bench wiring architecture image
 
 The repository includes `hardware/diagrams/ESP32EFISPhase1WiringDiagram.png` as a visual architecture/reference aid for Phase 1 bench assembly. **It is not yet an electrically verified wiring schematic and must not be used as authority for GPIO numbers, display pin assignments, supply rails or connector orientation.** Before first power, the Newhaven display/NHD-FFC40 pin mapping, ESP32 GPIO allocation, backlight connections and all supply/ground connections must be checked against authoritative datasheets and the firmware pin map. A verified schematic will supersede this reference image.
+
+
+### Production enclosure, power, GNSS and future avionics — 26 September 2026
+
+The current mechanical concept has evolved as follows. These are **design requirements/concepts, not frozen manufacturing dimensions or electrically verified interfaces**:
+
+- EFIS body mounts **behind the aircraft binnacle** so its presentation matches the other panel instruments.
+- Mounting bolts are inserted **from the front of the binnacle** and engage **stainless captive nuts pressed into recessed holes in the rear enclosure**. No loose mounting nuts are required.
+- Use the minimum practical number of small stainless cap-head Allen fasteners for the enclosure itself. Enclosure fasteners are separate from the aircraft-panel mounting bolts.
+- Production power input is **nominal 12 V aircraft power**, with internal reverse-polarity, transient/surge and filtering protection followed by regulated 5 V and 3.3 V rails. Phase-1 bench bring-up remains regulated 5 V.
+- USB-C is primarily a **service/programming** interface, not the normal production aircraft-power connection.
+- GNSS architecture must support either a suitable **externally powered/active GNSS antenna/receiver arrangement** or a **USB-connected GNSS mouse**. Exact receiver, connector, active-antenna bias arrangement and USB host requirements remain to be frozen in Phase 2.
+- Preserve future avionics integration without making the EFIS a critical intermediary. Reserve ESP32 resources and PCB space for a protected **RS-232** interface and footprints/options for **RS-485 and CAN**. Keep GNSS and external-avionics UART resources distinct.
+- A future PilotAware FX or other traffic source should be consumable as an external data source. The EFIS should listen to processed traffic/GNSS data rather than becoming part of a safety-critical transponder control path.
+- Existing transponder/control-head links such as the TT21/TC20 installation remain independent. Any future connection must be verified against the applicable equipment installation manuals before wiring.
+- The former generic rear-panel `GPIO EXPANSION` concept is superseded by a **DATA / EXPANSION** concept. Raw ESP32 pins must not be presented as aircraft-voltage-tolerant inputs. External avionics lines require appropriate transceivers/protection.
+- Where no external expansion function is needed, keep low-level GPIO/I2C service access internal to reduce connectors, EMI paths and accidental misuse.
+
+Concept renders generated during this design iteration are retained separately as project artefacts when binary repository upload is practical. They are visual design aids only: connector types, dimensions, pinouts, component placement and labels shown in generated images are **not authoritative engineering specifications**.
+
