@@ -121,11 +121,7 @@ Payment integration is provider-adapter based. The account service creates check
 Suggested containers: `efis-account` API/web portal; PostgreSQL account/device/entitlement store; private `efis-license-signer` with tightly restricted signing-key access; existing `efis-ota` and `efis-ota-admin`. Payment provider secrets live only in server-side secret storage.
 
 
-## Pitot/static and IAS direction — 26 September 2026
 
-The EFIS now has an **at least 180 kt IAS measurement/display design requirement**. BMP585 remains connected to STATIC for barometric altitude. Airspeed uses a separate 1 psi differential sensor: PITOT to P-plus, STATIC to P-minus. The enclosure therefore requires two permanently labelled rear pneumatic connections, **PITOT** and **STATIC**; exact fittings/tubing await aircraft measurement.
+## Pressure scope — 26 September 2026
 
-
-## Cost target
-
-Current planning estimate is approximately **£250–£365 parts cost for a one-off completed EFIS**, with approximately **£300** used as the working figure. The design aims for a repeatable BOM of **£300 or less at modest 10–25 unit quantities**, without compromising engineering requirements. See `docs/COST_MODEL.md`.
+ASI/IAS capability has been removed from scope. The BMP585 uses the aircraft **STATIC** pressure connection for altitude/barometric pressure. The EFIS has no PITOT input or differential-pressure airspeed sensor.
