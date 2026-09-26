@@ -126,7 +126,7 @@ EFIS BOOT
                     ACTIVATE & REBOOT
 ```
 
-The dialog shall support an iPhone Personal Hotspot and ordinary WPA2/WPA3 Personal networks supported by the ESP32. It should show SSID and connection state but never display a stored password after entry. Credentials may be stored in NVS only after deliberate connection/save behaviour and must never be logged or sent to the OTA server.
+The dialog shall support an iPhone Personal Hotspot and ordinary WPA2/WPA3 Personal networks supported by the ESP32. It should show SSID and connection state but never display a stored password after entry. Credentials are stored persistently in a dedicated ESP-IDF NVS namespace after deliberate connection/save behaviour. Production units use NVS encryption for stored Wi-Fi credentials; ordinary NVS is permitted only during early prototype bring-up. The password is never redisplayed after entry and must never be logged, included in diagnostics/test results, or sent to the OTA server. **Forget network** erases the saved credentials.
 
 Failure must be recoverable: inability to establish Wi-Fi, Internet, TLS or OTA-server connectivity must **not prevent the existing known-good EFIS firmware from starting**. The dialog should identify the failed layer and offer **Retry**, **Change Wi-Fi**, and **Start EFIS**.
 
