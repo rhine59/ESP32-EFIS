@@ -127,3 +127,9 @@ QEMU/Swift success is not evidence of physical flash/power-loss recovery.
 ## Current status
 
 Implemented in source control: Docker read-only origin, private image admin, staged metadata, explicit Publish, stage-only CLI helper, network/OTA Swift user scenarios. Not implemented/validated on ESP32: A/B partition table, maintenance Wi-Fi client, HTTPS OTA writer, signed-image pipeline/verification, boot confirmation and physical rollback/interruption tests.
+
+## Boot/update entry and Wi-Fi — 26 September 2026
+
+OTA is entered deliberately from the physical rotary boot menu: **FIRMWARE UPDATE** -> **Wi-Fi Connection** -> Check -> Download/Verify -> explicit **ACTIVATE & REBOOT**. The rotary/push control must operate the complete instrument-side flow. START EFIS remains available if networking fails.
+
+Saved Wi-Fi credentials persist in ESP-IDF NVS and require encrypted NVS in production. Wi-Fi/network failure must not alter the current known-good application or prevent it starting. Auto-download, where enabled, still applies only inside maintenance/update context and never implies automatic activation.
