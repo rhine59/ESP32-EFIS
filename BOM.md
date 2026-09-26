@@ -42,7 +42,6 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 | Header pins | 2.54 mm breakaway male/female | 1 | 1 set | 1 set | **AVAILABLE / USER CONFIRMED 21 Sep 2026** | Already owned |
 | Attitude IMU | **Bosch Shuttle Board 3.0 BMI088** | 2 | 1 | 1 | **RECEIVED** | DigiKey UK `828-SHUTTLEBOARD3.0BMI088-ND` |
 | BMI088 bench interposer | Verified **1.27 mm-pitch** mating solution | 2 | 1 | 0 | **NEEDED — verify connector** | Supplier/part to freeze after physical verification |
-| Differential pressure / airspeed sensor | **TE Connectivity / MEAS MS4525DO, 1 psi differential, 3.3 V, 14-bit digital (I²C/SPI), dual-port variant** — replaces SDP31; final exact suffix/port style to freeze before order | 2 | 1 | 0 | **NEEDED — 180 kt REQUIREMENT** | TE Connectivity MS4525DO 1 psi differential family; select currently stocked dual-port 3.3 V variant from authorized distributor |
 | Pressure module | **Adafruit BMP585 Baro+Temp Sensor PID 6413** | 2 | 1 | 1 | **RECEIVED — packaging/photo confirmed 22 Sep 2026** | Adafruit PID `6413`; DigiKey UK `1528-6413-ND`; The Pi Hut/Pimoroni alternate |
 | Pressure cable | **Adafruit STEMMA QT/Qwiic JST-SH 4-pin, 150 mm, PID 4397** | 2 | 2 | 2 | **RECEIVED — qty 2, DigiKey packaging/photo confirmed 24 Sep 2026** | DigiKey UK `1528-4397-ND` |
 | QT breadboard adapter | **Adafruit PID 5961** | 2 | 1 | 1 | **RECEIVED — DigiKey packaging/photo confirmed 24 Sep 2026** | DigiKey UK `1528-5961-ND` |
@@ -75,12 +74,11 @@ Stage 1 gate: safe/current-limited 5 V power, programmable/mounted single MCU, w
 3. **2 × STEMMA QT/Qwiic 150 mm cables PID 4397 received.**
 4. **Adafruit PID 5961 QT breadboard adapter received.**
 5. Buy 1 × PNI RM3100-CB P/N 14754.
-6. **Add 1 × TE Connectivity / MEAS MS4525DO 1 psi differential sensor** for pitot-minus-static measurement and IAS development. Requirement is measurement through at least 180 kt; exact dual-port 3.3 V ordering suffix to be frozen before purchase.
-7. Select the GNSS receiver, then its compatible bench antenna.
+6. Select the GNSS receiver, then its compatible bench antenna.
 
 ## Stage-specific items not yet ready to order
 
-Stage 3+ aircraft PITOT/STATIC bulkhead fittings and pneumatic tubing/tees, final RM3100 harness/mount, final GNSS installation hardware, optical window, final enclosure hardware, custom carrier PCB production, and aircraft 12 V input/protection hardware remain gated by bench validation and aircraft surveys.
+Stage 3+ aircraft static bulkhead fitting and pneumatic tubing/tee, final RM3100 harness/mount, final GNSS installation hardware, optical window, final enclosure hardware, custom carrier PCB production, and aircraft 12 V input/protection hardware remain gated by bench validation and aircraft surveys.
 
 ## Bench consumables / useful spares
 
@@ -92,11 +90,3 @@ This remains an experimental **supplementary/non-primary** flight instrument. Be
 
 See `docs/PROCUREMENT_STATUS_2026-09-16.md`, `docs/GNSS_DISPLAY.md`, `docs/POWER_BUDGET.md`, `docs/PROJECT_STATUS.md`, `docs/SENSORS.md`, `docs/ENCLOSURE.md`, `docs/SIMULATION.md`, `hardware/` and `docs/user-guides/`.
 
-
-## Pitot/static pressure architecture — added 26 September 2026
-
-The BMP585 is the **static/barometric** sensor and connects only to the aircraft STATIC pressure line. Airspeed requires a separate differential-pressure sensor. The airspeed requirement is now **at least 180 kt**. At standard sea-level density, incompressible dynamic pressure is approximately 5.25 kPa at 180 kt (about 0.76 psi); 130 kt is approximately 2.74 kPa. The previously selected SDP31 ±500 Pa would saturate far below this requirement and is therefore **SUPERSEDED / NOT SUITABLE**.
-
-The development baseline is now a **TE Connectivity / MEAS MS4525DO 1 psi differential digital sensor** (1 psi ≈ 6.895 kPa), 3.3 V, 14-bit, dual pressure ports, with I²C/SPI variant selected for the carrier. This nominal range corresponds to roughly 206 kt equivalent sea-level dynamic pressure, giving measurement headroom above the 180 kt display requirement. Final production selection must still validate calibration accuracy, pneumatic installation, compressibility/IAS computation, temperature behaviour, proof pressure and a suitable overspeed margin.
-
-The production enclosure therefore requires two pneumatic interfaces, labelled **PITOT** and **STATIC**. STATIC feeds both the BMP585 and SDP31 P−; PITOT feeds SDP31 P+. Exact tubing, tees, bulkhead fittings and mechanical port geometry remain Stage 3 aircraft-survey items.
