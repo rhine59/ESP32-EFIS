@@ -246,3 +246,10 @@ The current mechanical concept has evolved as follows. These are **design requir
 
 Concept renders generated during this design iteration are retained separately as project artefacts when binary repository upload is practical. They are visual design aids only: connector types, dimensions, pinouts, component placement and labels shown in generated images are **not authoritative engineering specifications**.
 
+
+
+### Bootable electrical test harness — 26 September 2026
+
+A complete selectable-at-boot electrical/component test harness is **ADOPTED / SPECIFICATION STAGED**. It will provide deterministic component tests, PASS / FAIL / NOT TESTED results and stable documented failure codes. Full specification and initial code registry: `ELECTRICAL_TEST_HARNESS.md`.
+
+The harness is intended for bench commissioning, manufacturing, installation and maintenance diagnosis. It must not imply airworthiness from a PASS result. Tests should continue after non-dangerous failures so all detected faults are reported in one run. Display/backlight tests include explicit human visual confirmation because successful bus writes cannot prove correct visible output. Optional/unfitted hardware is distinguished from failed hardware. Implementation begins with a simulated harness, then follows actual Phase-1 component bring-up.
