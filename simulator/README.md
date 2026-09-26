@@ -77,3 +77,7 @@ Exercise auto-download ON, auto-download OFF/manual Download, `Later`, successfu
 ## Safety and validation boundary
 
 Simulator values must never become fallback values in an aircraft build. Aircraft firmware retains independent fail-obvious validity handling and must have bench simulation disabled. Swift/QEMU results are never physical sensor or aircraft validation. See `../docs/GNSS_DISPLAY.md`, `../docs/OTA_USER_SCENARIO.md`, `../docs/OTA_IMAGE_ADMIN.md` and `../docs/REMOTE_UPDATES.md`.
+
+## Required boot-menu parity — 26 September 2026
+
+The Swift simulator is to mirror the adopted physical boot interaction: **START EFIS** (default), **FULL TEST**, and **FIRMWARE UPDATE**, navigated conceptually by rotary selection + push confirmation. Firmware Update must lead through the Wi-Fi connection dialog before the existing OTA flow. FULL TEST must model the documented component PASS/FAIL/NOT TESTED results and failure codes. Simulator implementation demonstrates workflow only and does not validate physical encoder, Wi-Fi or electrical tests.
