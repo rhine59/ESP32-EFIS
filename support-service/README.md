@@ -78,3 +78,14 @@ Future versions should add semantic clustering/embeddings, source-line citations
 Horizon is a supplementary/non-primary flight instrument. Support answers concerning installation, operation, limitations, pressure/static systems, electrical interfaces, firmware or flight use must be grounded in current approved documentation and clearly distinguish development concepts from validated instructions.
 
 The chatbot must never silently elevate an old design note, simulation result or customer statement into an approved operating instruction.
+
+
+## Grounded natural-language answers
+
+The service now includes an **OpenAI-compatible chat-completions adapter**. Configure `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL` privately in `.env`. The API key must never be committed.
+
+For non-exact questions, Horizon support retrieves approved product documents and supplies only that evidence to the LLM. The system prompt requires polished natural-language answers grounded solely in those sources, inline source markers, explicit uncertainty when documentation is insufficient, and correct treatment of provisional/development material. Temperature is deliberately low.
+
+Generated answers are recorded as interactions and Q&A **candidates**. They do not become validated answers until human approval. Exact approved Q&A continues to take precedence. If the LLM is unavailable, the service falls back to retrieved source material rather than fabricating an answer.
+
+The provider interface is deliberately generic so the deployment can use an OpenAI-compatible hosted or local model without coupling the product knowledge architecture to one vendor. Before public deployment add provider-specific privacy/retention review, secret management, token/cost controls, streaming if desired, semantic retrieval and prompt-injection/red-team tests.
