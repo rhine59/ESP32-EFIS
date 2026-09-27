@@ -103,3 +103,8 @@ Configure `EMBEDDING_BASE_URL`, `EMBEDDING_API_KEY`, `EMBEDDING_MODEL` and `EMBE
 The API now exposes an explicit `answer_status`: validated, generated/retrieved but not yet validated, invalidated, or no validated answer. Invalidated answers are retained as history and can be surfaced for context, but are visibly warned as not current approved guidance.
 
 Every answer also returns the prompt **“Did this answer resolve your question?”**. The feedback endpoint stores the customer's resolution yes/no separately from the rating. Resolution data ranks knowledge gaps and answer usefulness; it never constitutes technical approval and cannot automatically promote a candidate into `validated_qa`.
+
+
+## Voice and keyboard interaction
+
+Customer clients are designed to offer both keyboard/text and push-to-talk voice interaction. Speech is transcribed to visible/editable text and then uses the same `/v1/ask` pipeline; answers remain visible as text and may also be spoken by TTS. Keyboard remains available for exact identifiers and as a fallback. Raw audio is not retained by default. Answer provenance/status and resolution feedback remain visible regardless of interaction mode. Provider-neutral STT/TTS adapters are the next implementation step.
