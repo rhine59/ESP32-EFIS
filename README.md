@@ -125,3 +125,8 @@ Suggested containers: `efis-account` API/web portal; PostgreSQL account/device/e
 ## Pressure scope — 26 September 2026
 
 ASI/IAS capability has been removed from scope. The BMP585 uses the aircraft **STATIC** pressure connection for altitude/barometric pressure. The EFIS has no PITOT input or differential-pressure airspeed sensor.
+
+
+## Working product identity — 27 September 2026
+
+The current development brand is **MicroSky Avionics** and the product name is **Horizon**. Customer-facing shorthand is **MicroSky Horizon**. These are working names pending formal commercial/trademark clearance; technical repository/service/device identifiers are not being renamed at this stage. See `docs/BRANDING.md`.
