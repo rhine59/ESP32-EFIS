@@ -403,3 +403,8 @@ The apps are not flight instruments. They must never store raw payment PAN/CVV o
 ### Support voice/keyboard UX — 27 September 2026
 
 **ADOPTED / IMPLEMENTATION PENDING.** Horizon customer support will support keyboard and voice through one common knowledge/validation pipeline. Voice uses STT to visible/editable text and optional TTS for answers; keyboard remains the exact-string/fallback path. Provenance/status and resolution feedback are preserved in both modes. Raw microphone audio is not retained by default. Provider-neutral STT/TTS adapters and client UI remain to be implemented and tested.
+
+
+### Customer support voice/chat implementation — 27 September 2026
+
+**IMPLEMENTED IN REPOSITORY / RUNTIME VALIDATION PENDING.** Responsive web chat, keyboard input, microphone capture, editable STT transcript, optional TTS playback, answer-status/source display and Yes/No resolution feedback are now staged in `support-service/`. Provider-neutral speech configuration is runtime-only; raw audio is not persisted by the application. Browser/Synology/provider validation remains pending.
