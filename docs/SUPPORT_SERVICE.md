@@ -40,3 +40,12 @@ Collect the minimum conversation/account metadata required for support. Define r
 Before public exposure: authenticated admin/RBAC, CSRF where relevant, rate limiting/abuse controls, TLS/reverse-proxy policy, PII retention controls, backup/restore test, migrations, audit trail, semantic retrieval evaluation, grounded LLM adapter, prompt-injection tests, source citations, stale-document invalidation, support escalation, monitoring and a reviewed test set of expected answers.
 
 No runtime/build-success claim is made until the Docker harness is run on the Synology.
+
+
+## Grounded LLM answering — 27 September 2026
+
+**IMPLEMENTED IN MVP / RUNTIME VALIDATION PENDING.** The support API now has a provider-neutral OpenAI-compatible chat-completions adapter. Natural-language questions first retrieve approved product-document evidence. The LLM is instructed to answer only from that evidence, cite source numbers, distinguish provisional development material from validated instructions, avoid unsupported safety/certification/capability claims and explicitly escalate when evidence is insufficient.
+
+LLM output is never promoted directly to authoritative knowledge. It is stored as an interaction and candidate Q&A and must pass the existing human validation workflow before entering `validated_qa`. Exact validated Q&A takes precedence over generation. Provider failure falls back conservatively to retrieved source material.
+
+Provider URL/key/model are runtime secrets/configuration, not repository content. Production still requires semantic retrieval evaluation, source-level citation mapping, privacy/retention review, token/cost limits, authentication/rate limiting and prompt-injection/red-team testing.
