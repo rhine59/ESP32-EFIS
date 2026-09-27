@@ -88,3 +88,8 @@ The resolution question is available in both modes: tap Yes/No or answer an equi
 ### Implementation direction
 
 Add provider-neutral STT and TTS adapters so deployments can use hosted or local speech services. Web clients use browser microphone/audio capabilities where appropriate; iOS/Android customer apps use native microphone/audio APIs. Always provide keyboard fallback. Production gates include permission UX, transcription accuracy tests using MicroSky/Horizon terminology, noisy-cockpit testing where relevant, accessibility, latency/cost limits, privacy review and abuse/rate controls.
+
+
+## Voice/chat implementation checkpoint — 27 September 2026
+
+**IMPLEMENTED IN REPOSITORY / RUNTIME VALIDATION PENDING.** The Docker support service now includes a responsive customer web chat, keyboard input, browser microphone capture, editable transcription, STT/TTS API adapters, visible answer provenance, sources, spoken-answer control and Yes/No resolution feedback. Voice and keyboard converge on the same `/v1/ask` knowledge pipeline. Raw microphone bytes are processed in memory and are not persisted by the application. Browser/provider runtime testing and the production security/privacy gates remain outstanding.
