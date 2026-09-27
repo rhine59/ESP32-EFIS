@@ -4,7 +4,10 @@ from typing import Optional
 import psycopg
 import httpx
 from pgvector.psycopg import register_vector
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, UploadFile, File
+from fastapi.responses import Response, FileResponse
+from fastapi.staticfiles import StaticFiles
+from .speech import transcribe, synthesize
 from pydantic import BaseModel, Field
 
 DB=os.environ["DATABASE_URL"]
@@ -19,7 +22,8 @@ EMBED_BASE=os.getenv("EMBEDDING_BASE_URL",LLM_BASE).rstrip("/")
 EMBED_KEY=os.getenv("EMBEDDING_API_KEY",LLM_KEY)
 EMBED_MODEL=os.getenv("EMBEDDING_MODEL","")
 EMBED_DIMS=int(os.getenv("EMBEDDING_DIMENSIONS","1536"))
-app=FastAPI(title=f"{PRODUCT} Support",version="0.1.0")
+app=FastAPI(title=f"{PRODUCT} Support",version="0.2.0")
+app.mount("/static",StaticFiles(directory="static"),name="static")
 
 SCHEMA=f"""
 CREATE TABLE IF NOT EXISTS documents(
@@ -65,6 +69,9 @@ class Feedback(BaseModel):
     score:int=Field(ge=-1,le=1)
     resolved:Optional[bool]=None
 
+class SpeechRequest(BaseModel):
+    text:str=Field(min_length=1,max_length=8000)
+
 class Approve(BaseModel):
     candidate_id:int
     answer:Optional[str]=None
@@ -88,6 +95,24 @@ def retrieve(c,q,limit=5):
     pattern="|".join(map(re.escape,terms))
     return c.execute("""SELECT path,revision,content FROM documents
       WHERE content ~* %s ORDER BY ingested_at DESC LIMIT %s""",(pattern,limit)).fetchall()
+
+
+@app.get("/")
+def customer_ui():
+    return FileResponse("static/index.html")
+
+@app.post("/v1/transcribe")
+async def speech_to_text(file:UploadFile=File(...)):
+    audio=await file.read()
+    text,error=transcribe(audio,file.filename or "audio.webm",file.content_type or "application/octet-stream")
+    if error: raise HTTPException(503,error)
+    return {"text":text,"editable":True,"note":"Check exact technical identifiers before submitting."}
+
+@app.post("/v1/speech")
+def text_to_speech(req:SpeechRequest):
+    audio,content_type,error=synthesize(req.text)
+    if error: raise HTTPException(503,error)
+    return Response(content=audio,media_type=content_type)
 
 @app.get("/healthz")
 def health():
