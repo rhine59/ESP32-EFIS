@@ -378,3 +378,8 @@ The apps are not flight instruments. They must never store raw payment PAN/CVV o
 ### Working brand and product name — 27 September 2026
 
 **ADOPTED AS WORKING IDENTITY / FORMAL CLEARANCE PENDING.** Brand: **MicroSky Avionics**. Product: **Horizon**. Customer-facing shorthand: **MicroSky Horizon**. Keep the existing ESP32-EFIS repository and technical identifiers stable for now; branding must not trigger unnecessary changes to Device IDs, OTA/licensing identifiers or service names. `docs/BRANDING.md` is the authoritative branding note.
+
+
+### Customer support chatbot — 27 September 2026
+
+**ARCHITECTURE ADOPTED / MVP STAGED / SYNOLOGY VALIDATION PENDING.** `support-service/` adds FastAPI + PostgreSQL support infrastructure with product-document ingestion, retrieval, interaction/feedback storage, repeated-question candidate aggregation and explicit human promotion to a validated Q&A database. Customer text/model output never becomes product truth automatically. LLM generation, semantic/vector retrieval, private reviewer UI, production auth/RBAC, privacy/retention and public deployment remain gated. See `docs/SUPPORT_SERVICE.md`.
