@@ -383,3 +383,8 @@ The apps are not flight instruments. They must never store raw payment PAN/CVV o
 ### Customer support chatbot — 27 September 2026
 
 **ARCHITECTURE ADOPTED / MVP STAGED / SYNOLOGY VALIDATION PENDING.** `support-service/` adds FastAPI + PostgreSQL support infrastructure with product-document ingestion, retrieval, interaction/feedback storage, repeated-question candidate aggregation and explicit human promotion to a validated Q&A database. Customer text/model output never becomes product truth automatically. LLM generation, semantic/vector retrieval, private reviewer UI, production auth/RBAC, privacy/retention and public deployment remain gated. See `docs/SUPPORT_SERVICE.md`.
+
+
+### Support-service LLM capability — 27 September 2026
+
+**IMPLEMENTED IN REPOSITORY / RUNTIME VALIDATION PENDING.** MicroSky Horizon Support now accepts natural-language questions and can produce polished grounded answers through a configurable OpenAI-compatible LLM endpoint. Retrieval of approved product documentation occurs before generation; unsupported questions must fail conservatively. Generated responses remain candidates until human validation and cannot automatically enter the validated Q&A knowledge base. Provider credentials remain runtime secrets. Semantic retrieval and production security/privacy evaluation remain pending.
