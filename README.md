@@ -130,3 +130,8 @@ ASI/IAS capability has been removed from scope. The BMP585 uses the aircraft **S
 ## Working product identity — 27 September 2026
 
 The current development brand is **MicroSky Avionics** and the product name is **Horizon**. Customer-facing shorthand is **MicroSky Horizon**. These are working names pending formal commercial/trademark clearance; technical repository/service/device identifiers are not being renamed at this stage. See `docs/BRANDING.md`.
+
+
+## Customer support chatbot — 27 September 2026
+
+A Dockerized **MicroSky Horizon Support** service is staged under `support-service/`. It retrieves approved product documentation, records customer interactions/feedback and builds a candidate Q&A queue. Customer conversations never become authoritative automatically: a human reviewer must validate candidates against current product documents before they enter the validated Q&A database. See `docs/SUPPORT_SERVICE.md` and `support-service/README.md`.
