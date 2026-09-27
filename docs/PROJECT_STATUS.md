@@ -373,3 +373,8 @@ The apps are not flight instruments. They must never store raw payment PAN/CVV o
 ### ASI/IAS capability — 26 September 2026
 
 **REMOVED FROM SCOPE.** The earlier 180 kt IAS requirement, MS4525DO differential-sensor proposal and PITOT enclosure connection are superseded. The EFIS retains BMP585 static/barometric altitude sensing through one labelled STATIC pneumatic connection. No PITOT input or ASI/IAS calculation/display is required.
+
+
+### Working brand and product name — 27 September 2026
+
+**ADOPTED AS WORKING IDENTITY / FORMAL CLEARANCE PENDING.** Brand: **MicroSky Avionics**. Product: **Horizon**. Customer-facing shorthand: **MicroSky Horizon**. Keep the existing ESP32-EFIS repository and technical identifiers stable for now; branding must not trigger unnecessary changes to Device IDs, OTA/licensing identifiers or service names. `docs/BRANDING.md` is the authoritative branding note.
