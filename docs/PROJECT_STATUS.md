@@ -388,3 +388,8 @@ The apps are not flight instruments. They must never store raw payment PAN/CVV o
 ### Support-service LLM capability — 27 September 2026
 
 **IMPLEMENTED IN REPOSITORY / RUNTIME VALIDATION PENDING.** MicroSky Horizon Support now accepts natural-language questions and can produce polished grounded answers through a configurable OpenAI-compatible LLM endpoint. Retrieval of approved product documentation occurs before generation; unsupported questions must fail conservatively. Generated responses remain candidates until human validation and cannot automatically enter the validated Q&A knowledge base. Provider credentials remain runtime secrets. Semantic retrieval and production security/privacy evaluation remain pending.
+
+
+### Support semantic retrieval — 27 September 2026
+
+**IMPLEMENTED IN REPOSITORY / RUNTIME VALIDATION PENDING.** Support document retrieval now uses PostgreSQL pgvector and configurable embeddings for natural-language semantic matching, with lexical fallback. This feeds the existing grounded LLM/human-validation pipeline. Embedding-model changes require controlled re-indexing; retrieval quality and prompt-injection resistance remain production gates.
