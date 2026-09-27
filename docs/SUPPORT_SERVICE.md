@@ -56,3 +56,12 @@ Provider URL/key/model are runtime secrets/configuration, not repository content
 **IMPLEMENTED IN REPOSITORY / RUNTIME EVALUATION PENDING.** PostgreSQL is now based on the pgvector PG17 image. Approved document sections receive embeddings through a configurable OpenAI-compatible embedding endpoint. Natural-language questions are embedded and ranked against document vectors by cosine distance before grounded LLM generation. Lexical retrieval remains the fail-safe fallback if embeddings are not configured or the provider fails.
 
 Embedding model and dimensionality are deployment configuration and must be frozen per index generation. Model/dimension changes require controlled re-embedding/migration. Retrieval quality still requires a representative Horizon support-question test set before public launch.
+
+
+## Answer status and customer resolution — 27 September 2026
+
+Every response must make its knowledge status visible to the customer. Supported states are **VALIDATED**, **GENERATED — NOT YET VALIDATED**, **RETRIEVED — NOT YET VALIDATED**, **INVALIDATED**, and **NO VALIDATED ANSWER**. Invalidated historical answers may be retrieved when relevant, but they must be conspicuously labelled as superseded/not-current guidance, carry the invalidation reason where available, and must never be presented as an approved answer.
+
+After each answer the interaction asks **“Did this answer resolve your question?”**. The yes/no result is stored separately from optional positive/negative feedback. Customer resolution is evidence about answer usefulness, not technical validation: even many successful customer confirmations cannot promote an answer into the validated knowledge base without the formal reviewer process. Conversely, unresolved interactions should increase review priority and help identify missing documentation, weak retrieval and inadequate answers.
+
+The future reviewer dashboard should show answer status, source/revision, number of occurrences, resolution rate, feedback, invalidation history and candidate/validated lineage. It should support explicit invalidate/supersede operations without deleting the historical answer.
