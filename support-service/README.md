@@ -89,3 +89,10 @@ For non-exact questions, Horizon support retrieves approved product documents an
 Generated answers are recorded as interactions and Q&A **candidates**. They do not become validated answers until human approval. Exact approved Q&A continues to take precedence. If the LLM is unavailable, the service falls back to retrieved source material rather than fabricating an answer.
 
 The provider interface is deliberately generic so the deployment can use an OpenAI-compatible hosted or local model without coupling the product knowledge architecture to one vendor. Before public deployment add provider-specific privacy/retention review, secret management, token/cost controls, streaming if desired, semantic retrieval and prompt-injection/red-team tests.
+
+
+## Semantic retrieval
+
+The document store now uses PostgreSQL **pgvector**. At ingestion, approved document sections can be embedded through an OpenAI-compatible `/embeddings` endpoint and stored with their Git revision. At question time the question embedding is compared using cosine distance and the closest product-document sections are supplied to the grounded LLM. If the embedding service is absent or fails, retrieval falls back to lexical matching rather than making the support service unavailable.
+
+Configure `EMBEDDING_BASE_URL`, `EMBEDDING_API_KEY`, `EMBEDDING_MODEL` and `EMBEDDING_DIMENSIONS` privately. They may share the LLM provider or point at a separate/local embedding service. Changing embedding dimensionality requires a database migration/re-index rather than simply editing the environment variable on an existing database.
