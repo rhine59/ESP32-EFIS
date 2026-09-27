@@ -393,3 +393,8 @@ The apps are not flight instruments. They must never store raw payment PAN/CVV o
 ### Support semantic retrieval — 27 September 2026
 
 **IMPLEMENTED IN REPOSITORY / RUNTIME VALIDATION PENDING.** Support document retrieval now uses PostgreSQL pgvector and configurable embeddings for natural-language semantic matching, with lexical fallback. This feeds the existing grounded LLM/human-validation pipeline. Embedding-model changes require controlled re-indexing; retrieval quality and prompt-injection resistance remain production gates.
+
+
+### Support answer provenance and customer validation — 27 September 2026
+
+**ADOPTED / MVP IMPLEMENTED.** Support interactions can surface validated answers and retained invalidated/superseded answers, with status made explicit to the customer. Generated/retrieved unreviewed answers are likewise labelled as not yet validated. Each response asks whether it resolved the customer's question; that resolution signal is stored for quality/prioritisation but is explicitly not a substitute for technical/human validation. Invalidated answers remain auditable rather than being silently deleted.
