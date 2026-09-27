@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from typing import Optional
 import psycopg
 import httpx
+from pgvector.psycopg import register_vector
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
@@ -14,9 +15,13 @@ LLM_KEY=os.getenv("LLM_API_KEY","")
 LLM_MODEL=os.getenv("LLM_MODEL","")
 LLM_TIMEOUT=float(os.getenv("LLM_TIMEOUT_SECONDS","25"))
 MAX_CONTEXT=int(os.getenv("LLM_MAX_CONTEXT_CHARS","12000"))
+EMBED_BASE=os.getenv("EMBEDDING_BASE_URL",LLM_BASE).rstrip("/")
+EMBED_KEY=os.getenv("EMBEDDING_API_KEY",LLM_KEY)
+EMBED_MODEL=os.getenv("EMBEDDING_MODEL","")
+EMBED_DIMS=int(os.getenv("EMBEDDING_DIMENSIONS","1536"))
 app=FastAPI(title=f"{PRODUCT} Support",version="0.1.0")
 
-SCHEMA="""
+SCHEMA=f"""
 CREATE TABLE IF NOT EXISTS documents(
  id bigserial primary key, path text not null, revision text, content text not null,
  content_sha256 text not null unique, ingested_at timestamptz not null default now());
@@ -71,13 +76,16 @@ def norm(q):
     return re.sub(r"\s+"," ",re.sub(r"[^a-z0-9 ]"," ",q.lower())).strip()
 
 def retrieve(c,q,limit=5):
-    # Deliberately simple lexical baseline. Replace with embeddings after evaluation.
+    qv=embed(q)
+    if qv is not None:
+        rows=c.execute("""SELECT path,revision,content FROM documents
+          WHERE embedding IS NOT NULL ORDER BY embedding <=> %s LIMIT %s""",(qv,limit)).fetchall()
+        if rows: return rows
     terms=[x for x in norm(q).split() if len(x)>3][:8]
     if not terms: return []
     pattern="|".join(map(re.escape,terms))
-    rows=c.execute("""SELECT path,revision,content FROM documents
+    return c.execute("""SELECT path,revision,content FROM documents
       WHERE content ~* %s ORDER BY ingested_at DESC LIMIT %s""",(pattern,limit)).fetchall()
-    return rows
 
 @app.get("/healthz")
 def health():
@@ -88,10 +96,12 @@ def health():
 def ingest(d:Document, authorization:Optional[str]=Header(None)):
     require_admin(authorization)
     sha=hashlib.sha256(d.content.encode()).hexdigest()
+    vector=embed(d.content)
     with conn() as c:
-        c.execute("""INSERT INTO documents(path,revision,content,content_sha256)
-          VALUES(%s,%s,%s,%s) ON CONFLICT(content_sha256) DO NOTHING""",
-          (d.path,d.revision,d.content,sha))
+        c.execute("""INSERT INTO documents(path,revision,content,content_sha256,embedding)
+          VALUES(%s,%s,%s,%s,%s) ON CONFLICT(content_sha256) DO UPDATE
+          SET embedding=COALESCE(EXCLUDED.embedding,documents.embedding)""",
+          (d.path,d.revision,d.content,sha,vector))
     return {"ok":True,"sha256":sha}
 
 
