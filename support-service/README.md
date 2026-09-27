@@ -108,3 +108,10 @@ Every answer also returns the prompt **“Did this answer resolve your question?
 ## Voice and keyboard interaction
 
 Customer clients are designed to offer both keyboard/text and push-to-talk voice interaction. Speech is transcribed to visible/editable text and then uses the same `/v1/ask` pipeline; answers remain visible as text and may also be spoken by TTS. Keyboard remains available for exact identifiers and as a fallback. Raw audio is not retained by default. Answer provenance/status and resolution feedback remain visible regardless of interaction mode. Provider-neutral STT/TTS adapters are the next implementation step.
+
+
+## Customer web chat and speech
+
+A responsive customer UI is now served at `/`. It supports keyboard questions, browser microphone capture, editable STT transcripts, visible answer-status badges, source paths, Yes/No resolution feedback and optional spoken answers. `/v1/transcribe` and `/v1/speech` use provider-neutral OpenAI-compatible audio endpoints configured by STT/TTS environment variables. Raw audio is processed in memory and is not written to the support database by this implementation. Exact technical speech transcripts must be checked by the customer before submission.
+
+**Runtime/browser validation is still pending.** Production work includes authentication/abuse controls, CSP/security headers, accessibility testing, mobile/Safari microphone validation, provider privacy review, audio format compatibility, streaming/latency controls and automated tests.
