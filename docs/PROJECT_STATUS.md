@@ -398,3 +398,8 @@ The apps are not flight instruments. They must never store raw payment PAN/CVV o
 ### Support answer provenance and customer validation — 27 September 2026
 
 **ADOPTED / MVP IMPLEMENTED.** Support interactions can surface validated answers and retained invalidated/superseded answers, with status made explicit to the customer. Generated/retrieved unreviewed answers are likewise labelled as not yet validated. Each response asks whether it resolved the customer's question; that resolution signal is stored for quality/prioritisation but is explicitly not a substitute for technical/human validation. Invalidated answers remain auditable rather than being silently deleted.
+
+
+### Support voice/keyboard UX — 27 September 2026
+
+**ADOPTED / IMPLEMENTATION PENDING.** Horizon customer support will support keyboard and voice through one common knowledge/validation pipeline. Voice uses STT to visible/editable text and optional TTS for answers; keyboard remains the exact-string/fallback path. Provenance/status and resolution feedback are preserved in both modes. Raw microphone audio is not retained by default. Provider-neutral STT/TTS adapters and client UI remain to be implemented and tested.
