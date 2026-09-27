@@ -96,3 +96,10 @@ The provider interface is deliberately generic so the deployment can use an Open
 The document store now uses PostgreSQL **pgvector**. At ingestion, approved document sections can be embedded through an OpenAI-compatible `/embeddings` endpoint and stored with their Git revision. At question time the question embedding is compared using cosine distance and the closest product-document sections are supplied to the grounded LLM. If the embedding service is absent or fails, retrieval falls back to lexical matching rather than making the support service unavailable.
 
 Configure `EMBEDDING_BASE_URL`, `EMBEDDING_API_KEY`, `EMBEDDING_MODEL` and `EMBEDDING_DIMENSIONS` privately. They may share the LLM provider or point at a separate/local embedding service. Changing embedding dimensionality requires a database migration/re-index rather than simply editing the environment variable on an existing database.
+
+
+## Answer provenance and resolution feedback
+
+The API now exposes an explicit `answer_status`: validated, generated/retrieved but not yet validated, invalidated, or no validated answer. Invalidated answers are retained as history and can be surfaced for context, but are visibly warned as not current approved guidance.
+
+Every answer also returns the prompt **“Did this answer resolve your question?”**. The feedback endpoint stores the customer's resolution yes/no separately from the rating. Resolution data ranks knowledge gaps and answer usefulness; it never constitutes technical approval and cannot automatically promote a candidate into `validated_qa`.
