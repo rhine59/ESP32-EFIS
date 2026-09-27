@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS documents(
 CREATE INDEX IF NOT EXISTS documents_path_idx ON documents(path);
 CREATE TABLE IF NOT EXISTS interactions(
  id bigserial primary key, session_id text, question text not null, answer text not null,
- sources text[] not null default '{}', confidence real, user_feedback smallint,
+ sources text[] not null default '{}', confidence real, user_feedback smallint, resolved boolean,
  created_at timestamptz not null default now());
 CREATE TABLE IF NOT EXISTS qa_candidates(
  id bigserial primary key, normalized_question text not null, draft_answer text not null,
@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS validated_qa(
  id bigserial primary key, question text not null, answer text not null,
  evidence_paths text[] not null default '{}', approved_by text not null,
  approved_at timestamptz not null default now(), active boolean not null default true);
+CREATE TABLE IF NOT EXISTS invalidated_qa( id bigserial primary key, question text not null, answer text not null, evidence_paths text[] not null default '{}', invalidated_reason text, invalidated_by text not null, invalidated_at timestamptz not null default now());
 """
 
 def conn():
@@ -62,6 +63,7 @@ class Ask(BaseModel):
 class Feedback(BaseModel):
     interaction_id:int
     score:int=Field(ge=-1,le=1)
+    resolved:Optional[bool]=None
 
 class Approve(BaseModel):
     candidate_id:int
@@ -144,8 +146,15 @@ def ask(a:Ask):
         exact=c.execute("""SELECT question,answer,evidence_paths FROM validated_qa
           WHERE active AND lower(question)=lower(%s) ORDER BY approved_at DESC LIMIT 1""",
           (a.question.strip(),)).fetchone()
+        invalid=c.execute("""SELECT question,answer,evidence_paths,invalidated_reason FROM invalidated_qa
+          WHERE lower(question)=lower(%s) ORDER BY invalidated_at DESC LIMIT 1""",
+          (a.question.strip(),)).fetchone()
         if exact:
-            answer=exact[1]; sources=exact[2]; confidence=1.0
+            answer=exact[1]; sources=exact[2]; confidence=1.0; answer_status="VALIDATED"
+        elif invalid:
+            answer=("⚠️ INVALIDATED ANSWER — retained for history, not current approved guidance.\n"
+                    + invalid[1] + ("\n\nReason: "+invalid[3] if invalid[3] else ""))
+            sources=invalid[2]; confidence=0.0; answer_status="INVALIDATED"
         else:
             docs=retrieve(c,a.question)
             sources=[r[0] for r in docs]
@@ -154,26 +163,29 @@ def ask(a:Ask):
                 if generated:
                     answer=generated
                     confidence=0.70
+                    answer_status="GENERATED — NOT YET VALIDATED"
                 else:
                     snippets="\n\n".join(f"[{p}] {txt[:900]}" for p,_,txt in docs)
                     answer=("I found relevant product documentation, but the language service is unavailable. "
                             "Here is the retrieved source material for support review.\n\n"+snippets[:3000])
                     confidence=0.35
+                    answer_status="RETRIEVED — NOT YET VALIDATED"
             else:
                 answer="I don't have validated product information to answer that yet."
                 confidence=0.0
+                answer_status="NO VALIDATED ANSWER"
         iid=c.execute("""INSERT INTO interactions(session_id,question,answer,sources,confidence)
           VALUES(%s,%s,%s,%s,%s) RETURNING id""",
           (a.session_id,a.question,answer,sources,confidence)).fetchone()[0]
         c.execute("""INSERT INTO qa_candidates(normalized_question,draft_answer,evidence_paths)
           VALUES(%s,%s,%s) ON CONFLICT(normalized_question) DO UPDATE
           SET occurrences=qa_candidates.occurrences+1,updated_at=now()""",(qn,answer,sources))
-    return {"interaction_id":iid,"answer":answer,"sources":sources,"confidence":confidence}
+    return {"interaction_id":iid,"answer":answer,"answer_status":answer_status,"sources":sources,"confidence":confidence,"resolution_prompt":"Did this answer resolve your question?"}
 
 @app.post("/v1/feedback")
 def feedback(f:Feedback):
     with conn() as c:
-        n=c.execute("UPDATE interactions SET user_feedback=%s WHERE id=%s",(f.score,f.interaction_id)).rowcount
+        n=c.execute("UPDATE interactions SET user_feedback=%s,resolved=%s WHERE id=%s",(f.score,f.resolved,f.interaction_id)).rowcount
     if not n: raise HTTPException(404,"interaction not found")
     return {"ok":True}
 
