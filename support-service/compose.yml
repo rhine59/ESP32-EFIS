@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: efis_support
+      POSTGRES_USER: efis_support
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-CHANGE-ME}
+    volumes:
+      - support-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U efis_support -d efis_support"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  support:
+    build: .
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+      PRODUCT_NAME: ${PRODUCT_NAME:-MicroSky Horizon}
+    ports:
+      - "127.0.0.1:8093:8093"
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs: ["/tmp"]
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+volumes:
+  support-db:
