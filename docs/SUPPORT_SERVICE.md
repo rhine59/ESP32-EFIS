@@ -65,3 +65,26 @@ Every response must make its knowledge status visible to the customer. Supported
 After each answer the interaction asks **“Did this answer resolve your question?”**. The yes/no result is stored separately from optional positive/negative feedback. Customer resolution is evidence about answer usefulness, not technical validation: even many successful customer confirmations cannot promote an answer into the validated knowledge base without the formal reviewer process. Conversely, unresolved interactions should increase review priority and help identify missing documentation, weak retrieval and inadequate answers.
 
 The future reviewer dashboard should show answer status, source/revision, number of occurrences, resolution rate, feedback, invalidation history and candidate/validated lineage. It should support explicit invalidate/supersede operations without deleting the historical answer.
+
+
+## Customer interaction modes — 27 September 2026
+
+**ADOPTED / IMPLEMENTATION PENDING.** Customer support will support both **keyboard/text** and **voice** interaction. Both modes feed the same support session, retrieval, LLM, provenance, feedback and validation pipeline; voice is an input/output presentation layer rather than a separate knowledge system.
+
+### Keyboard
+
+Text entry is always available and is the baseline/fallback interaction. It is preferable for serial numbers, Device IDs, firmware versions, fault codes, URLs and other exact technical strings. Answers retain their visible status (VALIDATED, GENERATED — NOT YET VALIDATED, RETRIEVED — NOT YET VALIDATED, INVALIDATED or NO VALIDATED ANSWER), sources and the “Did this answer resolve your question?” control.
+
+### Voice
+
+The customer may press a microphone control to speak a question. Speech-to-text produces a visible editable transcript **before or alongside submission** so the customer can correct technical terms, identifiers and numbers. The resulting text is sent through exactly the same support API as keyboard input.
+
+Answers are displayed as text and may optionally be read aloud using text-to-speech. Spoken output must not hide provenance: the UI continues to show answer status and sources, and for safety-significant INVALIDATED or unvalidated answers the spoken introduction should also state the status before reading the answer. Voice must never turn an uncertain transcription into an assumed Device ID, fault code, firmware version or other exact identifier without confirmation.
+
+Conversation history stores the normalized text question/answer and interaction metadata. Raw microphone audio should **not be retained by default**; any future diagnostic/audio retention requires explicit consent, purpose and retention policy. Speech-provider configuration and credentials are runtime secrets.
+
+The resolution question is available in both modes: tap Yes/No or answer an equivalent voice prompt. Voice-derived resolution is stored identically to keyboard/tap feedback and remains a usefulness signal, never technical validation.
+
+### Implementation direction
+
+Add provider-neutral STT and TTS adapters so deployments can use hosted or local speech services. Web clients use browser microphone/audio capabilities where appropriate; iOS/Android customer apps use native microphone/audio APIs. Always provide keyboard fallback. Production gates include permission UX, transcription accuracy tests using MicroSky/Horizon terminology, noisy-cockpit testing where relevant, accessibility, latency/cost limits, privacy review and abuse/rate controls.
