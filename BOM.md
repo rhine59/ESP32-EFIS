@@ -84,6 +84,57 @@ Stage 3+ aircraft static bulkhead fitting and pneumatic tubing/tee, final RM3100
 
 Useful bench stock: 0.1 uF, 1 uF and 10 uF ceramic capacitors; 4.7 kOhm and 10 kOhm resistors; heat-shrink; small cable ties/lacing; and suitable non-magnetic/stainless M2/M2.5/M3 hardware. Preferred general sources: DigiKey, Mouser, RS, CPC Farnell and Accu as appropriate.
 
+## Budget bench-power option — optional / not required to start Stage 1
+
+The existing current-limited bench PSU remains the preferred source for first power-up. The following low-cost parts form a useful separate 12 V bench-power rig and a stepping stone toward later aircraft-power development. **Do not mark these items ordered or received without purchase/arrival evidence.**
+
+| Item | Practical choice | Qty | Status | Indicative budget | Notes / source |
+|---|---|---:|---|---:|---|
+| 12 V source | Regulated 12 V DC brick, **3 A minimum** | 1 | OPTIONAL / BUY IF NEEDED | £12–£20 | Reputable UK electronics/model supplier; 5.5×2.1 mm barrel is convenient |
+| 5 V buck | Adjustable **LM2596-class** step-down module, preferably multi-turn adjustment / display | 1 | OPTIONAL | £3–£8 | Set to **5.00 V before connecting Horizon**; a displayed LM2596 3 A module is a convenient bench choice |
+| Spare adjustable buck | LM2596-class adjustable module | 1 | OPTIONAL | £2–£5 | Useful for experiments; never assume factory output setting |
+| Input fuse holder | Inline ATO/ATC blade-fuse holder | 1 | OPTIONAL | £2–£5 | Fit an appropriately small bench fuse; start conservatively |
+| 5 V branch fuse | Inline holder + **1 A fuse** | 1 | OPTIONAL | £2–£5 | Prototype protection; revise if measured startup/current demands require it |
+| Master switch | DC-rated SPST toggle/rocker, >=3 A at 12 V | 1 | OPTIONAL | £2–£4 | Switch 12 V input before the converters |
+| 5 V enable/switch | DC-rated SPST | 1 | OPTIONAL | £1–£3 | Lets logic be isolated independently |
+| Voltage/current indication | Small DC volt/ammeter or USB/DC inline meter | 1 | OPTIONAL | £4–£8 | Diagnostic convenience, not a calibrated instrument |
+| Screw terminals / DC socket / wire | 5.5×2.1 mm socket, terminal blocks, 20–22 AWG wire, heat-shrink | 1 set | OPTIONAL | £3–£6 | Keep polarity and rails clearly labelled |
+
+**Budget:** about **£20–£30** if a suitable 12 V source, switches, fuse parts or meter are already in the workshop; approximately **£30–£50** if buying the complete rig from scratch. Prices are indicative and should be rechecked before purchase.
+
+### Bench topology
+
+```text
+12 V regulated source
+        |
+      fuse
+        |
+ master switch
+        |
+   +----+---------------------------+
+   |                                |
+LM2596 buck -> verified 5.00 V      | future/experimental branch
+   |                                |
+ 1 A branch fuse                    +-> separate converter as required
+   |
+ Horizon 5 V bench rail
+   |
+ regulated 3.3 V rail -> ESP32/sensors as designed
+
+Display backlight: use the dedicated TPS61169 backlight-driver path already in the BOM;
+do not substitute an arbitrary 6 V rail for the designed LED current driver.
+```
+
+### Bring-up rules
+
+1. First power-up should still use the owned **current-limited bench PSU**.
+2. Adjust each buck **with no Horizon electronics attached**, verify with a multimeter, power-cycle it, and verify again.
+3. Never rely on the module's printed/displayed voltage alone for first connection.
+4. Start with a conservative current limit/fuse and monitor rail voltage/current for abnormal draw.
+5. Keep a common 0 V reference only where required by the verified wiring design; do not improvise aircraft grounding from the bench rig.
+6. Espressif recommends 3.3 V and at least 500 mA capability for an ESP32-S3 single-supply design, with local bulk/decoupling capacitance. The Horizon design should retain its documented decoupling rather than relying on the buck module alone.
+7. This low-cost bench rig is **not** the production aircraft power-input design and does not replace reverse-polarity, surge/transient, filtering and other aircraft-side protection.
+
 ## Safety / configuration rule
 
 This remains an experimental **supplementary/non-primary** flight instrument. Bench simulation must be unmistakably identified and disabled for aircraft-use firmware. Missing, stale or implausible data must invalidate the relevant indication rather than freezing a plausible value. GNSS loss must not invalidate otherwise-valid attitude or magnetic heading, and GNSS validity must not imply those sources are valid.
