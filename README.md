@@ -135,3 +135,8 @@ The current development brand is **MicroSky Avionics** and the product name is *
 ## Customer support chatbot — 27 September 2026
 
 A Dockerized **MicroSky Horizon Support** service is staged under `support-service/`. It retrieves approved product documentation, records customer interactions/feedback and builds a candidate Q&A queue. Customer conversations never become authoritative automatically: a human reviewer must validate candidates against current product documents before they enter the validated Q&A database. See `docs/SUPPORT_SERVICE.md` and `support-service/README.md`.
+
+
+## Server platform — 29 September 2026
+
+The proposed server-side infrastructure baseline is a **£750-class, 64 GB RAM / 1 TB NVMe virtualisation host** running Proxmox VE, with separate production Docker, development/test and monitoring VMs plus an optional k3s lab. Existing Docker Compose services should migrate first without requiring Kubernetes; k3s is a deliberate later evaluation path. This platform supports OTA, accounts/licensing, Horizon Support and related services and is **not part of the flight hardware baseline**. See `docs/SERVER_PLATFORM.md`.
