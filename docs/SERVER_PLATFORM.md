@@ -247,3 +247,95 @@ The initial hypervisor/software budget is **£0**:
 - **Debian + KVM/libvirt:** viable lower-level alternative, but would require more manual assembly and administration.
 
 The £750 platform budget should therefore be spent on hardware, RAM, NVMe storage and power protection rather than a hypervisor licence.
+
+## Native Proxmox LXC containers
+
+Proxmox VE supports **LXC containers directly on the hypervisor** alongside full KVM virtual machines. Lightweight infrastructure services should use LXC where they do not require a separate kernel or stronger VM security/failure boundary.
+
+The default should be **unprivileged LXC containers**.
+
+Initial proposed LXC services:
+
+| Container | OS/userspace | CPU | RAM | Disk | Purpose |
+|---|---|---:|---:|---:|---|
+| `dns01` | Debian | 1 core | 512 MB–1 GB | 8 GB | Internal DNS, e.g. AdGuard Home |
+| `utility01` | Debian | 1 core | ~1 GB | 8–16 GB | Optional lightweight network/admin tools |
+
+A representative host layout is therefore:
+
+```text
+Proxmox VE
+|
++-- LXC dns01
+|     +-- Debian userspace
+|     +-- AdGuard Home
+|
++-- LXC utility01          [optional]
+|
++-- VM prod-docker
+|     +-- Debian 13
+|     +-- Docker/Compose
+|
++-- VM dev-docker
+|     +-- Debian 13
+|     +-- Docker/Compose
+|
++-- VM monitor
+|     +-- Debian 13
+|
++-- VM k3s-lab
+      +-- Debian 13
+      +-- k3s
+```
+
+LXC guests share the Proxmox Linux kernel, so they have substantially less overhead than full VMs and start quickly. Full VMs remain preferable for the production Docker estate, development/test Docker environment, k3s and workloads requiring a stronger isolation boundary.
+
+### Docker policy
+
+Do **not** make Docker-inside-LXC the default architecture. Although nested Docker in LXC is possible, it adds nesting, permission and kernel-feature dependencies that are unnecessary on a 64 GB host. Docker environments should remain in full Debian VMs unless a specific measured benefit justifies changing this policy.
+
+### DNS container
+
+The initial internal DNS service can run directly as `dns01` under Proxmox rather than consuming a complete VM.
+
+Suggested starting configuration:
+
+```text
+Hostname:       dns01
+Type:           unprivileged LXC
+Userspace:      Debian
+CPU:            1 core
+RAM:            512 MB initially
+Swap:           512 MB
+Disk:           8 GB
+Network:        vmbr0
+Address:        static LAN address
+Start at boot:  enabled
+```
+
+The local DHCP service/router should advertise `dns01` as a resolver only after the DNS configuration has been tested.
+
+Use the reserved `.home.arpa` namespace for private home-network names rather than inventing a public-looking internal domain.
+
+Example:
+
+```text
+proxmox.home.arpa
+prod.home.arpa
+dev.home.arpa
+monitor.home.arpa
+nas.home.arpa
+```
+
+### DNS resilience
+
+A single `dns01` container on Proxmox would disappear whenever the physical host is rebooted or unavailable. The preferred later design is therefore two DNS instances in separate physical failure domains:
+
+```text
+dns01  -> new Proxmox server
+dns02  -> Synology or another independent device
+```
+
+Clients can then be given both resolver addresses through DHCP. DNS availability should not depend solely on the new Proxmox host.
+
+Public authoritative DNS for MicroSky/Horizon customer-facing services should remain with a hosted DNS provider; the internal LXC DNS service is not intended to become a public authoritative DNS server.
