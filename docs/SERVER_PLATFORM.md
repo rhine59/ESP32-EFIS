@@ -31,7 +31,7 @@ Target specification:
 | Primary storage | **1 TB NVMe SSD minimum** |
 | Expansion | at least one additional M.2/NVMe slot preferred |
 | Networking | **dual 2.5 GbE preferred** |
-| Virtualisation | AMD-V/VT-x capable |
+| Virtualisation | AMD-V/VT-x capable; Proxmox VE no-subscription baseline (£0) |
 | Power profile | suitable for quiet 24x7 operation |
 | UPS | desirable if it can be accommodated within/alongside budget |
 
@@ -54,9 +54,13 @@ For this workload the priorities are:
 
 Used enterprise rack hardware remains an option where ECC, IPMI, many disks or enterprise RAID are required, but those features do not currently justify the higher power/noise/space cost for this project.
 
-## Virtualisation baseline: Proxmox VE
+## Virtualisation baseline: Proxmox VE (no-subscription)
 
-The proposed host layer is **Proxmox VE**.
+The proposed host layer is **Proxmox VE using the no-subscription repository**, with a software subscription cost of **£0** for the initial self-managed platform.
+
+A paid Proxmox subscription is not required to run the hypervisor. The no-subscription repository is suitable for this development/self-hosted baseline, while a supported Enterprise subscription can be reconsidered later if MicroSky Horizon becomes a commercial production service requiring vendor support and the more heavily tested enterprise package stream.
+
+The principal fully open-source alternative is **Incus**, which supports both system containers and QEMU virtual machines and can scale to clustered hosts. Incus should remain documented as the fallback/alternative rather than changing the initial architecture, because Proxmox provides the more convenient integrated VM, storage, snapshot, backup and web-management environment for this deployment.
 
 Proxmox provides VM isolation, snapshots, backup/restore, resource allocation, networking and a web management interface. Application containers should not normally run directly on the Proxmox host; they run inside dedicated Linux VMs.
 
@@ -232,3 +236,14 @@ Before purchase:
 - reserve budget for backup and preferably UPS protection.
 
 The immediate objective is not a Kubernetes cluster. It is a reliable, expandable virtualisation host that can run the existing Docker estate cleanly today and provide a low-risk path to k3s/multi-node infrastructure later.
+
+
+## Hypervisor cost and alternative
+
+The initial hypervisor/software budget is **£0**:
+
+- **Proxmox VE no-subscription:** selected baseline; no paid subscription required for the self-managed installation.
+- **Incus:** principal open-source alternative if a future decision favours a more Linux-native container/VM management model.
+- **Debian + KVM/libvirt:** viable lower-level alternative, but would require more manual assembly and administration.
+
+The £750 platform budget should therefore be spent on hardware, RAM, NVMe storage and power protection rather than a hypervisor licence.
