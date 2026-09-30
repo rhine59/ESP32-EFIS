@@ -459,3 +459,8 @@ Still pending: C/C++ codec, Swift codec, Python codec/tooling, automated executi
 ### Device registration and QR ownership claiming — 30 September 2026
 
 **ADOPTED DESIGN DIRECTION / IMPLEMENTATION PENDING.** Fit a durable QR/data label plus human-readable immutable Device ID to a non-prominent accessible part of the Horizon body. The QR is discovery/identification only and contains no reusable credential, PII or private key. First-owner claiming requires account sign-in plus physical-possession proof using a short-lived device challenge or authenticated maintenance-session confirmation; scanning the static QR alone cannot transfer ownership. Registration is separate from licensing and never blocks normal START EFIS. Existing explicit ownership-transfer rules remain authoritative for resale. See `docs/DEVICE_REGISTRATION.md`.
+
+
+### Single USB-C service/GPS interface — 30 September 2026
+
+**ADOPTED / DETAILED PCB VALIDATION PENDING.** Horizon will have one external USB-C OTG connector labelled **SERVICE / GPS**. ESP32-S3 operates as USB device for factory programming, service, diagnostics and recovery, and as USB host for the external GPS receiver. Routine production updates use signed OTA, but USB recovery is retained. Carrier hardware must include correct USB-C role handling, protected/current-limited host VBUS switching, ESD/signal-integrity provisions and internal factory/recovery programming/test pads. No separate external programming or dedicated GNSS connector is planned.
