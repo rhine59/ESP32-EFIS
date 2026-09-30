@@ -11,6 +11,7 @@ idf_component_register(
         "bmi088.c"
         "attitude_estimator.c"
         "gnss_quality.c"
+        "aef_can_codec.c"
     INCLUDE_DIRS
         "."
         "../include"
