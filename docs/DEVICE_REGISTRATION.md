@@ -122,3 +122,62 @@ The exact six-digit format and timeout are illustrative until threat modelling i
 ## Production tests
 
 Test at minimum: valid first claim; photographed/static QR without physical device; expired/replayed challenge; already-owned device; offline/deferred registration; interrupted claim; backend retry/idempotency; ownership transfer; factory/service recovery; account deletion/privacy handling; device identity corruption; and registration state surviving firmware OTA without changing Device ID.
+
+
+## Physical identity / QR label — initial mechanical specification
+
+**ADOPTED DIRECTION / ARTWORK AND MATERIAL VALIDATION PENDING.**
+
+Place the primary device identity label on the **rear enclosure**, clear of the STATIC fitting, 12 V power, EIU/CAN connector, USB service/GPS connection, mounting fasteners and cable bend/connector release zones. It should remain readable with the instrument removed from the panel but should not be prominent from the cockpit or visible through the normal panel opening.
+
+### Preferred label content
+
+Keep the permanent label deliberately sparse:
+
+```
+MicroSky Avionics
+HORIZON
+Flight Display
+
+Device ID: EFIS-00001247
+
+[ QR CODE ]
+
+Scan to register
+HW: V1
+```
+
+The product serial identity is the immutable Device ID. Do not add customer name, email, licence status, Wi-Fi details, passwords or other PII. Regulatory/compliance markings may be added separately when requirements are known rather than crowding the registration label.
+
+### QR payload
+
+Use a versioned HTTPS registration URI containing the immutable public Device ID only. The production domain remains unfrozen. The QR must not contain a reusable claim token or device private credential. Backend records determine whether the device is unclaimed, owned, transferred, retired or under service recovery.
+
+The human-readable Device ID must always accompany the QR so registration/support remains possible if the QR is damaged or a camera cannot read it.
+
+### Marking method
+
+Preferred production direction is a durable high-contrast laser-marked plate/label or similarly permanent industrial marking suitable for the enclosure material. A prototype adhesive polyester/polyimide label is acceptable during development. Final material/adhesive/marking must be checked for heat, moisture, cleaning agents, abrasion and expected enclosure surface/finish.
+
+Do not freeze exact QR size until representative labels are printed and scanned using several current phones under poor lighting and at awkward rear-panel angles. Preserve a quiet zone around the QR and avoid placing it across a seam, curvature, screw recess or textured feature that impairs scanning.
+
+### Secondary setup card
+
+Ship a second copy of the Device ID and registration QR on a removable setup/owner card. This is a convenience copy only. The rear-body identity marking remains the physical unit's durable identity reference.
+
+### Service/manufacturing data
+
+Manufacturing may maintain additional machine-readable internal records (hardware revision, batch, test record and cryptographic identity references), but the customer-facing QR should remain stable and simple. Do not expose factory secrets or cryptographic private material on an external label.
+
+### Prototype validation
+
+Before artwork freeze:
+
+1. Generate representative labels for multiple Device IDs.
+2. Verify QR decoding against the exact intended URI format.
+3. Test phone scanning before and after enclosure installation.
+4. Test low light, oblique angle and modest surface contamination.
+5. Verify the human-readable Device ID without scanning.
+6. Confirm no connector, cable, mounting screw or static tube obscures the label.
+7. Check abrasion/cleaner/temperature resistance of the selected marking.
+8. Confirm a photograph of the static QR alone cannot complete a device claim.
