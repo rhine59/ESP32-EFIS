@@ -408,3 +408,10 @@ The apps are not flight instruments. They must never store raw payment PAN/CVV o
 ### Customer support voice/chat implementation — 27 September 2026
 
 **IMPLEMENTED IN REPOSITORY / RUNTIME VALIDATION PENDING.** Responsive web chat, keyboard input, microphone capture, editable STT transcript, optional TTS playback, answer-status/source display and Yes/No resolution feedback are now staged in `support-service/`. Provider-neutral speech configuration is runtime-only; raw audio is not persisted by the application. Browser/Synology/provider validation remains pending.
+
+
+### Engine sensor connector and USB GPS — 30 September 2026
+
+**ADOPTED DESIGN DIRECTION / IMPLEMENTATION PENDING.** Horizon will provide externally accessible plug connectivity for a grouped engine-sensor harness covering CHT, EGT, oil temperature, oil pressure and coolant/water temperature. Sender types/ranges, connector family/pinout, conditioning, precision conversion, thermocouple cold-junction compensation, protection and calibration remain to be frozen. Raw aircraft sensor wiring will not connect directly to ESP32 ADC/GPIO.
+
+The earlier dedicated GNSS connector is **REMOVED FROM THE DESIGN DIRECTION**. GNSS will instead use a validated external USB GPS mouse/receiver. USB-host support, receiver/protocol selection, power budget, retention, ESD/protection and service-port coexistence must be proven before PCB/enclosure freeze. A USB GPS mouse is an active powered receiver, despite being operationally plug-and-play.
