@@ -4,7 +4,7 @@ protocol:
   version:
     major: 1
     minor: 0
-  status: adopted-draft
+  status: adopted-v1
   role: supplementary-non-primary
   transport:
     baseline: classical-can
@@ -67,6 +67,21 @@ sensor_states:
   STALE: 5
   CALIBRATING: 6
   SENSOR_FAULT: 7
+
+sensor_ids:
+  RPM: 1
+  OIL_PRESSURE: 2
+  OIL_TEMPERATURE: 3
+  CHT_1: 16
+  CHT_2: 17
+  EGT_1: 32
+  EGT_2: 33
+  EGT_3: 34
+  EGT_4: 35
+  COOLANT_TEMPERATURE: 48
+  SUPPLY_VOLTAGE: 64
+  SUPPLY_CURRENT: 65
+  INTERNAL_TEMPERATURE: 80
 
 capabilities:
   RPM: 0
@@ -170,9 +185,18 @@ messages:
     version: 1
     rate_hz: 2
     timeout_ms: 2000
-    note: "Initial compact status transport; exact bit packing to be frozen before firmware implementation."
+    note: "Generic paged sensor-status frame. One frame describes up to four logical sensors; additional pages use the same CAN ID."
     fields:
-      - { name: status_payload, offset: 0, type: bytes, length: 8 }
+      - { name: node_instance, offset: 0, type: uint8 }
+      - { name: page, offset: 1, type: uint8, note: "sensor indices page*4 through page*4+3" }
+      - { name: sensor_0_id, offset: 2, type: uint8 }
+      - { name: sensor_0_state, offset: 3, type: uint8, enum: sensor_states }
+      - { name: sensor_1_id, offset: 4, type: uint8 }
+      - { name: sensor_1_state, offset: 5, type: uint8, enum: sensor_states }
+      - { name: sensor_2_id, offset: 6, type: uint8 }
+      - { name: sensor_2_state, offset: 7, type: uint8, enum: sensor_states }
+    continuation:
+      note: "A fourth sensor is intentionally not packed into V1 because node/page provenance consumes two bytes. Pages repeat at the nominal status rate as required."
 
   - name: EIU_HEALTH_V1
     id: 0x601
