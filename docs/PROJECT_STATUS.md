@@ -439,6 +439,13 @@ The earlier dedicated GNSS connector is **REMOVED FROM THE DESIGN DIRECTION**. G
 | D210 | Reserve functional 11-bit CAN-ID blocks before expansion | **ADOPTED** | Prevents arbitrary ID growth and preserves priority/functional organization. |
 | D211 | Machine-readable `protocol/aef-can.yaml` as protocol source of truth | **ADOPTED** | Enables common C/C++, Swift, Python, documentation and deterministic test-vector generation. |
 | D212 | CAN FD as future extension, not current requirement | **ADOPTED** | Preserves a migration route without putting FD frames onto Classical-only nodes. |
-| D213 | SENSOR_STATUS_V1 exact bit packing | **PROPOSED / NOT FROZEN** | Need to preserve expansion to different engines, sensor counts and multiple EIUs before assigning compact per-sensor bits. |
+| D213 | SENSOR_STATUS_V1 paged sensor-ID/state layout | **ADOPTED / FROZEN V1** | Explicit node instance + page + sensor-ID/state pairs scale across different engines, sensor counts and multiple EIUs without a Rotax-specific bitmap. |
 
 Implementation status: `docs/CAN-PROTOCOL.md` and `protocol/aef-can.yaml` exist. Firmware codec, simulator CAN traffic, schema validation, generated test vectors and physical transceiver testing remain pending. Simulation success will not be recorded as physical CAN validation.
+
+
+### AEF-CAN V1 implementation checkpoint — 30 September 2026
+
+Core V1 protocol engineering is now **IMPLEMENTATION-READY / PHYSICAL VALIDATION PENDING**. The scalable sensor-status layout is frozen; the YAML is marked adopted-v1; a structural validator and deterministic golden frame vectors have been added. The golden vectors were independently checked against the specified little-endian scaled-integer encodings.
+
+Still pending: C/C++ codec, Swift codec, Python codec/tooling, automated execution of the validator in CI, EIU traffic simulator, Horizon stale/fault consumer, bus-load test, and real two-transceiver/termination bench validation.
