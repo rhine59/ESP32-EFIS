@@ -147,3 +147,22 @@ See `docs/PROCUREMENT_STATUS_2026-09-16.md`, `docs/GNSS_DISPLAY.md`, `docs/POWER
 
 - **Engine sensors:** add a keyed, positively retained enclosure-accessible multiway connector/harness provision for CHT, EGT, oil temperature, oil pressure and coolant/water temperature. Connector family, sender-specific conditioning and exact parts are **SELECTION REQUIRED**; nothing is ordered by this decision.
 - **GNSS:** supersede the earlier dedicated GNSS connector/bench-antenna direction with a **USB GPS mouse/receiver — SELECTION REQUIRED**. It must be validated for ESP32-S3 USB-host operation, protocol support, power demand and mechanical retention before procurement/freeze. A USB GPS mouse is an active USB-powered GNSS receiver, not a passive electrical device.
+
+## Remote Engine Interface Unit — planning BOM
+
+The direct engine-sensor connector at Horizon is superseded by a separate **Engine Interface Unit (EIU)**. For initial planning assume a conventional Rotax 912-series installation, while verifying the actual engine variant/serial/configuration before freezing sender curves, ranges or limits.
+
+| EIU item/function | V1 direction | Status |
+|---|---|---|
+| EIU enclosure + sensor connector | Keyed, positively retained, environmentally appropriate | SELECTION REQUIRED |
+| EIU processor | Small MCU with watchdog, CAN and adequate diagnostics | SELECTION REQUIRED |
+| Analogue conversion | External precision ADC / sender-specific front ends | SELECTION REQUIRED |
+| EGT channels | 2 × K-type thermocouple front ends with cold-junction compensation and open-sensor detection | SELECTION REQUIRED |
+| Head/coolant temperature | 2 channels, exact Rotax sender/transfer function selected by installation | SELECTION REQUIRED |
+| Oil temperature | Rotax-compatible sender conditioning | SELECTION REQUIRED |
+| Oil pressure | Sender-specific input; exact installed Rotax sender generation/range must be verified | SELECTION REQUIRED |
+| EIU ↔ Horizon bus | **Isolated CAN**, protected at both ends | PREFERRED V1 |
+| EIU power | Protected aircraft supply with local regulation/filtering | DESIGN REQUIRED |
+| Diagnostics | Open/short/plausibility, sequence/freshness, raw + engineering values | DESIGN REQUIRED |
+
+The EIU is monitoring-only. It must not become necessary for engine operation and must not disturb an existing engine-control or required indication circuit. No EIU parts are marked ordered by this planning update.
