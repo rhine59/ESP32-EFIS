@@ -1,0 +1,12 @@
+services:
+  efis-web-simulator:
+    build: .
+    container_name: esp32-efis-web-simulator
+    ports:
+      - "127.0.0.1:8088:8080"
+    environment:
+      DEVICE_ID: ${DEVICE_ID:-EFIS-SIM-0001}
+      OTA_BASE_URL: ${OTA_BASE_URL:-}
+      LICENSE_BASE_URL: ${LICENSE_BASE_URL:-}
+      SIM_ALLOW_MUTATIONS: ${SIM_ALLOW_MUTATIONS:-false}
+    restart: unless-stopped
