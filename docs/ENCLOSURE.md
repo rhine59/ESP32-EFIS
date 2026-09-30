@@ -49,3 +49,10 @@ Production power is nominal **12 V aircraft input** through an appropriate prote
 ## Airspeed scope decision — 26 September 2026
 
 **ASI/IAS capability is removed from the EFIS scope.** The enclosure requires only the **STATIC** pneumatic connection for the BMP585 altitude/barometric-pressure system. There is no PITOT connection and no differential-pressure sensor. Preserve the established round-display/front-bezel/PEC09/behind-binnacle/captive-nut enclosure concept. The previously generated rectangular multi-button image remains rejected and is not a design reference.
+
+
+## Engine-sensor plug and GNSS connector revision — 30 September 2026
+
+**ADOPTED DESIGN DIRECTION / CONNECTOR FAMILY TO BE FROZEN.** Provide externally accessible, keyed and positively retained plug access on the enclosure for a grouped engine-sensor harness. The intended initial measurement set is CHT, EGT, oil temperature, oil pressure and coolant/water temperature, with signal conditioning/protection appropriate to each sender type. Do not expose raw ESP32 GPIO/ADC pins at this connector. Final pin count, connector family, shielding/grounding, thermocouple treatment and whether conditioning lives on the main carrier or a separate engine-interface PCB remain engineering decisions pending sender identification and electrical validation.
+
+The previously reserved dedicated **GNSS connector is removed**. GNSS is instead intended to use an external **USB GPS mouse/receiver** connected through the instrument USB interface. This requires USB-host support, suitable receiver/protocol selection and a mechanically retained service/flight connection; do not assume an arbitrary USB GPS device is compatible until validated. The GPS unit may be physically passive from the pilot's perspective, but a USB receiver is an active powered electronic device.
