@@ -140,3 +140,16 @@ A Dockerized **MicroSky Horizon Support** service is staged under `support-servi
 ## Server platform — 29 September 2026
 
 The proposed server-side infrastructure baseline is a **£750-class, 64 GB RAM / 1 TB NVMe virtualisation host** running Proxmox VE, with separate production Docker, development/test and monitoring VMs plus an optional k3s lab. Existing Docker Compose services should migrate first without requiring Kubernetes; k3s is a deliberate later evaluation path. This platform supports OTA, accounts/licensing, Horizon Support and related services and is **not part of the flight hardware baseline**. See `docs/SERVER_PLATFORM.md`.
+
+
+## AEF-CAN aircraft data bus — 30 September 2026
+
+**ADOPTED / PROTOCOL STAGED.** The project now defines **AEF-CAN (Aircraft Experimental Flight CAN)** as the extensible internal data bus for the proposed Engine Interface Unit (EIU), Horizon display and future aircraft modules. It is deliberately hardware-independent and describes aircraft measurements and validity rather than display presentation.
+
+V1 uses 500 kbit/s Classical CAN with 11-bit identifiers. The current ESP32-S3 TWAI controller requires an external CAN transceiver and is Classical-CAN-only; future CAN FD hardware can be added without redefining the application-level measurement semantics.
+
+The protocol reserves functional CAN-ID ranges for engine, electrical, air data, GNSS/navigation, attitude, fuel, aircraft state, alerts, configuration, diagnostics and logging. It defines canonical wire units, scaled integer encoding, explicit freshness/fault semantics, node discovery/capabilities and major/minor compatibility rules. Producers publish facts; consumers own display units, thresholds and colours.
+
+`protocol/aef-can.yaml` is the machine-readable source of truth. The long-form rationale and implementation/testing rules are in `docs/CAN-PROTOCOL.md`. Future C/C++, Swift and Python codecs/test vectors should be generated or verified from the YAML to prevent firmware/simulator/documentation drift.
+
+The AEF-CAN/EIU system remains **secondary, supplementary and non-certified**. No CAN value may remain silently presented as live after its freshness timeout.
