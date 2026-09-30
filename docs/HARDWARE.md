@@ -179,3 +179,14 @@ The core Horizon design shall be **AEF-CAN ready** without making engine monitor
 Firmware shall accept AEF-CAN through a transport boundary and maintain an optional engine-data state. Missing or stale EIU traffic invalidates engine data only; it must not impair attitude, altitude, GNSS or other core Horizon functions. The initial implementation is in `aef_can_codec.[ch]` and `aef_engine_input.[ch]`.
 
 The remote EIU and its analogue sensor electronics are **Provisional Stage 7**; see `docs/STAGE-7-EIU.md`.
+
+
+## Single external USB-C OTG interface — 30 September 2026
+
+**ADOPTED PRODUCTION DIRECTION.** Horizon shall use one externally accessible USB-C port for both service/programming and the external USB GNSS receiver. The ESP32-S3 USB interface is used in dual-role/OTG fashion: Horizon is a USB **device** when attached to a service computer and a USB **host** when operating the selected GPS mouse/receiver.
+
+Routine production firmware updates should use the signed OTA path, but USB programming/recovery remains a required service capability for initial factory programming, development, diagnostics and recovery when OTA is unavailable. Retain internal factory/recovery programming/test pads on the carrier PCB as a second service path if the external connector or USB firmware path is damaged.
+
+The final circuit must correctly implement USB-C role detection and protected VBUS switching. Horizon must not source VBUS while attached as a USB device to a computer; in host mode it must provide a protected/current-limited 5 V supply adequate for the validated GPS receiver. ESD protection, USB signal integrity, receiver power budget, connector retention and host/device firmware behaviour are PCB-release gates.
+
+No second external programming connector and no dedicated GNSS connector are required. The rear-panel designation is **USB-C — SERVICE / GPS**. Exact USB GPS receiver/protocol remains selection/validation required.
