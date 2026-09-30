@@ -1,0 +1,11 @@
+# AEF-CAN V1 golden vectors
+# Format: CAN_ID DLC DATA_HEX ; interpretation
+0x100 8 06137B00C4030000 ; rpm=4870 oil_pressure=1.23bar oil_temperature=96.4C
+0x101 8 FC03B00400000000 ; cht_1=102.0C cht_2=120.0C
+0x102 8 841E201F00000000 ; egt_1=781.2C egt_2=796.8C
+0x103 8 BC1FC82000000000 ; egt_3=812.4C egt_4=839.2C
+0x104 8 6603000000000000 ; coolant_temperature=87.0C
+0x180 8 2A05FA0000000000 ; supply_voltage=13.22V supply_current=2.50A
+0x600 8 0000010002000300 ; node=0 page=0 RPM/OIL_PRESSURE/OIL_TEMPERATURE all VALID
+0x601 8 2C01000000000000 ; internal_temperature=30.0C reset_reason=0 health_flags=0 errors=0
+0x091 8 0100010039300000 ; node_type=1 node=0 protocol=1.0 uptime=12345s
