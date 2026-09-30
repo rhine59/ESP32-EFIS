@@ -449,3 +449,8 @@ Implementation status: `docs/CAN-PROTOCOL.md` and `protocol/aef-can.yaml` exist.
 Core V1 protocol engineering is now **IMPLEMENTATION-READY / PHYSICAL VALIDATION PENDING**. The scalable sensor-status layout is frozen; the YAML is marked adopted-v1; a structural validator and deterministic golden frame vectors have been added. The golden vectors were independently checked against the specified little-endian scaled-integer encodings.
 
 Still pending: C/C++ codec, Swift codec, Python codec/tooling, automated execution of the validator in CI, EIU traffic simulator, Horizon stale/fault consumer, bus-load test, and real two-transceiver/termination bench validation.
+
+
+### Provisional Stage 7 — Engine Sensor / EIU integration
+
+**PROVISIONAL / CORE EFIS MADE INTERFACE-READY.** Engine monitoring is now an additional Stage 7 and does not block Stages 1–6. Horizon reserves an AEF-CAN acceptance path; firmware now has a transport-independent optional engine state with stale invalidation. Final carrier hardware is to reserve TWAI-to-CAN transceiver/protection/connector/termination provision. The remote EIU, Rotax sender front ends and aircraft harness remain provisional pending bench development and installed-engine survey. See `docs/STAGE-7-EIU.md`.
