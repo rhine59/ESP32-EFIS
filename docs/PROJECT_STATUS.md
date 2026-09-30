@@ -454,3 +454,8 @@ Still pending: C/C++ codec, Swift codec, Python codec/tooling, automated executi
 ### Provisional Stage 7 — Engine Sensor / EIU integration
 
 **PROVISIONAL / CORE EFIS MADE INTERFACE-READY.** Engine monitoring is now an additional Stage 7 and does not block Stages 1–6. Horizon reserves an AEF-CAN acceptance path; firmware now has a transport-independent optional engine state with stale invalidation. Final carrier hardware is to reserve TWAI-to-CAN transceiver/protection/connector/termination provision. The remote EIU, Rotax sender front ends and aircraft harness remain provisional pending bench development and installed-engine survey. See `docs/STAGE-7-EIU.md`.
+
+
+### Device registration and QR ownership claiming — 30 September 2026
+
+**ADOPTED DESIGN DIRECTION / IMPLEMENTATION PENDING.** Fit a durable QR/data label plus human-readable immutable Device ID to a non-prominent accessible part of the Horizon body. The QR is discovery/identification only and contains no reusable credential, PII or private key. First-owner claiming requires account sign-in plus physical-possession proof using a short-lived device challenge or authenticated maintenance-session confirmation; scanning the static QR alone cannot transfer ownership. Registration is separate from licensing and never blocks normal START EFIS. Existing explicit ownership-transfer rules remain authoritative for resale. See `docs/DEVICE_REGISTRATION.md`.
