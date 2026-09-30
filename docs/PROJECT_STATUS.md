@@ -464,3 +464,8 @@ Still pending: C/C++ codec, Swift codec, Python codec/tooling, automated executi
 ### Single USB-C service/GPS interface — 30 September 2026
 
 **ADOPTED / DETAILED PCB VALIDATION PENDING.** Horizon will have one external USB-C OTG connector labelled **SERVICE / GPS**. ESP32-S3 operates as USB device for factory programming, service, diagnostics and recovery, and as USB host for the external GPS receiver. Routine production updates use signed OTA, but USB recovery is retained. Carrier hardware must include correct USB-C role handling, protected/current-limited host VBUS switching, ESD/signal-integrity provisions and internal factory/recovery programming/test pads. No separate external programming or dedicated GNSS connector is planned.
+
+
+### Containerised EFIS boot/service simulator — 1 October 2026
+
+**MVP IMPLEMENTED IN REPOSITORY / RUNTIME VALIDATION PENDING.** `efis-web-simulator/` provides a Dockerised browser emulator of the Horizon round display and rotary/push boot menus. It covers START EFIS, FULL TEST, FAULT LOG, LICENSE and FIRMWARE UPDATE, with synthetic device state, Wi-Fi online/offline injection, licence status/install/reset, public OTA manifest checking, firmware staging and explicit ACTIVATE & REBOOT. The browser talks only to the simulator backend; service secrets must never be exposed to client JavaScript. Default mock mode is safe and requires no live services. Upstream OTA and licence base URLs are configurable for integration testing; mutating production services is deliberately disabled by default. Runtime/Synology validation and final licence-service API adapters remain pending.
