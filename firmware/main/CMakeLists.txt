@@ -12,6 +12,7 @@ idf_component_register(
         "attitude_estimator.c"
         "gnss_quality.c"
         "aef_can_codec.c"
+        "aef_engine_input.c"
     INCLUDE_DIRS
         "."
         "../include"
