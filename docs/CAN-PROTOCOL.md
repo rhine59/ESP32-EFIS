@@ -322,3 +322,14 @@ The core V1 wire contract is now frozen sufficiently to start codecs and simulat
 Changing the meaning, offset, scaling, signedness or unit of a frozen V1 field is an incompatible change and must not be committed as an in-place edit. Additive reserved-field use must obey the compatibility rules; otherwise define a new message/version.
 
 The next implementation layer is a transport-neutral codec/model shared semantically across ESP-IDF C/C++, Swift and Python, followed by simulated EIU publication and Horizon freshness/fault consumption.
+
+
+## 19. C codec implementation
+
+The first executable V1 codec is now in `firmware/main/aef_can_codec.[ch]`. It is deliberately independent of ESP-IDF/TWAI and can therefore be compiled both into Horizon firmware and as ordinary host C.
+
+Initial implemented codecs cover `ENGINE_FAST_V1`, two-temperature frames used by CHT/EGT, and `SENSOR_STATUS_V1`. Decoders enforce DLC and V1 reserved-byte/state constraints rather than accepting malformed frames silently.
+
+Host regression is in `tests/aef_can_codec_test.c`; `scripts/test-aef-can-codec.sh` builds it with strict C11 warnings and compares encoded data with the frozen golden byte patterns. This is codec validation only, not TWAI/transceiver/bus validation.
+
+Next implementation increment: complete the remaining V1 message codecs, add a small AEF frame dispatcher/freshness model, then connect that abstraction to simulated EIU publication before adding the ESP-IDF TWAI transport.
