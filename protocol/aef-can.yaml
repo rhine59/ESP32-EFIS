@@ -1,0 +1,196 @@
+protocol:
+  name: AEF-CAN
+  long_name: Aircraft Experimental Flight CAN
+  version:
+    major: 1
+    minor: 0
+  status: adopted-draft
+  role: supplementary-non-primary
+  transport:
+    baseline: classical-can
+    bitrate: 500000
+    identifier_bits: 11
+    byte_order: little
+    max_payload_bytes: 8
+    can_fd_required: false
+
+units:
+  temperature:
+    wire_unit: degC
+    scale: 0.1
+  pressure:
+    wire_unit: bar
+    scale: 0.01
+  voltage:
+    wire_unit: V
+    scale: 0.01
+  current:
+    wire_unit: A
+    scale: 0.01
+  rotational_speed:
+    wire_unit: rpm
+    scale: 1
+  altitude:
+    wire_unit: m
+    scale: 0.1
+  speed:
+    wire_unit: m/s
+    scale: 0.01
+  fuel_quantity:
+    wire_unit: L
+    scale: 0.01
+
+id_ranges:
+  - { start: 0x000, end: 0x07F, purpose: network_control }
+  - { start: 0x080, end: 0x0FF, purpose: node_management }
+  - { start: 0x100, end: 0x17F, purpose: engine }
+  - { start: 0x180, end: 0x1FF, purpose: electrical }
+  - { start: 0x200, end: 0x27F, purpose: air_data }
+  - { start: 0x280, end: 0x2FF, purpose: navigation_gnss }
+  - { start: 0x300, end: 0x37F, purpose: attitude_motion }
+  - { start: 0x380, end: 0x3FF, purpose: fuel }
+  - { start: 0x400, end: 0x47F, purpose: environmental }
+  - { start: 0x480, end: 0x4FF, purpose: aircraft_state }
+  - { start: 0x500, end: 0x57F, purpose: alerts_events }
+  - { start: 0x580, end: 0x5FF, purpose: configuration_service }
+  - { start: 0x600, end: 0x67F, purpose: diagnostics }
+  - { start: 0x680, end: 0x6FF, purpose: logging_time }
+  - { start: 0x700, end: 0x77F, purpose: experimental }
+  - { start: 0x780, end: 0x7FF, purpose: reserved }
+
+sensor_states:
+  VALID: 0
+  NOT_INSTALLED: 1
+  OPEN_CIRCUIT: 2
+  SHORT_CIRCUIT: 3
+  OUT_OF_RANGE: 4
+  STALE: 5
+  CALIBRATING: 6
+  SENSOR_FAULT: 7
+
+capabilities:
+  RPM: 0
+  CHT: 1
+  EGT: 2
+  OIL_TEMPERATURE: 3
+  OIL_PRESSURE: 4
+  COOLANT_TEMPERATURE: 5
+  VOLTAGE: 6
+  CURRENT: 7
+  DIAGNOSTICS: 8
+
+messages:
+  - name: NODE_ANNOUNCE_V1
+    id: 0x090
+    version: 1
+    rate_hz: 1
+    transmit: boot_and_periodic
+    timeout_ms: 3000
+    fields:
+      - { name: protocol_major, offset: 0, type: uint8 }
+      - { name: protocol_minor, offset: 1, type: uint8 }
+      - { name: node_type, offset: 2, type: uint8 }
+      - { name: node_instance, offset: 3, type: uint8 }
+      - { name: capabilities, offset: 4, type: uint32, note: bitmask }
+
+  - name: NODE_HEARTBEAT_V1
+    id: 0x091
+    version: 1
+    rate_hz: 1
+    timeout_ms: 3000
+    fields:
+      - { name: node_type, offset: 0, type: uint8 }
+      - { name: node_instance, offset: 1, type: uint8 }
+      - { name: protocol_major, offset: 2, type: uint8 }
+      - { name: protocol_minor, offset: 3, type: uint8 }
+      - { name: uptime_s_mod, offset: 4, type: uint32, unit: s }
+
+  - name: ENGINE_FAST_V1
+    id: 0x100
+    version: 1
+    rate_hz: 10
+    timeout_ms: 500
+    fields:
+      - { name: rpm, offset: 0, type: uint16, scale: 1, unit: rpm }
+      - { name: oil_pressure, offset: 2, type: uint16, scale: 0.01, unit: bar }
+      - { name: oil_temperature, offset: 4, type: int16, scale: 0.1, unit: degC }
+      - { name: reserved, offset: 6, type: uint16, required_value: 0 }
+
+  - name: CHT_V1
+    id: 0x101
+    version: 1
+    rate_hz: 5
+    timeout_ms: 1000
+    fields:
+      - { name: cht_1, offset: 0, type: int16, scale: 0.1, unit: degC }
+      - { name: cht_2, offset: 2, type: int16, scale: 0.1, unit: degC }
+      - { name: reserved, offset: 4, type: uint32, required_value: 0 }
+
+  - name: EGT_12_V1
+    id: 0x102
+    version: 1
+    rate_hz: 5
+    timeout_ms: 1000
+    fields:
+      - { name: egt_1, offset: 0, type: int16, scale: 0.1, unit: degC }
+      - { name: egt_2, offset: 2, type: int16, scale: 0.1, unit: degC }
+      - { name: reserved, offset: 4, type: uint32, required_value: 0 }
+
+  - name: EGT_34_V1
+    id: 0x103
+    version: 1
+    rate_hz: 5
+    timeout_ms: 1000
+    fields:
+      - { name: egt_3, offset: 0, type: int16, scale: 0.1, unit: degC }
+      - { name: egt_4, offset: 2, type: int16, scale: 0.1, unit: degC }
+      - { name: reserved, offset: 4, type: uint32, required_value: 0 }
+
+  - name: ENGINE_COOLING_V1
+    id: 0x104
+    version: 1
+    rate_hz: 5
+    timeout_ms: 1000
+    fields:
+      - { name: coolant_temperature, offset: 0, type: int16, scale: 0.1, unit: degC }
+      - { name: reserved, offset: 2, type: bytes, length: 6, required_value: 0 }
+
+  - name: EIU_ELECTRICAL_V1
+    id: 0x180
+    version: 1
+    rate_hz: 2
+    timeout_ms: 2000
+    fields:
+      - { name: supply_voltage, offset: 0, type: uint16, scale: 0.01, unit: V }
+      - { name: supply_current, offset: 2, type: int16, scale: 0.01, unit: A }
+      - { name: reserved, offset: 4, type: uint32, required_value: 0 }
+
+  - name: SENSOR_STATUS_V1
+    id: 0x600
+    version: 1
+    rate_hz: 2
+    timeout_ms: 2000
+    note: "Initial compact status transport; exact bit packing to be frozen before firmware implementation."
+    fields:
+      - { name: status_payload, offset: 0, type: bytes, length: 8 }
+
+  - name: EIU_HEALTH_V1
+    id: 0x601
+    version: 1
+    rate_hz: 1
+    timeout_ms: 3000
+    fields:
+      - { name: internal_temperature, offset: 0, type: int16, scale: 0.1, unit: degC }
+      - { name: reset_reason, offset: 2, type: uint8 }
+      - { name: health_flags, offset: 3, type: uint8, note: bitmask }
+      - { name: tx_error_count, offset: 4, type: uint16 }
+      - { name: rx_error_count, offset: 6, type: uint16 }
+
+compatibility:
+  rules:
+    - "Unknown message IDs are ignored."
+    - "Existing field meanings are never silently redefined."
+    - "Minor protocol revisions are additive/backward compatible."
+    - "Incompatible semantics require a new major version or new message definition."
+    - "Reserved transmitted bits/bytes are zero and ignored by receivers."
+    - "Firmware version is independent of protocol version."
