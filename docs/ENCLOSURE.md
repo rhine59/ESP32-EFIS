@@ -66,3 +66,8 @@ The preferred engine-monitoring architecture now moves sender termination and an
 ## Registration identity marking — 30 September 2026
 
 Reserve a non-prominent, readable area on the **rear enclosure** for the permanent Horizon identity/registration marking: MicroSky Avionics / HORIZON, immutable human-readable Device ID, versioned registration QR, and hardware revision. Keep it clear of STATIC, 12 V, EIU/CAN, USB, mounting fasteners and connector/cable service zones. The QR is identification/onboarding only and contains no reusable credential or customer PII. Exact label dimensions/material remain subject to physical scan and environmental testing. See `docs/DEVICE_REGISTRATION.md`.
+
+
+## USB-C SERVICE / GPS connector — 30 September 2026
+
+**ADOPTED.** Provide one rear USB-C connector labelled **SERVICE / GPS**. It replaces separate external programming and GNSS connectors. In normal installed operation it accepts the validated USB GPS mouse/receiver; for factory/service/recovery the GPS is disconnected and a computer uses the same port. Provide suitable mechanical retention/protection for the flight GPS connection. Internal PCB programming/test pads remain available for factory/recovery access and do not require another enclosure opening.
