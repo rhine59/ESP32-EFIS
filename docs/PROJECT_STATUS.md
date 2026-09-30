@@ -420,3 +420,25 @@ The earlier dedicated GNSS connector is **REMOVED FROM THE DESIGN DIRECTION**. G
 ### Remote Engine Interface Unit — 30 September 2026
 
 **PREFERRED ARCHITECTURE / IMPLEMENTATION PENDING.** Replace the direct multi-sensor connection at Horizon with a separate Engine Interface Unit (EIU), initially targeting conventional Rotax 912-series sensors. The EIU terminates/conditions CHT or coolant/head temperature as applicable, EGT, oil temperature and oil pressure, performs precision conversion and sensor diagnostics, and sends values plus validity metadata to Horizon over one robust digital link. **Isolated CAN is the V1 preferred physical bus.** Engine variant/serial/configuration determines exact sender definitions and limits; do not assume all 912 variants are electrically identical. The EIU must remain monitoring-only and must not compromise any engine-control or existing required indication circuit. Horizon invalidates stale/lost EIU data.
+
+
+## AEF-CAN / Engine Interface Unit architecture — 30 September 2026
+
+| ID | Idea / decision | State | Reason / replacement |
+|---|---|---|---|
+| D200 | Separate EIU near engine sensors with digital bus to Horizon | **ADOPTED** | Keeps analogue/thermocouple/sensor conditioning local and provides an extensible digital aircraft interface. |
+| D201 | AEF-CAN application protocol independent of ESP32 hardware | **ADOPTED** | Allows future MCU, display, logger and sensor-node implementations without redefining aircraft data semantics. |
+| D202 | Classical CAN at 500 kbit/s, 11-bit IDs for V1 | **ADOPTED** | Matches ESP32-S3 native TWAI capability and is ample for initial engine traffic. |
+| D203 | Require CAN FD for V1 | **DISMISSED** | ESP32-S3 native TWAI is Classical CAN only; V1 does not need FD bandwidth. Architecture remains transport-neutral for later FD-capable hardware. |
+| D204 | Broadcast measurement producers; no EFIS master polling required | **ADOPTED** | Decouples producers/consumers and permits logger, second display and future modules. |
+| D205 | Encode display colour/warning state in normal sensor measurements | **DISMISSED** | Producers publish physical facts and validity; consumer configuration owns units/thresholds/presentation. |
+| D206 | Fixed canonical units and scaled integers on wire | **ADOPTED** | Deterministic cross-platform encoding without floating-point representation ambiguity. |
+| D207 | Explicit validity/fault/freshness semantics | **ADOPTED** | Prevents stale plausible measurements being treated as live. |
+| D208 | Major/minor protocol version independent of firmware version | **ADOPTED** | Supports additive evolution while preserving existing message meaning. |
+| D209 | Node discovery and capability announcement | **ADOPTED** | Avoids assuming one EIU, one display, a fixed engine or a fixed sensor count. |
+| D210 | Reserve functional 11-bit CAN-ID blocks before expansion | **ADOPTED** | Prevents arbitrary ID growth and preserves priority/functional organization. |
+| D211 | Machine-readable `protocol/aef-can.yaml` as protocol source of truth | **ADOPTED** | Enables common C/C++, Swift, Python, documentation and deterministic test-vector generation. |
+| D212 | CAN FD as future extension, not current requirement | **ADOPTED** | Preserves a migration route without putting FD frames onto Classical-only nodes. |
+| D213 | SENSOR_STATUS_V1 exact bit packing | **PROPOSED / NOT FROZEN** | Need to preserve expansion to different engines, sensor counts and multiple EIUs before assigning compact per-sensor bits. |
+
+Implementation status: `docs/CAN-PROTOCOL.md` and `protocol/aef-can.yaml` exist. Firmware codec, simulator CAN traffic, schema validation, generated test vectors and physical transceiver testing remain pending. Simulation success will not be recorded as physical CAN validation.
