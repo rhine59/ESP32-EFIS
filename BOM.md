@@ -21,6 +21,7 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 - **Stage 4 — Physical interfaces / enclosure freeze:** optical window, static fittings, magnetometer harness, GNSS antenna/receiver interface, mounting and final enclosure details.
 - **Stage 5 — Custom carrier PCB:** fabricate/populate the integrated carrier only after bench and physical interfaces are mature.
 - **Stage 6 — Aircraft installation / validation:** final aircraft power protection, retained wiring/connectors, GNSS installation hardware, mounting hardware and installation-specific items.
+- **Stage 7 — PROVISIONAL Engine Sensor / EIU integration:** optional remote engine monitoring over AEF-CAN. Does not block Stages 1–6; see `docs/STAGE-7-EIU.md`.
 
 ## Purchasing status and sources
 
@@ -166,3 +167,29 @@ The direct engine-sensor connector at Horizon is superseded by a separate **Engi
 | Diagnostics | Open/short/plausibility, sequence/freshness, raw + engineering values | DESIGN REQUIRED |
 
 The EIU is monitoring-only. It must not become necessary for engine operation and must not disturb an existing engine-control or required indication circuit. No EIU parts are marked ordered by this planning update.
+
+
+## Stage 7 — provisional EIU / AEF-CAN BOM addition
+
+These items are **provisional** and are not instructions to purchase yet. Exact transceiver/isolation/protection and sensor-front-end parts will be frozen after electrical design and installed-engine survey.
+
+| Item | Provisional requirement | Location | Qty | Status |
+|---|---|---|---:|---|
+| Horizon CAN transceiver | 3.3 V Classical CAN transceiver compatible with ESP32-S3 TWAI; protected interface | Horizon carrier | 1 | SELECTION REQUIRED |
+| CAN termination | 120 ohm, switchable/jumper-selectable on Horizon | Horizon carrier | 1 | DESIGN REQUIRED |
+| CAN protection | ESD/transient protection appropriate to final interface | Horizon carrier | 1 set | DESIGN REQUIRED |
+| CAN connector | keyed locking CAN-H/CAN-L/reference/shield provision | Horizon enclosure | 1 | SELECTION REQUIRED |
+| CAN cable | twisted pair, installation length after aircraft survey | aircraft harness | as required | DEFERRED |
+| EIU MCU | MCU with watchdog + Classical CAN; ESP32-class prototype acceptable | EIU | 1 | SELECTION REQUIRED |
+| EIU CAN transceiver | preferably galvanically isolated architecture for V1 installation | EIU | 1 | SELECTION REQUIRED |
+| EIU termination | 120 ohm if EIU is opposite physical bus end | EIU | 1 | DESIGN REQUIRED |
+| EIU protected power | aircraft input protection, filtering and local rails | EIU | 1 set | DESIGN REQUIRED |
+| Precision ADC/front ends | sender-specific analogue conversion | EIU | as required | DESIGN REQUIRED |
+| K-type thermocouple front ends | cold-junction compensation + open-sensor detection | EIU | provision for 4 EGT | DESIGN REQUIRED |
+| Temperature sender interfaces | installed Rotax sender-specific | EIU | as required | SURVEY REQUIRED |
+| Oil-pressure interface | installed sender generation/range-specific | EIU | 1 | SURVEY REQUIRED |
+| RPM conditioner | protected interface appropriate to selected RPM source | EIU | 1 | SURVEY REQUIRED |
+| EIU sensor connector(s) | keyed/retained/environmentally appropriate | EIU | as required | SELECTION REQUIRED |
+| EIU enclosure | vibration/temperature/moisture appropriate | EIU | 1 | SELECTION REQUIRED |
+
+The Horizon-side CAN provision is part of making the core EFIS **Stage-7-ready**. The EIU and engine-sensor hardware remain optional/provisional.
