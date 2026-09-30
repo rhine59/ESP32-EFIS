@@ -152,3 +152,10 @@ Wi-Fi credentials are persistent in ESP-IDF NVS. Production configuration requir
 ## Airspeed scope decision — 26 September 2026
 
 **ASI/IAS is not part of the EFIS.** Do not fit a pitot/differential-pressure sensor. BMP585 remains the sole pressure sensor and connects to aircraft STATIC for altitude/barometric pressure. No PITOT pneumatic input is required.
+
+
+## Engine-sensor and USB GPS interface direction — 30 September 2026
+
+**ADOPTED / DETAILED ELECTRICAL DESIGN PENDING.** Reserve an enclosure-accessible multiway engine-sensor connector for CHT, EGT, oil temperature, oil pressure and coolant/water temperature. Inputs require sender-specific protection, filtering and conversion; EGT/thermocouple inputs require a proper thermocouple front end and cold-junction compensation. Prefer a dedicated precision conversion/interface stage rather than routing aircraft sender wiring directly to ESP32 ADC/GPIO pins. Exact sender types and ranges must be identified before the analogue design is frozen.
+
+Remove the dedicated GNSS connector from the carrier/enclosure concept. GNSS will use a validated external USB GPS mouse/receiver. The ESP32-S3 design must therefore support the selected USB-host architecture and receiver protocol while retaining a practical service/programming path. USB power budget, ESD/transient protection, connector retention and coexistence with service USB must be resolved before PCB freeze. Do not describe a USB GPS mouse as electrically passive: it is an active USB-powered GNSS receiver even though it needs no separate aircraft data interface.
