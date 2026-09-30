@@ -193,3 +193,18 @@ These items are **provisional** and are not instructions to purchase yet. Exact 
 | EIU enclosure | vibration/temperature/moisture appropriate | EIU | 1 | SELECTION REQUIRED |
 
 The Horizon-side CAN provision is part of making the core EFIS **Stage-7-ready**. The EIU and engine-sensor hardware remain optional/provisional.
+
+
+## USB-C dual-role production interface — 30 September 2026
+
+| Item | Requirement | Status |
+|---|---|---|
+| External USB-C connector | Single robust rear connector, labelled SERVICE / GPS | DESIGN REQUIRED |
+| USB-C CC/role circuitry | Correct host/device role handling for ESP32-S3 OTG architecture | DESIGN REQUIRED |
+| USB host VBUS switch | Protected/current-limited 5 V supply for validated GPS receiver; off when Horizon is USB device | DESIGN REQUIRED |
+| USB ESD protection | Appropriate low-capacitance protection and PCB layout | DESIGN REQUIRED |
+| GPS cable retention | Vibration-resistant installed connection without adding a second GNSS connector | DESIGN REQUIRED |
+| Internal programming/test pads | Factory/recovery access independent of external connector condition | DESIGN REQUIRED |
+| USB GPS mouse/receiver | USB-host compatible receiver/protocol and acceptable power demand | SELECTION REQUIRED |
+
+One external USB-C port serves both GPS host operation and computer service/programming. Routine field firmware updating is intended to use signed OTA, but USB programming/recovery remains a production requirement.
