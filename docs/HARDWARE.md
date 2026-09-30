@@ -170,3 +170,12 @@ Initial EIU channels should cover the applicable Rotax 912 head/coolant temperat
 **Preferred EIU-to-Horizon physical bus for V1: isolated CAN.** Use a short application protocol with node identity, channel identity, engineering value, raw value/diagnostic state, sequence counter and freshness/CRC handling. Horizon must mark stale, missing or implausible engine data invalid rather than retain a plausible old value. The EIU is not an engine-control device and must not be placed in series with any sensor required by another engine-control system. Where an existing sender must also feed another instrument, loading/isolation must be engineered and validated rather than simply paralleling it.
 
 Locate the EIU near enough to the engine/sensor harness to keep thermocouple and analogue runs controlled, but in an installation environment compatible with its temperature, vibration and moisture ratings. Keep the Horizon enclosure interface to protected power/ground plus the digital bus rather than a large bundle of analogue sensor wires.
+
+
+## Stage 7 readiness — provisional engine monitoring
+
+The core Horizon design shall be **AEF-CAN ready** without making engine monitoring a dependency. Reserve ESP32-S3 TWAI pins and carrier-board space for a 3.3 V Classical CAN transceiver, interface protection, connector and selectable 120-ohm end termination. The exact transceiver/isolation implementation remains to be frozen before carrier-PCB release.
+
+Firmware shall accept AEF-CAN through a transport boundary and maintain an optional engine-data state. Missing or stale EIU traffic invalidates engine data only; it must not impair attitude, altitude, GNSS or other core Horizon functions. The initial implementation is in `aef_can_codec.[ch]` and `aef_engine_input.[ch]`.
+
+The remote EIU and its analogue sensor electronics are **Provisional Stage 7**; see `docs/STAGE-7-EIU.md`.
