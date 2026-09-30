@@ -1,6 +1,6 @@
 # AEF-CAN — Aircraft Experimental Flight CAN
 
-**Status:** ADOPTED architecture; V1 protocol definition staged for implementation  
+**Status:** ADOPTED architecture; V1 core wire contract frozen for implementation  
 **Scope:** MicroSky Horizon / ESP32-EFIS and future experimental aircraft nodes  
 **Role:** Secondary, supplementary, non-certified instrumentation
 
@@ -161,6 +161,23 @@ Initial timeout guidance:
 
 These are protocol defaults and may be tightened after bench testing.
 
+### 8.1 SENSOR_STATUS_V1 scalable layout
+
+The V1 status frame uses explicit logical sensor identifiers rather than a Rotax-specific fixed bitmap:
+
+| Byte | Meaning |
+|---:|---|
+| 0 | producer node instance |
+| 1 | status page |
+| 2 | sensor ID A |
+| 3 | state A |
+| 4 | sensor ID B |
+| 5 | state B |
+| 6 | sensor ID C |
+| 7 | state C |
+
+A producer sends as many pages as required. Sensor IDs are stable protocol identifiers (for example RPM, oil pressure, CHT1 or EGT4); they are not ADC channel numbers. This permits different engines, sensor counts and multiple producer nodes without changing the state encoding. A sensor omitted from all current pages is not automatically assumed valid or installed; capabilities/configuration determine expectation.
+
 ## 9. Versioning and compatibility
 
 AEF-CAN uses protocol **major.minor** versioning.
@@ -268,9 +285,9 @@ Simulation/codec tests do not constitute physical CAN validation.
 
 ## 16. Initial implementation sequence
 
-1. Freeze V1 YAML schema and message byte layouts.
-2. Add a schema validator/linter.
-3. Generate or hand-verify golden test vectors.
+1. ~~Freeze V1 YAML schema and core message byte layouts.~~ **DONE for core V1.**
+2. ~~Add a schema validator/linter.~~ **DONE: `scripts/validate-aef-can.py`.**
+3. ~~Generate or hand-verify initial golden test vectors.~~ **DONE: `protocol/golden-vectors.txt`; initial vectors independently byte-checked.**
 4. Implement a transport-neutral AEF data model.
 5. Implement Classical CAN codec.
 6. Add EIU simulator traffic.
@@ -292,3 +309,16 @@ Simulation/codec tests do not constitute physical CAN validation.
 **Hardware independence.** AEF-CAN belongs to the aircraft system architecture, not to ESP32.
 
 **One specification.** Firmware, simulator, tests and documentation derive from the same machine-readable definition.
+
+
+## 18. V1 implementation artefacts
+
+The core V1 wire contract is now frozen sufficiently to start codecs and simulators.
+
+- `protocol/aef-can.yaml` — authoritative machine-readable protocol definition.
+- `protocol/golden-vectors.txt` — deterministic example frames for cross-language codec tests.
+- `scripts/validate-aef-can.py` — structural validation of IDs, field overlap and Classical CAN payload bounds.
+
+Changing the meaning, offset, scaling, signedness or unit of a frozen V1 field is an incompatible change and must not be committed as an in-place edit. Additive reserved-field use must obey the compatibility rules; otherwise define a new message/version.
+
+The next implementation layer is a transport-neutral codec/model shared semantically across ESP-IDF C/C++, Swift and Python, followed by simulated EIU publication and Horizon freshness/fault consumption.
