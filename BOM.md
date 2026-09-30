@@ -141,3 +141,9 @@ This remains an experimental **supplementary/non-primary** flight instrument. Be
 
 See `docs/PROCUREMENT_STATUS_2026-09-16.md`, `docs/GNSS_DISPLAY.md`, `docs/POWER_BUDGET.md`, `docs/PROJECT_STATUS.md`, `docs/SENSORS.md`, `docs/ENCLOSURE.md`, `docs/SIMULATION.md`, `hardware/` and `docs/user-guides/`.
 
+
+
+## Interface direction update — 30 September 2026
+
+- **Engine sensors:** add a keyed, positively retained enclosure-accessible multiway connector/harness provision for CHT, EGT, oil temperature, oil pressure and coolant/water temperature. Connector family, sender-specific conditioning and exact parts are **SELECTION REQUIRED**; nothing is ordered by this decision.
+- **GNSS:** supersede the earlier dedicated GNSS connector/bench-antenna direction with a **USB GPS mouse/receiver — SELECTION REQUIRED**. It must be validated for ESP32-S3 USB-host operation, protocol support, power demand and mechanical retention before procurement/freeze. A USB GPS mouse is an active USB-powered GNSS receiver, not a passive electrical device.
