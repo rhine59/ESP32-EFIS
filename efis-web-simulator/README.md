@@ -41,3 +41,10 @@ Use the on-screen rotary buttons or keyboard: Up/Down = rotate, Enter = short pr
 ## Safety
 
 Never configure the simulator with the private licence signing key, signer token, OTA admin session secret, payment secrets or real aircraft credentials. It is a client/service test harness, not an admin control plane.
+
+
+## Multi-node offline OTA simulation
+
+The simulator now exposes Horizon and EIU installed versions, release-set caching, local maintenance-network state, transfer/staging and dependency-ordered activation. The default mock release demonstrates EIU 1.7 -> 1.9 before Horizon 2.4 -> 2.5, with Horizon checking the required EIU capability before completing its own activation.
+
+This models control flow only. It is not evidence of physical Wi-Fi, flash, A/B boot or CAN behaviour.
