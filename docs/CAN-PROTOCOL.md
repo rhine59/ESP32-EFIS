@@ -438,3 +438,12 @@ The 4 KiB and 64 KiB mechanisms deliberately solve different problems. A **4 KiB
 Absolute byte offsets are authoritative for restart. Percentage is UI-only. Transfer ID plus image identity/digest prevents a partial image from being resumed as a different release.
 
 The simulator must be revised to model block ACK/NACK, corruption inside a block, retransmission, interruption between durable checkpoints, restart from the last 64 KiB committed offset, and bus-yield behaviour. The existing stop-and-wait simulator remains historical/prototype evidence until replaced; it must not be described as the production wire implementation.
+
+
+## 23. Operational independence and gateway role — 1 October 2026
+
+AEF-CAN remains peer-to-peer/multi-master. Horizon/EFIS may provide maintenance, firmware and commissioning gateway services, but it is **not the operational bus master**. Measurement producers publish independently of Horizon presence. Loss/reboot/update of Horizon must not stop an EIU, logger or other producer from continuing its normal protocol role.
+
+The baseline physical interface is protected **non-isolated** Classical CAN with an explicit reference/ground design. Galvanic isolation is an installation-driven option, not a V1 default; add it only where grounding/common-mode/noise validation establishes a need. This avoids unnecessary isolated power, PCB area and component/failure complexity while preserving the option for installations that require isolation.
+
+Firmware-maintenance traffic remains lower priority than operational measurements and health traffic.
