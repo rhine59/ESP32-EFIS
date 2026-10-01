@@ -223,3 +223,22 @@ Preferred system power architecture: the EIU receives its **own protected aircra
 The AEF-CAN connection carries digital communications; whether aircraft power is physically bundled with that cable or supplied independently at installation remains a harness/topology decision. In either case, the EFIS core electronics must not be the unprotected source of EIU/sensor power.
 
 J1 ENGINE TEMP is therefore primarily passive thermocouple/resistive measurement wiring. J2 ENGINE AUX may contain sender-specific excitation only where the selected sensor requires it. Exact J1/J2 power/excitation pins remain **TBD / DO NOT FREEZE** until the installed Rotax 912 sender set and RPM source have been surveyed.
+
+
+### EIU USB-C SERVICE interface — 1 October 2026
+
+The EIU shall have an externally accessible **USB-C SERVICE** port as its primary factory programming, development, diagnostics and recovery interface. For an ESP32-S3 implementation, use the MCU native USB capability where practical rather than adding a USB-to-UART bridge solely for programming.
+
+The USB-C SERVICE port is distinct from the normal production firmware-delivery path:
+- **normal field update:** signed firmware service -> Horizon/EFIS -> AEF-CAN -> EIU inactive application slot;
+- **factory/development/recovery:** service computer -> USB-C SERVICE -> EIU.
+
+USB service shall support initial blank-board/factory flashing, development flashing, bootloader recovery, diagnostic console/manufacturing test functions and device interrogation as implemented. It is not a substitute for the AEF-CAN field-update architecture.
+
+USB-C 5 V may power the EIU digital/service electronics for bench programming without an aircraft 12 V supply. The PCB must implement a deliberate protected power-path arrangement so USB VBUS cannot back-feed the aircraft supply and the aircraft supply cannot drive USB VBUS. Final implementation shall consider current limiting, reverse-current blocking/ORing, ESD and USB-C CC/device-role requirements. Firmware should be able to detect USB/service presence where useful.
+
+The production enclosure interface set therefore includes **J1 ENGINE TEMP, J2 ENGINE AUX, J3 AEF-CAN and USB-C SERVICE**.
+
+Retain small internal programming/recovery/test pads even with USB-C. At minimum provide access appropriate to the selected MCU for ground, reset/enable, boot/download control and a fallback serial/debug/programming route. These pads are a last-resort manufacturing/recovery path if USB is unavailable or misconfigured.
+
+Factory provisioning should be scriptable over USB and may flash the bootloader, partition table and factory application; provision non-secret manufacturing identity such as serial number/hardware/PCB revision; reboot/interrogate the EIU; and run production self-tests. Security/eFuse provisioning must be a separate deliberate production step and must not be performed accidentally by ordinary development flashing.
