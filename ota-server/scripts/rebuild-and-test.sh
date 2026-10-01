@@ -51,6 +51,9 @@ sudo docker compose run --rm --no-deps --entrypoint python efis-ota-admin /app/t
 echo "== Simulated EIU OTA state machine =="
 sudo docker compose run --rm --no-deps --entrypoint python efis-ota-admin /app/test_eiu_ota.py
 
+echo "== Simulated AEF-CAN EIU OTA transport =="
+sudo docker compose run --rm --no-deps --entrypoint python efis-ota-admin /app/test_eiu_can_ota.py
+
 echo "== Public origin manifest =="
 curl -fsS http://127.0.0.1:8180/efis/manifest.json
 printf '\n'
