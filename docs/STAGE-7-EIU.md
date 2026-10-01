@@ -125,3 +125,12 @@ USB VBUS may power the service-side EIU electronics on the bench, but the hardwa
 USB-C does **not** replace normal field OTA. Production user updates remain Horizon -> AEF-CAN -> EIU. USB is for factory provisioning, development, workshop diagnostics and recovery.
 
 Internal fallback programming/test pads remain mandatory for recovery from a USB/bootloader/configuration failure. Development units should remain recoverable; irreversible security/eFuse changes belong to a separately controlled production-provisioning operation.
+
+
+### Interrupted transfer / checkpoint requirement
+
+EIU firmware transfer must survive removal of aircraft power or loss of CAN without threatening the running firmware. The inactive slot is written in durable blocks; the initial V1 checkpoint interval is **4 KiB**. A checkpoint binds transfer ID and image digest to an absolute committed byte offset plus block integrity information.
+
+After restart Horizon queries update state. If transfer ID/image identity match, transfer resumes from the last committed offset. If they do not match, the partial candidate is not silently reused. Percentage complete is UI-only and is derived from committed offset/image size.
+
+The active known-good slot remains bootable throughout download. Only a complete image that passes whole-image digest/signature verification can become pending for activation.
