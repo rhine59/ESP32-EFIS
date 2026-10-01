@@ -15,7 +15,7 @@ OUT=ROOT/"dist"/"MicroSky-Horizon-Project-Reference.pdf"
 OUT.parent.mkdir(exist_ok=True)
 
 def wanted(p):
-    s=p.as_posix()
+    s=p.relative_to(ROOT).as_posix()
     if any(x in s for x in ["/build-","/.git/","CMakeFiles","__pycache__"]): return False
     if p.suffix.lower()==".md":
         return s=="README.md" or s=="BOM.md" or s.startswith("docs/") or s.endswith("/README.md") or s.endswith("/DEPLOYMENT.md") or s.endswith("/BUILD-AND-DEPLOY.md") or s.endswith("CARRIER_PCB_SCHEMATIC.md")
@@ -47,11 +47,11 @@ story += [Spacer(1,35*mm),Paragraph("MicroSky Horizon",styles["Cover"]),Paragrap
 story.append(Paragraph("Contents",styles["DocTitle"]))
 toc=TableOfContents();toc.levelStyles=[ParagraphStyle(name="TOC1",fontSize=9,leading=12,leftIndent=0,firstLineIndent=0),ParagraphStyle(name="TOC2",fontSize=8,leading=10,leftIndent=12,firstLineIndent=0)]
 story += [toc,PageBreak(),Paragraph("Document index",styles["DocTitle"])]
-for p in files: story.append(Paragraph(inline(p.as_posix()),styles["BodyX"]))
+for p in files: story.append(Paragraph(inline(p.relative_to(ROOT).as_posix()),styles["BodyX"]))
 story.append(PageBreak())
 
 for idx,p in enumerate(files):
-    rel=p.as_posix(); text=p.read_text(errors="replace")
+    rel=p.relative_to(ROOT).as_posix(); text=p.read_text(errors="replace")
     story.append(Paragraph(inline(rel),styles["DocTitle"]))
     story.append(Paragraph("Repository source: "+inline(rel),styles["Path"]))
     in_code=False; buf=[]
