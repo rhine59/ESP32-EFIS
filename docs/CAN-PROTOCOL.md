@@ -414,3 +414,27 @@ For the EIU leg, V1 uses a durable checkpoint after each complete **4 KiB** bloc
 Integrity is layered: CAN sequencing detects missing/out-of-order frames; checkpoint CRC detects block corruption; final SHA-256 and firmware signature authenticate/verify the complete image before activation. Checkpoints always concern the inactive A/B slot. The currently running known-good slot is never modified by an incomplete transfer.
 
 The executable simulator uses 4 KiB durable checkpoints and regression-tests restart/resume, absolute-offset recovery, complete-image verification and rejection of checkpoint reuse by a different image. Physical flash durability and CAN interruption behaviour remain hardware-validation gates.
+
+
+## 22. Adopted production firmware transport — 1 October 2026
+
+The original six-byte DATA / per-frame stop-and-wait transport was a useful executable prototype, but it is **not the production design**. Its per-frame acknowledgement overhead and two-byte sequence field are unnecessarily expensive for firmware images of order 1–2 MB.
+
+The adopted production direction is:
+
+- Classical CAN at 500 kbit/s remains the baseline;
+- each FW_DATA_V1 frame carries a **1-byte local sequence plus 7 firmware bytes**;
+- firmware is transferred in **4 KiB blocks**;
+- each completed block is checked with **CRC32** and receives one block ACK or NACK;
+- a failed/incomplete block is retransmitted; individual DATA frames are not normally ACKed;
+- durable resume metadata is committed nominally every **64 KiB**, not every 4 KiB;
+- a restart may therefore retransmit up to one 64 KiB durable-checkpoint interval;
+- final SHA-256 and cryptographic signature verification remain mandatory before activation;
+- all transfer writes target the inactive A/B application slot;
+- operational AEF-CAN traffic has priority over firmware maintenance traffic and firmware transfer must yield/throttle rather than monopolise the bus.
+
+The 4 KiB and 64 KiB mechanisms deliberately solve different problems. A **4 KiB transfer block** bounds retransmission and detects corruption. A **64 KiB durable checkpoint** bounds restart recovery while avoiding unnecessary persistent metadata writes/flash wear.
+
+Absolute byte offsets are authoritative for restart. Percentage is UI-only. Transfer ID plus image identity/digest prevents a partial image from being resumed as a different release.
+
+The simulator must be revised to model block ACK/NACK, corruption inside a block, retransmission, interruption between durable checkpoints, restart from the last 64 KiB committed offset, and bus-yield behaviour. The existing stop-and-wait simulator remains historical/prototype evidence until replaced; it must not be described as the production wire implementation.
