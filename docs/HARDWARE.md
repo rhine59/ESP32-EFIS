@@ -206,3 +206,20 @@ Provisional enclosure interface:
 Use different pin counts and/or mechanical keying where practical so sensor and CAN/power harnesses cannot be cross-connected. Exact contact count, connector manufacturer/family and part numbers remain **TBD** until the Rotax 912 sender set, thermocouple wiring requirements, conductor sizes, current ratings, temperature/vibration limits and required degree of splash resistance are frozen.
 
 The visual target is the small black plastic connector style familiar from ULM headset installations. Earlier metal-bodied Binder-style illustrations are **not** the intended EIU production appearance.
+
+
+### EIU sensor power and excitation architecture — 1 October 2026
+
+Sensor power is **sender-dependent**. Do not assume that every engine sensor requires, or may safely receive, a +5 V feed.
+
+- **K-type EGT thermocouples:** self-generating millivolt sources; no sensor power is supplied. The EIU provides the thermocouple analogue front end, cold-junction compensation, open-sensor diagnostics and appropriate protection.
+- **Resistive temperature senders (CHT/head/coolant/oil temperature where applicable):** no separate power wire. The EIU supplies only the controlled low-level measurement excitation through a precision resistance-measurement network and measures the resulting voltage/resistance.
+- **Oil pressure:** power/interface requirements depend on the actual installed sender. A three-wire electronic sender may require a regulated excitation supply (for example 5 V), while other sender types require different conditioning. No supply voltage is frozen until the installed sender is identified.
+- **RPM:** excitation/interface depends on the selected Rotax/tacho pickup or any added Hall/frequency sensor. Do not assume +5 V.
+- Any powered sensor supply shall be generated and protected **locally inside the EIU**, with current limiting/fault containment appropriate to the final sender.
+
+Preferred system power architecture: the EIU receives its **own protected aircraft-supply feed** rather than being powered from the EFIS regulated electronics. The EIU locally provides its MCU/ADC/front-end rails and any required sensor excitation. This limits the ability of an EIU or engine-sensor wiring fault to pull down the core EFIS.
+
+The AEF-CAN connection carries digital communications; whether aircraft power is physically bundled with that cable or supplied independently at installation remains a harness/topology decision. In either case, the EFIS core electronics must not be the unprotected source of EIU/sensor power.
+
+J1 ENGINE TEMP is therefore primarily passive thermocouple/resistive measurement wiring. J2 ENGINE AUX may contain sender-specific excitation only where the selected sensor requires it. Exact J1/J2 power/excitation pins remain **TBD / DO NOT FREEZE** until the installed Rotax 912 sender set and RPM source have been surveyed.
