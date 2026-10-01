@@ -271,3 +271,14 @@ Horizon owns unit selection, conversion, formatting, colour/state presentation a
 A channel assignment screen shall present, together, the physical channel, detected electrical class/presence, selected sensor function, selected sender profile, threshold regions and values expressed in the Horizon-selected display units. Saving the channel converts those displayed values to the canonical representation and commits the complete channel configuration transactionally.
 
 Changing a sender profile or semantic channel function shall force the applicable thresholds to be reviewed before the revised configuration is accepted. A fundamental sensor reassignment invalidates the relevant engine-sensor commissioning check and requires revalidation.
+
+
+### Horizon unit preferences
+
+**ADOPTED — 1 October 2026.** User-facing engineering units are controlled centrally by Horizon and are not EIU configuration properties. Horizon shall support unit selection **per measurement type**, rather than relying on a single global metric/imperial mode, because normal aviation practice mixes unit systems.
+
+At minimum, independent preferences shall be possible for speed, distance, altitude, barometric pressure, oil pressure, fuel pressure, temperature and fuel quantity. Voltage remains volts. In particular, **oil pressure may be configured and displayed in psi while barometric pressure remains in hPa**.
+
+An EIU channel inherits the applicable Horizon presentation-unit preference from its commissioned semantic function. For example, a channel assigned as OIL PRESSURE displays and accepts commissioning thresholds in the Horizon oil-pressure unit, such as psi. A unit selector exposed from a channel-commissioning screen is a shortcut to the corresponding Horizon unit preference; it must not create a second channel-local or EIU-local unit setting.
+
+The EIU and AEF-CAN remain unit-independent at the presentation layer: measurements and persisted thresholds use the defined canonical engineering representation. Horizon converts canonical values to the selected units for display and converts installer-entered threshold values back to canonical form before persistence/transfer. Changing display units therefore changes neither the physical measurement nor the underlying alarm/caution thresholds.
