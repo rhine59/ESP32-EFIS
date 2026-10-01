@@ -48,6 +48,9 @@ printf '\n'
 echo "== Isolated admin functional harness =="
 sudo docker compose run --rm --no-deps --entrypoint python efis-ota-admin /app/test_harness.py
 
+echo "== Simulated EIU OTA state machine =="
+sudo docker compose run --rm --no-deps --entrypoint python efis-ota-admin /app/test_eiu_ota.py
+
 echo "== Public origin manifest =="
 curl -fsS http://127.0.0.1:8180/efis/manifest.json
 printf '\n'
