@@ -221,3 +221,8 @@ One external USB-C port serves both GPS host operation and computer service/prog
 The EIU connector visual/mechanical target is the **small black-plastic locking circular style used on ULM/microlight headset installations**. Metal-bodied Binder/aerospace-style connectors and industrial M12 connectors shown in earlier concept work are not the current preferred production appearance.
 
 Do **not** purchase the provisional 12-way/12-way/7-way connector set yet. Those pin counts are packaging concepts only. Freeze the connector family and contact counts after confirming the actual Rotax 912 sensor set, EGT thermocouple termination strategy, wire gauges, contact ratings, temperature/vibration requirements and the final CAN/power pin allocation. The installation needs sensible splash/water resistance, not full waterproof/IP67 performance.
+
+
+### EIU sensor-power BOM rule — 1 October 2026
+
+Do not add a generic +5 V engine-sensor supply as a frozen BOM requirement. EGT thermocouples are self-generating; resistive temperature senders use EIU measurement excitation; oil-pressure and RPM power/interface requirements depend on the actual installed sender/source. Any required regulated sender supply is generated, protected and fault-contained locally within the EIU. The EIU itself should preferably use an independently protected aircraft-supply branch rather than the EFIS regulated electronics. Sender-specific regulator/current-limit/protection components remain **DESIGN/SURVEY REQUIRED**.
