@@ -4,7 +4,7 @@ on:
     paths:
       - 'tools/build_project_reference.py'
       - '.github/workflows/build-project-reference.yml'
-  workflow_dispatch:
+  pull_request:\n  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
