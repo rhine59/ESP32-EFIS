@@ -491,3 +491,8 @@ EIU CAN simulator migration completed: it now models 7-byte FW_DATA, 4 KiB CRC/A
 ### EIU channel thresholds and units — 1 October 2026
 
 **ADOPTED / IMPLEMENTATION PENDING.** EIU sensor commissioning now treats physical channel, semantic sensor function, sender profile and operating thresholds as one configuration operation. The persistent model supports low alarm / low caution / normal / high caution / high alarm regions. Thresholds and measurements use canonical engineering units; Horizon owns display-unit conversion and colour/state presentation. Known profiles may propose defaults but the installer must explicitly review/accept them. Sensor/function/profile reassignment invalidates the relevant commissioning check and requires revalidation. See `docs/STAGE-7-EIU.md`.
+
+
+### Horizon per-measurement units — 1 October 2026
+
+**ADOPTED / IMPLEMENTATION PENDING.** Presentation units are centrally controlled by Horizon and independently selectable by measurement type, not by one global metric/imperial mode. Oil pressure can therefore use **psi** while barometric pressure uses **hPa**. EIU channels inherit units from their semantic function; EIU/AEF-CAN measurements and thresholds remain canonical and unit-independent. Changing presentation units does not alter persisted threshold meaning.
