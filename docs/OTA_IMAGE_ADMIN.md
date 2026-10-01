@@ -132,3 +132,16 @@ Both firmware-delivery legs are checkpointed.
 **Horizon -> EIU:** AEF-CAN DATA remains sequence checked and the EIU durably commits the inactive-slot candidate in 4 KiB blocks. Each checkpoint binds the transfer/image identity to the committed byte offset and block integrity. On restart Horizon queries the EIU and resumes only when identities match.
 
 The UI may display percentage, but the stored/protocol state is always an absolute byte offset. Final whole-image verification remains mandatory even when every intermediate checkpoint passed.
+
+
+## End-to-end interruption harness — 1 October 2026
+
+The executable OTA harness now covers the complete simulated path:
+
+`release service -> persistent Horizon/EFIS staging -> verified staged EIU image -> AEF-CAN -> EIU inactive slot -> activation/confirmation`.
+
+`end_to_end_ota_sim.py` models persistent EFIS staging with 64 KiB network-download checkpoints. `test_end_to_end_ota.py` deliberately interrupts the server-to-EFIS download, reconstructs the EFIS-side object from persistent state, resumes at the committed byte offset and requires complete SHA-256 verification before the image can enter the CAN stage.
+
+The same test then interrupts EFIS-to-EIU delivery after multiple 4 KiB EIU checkpoints, recreates the volatile EIU/CAN endpoint while preserving durable checkpoint state, resumes from the EIU's reported committed offset, verifies the complete image, confirms that the old EIU application remained active throughout transfer, and finally exercises explicit activation and first-boot confirmation.
+
+The normal Docker rebuild/test script executes this end-to-end suite. These tests validate software recovery semantics only; actual HTTP range requests, ESP32 flash wear/durability, physical power interruption, TWAI/CAN faults and cryptographic signature verification remain hardware/integration gates.
