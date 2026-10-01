@@ -1,7 +1,7 @@
 FROM python:3.13-alpine
 WORKDIR /app
 RUN pip install --no-cache-dir flask==3.1.2 gunicorn==23.0.0
-COPY app.py test_harness.py /app/
+COPY app.py test_harness.py release_resolver.py test_release_resolver.py eiu_ota_sim.py eiu_can_ota.py end_to_end_ota_sim.py test_eiu_ota.py test_eiu_can_ota.py test_end_to_end_ota.py /app/
 RUN addgroup -S otaadmin && adduser -S -G otaadmin otaadmin
 USER otaadmin
 EXPOSE 8090
