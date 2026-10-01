@@ -381,3 +381,16 @@ Horizon shall invalidate stale data when freshness limits are exceeded. EIU rebo
 The same mechanism is intended to support future EIU channels and other AEF-CAN sensor nodes (for example fuel pressure/level, manifold pressure or additional temperature modules) without embedding each physical product into Horizon UI logic. Producers publish identity, capabilities, facts and validity; Horizon owns semantic commissioning and presentation.
 
 The machine-readable AEF-CAN schema will require additive discovery/capability/configuration message definitions before this feature is considered wire-protocol complete.
+
+
+## 21. AEF-CAN remote firmware-update service — architecture
+
+AEF-CAN shall provide a versioned maintenance service for remote node firmware delivery. This is separate from normal engine telemetry and must not reinterpret existing V1 measurement frames.
+
+Required transaction semantics include: target-node identity and hardware compatibility; update request/ready refusal states; image metadata (product/hardware compatibility, version, size and cryptographic digest/signature metadata); ordered data transfer with explicit progress/acknowledgement and bounded retry; end-to-end complete-image verification; activation request; reboot/reappearance; running-version report; and success/rollback status.
+
+Classical CAN bandwidth is acceptable because updates are infrequent and reliability is preferred over speed. The exact segmentation/windowing scheme and CAN identifiers are **not yet frozen** and must be added additively to the machine-readable protocol schema.
+
+The EIU bootloader independently verifies firmware authenticity before execution. CAN transport integrity, Horizon verification and cryptographic image authenticity are distinct checks.
+
+Firmware update mode must not produce stale-but-plausible engine data: Horizon explicitly marks EIU engine indications unavailable/stale while the node is in maintenance/update/reboot state.
