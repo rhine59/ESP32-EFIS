@@ -102,3 +102,5 @@ def footer(canvas,doc):
 doc=IndexedDoc(str(OUT),pagesize=A4,rightMargin=16*mm,leftMargin=16*mm,topMargin=15*mm,bottomMargin=16*mm,title="MicroSky Horizon Project Reference",author="ESP32-EFIS project")
 doc.multiBuild(story,onFirstPage=footer,onLaterPages=footer)
 print(OUT)
+
+# PR build trigger
