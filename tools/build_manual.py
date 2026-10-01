@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 from pathlib import Path
 import re, html, json
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib import colors
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate,Paragraph,Spacer,PageBreak,Preformatted,KeepTogether,Table,TableStyle
+from reportlab.platypus import BaseDocTemplate,Paragraph,Spacer,PageBreak,Preformatted,KeepTogether,Table,TableStyle,PageTemplate,Frame,NextPageTemplate
 from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
@@ -88,13 +88,15 @@ for idx,p in enumerate(files):
             if rows:
                 n=max(len(row) for row in rows)
                 rows=[row+[""]*(n-len(row)) for row in rows]
+                wide=n>=6
+                available_mm=265.0 if wide else 178.0
                 if n==7:
-                    width_mm=[24,43,10,12,13,32,44]
+                    width_mm=[34,67,14,17,18,48,67]
                 elif n==6:
-                    width_mm=[27,42,12,31,25,41]
+                    width_mm=[38,66,18,48,38,57]
                 else:
                     weights=[max(8,min(32,max(len(row[j]) for row in rows))) for j in range(n)]
-                    scale=178.0/sum(weights); width_mm=[w*scale for w in weights]
+                    scale=available_mm/sum(weights); width_mm=[w*scale for w in weights]
                 data=[]
                 for ri,row in enumerate(rows):
                     style=styles["TableHead"] if ri==0 else styles["TableCell"]
@@ -108,7 +110,10 @@ for idx,p in enumerate(files):
                     ("TOPPADDING",(0,0),(-1,-1),2.5),("BOTTOMPADDING",(0,0),(-1,-1),2.5),
                     ("ROWBACKGROUNDS",(0,1),(-1,-1),[colors.white,colors.HexColor("#F7F7F7")]),
                 ]))
-                story.append(table); story.append(Spacer(1,4))
+                if wide:
+                    story.extend([NextPageTemplate("Landscape"),PageBreak(),table,NextPageTemplate("Portrait"),PageBreak()])
+                else:
+                    story.append(table); story.append(Spacer(1,4))
             continue
         if re.match(r'^\\s*[-*+]\\s+',line):
             story.append(Paragraph("• "+inline(re.sub(r'^\\s*[-*+]\\s+','',line)),styles["BodyX"])); i+=1; continue
@@ -118,7 +123,17 @@ for idx,p in enumerate(files):
     buf=flush_code(buf)
     if idx<len(files)-1: story.append(PageBreak())
 
-class IndexedDoc(SimpleDocTemplate):
+class IndexedDoc(BaseDocTemplate):
+    def __init__(self, filename, **kwargs):
+        super().__init__(filename, pagesize=A4, **kwargs)
+        portrait_frame=Frame(16*mm,16*mm,A4[0]-32*mm,A4[1]-31*mm,id="portrait-frame")
+        land=landscape(A4)
+        landscape_frame=Frame(16*mm,16*mm,land[0]-32*mm,land[1]-31*mm,id="landscape-frame")
+        self.addPageTemplates([
+            PageTemplate(id="Portrait",pagesize=A4,frames=[portrait_frame],onPage=footer),
+            PageTemplate(id="Landscape",pagesize=land,frames=[landscape_frame],onPage=footer),
+        ])
+
     def afterFlowable(self,flowable):
         if isinstance(flowable,Paragraph):
             txt=flowable.getPlainText()
@@ -134,9 +149,9 @@ class IndexedDoc(SimpleDocTemplate):
 def footer(canvas,doc):
     canvas.saveState();canvas.setFont("Helvetica",7)
     canvas.drawString(18*mm,10*mm,"MicroSky Horizon - Project Reference")
-    canvas.drawRightString(192*mm,10*mm,f"Page {doc.page}")
+    canvas.drawRightString(canvas._pagesize[0]-18*mm,10*mm,f"Page {doc.page}")
     canvas.restoreState()
 
-doc=IndexedDoc(str(OUT),pagesize=A4,rightMargin=16*mm,leftMargin=16*mm,topMargin=15*mm,bottomMargin=16*mm,title="MicroSky Horizon Project Reference",author="ESP32-EFIS project")
-doc.multiBuild(story,onFirstPage=footer,onLaterPages=footer)
+doc=IndexedDoc(str(OUT),title="MicroSky Horizon Project Reference",author="ESP32-EFIS project")
+doc.multiBuild(story)
 print(OUT)
