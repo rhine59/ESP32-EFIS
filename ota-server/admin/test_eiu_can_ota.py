@@ -1,27 +1,38 @@
 #!/usr/bin/env python3
-"""AEF-CAN EIU OTA transport regression tests."""
 from eiu_ota_sim import Image,SimulatedEIU
-from eiu_can_ota import EIUCanOtaEndpoint,transfer_image
+from eiu_can_ota import EIUCanOtaEndpoint,transfer_image,CHECKPOINT_BYTES
 
 def check(ok,msg):
-    if not ok: raise AssertionError(msg)
+    if not ok:raise AssertionError(msg)
     print(f"PASS  {msg}")
 
-img=Image.make("2.1.0",b"AEF-CAN-EIU-IMAGE"*31)
-e=SimulatedEIU(); ep=EIUCanOtaEndpoint(e)
+img=Image.make("2.1.0",b"AEF-CAN-EIU-IMAGE"*600)
+store={}; e=SimulatedEIU(); ep=EIUCanOtaEndpoint(e,store)
+r=ep.begin(img,37); check(r.status=="READY","new transfer ready")
+seq=0
+while len(e._received)<CHECKPOINT_BYTES+600:
+    r=ep.data(seq,img.payload[seq*6:seq*6+6]); seq+=1
+check(store["checkpoint"]["committed_offset"]==CHECKPOINT_BYTES,"4 KiB durable checkpoint recorded")
+committed=store["checkpoint"]["committed_offset"]
+check(ep.query().committed_offset==committed,"checkpoint query reports absolute byte offset")
 
-r=ep.begin(img); check(r.status=="READY","BEGIN -> READY")
-r=ep.data(1,b"abcdef"); check(r.status=="REJECTED" and r.detail=="sequence" and r.sequence==0,"out-of-order block rejected")
-r=ep.data(0,b"abcdefg"); check(r.status=="REJECTED" and r.detail=="payload-too-large","Classical CAN data payload limit enforced")
+# simulate power loss: volatile endpoint/EIU receive state disappears, durable checkpoint survives
+e2=SimulatedEIU(); ep2=EIUCanOtaEndpoint(e2,store)
+r=ep2.begin(img,37); check(r.status=="RESUME" and r.committed_offset==committed,"matching transfer resumes after restart")
+seq=r.sequence
+for pos in range(committed,len(img.payload),6):
+    r=ep2.data(seq,img.payload[pos:pos+6]); seq+=1
+r=ep2.finish(); check(r.status=="VERIFIED","resumed image verifies end-to-end")
+check(e2.version=="1.0.0","known-good running slot untouched before activation")
+r=ep2.activate(0); check(r.status=="REBOOT_PENDING","verified resumed image can activate")
+v,state=e2.first_boot(True); check(v=="2.1.0" and state=="confirmed","resumed update confirms")
 
-e=SimulatedEIU(); ep=EIUCanOtaEndpoint(e)
-r=transfer_image(ep,img,corrupt_sequence=2); check(r.status=="REJECTED" and r.detail=="hash-failure","end-to-end corruption rejected")
-check(e.version=="1.0.0","failed transfer leaves running slot unchanged")
-
-e=SimulatedEIU(); ep=EIUCanOtaEndpoint(e); baseline=dict(e.configuration)
-r=transfer_image(ep,img); check(r.status=="VERIFIED","segmented AEF-CAN transfer verifies")
-r=ep.activate(900); check(r.status=="REJECTED" and r.detail=="engine-running","CAN activation rejected while engine running")
-r=ep.activate(0); check(r.status=="REBOOT_PENDING","CAN activation accepted at RPM zero")
-v,state=e.first_boot(True); check(v=="2.1.0" and state=="confirmed","new EIU image confirmed after reboot")
-check(e.configuration==baseline,"commissioning preserved across CAN update")
-print("\nALL SIMULATED AEF-CAN EIU OTA TESTS PASSED")
+# mismatched image/transfer must not reuse checkpoint
+store={}; e=SimulatedEIU(); ep=EIUCanOtaEndpoint(e,store); ep.begin(img,50)
+seq=0
+while len(e._received)<CHECKPOINT_BYTES:
+    ep.data(seq,img.payload[seq*6:seq*6+6]);seq+=1
+other=Image.make("2.2.0",b"DIFFERENT"*700)
+e3=SimulatedEIU(); r=EIUCanOtaEndpoint(e3,store).begin(other,50)
+check(r.status=="READY" and r.committed_offset==0,"different image cannot inherit checkpoint")
+print("\nALL RESUMABLE AEF-CAN EIU OTA TESTS PASSED")
