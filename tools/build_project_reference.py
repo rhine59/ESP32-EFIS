@@ -61,7 +61,7 @@ for idx,p in enumerate(files):
     for raw in text.splitlines():
         line=raw.rstrip()
         if line.startswith("```"):
-            if in_code: flush_code()
+            if in_code: buf=flush_code(buf)
             in_code=not in_code; continue
         if in_code: buf.append(line); continue
         if not line.strip(): story.append(Spacer(1,2)); continue
@@ -77,7 +77,7 @@ for idx,p in enumerate(files):
         if re.match(r'^\s*\d+[.)]\s+',line):
             story.append(Paragraph(inline(line),styles["BodyX"]));continue
         story.append(Paragraph(inline(line),styles["BodyX"]))
-    flush_code()
+    buf=flush_code(buf)
     if idx<len(files)-1: story.append(PageBreak())
 
 class IndexedDoc(SimpleDocTemplate):
