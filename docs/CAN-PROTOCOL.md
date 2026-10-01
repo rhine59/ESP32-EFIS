@@ -403,3 +403,14 @@ The first executable transport model is now implemented in `ota-server/admin/eiu
 The V1 baseline deliberately uses simple stop-and-wait segmentation: each Classical CAN DATA frame contains a uint16 sequence number and up to six firmware bytes. The simulated EIU rejects out-of-order blocks and oversized data, acknowledges accepted sequence numbers, verifies the complete image digest before activation, retains the RPM=0 activation gate and exercises first-boot confirmation/configuration preservation. This simple baseline favours deterministic recovery and testability; a later additive windowed transport may improve throughput without redefining V1.
 
 `test_eiu_can_ota.py` is part of the normal Docker rebuild/test runner. This remains protocol simulation, not physical TWAI/CAN validation.
+
+
+### Resumable firmware checkpoints — 1 October 2026
+
+Firmware delivery is resumable at both stages: release service -> Horizon staging and Horizon -> EIU. Progress is represented by an absolute byte offset, never by percentage on the wire.
+
+For the EIU leg, V1 uses a durable checkpoint after each complete **4 KiB** block. Individual Classical CAN DATA frames remain sequence checked; the checkpoint records transfer identity, image identity/digest, committed byte offset and block integrity. After interruption or power loss Horizon queries the EIU, compares transfer/image identity and resumes at the EIU's last committed offset. A mismatched image or transfer does not inherit an old checkpoint.
+
+Integrity is layered: CAN sequencing detects missing/out-of-order frames; checkpoint CRC detects block corruption; final SHA-256 and firmware signature authenticate/verify the complete image before activation. Checkpoints always concern the inactive A/B slot. The currently running known-good slot is never modified by an incomplete transfer.
+
+The executable simulator uses 4 KiB durable checkpoints and regression-tests restart/resume, absolute-offset recovery, complete-image verification and rejection of checkpoint reuse by a different image. Physical flash durability and CAN interruption behaviour remain hardware-validation gates.
