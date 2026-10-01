@@ -162,7 +162,7 @@ The direct engine-sensor connector at Horizon is superseded by a separate **Engi
 | Head/coolant temperature | 2 channels, exact Rotax sender/transfer function selected by installation | SELECTION REQUIRED |
 | Oil temperature | Rotax-compatible sender conditioning | SELECTION REQUIRED |
 | Oil pressure | Sender-specific input; exact installed Rotax sender generation/range must be verified | SELECTION REQUIRED |
-| EIU ↔ Horizon bus | **Isolated CAN**, protected at both ends | PREFERRED V1 |
+| EIU ↔ Horizon bus | **Protected non-isolated Classical CAN** with explicit reference/ground strategy; galvanic isolation only if installation testing justifies it | ADOPTED BASELINE |
 | EIU power | Protected aircraft supply with local regulation/filtering | DESIGN REQUIRED |
 | Diagnostics | Open/short/plausibility, sequence/freshness, raw + engineering values | DESIGN REQUIRED |
 
@@ -180,8 +180,8 @@ These items are **provisional** and are not instructions to purchase yet. Exact 
 | CAN protection | ESD/transient protection appropriate to final interface | Horizon carrier | 1 set | DESIGN REQUIRED |
 | CAN connector | keyed locking CAN-H/CAN-L/reference/shield provision; coordinate with final Horizon enclosure interface | Horizon enclosure | 1 | SELECTION REQUIRED |
 | CAN cable | twisted pair, installation length after aircraft survey | aircraft harness | as required | DEFERRED |
-| EIU MCU | MCU with watchdog + Classical CAN; ESP32-class prototype acceptable | EIU | 1 | SELECTION REQUIRED |
-| EIU CAN transceiver | preferably galvanically isolated architecture for V1 installation | EIU | 1 | SELECTION REQUIRED |
+| EIU MCU | MCU with watchdog + Classical CAN; ESP32-S3 remains candidate but must be compared with suitable industrial/deterministic alternatives before PCB freeze | EIU | 1 | DESIGN REVIEW REQUIRED |
+| EIU CAN transceiver | 3.3 V compatible protected Classical CAN transceiver; non-isolated baseline, isolation only if testing/installation requires it | EIU | 1 | SELECTION REQUIRED |
 | EIU termination | 120 ohm if EIU is opposite physical bus end | EIU | 1 | DESIGN REQUIRED |
 | EIU protected power | aircraft input protection, filtering and local rails | EIU | 1 set | DESIGN REQUIRED |
 | Precision ADC/front ends | sender-specific analogue conversion | EIU | as required | DESIGN REQUIRED |
@@ -189,11 +189,11 @@ These items are **provisional** and are not instructions to purchase yet. Exact 
 | Temperature sender interfaces | installed Rotax sender-specific | EIU | as required | SURVEY REQUIRED |
 | Oil-pressure interface | installed sender generation/range-specific | EIU | 1 | SURVEY REQUIRED |
 | RPM conditioner | protected interface appropriate to selected RPM source | EIU | 1 | SURVEY REQUIRED |
-| EIU J1 ENGINE TEMP panel socket | Black-plastic ULM/microlight-headset-style circular positive-locking multiway panel connector; provisional 12-way concept, final count TBD | EIU | 1 | SELECTION REQUIRED — DO NOT ORDER |
+| EIU J1 ENGINE TEMP panel socket | Connector/contact count derived from actual sender/harness survey including thermocouple termination requirements; earlier 12-way concept is illustrative only | EIU | 1 | SURVEY + SELECTION REQUIRED — DO NOT ORDER |
 | J1 mating cable plug | Matching black-plastic locking cable plug, contacts/termination and strain relief/boot as required | engine harness | 1 | SELECTION REQUIRED — DO NOT ORDER |
-| EIU J2 ENGINE AUX panel socket | Black-plastic ULM/microlight-headset-style circular positive-locking multiway panel connector; provisional 12-way concept, final count TBD | EIU | 1 | SELECTION REQUIRED — DO NOT ORDER |
+| EIU J2 ENGINE AUX panel socket | Connector/contact count derived from actual sender/harness survey; earlier 12-way concept is illustrative only | EIU | 1 | SURVEY + SELECTION REQUIRED — DO NOT ORDER |
 | J2 mating cable plug | Matching black-plastic locking cable plug, contacts/termination and strain relief/boot as required | engine harness | 1 | SELECTION REQUIRED — DO NOT ORDER |
-| EIU J3 EFIS CAN panel socket | Smaller and/or differently keyed black-plastic ULM-style locking circular connector for protected power/ground + CAN-H/CAN-L; provisional 7-way concept | EIU | 1 | SELECTION REQUIRED — DO NOT ORDER |
+| EIU J3 AEF-CAN panel socket | Keyed connector for CAN-H/CAN-L/reference and only those installation conductors deliberately selected after power/harness design; earlier 7-way concept is illustrative only | EIU | 1 | DESIGN + SELECTION REQUIRED — DO NOT ORDER |
 | J3 mating cable plug | Matching black-plastic locking cable plug, contacts/termination and strain relief/boot as required | EIU-to-Horizon harness | 1 | SELECTION REQUIRED — DO NOT ORDER |
 | Connector environmental accessories | Boots, heat-shrink, strain relief, sealing/grommet hardware as needed for splash/water-resistant installation; IP67 not required by current concept | EIU/harness | 1 set | DESIGN REQUIRED |
 | EIU enclosure | vibration/temperature/moisture appropriate; connector orientation should minimise direct splash ingress and permit drip loops | EIU | 1 | SELECTION REQUIRED |
@@ -245,3 +245,12 @@ Do not add a generic +5 V engine-sensor supply as a frozen BOM requirement. EGT 
 The external USB-C SERVICE connector is now the preferred factory/development programming route. Pogo/test pads are retained as fallback/recovery rather than the primary operator interface. Routine production firmware upgrades remain signed Horizon -> AEF-CAN -> EIU updates.
 
 Do not freeze a USB power mux/ideal-diode/current-limit part until the EIU aircraft-input regulator and total bench-service power requirement are known. Likewise, do not enable irreversible ESP32 security/eFuse settings in the ordinary development flash process; production security provisioning requires a separate reviewed procedure.
+
+
+### Stage-7 architecture review — 1 October 2026
+
+The EIU and Horizon use independent protected aircraft-power branches; EIU power is not sourced from Horizon regulated rails. The CAN baseline is now protected **non-isolated** Classical CAN with deliberate reference/ground design. Galvanic isolation is retained as an option only when common-mode/noise/installation testing justifies its additional complexity.
+
+ESP32-S3 is not frozen for the EIU. Perform an MCU comparison before PCB freeze. Likewise, the former 12/12/7 connector counts are packaging concepts only and must not drive the sensor/harness design. Actual Rotax installation/sender survey and thermocouple wiring requirements determine contacts and connector family.
+
+V1 commissioning uses explicit channel role/sender-profile assignment plus automatic compatibility/fault detection, not semantic auto-identification. Horizon is a maintenance gateway rather than an AEF-CAN operational master.
