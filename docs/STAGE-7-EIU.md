@@ -129,8 +129,17 @@ Internal fallback programming/test pads remain mandatory for recovery from a USB
 
 ### Interrupted transfer / checkpoint requirement
 
-EIU firmware transfer must survive removal of aircraft power or loss of CAN without threatening the running firmware. The inactive slot is written in durable blocks; the initial V1 checkpoint interval is **4 KiB**. A checkpoint binds transfer ID and image digest to an absolute committed byte offset plus block integrity information.
+EIU firmware transfer must survive removal of aircraft power or loss of CAN without threatening the running firmware. The inactive slot is written in durable blocks; the transfer-block interval is **4 KiB**; durable resume state is nominally **64 KiB**. A checkpoint binds transfer ID and image digest to an absolute committed byte offset plus block integrity information.
 
 After restart Horizon queries update state. If transfer ID/image identity match, transfer resumes from the last committed offset. If they do not match, the partial candidate is not silently reused. Percentage complete is UI-only and is derived from committed offset/image size.
 
 The active known-good slot remains bootable throughout download. Only a complete image that passes whole-image digest/signature verification can become pending for activation.
+
+
+### Adopted production CAN firmware transport — 1 October 2026
+
+The Stage-7 production direction supersedes the prototype six-byte/per-frame-ACK transport. FW_DATA uses one local sequence byte and seven firmware bytes. Horizon sends a 4 KiB transfer block, the EIU validates that block with CRC32, then returns a block ACK/NACK. A bad or incomplete block is retransmitted.
+
+A 4 KiB block is **not** a durable restart checkpoint. Durable resume state is recorded nominally every 64 KiB to reduce unnecessary metadata writes and flash wear. Following power loss, the EIU resumes from the last durable 64 KiB absolute offset; retransmission of data after that point is acceptable because the active known-good A/B slot is untouched.
+
+Firmware-maintenance CAN traffic is deliberately lower priority than operational measurement/health traffic and must be rate-limited/yield when necessary. Complete-image SHA-256 and signature verification, explicit activation, trial boot and rollback remain unchanged.
