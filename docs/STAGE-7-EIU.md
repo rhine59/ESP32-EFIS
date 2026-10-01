@@ -55,15 +55,13 @@ Stage 7E — installed supplementary evaluation.
 No Stage 7 item is treated as flight-validated merely because it passes simulation or bench CAN tests.
 
 
-## Sensor auto-discovery and commissioning
+## Sensor commissioning and automatic fault detection
 
-Stage 7 shall use the three-level AEF-CAN discovery model documented in `docs/CAN-PROTOCOL.md`: EIU device discovery, electrical channel discovery, then user-confirmed semantic assignment.
+V1 uses explicit commissioning rather than attempting semantic auto-identification of conventional analogue engine sensors. The user/installer assigns each physical channel a semantic role and verified sender/profile (for example EGT1, CHT1 or oil temperature), and that mapping is persisted.
 
-Conventional Rotax analogue senders and K-type thermocouples are **not self-identifying devices**. The EIU may determine electrical class/presence and diagnose open/short/plausibility states, but it must not guess that a channel is “oil temperature”, “EGT 1”, etc. solely from a plausible electrical reading. First-run commissioning presents compatible assignments to the user and persists the confirmed mapping.
+The EIU automatically discovers its own identity/capabilities and monitors each configured channel for presence, electrical compatibility, open/short/out-of-range/plausibility and stale/fault conditions. It must not infer or silently change semantic roles merely because an electrical reading resembles a sensor class.
 
-Subsequent starts should be automatic when hardware matches the stored configuration. New sensors on previously empty channels, missing commissioned sensors, incompatible electrical behaviour or changed EIU/configuration identity must generate an explicit discovery/change/fault state. They must not silently alter a channel mapping or leave a frozen plausible value on Horizon.
-
-Stage 7A therefore includes simulated discovery, capability enumeration, persistent mapping and stale/change/fault behaviour in addition to ordinary engine-value frames. Stage 7C validates the electrical detection limits of the real EIU front ends; simulation must not claim a sensor type can be distinguished unless the hardware can actually distinguish it.
+Subsequent starts are automatic when the stored EIU/channel configuration remains valid. New, missing or electrically incompatible sensors generate an explicit commissioning/change/fault state rather than a silent remap.
 
 
 ## Sensor power / excitation
@@ -143,3 +141,40 @@ The Stage-7 production direction supersedes the prototype six-byte/per-frame-ACK
 A 4 KiB block is **not** a durable restart checkpoint. Durable resume state is recorded nominally every 64 KiB to reduce unnecessary metadata writes and flash wear. Following power loss, the EIU resumes from the last durable 64 KiB absolute offset; retransmission of data after that point is acceptable because the active known-good A/B slot is untouched.
 
 Firmware-maintenance CAN traffic is deliberately lower priority than operational measurement/health traffic and must be rate-limited/yield when necessary. Complete-image SHA-256 and signature verification, explicit activation, trial boot and rollback remain unchanged.
+
+
+## Architecture review decisions — 1 October 2026
+
+The following decisions are now adopted constraints for Stage 7 rather than optional review notes.
+
+### Power and fault containment
+
+Horizon/EFIS and the EIU shall use **independent protected branches from the aircraft electrical system**. The EIU shall not be powered from the EFIS regulated rails. Whether aircraft power conductors and AEF-CAN share a physical harness remains an installation decision; electrically, the branches remain separately protected and a fault in one unit must not remove power from the other.
+
+The baseline CAN implementation is **protected non-isolated Classical CAN with an explicit reference/ground strategy**. Galvanic isolation is not a default requirement because it adds isolated power, components, PCB area and failure modes. Isolation shall be added only if aircraft grounding/common-mode/noise testing or a later installation requirement demonstrates a need.
+
+A formal fault-containment requirement applies: EIU failure must not disable core Horizon; a sensor short must be locally contained; CAN faults must not reboot either node; USB/service faults must not propagate into aircraft power/CAN; bad firmware/configuration must remain recoverable; update failures must leave a known-good application bootable.
+
+### EIU processor design gate
+
+ESP32-S3 is **not frozen as the EIU MCU**. It remains a strong candidate because shared ESP-IDF, native USB, OTA/security tooling and project knowledge reduce development cost. Before EIU PCB freeze, compare it against suitable deterministic/industrial MCU alternatives (for example an STM32-class device) for CAN/timers/ADC support, boot/rollback facilities, development complexity, component count and long-term maintainability. Select on system merit, not processor-family inertia.
+
+### Sensor commissioning simplification
+
+V1 shall not attempt semantic auto-identification of conventional analogue engine sensors. Physical channels are commissioned/configured with explicit roles and sender profiles (for example EGT1, oil temperature). Firmware then performs automatic **electrical compatibility, presence and fault detection** against that configuration. Device discovery and EIU capability discovery remain automatic. No channel is silently remapped from electrical inference.
+
+### Connector design gate
+
+The previous 12-way / 12-way / 7-way connector arrangement is a packaging illustration only. Pin counts and connector family shall not be frozen until the actual engine/sender installation has been surveyed. Sensor electrical interface, thermocouple termination/material requirements, wire count/gauge, grounding/reference, current rating and environmental/mechanical requirements determine connector selection.
+
+### Network role
+
+Horizon/EFIS is an **AEF-CAN maintenance gateway, not an operational bus master**. The EIU publishes measurements independently and continues doing so if Horizon disappears. A logger, second display or future compatible consumer may receive EIU data directly. Firmware/configuration gateway functions do not create an operational dependency on Horizon.
+
+### USB-C service scope
+
+EIU USB-C remains the preferred local service/programming interface, but is not an everyday operational interface. It should be mechanically recessed/protected as appropriate. USB bench power need only support the service/digital domain required for programming and diagnostics; it is not required to reproduce the complete aircraft-powered sensor environment. Internal recovery access remains required.
+
+### Platform OTA facilities
+
+The required firmware behaviour is known-good -> candidate -> trial -> confirmed/rollback. Implement this using mature MCU/platform OTA/boot facilities where suitable rather than creating a bespoke boot manager without need. The EIU still independently verifies firmware authenticity before execution.
