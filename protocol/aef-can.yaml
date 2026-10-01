@@ -235,10 +235,10 @@ messages:
     id: 0x5C2
     version: 1
     rate_hz: transfer
-    note: "Stop-and-wait V1 baseline: uint16 sequence plus up to six firmware bytes. More efficient additive transport may be defined later without changing this frame."
+    note: "Adopted production transport: one-byte sequence plus seven firmware bytes. Sequence is local to the active 4 KiB transfer block; block CRC and final image verification provide higher-level integrity."
     fields:
-      - { name: sequence, offset: 0, type: uint16 }
-      - { name: data, offset: 2, type: bytes, length: 6 }
+      - { name: sequence, offset: 0, type: uint8, note: "frame sequence within current transfer block; wrap permitted with block byte count providing context" }
+      - { name: data, offset: 1, type: bytes, length: 7 }
 
   - name: FW_STATUS_V1
     id: 0x5C3
@@ -256,11 +256,11 @@ messages:
     id: 0x5C4
     version: 1
     rate_hz: event
-    note: "Durable resumability checkpoint. Offset is authoritative; percentage is presentation only. CRC32 covers the just-committed checkpoint block."
+    note: "Durable resume checkpoint, nominally every 64 KiB. This is distinct from each 4 KiB CRC-verified transfer block. Offset is authoritative; percentage is presentation only."
     fields:
       - { name: transfer_id, offset: 0, type: uint16 }
       - { name: committed_offset, offset: 2, type: uint32, unit: bytes }
-      - { name: block_crc16_summary, offset: 6, type: uint16, note: "compact wire summary; full CRC32 may be obtained/validated through maintenance metadata/status exchange" }
+      - { name: checkpoint_integrity, offset: 6, type: uint16, note: "compact checkpoint-state integrity token; 4 KiB block CRC32 is carried by block-control/status exchange" }
 
 compatibility:
   rules:
