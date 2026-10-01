@@ -108,3 +108,20 @@ The EIU PCB retains internal service/recovery pads or an equivalent programming/
 ### Test requirement
 
 The OTA harness shall gain a simulated AEF-CAN EIU node so the complete workflow can be exercised without aircraft hardware: discovery/version report, compatibility decision, image transfer with acknowledgements/retry, interruption/resume or clean restart policy, complete-image verification, pending activation, reboot, health confirmation, rollback and configuration preservation. Simulation is not physical CAN/flash validation.
+
+
+## USB-C factory/service programming
+
+The EIU external **USB-C SERVICE** port is the primary local programming/service interface. On an ESP32-S3 design it should use native USB where practical.
+
+Factory/development flow is:
+
+`service computer -> USB-C SERVICE -> ROM/bootloader programming -> factory image -> reboot -> identity/self-test`.
+
+The factory image establishes the bootloader, partition table, initial application slot and persistent-storage layout required by the A/B update architecture. Manufacturing identity (serial number, hardware revision and PCB revision) is provisioned separately from aircraft sensor commissioning/calibration data.
+
+USB VBUS may power the service-side EIU electronics on the bench, but the hardware must prevent back-feed between USB 5 V and the aircraft-power input. USB-powered service mode must not imply that engine sensor excitation or all aircraft-side interfaces are safe/available unless the final power design explicitly supports them.
+
+USB-C does **not** replace normal field OTA. Production user updates remain Horizon -> AEF-CAN -> EIU. USB is for factory provisioning, development, workshop diagnostics and recovery.
+
+Internal fallback programming/test pads remain mandatory for recovery from a USB/bootloader/configuration failure. Development units should remain recoverable; irreversible security/eFuse changes belong to a separately controlled production-provisioning operation.
