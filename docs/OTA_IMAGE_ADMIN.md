@@ -121,3 +121,14 @@ The first executable transport-neutral EIU update state machine is in `ota-serve
 Current simulation covers discovery/version reporting, target-hardware rejection, segmented transfer, end-to-end SHA-256 corruption detection, inactive-slot staging, RPM=0 activation gate, successful first-boot confirmation, failed-first-boot rollback and preservation of commissioned sensor configuration. Test payloads deliberately identify two distinct simulated releases (`EIU-V2-GREEN-LED` and `EIU-V3-BLUE-LED`).
 
 This remains a software model. It does not yet implement AEF-CAN frame segmentation, cryptographic signature verification, resume after interruption, ESP32 partition-table flashing or physical bootloader rollback. Those are subsequent gates and must not be described as hardware-validated.
+
+
+## Two-stage download checkpoints — 1 October 2026
+
+Both firmware-delivery legs are checkpointed.
+
+**Release service -> Horizon:** Horizon stages firmware persistently and records absolute downloaded offset/image identity so an interrupted network download can resume rather than restart. The complete staged image must pass digest/signature verification before it is offered to the EIU.
+
+**Horizon -> EIU:** AEF-CAN DATA remains sequence checked and the EIU durably commits the inactive-slot candidate in 4 KiB blocks. Each checkpoint binds the transfer/image identity to the committed byte offset and block integrity. On restart Horizon queries the EIU and resumes only when identities match.
+
+The UI may display percentage, but the stored/protocol state is always an absolute byte offset. Final whole-image verification remains mandatory even when every intermediate checkpoint passed.
