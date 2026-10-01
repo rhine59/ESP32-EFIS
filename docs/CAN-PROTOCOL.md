@@ -447,3 +447,12 @@ AEF-CAN remains peer-to-peer/multi-master. Horizon/EFIS may provide maintenance,
 The baseline physical interface is protected **non-isolated** Classical CAN with an explicit reference/ground design. Galvanic isolation is an installation-driven option, not a V1 default; add it only where grounding/common-mode/noise validation establishes a need. This avoids unnecessary isolated power, PCB area and component/failure complexity while preserving the option for installations that require isolation.
 
 Firmware-maintenance traffic remains lower priority than operational measurements and health traffic.
+
+
+## Flash persistence rule for AEF-CAN nodes — 1 October 2026
+
+AEF-CAN operational traffic is RAM-first. Receipt/transmission of a CAN frame, sensor sampling, heartbeat generation, freshness tracking, diagnostic counters and ordinary changing measurement state must not trigger persistent flash writes.
+
+For EIU firmware transfer, 4 KiB transfer-block CRC/ACK state is volatile; durable resume metadata is nominally committed every 64 KiB using an append-only rotating checkpoint journal (or demonstrably equivalent wear-levelled storage), never a repeatedly erased fixed metadata sector. A/B application slots remain the firmware rollback mechanism.
+
+Persistent storage is reserved for intentionally durable configuration/calibration/identity, wear-aware OTA metadata, and explicitly justified infrequent events. This rule applies to future AEF-CAN nodes as well as the initial EIU.
