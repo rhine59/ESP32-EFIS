@@ -242,3 +242,14 @@ The production enclosure interface set therefore includes **J1 ENGINE TEMP, J2 E
 Retain small internal programming/recovery/test pads even with USB-C. At minimum provide access appropriate to the selected MCU for ground, reset/enable, boot/download control and a fallback serial/debug/programming route. These pads are a last-resort manufacturing/recovery path if USB is unavailable or misconfigured.
 
 Factory provisioning should be scriptable over USB and may flash the bootloader, partition table and factory application; provision non-secret manufacturing identity such as serial number/hardware/PCB revision; reboot/interrogate the EIU; and run production self-tests. Security/eFuse provisioning must be a separate deliberate production step and must not be performed accidentally by ordinary development flashing.
+
+
+## Stage-7 architecture constraints — 1 October 2026
+
+- **Independent power:** Horizon and EIU use separately protected aircraft-supply branches. Do not power the EIU from Horizon regulated rails.
+- **CAN baseline:** protected non-isolated Classical CAN plus deliberate reference/ground design. Galvanic isolation is optional and must be justified by installation/common-mode/noise testing.
+- **Fault containment:** sensor, EIU, CAN and USB/service faults must be locally contained and must not disable the core Horizon instrument or destroy the known-good recovery path.
+- **EIU MCU:** ESP32-S3 is a candidate, not a frozen selection. Perform an ESP32-S3 versus suitable industrial/deterministic MCU review before EIU PCB freeze.
+- **Connectors:** previous 12/12/7 pin counts are conceptual only. Freeze only after the installed engine/sender/harness survey, including thermocouple termination requirements.
+- **USB-C SERVICE:** retain as local factory/workshop interface, preferably recessed/protected. USB bench power is scoped to service/digital operation; it need not power the full sensor environment.
+- **Boot architecture:** use mature platform A/B OTA/rollback facilities where they meet the required known-good/candidate/trial/confirm behaviour rather than inventing a bespoke bootloader.
