@@ -1,9 +1,9 @@
-name: Build indexed project PDF
+name: Build complete indexed project manual
 on:
   push:
     branches: [main]
     paths:
-      - 'tools/build_project_reference.py'
+      - 'tools/build_manual.py'
       - '.github/workflows/build-project-reference.yml'
   workflow_dispatch:
 permissions:
@@ -16,17 +16,17 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.13'}
       - run: pip install reportlab
-      - run: python tools/build_project_reference.py
+      - run: python tools/build_manual.py
       - name: Store transport copy
-        run: base64 -w 0 dist/MicroSky-Horizon-Project-Reference.pdf > dist/MicroSky-Horizon-Project-Reference.pdf.b64
+        run: base64 -w 0 dist/MicroSky-Horizon-Complete-Project-Manual.pdf > dist/MicroSky-Horizon-Complete-Project-Manual.pdf.b64
       - name: Commit generated reference
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f dist/MicroSky-Horizon-Project-Reference.pdf.b64
+          git add -f dist/MicroSky-Horizon-Complete-Project-Manual.pdf.b64
           git diff --cached --quiet || git commit -m "Build current indexed project reference PDF"
           git push
       - uses: actions/upload-artifact@v4
         with:
-          name: MicroSky-Horizon-Project-Reference
-          path: dist/MicroSky-Horizon-Project-Reference.pdf
+          name: MicroSky-Horizon-Complete-Project-Manual
+          path: dist/MicroSky-Horizon-Complete-Project-Manual.pdf
