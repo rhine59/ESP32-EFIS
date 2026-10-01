@@ -129,7 +129,7 @@ Both firmware-delivery legs are checkpointed.
 
 **Release service -> Horizon:** Horizon stages firmware persistently and records absolute downloaded offset/image identity so an interrupted network download can resume rather than restart. The complete staged image must pass digest/signature verification before it is offered to the EIU.
 
-**Horizon -> EIU:** AEF-CAN DATA remains sequence checked and the EIU durably commits the inactive-slot candidate in 4 KiB blocks. Each checkpoint binds the transfer/image identity to the committed byte offset and block integrity. On restart Horizon queries the EIU and resumes only when identities match.
+**Horizon -> EIU:** AEF-CAN DATA remains sequence checked and the EIU CRC-verifies the inactive-slot candidate in 4 KiB transfer blocks and records durable resume state nominally every 64 KiB. Each durable checkpoint binds the transfer/image identity to the committed byte offset and block integrity. On restart Horizon queries the EIU and resumes only when identities match.
 
 The UI may display percentage, but the stored/protocol state is always an absolute byte offset. Final whole-image verification remains mandatory even when every intermediate checkpoint passed.
 
@@ -142,6 +142,17 @@ The executable OTA harness now covers the complete simulated path:
 
 `end_to_end_ota_sim.py` models persistent EFIS staging with 64 KiB network-download checkpoints. `test_end_to_end_ota.py` deliberately interrupts the server-to-EFIS download, reconstructs the EFIS-side object from persistent state, resumes at the committed byte offset and requires complete SHA-256 verification before the image can enter the CAN stage.
 
-The same test then interrupts EFIS-to-EIU delivery after multiple 4 KiB EIU checkpoints, recreates the volatile EIU/CAN endpoint while preserving durable checkpoint state, resumes from the EIU's reported committed offset, verifies the complete image, confirms that the old EIU application remained active throughout transfer, and finally exercises explicit activation and first-boot confirmation.
+The same test then interrupts EFIS-to-EIU delivery after multiple prototype 4 KiB EIU checkpoints (this harness predates the adopted 4 KiB-block/64 KiB-durable-checkpoint production transport and is scheduled for revision), recreates the volatile EIU/CAN endpoint while preserving durable checkpoint state, resumes from the EIU's reported committed offset, verifies the complete image, confirms that the old EIU application remained active throughout transfer, and finally exercises explicit activation and first-boot confirmation.
 
 The normal Docker rebuild/test script executes this end-to-end suite. These tests validate software recovery semantics only; actual HTTP range requests, ESP32 flash wear/durability, physical power interruption, TWAI/CAN faults and cryptographic signature verification remain hardware/integration gates.
+
+
+## Firmware transport architecture decision — 1 October 2026
+
+Following engineering review, the stop-and-wait CAN transport is retained only as prototype evidence. It is not the intended production protocol because acknowledging every six-byte firmware frame creates excessive frame count, acknowledgement traffic and idle wait time.
+
+Production EIU delivery uses **7 firmware bytes + 1 local sequence byte per DATA frame**, grouped into **4 KiB CRC32-verified transfer blocks** with one block ACK/NACK. Durable restart metadata is committed every **64 KiB** rather than every block. This separates short-range corruption/retransmission recovery from persistent power-loss recovery and reduces metadata flash writes.
+
+On restart, transfer ID, image identity/digest and absolute committed byte offset are compared. Matching transfers resume from the last durable 64 KiB checkpoint; otherwise the partial candidate is not reused. The final candidate still requires complete SHA-256 and signature verification before activation.
+
+Firmware maintenance traffic must yield to normal AEF-CAN operational traffic. The next simulator revision must replace per-frame ACK behaviour with block ACK/NACK, inject within-block corruption/loss, verify retransmission, exercise restart between durable checkpoints and demonstrate that maintenance transfer does not starve higher-priority traffic.
