@@ -217,7 +217,7 @@ messages:
     rate_hz: event
     fields:
       - { name: node_instance, offset: 0, type: uint8 }
-      - { name: operation, offset: 1, type: uint8, note: "1=BEGIN, 2=FINISH, 3=ACTIVATE" }
+      - { name: operation, offset: 1, type: uint8, note: "1=BEGIN, 2=FINISH, 3=ACTIVATE, 4=QUERY_TRANSFER" }
       - { name: transfer_id, offset: 2, type: uint16 }
       - { name: argument, offset: 4, type: uint32, note: "operation-specific; reserved zero unless defined" }
 
@@ -246,10 +246,21 @@ messages:
     rate_hz: event
     fields:
       - { name: node_instance, offset: 0, type: uint8 }
-      - { name: status, offset: 1, type: uint8, note: "1=READY, 2=ACK, 3=VERIFIED, 4=REJECTED, 5=REBOOT_PENDING" }
+      - { name: status, offset: 1, type: uint8, note: "1=READY, 2=ACK, 3=VERIFIED, 4=REJECTED, 5=REBOOT_PENDING, 6=CHECKPOINT, 7=RESUME, 8=NO_TRANSFER" }
       - { name: sequence, offset: 2, type: uint16, note: "last accepted or next expected sequence according to status" }
       - { name: detail, offset: 4, type: uint16, note: "machine-readable reason code; catalogue TBD" }
       - { name: reserved, offset: 6, type: uint16, required_value: 0 }
+
+
+  - name: FW_CHECKPOINT_V1
+    id: 0x5C4
+    version: 1
+    rate_hz: event
+    note: "Durable resumability checkpoint. Offset is authoritative; percentage is presentation only. CRC32 covers the just-committed checkpoint block."
+    fields:
+      - { name: transfer_id, offset: 0, type: uint16 }
+      - { name: committed_offset, offset: 2, type: uint32, unit: bytes }
+      - { name: block_crc16_summary, offset: 6, type: uint16, note: "compact wire summary; full CRC32 may be obtained/validated through maintenance metadata/status exchange" }
 
 compatibility:
   rules:
