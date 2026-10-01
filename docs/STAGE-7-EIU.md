@@ -236,3 +236,38 @@ EIU firmware is independently versioned from Horizon firmware. Normal compatibil
 The EIU must preserve capabilities required by the previous supported Horizon state during any normal coordinated-update transition in which Horizon could roll back to that state. Likewise, a Horizon release must not begin using a new mandatory EIU capability until discovery confirms that capability after the EIU update/reboot.
 
 There is no universal "EIU first" rule. The release manifest specifies an order proven to keep each intermediate and rollback state compatible. A dependency transition that cannot meet this property requires a special migration/recovery procedure and is excluded from normal OTA/offline one-click updates.
+
+
+## EIU channel assignment, thresholds and display units
+
+**ADOPTED — 1 October 2026.** Sensor operating thresholds are commissioned at the same time that a physical EIU input channel is assigned its semantic function and sender profile. Channel commissioning is therefore one atomic configuration operation:
+
+`physical channel -> sensor function -> sender profile -> operating thresholds`
+
+Horizon is the commissioning authority and user interface. The EIU retains the commissioned channel configuration locally so that channel identity, sender conversion and durable configuration remain associated with the measurement source.
+
+### Threshold model
+
+For each commissioned channel, the configuration shall support the following ordered operating regions:
+
+- low alarm;
+- low caution;
+- normal;
+- high caution;
+- high alarm.
+
+A V1 display or sender profile may use only a subset of these regions, but the persistent configuration/data model shall not be limited to a simple low/normal/high representation. This avoids a later incompatible schema change when amber/red caution and alarm presentation is introduced.
+
+Known engine/sender profiles may provide recommended default thresholds. Defaults are advisory commissioning values only: Horizon shall display them to the installer and require explicit acceptance or adjustment. Sensor detection, engine type or sender-profile selection must never silently assert that a threshold is correct for a particular aircraft installation. Applicable engine and installation documentation remains authoritative.
+
+### Canonical engineering units
+
+Thresholds and measured values shall be stored and exchanged in canonical engineering units independent of the pilot's selected display units. Changing Horizon from, for example, °C to °F or bar to psi changes presentation only and must not alter the underlying threshold configuration.
+
+Horizon owns unit selection, conversion, formatting, colour/state presentation and commissioning UI. The EIU performs sender excitation/conditioning/conversion and reports the canonical engineering value plus validity/fault metadata. Where threshold evaluation is required in both nodes, both shall evaluate the same canonical configured values rather than separately converted display values.
+
+### Commissioning interaction
+
+A channel assignment screen shall present, together, the physical channel, detected electrical class/presence, selected sensor function, selected sender profile, threshold regions and values expressed in the Horizon-selected display units. Saving the channel converts those displayed values to the canonical representation and commits the complete channel configuration transactionally.
+
+Changing a sender profile or semantic channel function shall force the applicable thresholds to be reviewed before the revised configuration is accepted. A fundamental sensor reassignment invalidates the relevant engine-sensor commissioning check and requires revalidation.
