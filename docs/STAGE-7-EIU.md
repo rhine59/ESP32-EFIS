@@ -143,6 +143,48 @@ A 4 KiB block is **not** a durable restart checkpoint. Durable resume state is r
 Firmware-maintenance CAN traffic is deliberately lower priority than operational measurement/health traffic and must be rate-limited/yield when necessary. Complete-image SHA-256 and signature verification, explicit activation, trial boot and rollback remain unchanged.
 
 
+## Flash-endurance architecture — 1 October 2026
+
+Flash endurance is now an explicit EIU design constraint. Firmware-image programming is not expected to be the dominant wear mechanism because production OTA uses alternating A/B application slots. The implementation shall instead prevent small, frequently updated metadata or operational state from concentrating erase cycles on one flash sector.
+
+### Durable OTA checkpoint journal
+
+The nominal 64 KiB durable-resume interval is retained, but checkpoint metadata shall **not** repeatedly erase/rewrite one fixed sector. Durable checkpoints shall use an append-only rotating journal spanning multiple erase sectors, or an equivalent platform wear-levelled implementation with demonstrably comparable behaviour.
+
+Each durable checkpoint record shall contain enough information to reject stale or mismatched state, including at minimum:
+- monotonically increasing generation/record sequence;
+- transfer/image identity and whole-image digest identity;
+- absolute committed byte offset;
+- transfer/block integrity state needed for safe resume;
+- record integrity check (CRC or equivalent).
+
+A record becomes valid atomically: an interrupted metadata write must leave either the previous checkpoint usable or the new checkpoint independently recognizable as complete. Journal reclamation/erase occurs only when required after rotating through the allocated checkpoint area. On boot, the newest valid compatible record is selected; corrupt, incomplete or wrong-image records are ignored.
+
+The 4 KiB CAN transfer-block ACK/CRC state remains primarily volatile. A successful 4 KiB block does not require a persistent metadata write. Durable flash state is committed nominally every 64 KiB and at carefully selected lifecycle boundaries where required for correctness.
+
+### RAM-first operational state
+
+High-frequency EIU state shall remain in RAM. Normal sensor samples, CAN frames, counters, transient diagnostics, heartbeat state and continuously changing engine values shall **not** cause flash writes.
+
+Persistent writes are limited to deliberately durable information such as:
+- commissioned sensor/channel configuration;
+- calibration and manufacturing identity;
+- infrequent user configuration changes;
+- OTA checkpoint/activation/rollback metadata;
+- selected significant fault/event records where persistence is explicitly justified.
+
+Where frequently changing persistent state is genuinely required, it must use ESP-IDF NVS/wear levelling or a purpose-designed append-only journal rather than a fixed-sector rewrite loop.
+
+### Prohibited implementation pattern
+
+No implementation may perform a flash/NVS commit per CAN frame, per sensor sample, per heartbeat, or on every increment of an operational counter. Rate limiting alone is not sufficient justification for such a design; persistence must be event-driven and wear-aware.
+
+### Validation requirement
+
+The EIU test plan shall include flash-wear accounting. Tests/review must demonstrate checkpoint rotation, recovery after power loss during checkpoint creation, rejection of corrupt/stale records, journal wrap/reclamation, preservation of A/B rollback, and absence of high-frequency operational flash commits.
+
+Adding FRAM, EEPROM or removable storage solely to address expected OTA flash wear is **not required** for V1. Such hardware should be introduced only if later requirements create a justified high-write persistent-data workload.
+
 ## Architecture review decisions — 1 October 2026
 
 The following decisions are now adopted constraints for Stage 7 rather than optional review notes.
