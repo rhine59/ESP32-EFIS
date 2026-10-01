@@ -227,3 +227,12 @@ The required firmware behaviour is known-good -> candidate -> trial -> confirmed
 The customer mobile app may pre-cache a compatible signed release set containing both Horizon and EIU firmware before travelling to an aircraft with no network coverage. The phone transfers the Horizon package to Horizon over the local maintenance connection; Horizon then remains the AEF-CAN maintenance gateway for EIU delivery.
 
 The phone does not directly program the EIU in V1. This preserves one CAN maintenance authority/path, keeps EIU transport/recovery policy inside Horizon, and avoids requiring a second phone-to-EIU radio/service protocol. The EIU independently authenticates its candidate exactly as it does for an Internet-originated update.
+
+
+### EFIS/EIU firmware dependency contract
+
+EIU firmware is independently versioned from Horizon firmware. Normal compatibility is negotiated from AEF-CAN protocol version and advertised capabilities, with the signed release-set manifest defining tested combinations and deployment order.
+
+The EIU must preserve capabilities required by the previous supported Horizon state during any normal coordinated-update transition in which Horizon could roll back to that state. Likewise, a Horizon release must not begin using a new mandatory EIU capability until discovery confirms that capability after the EIU update/reboot.
+
+There is no universal "EIU first" rule. The release manifest specifies an order proven to keep each intermediate and rollback state compatible. A dependency transition that cannot meet this property requires a special migration/recovery procedure and is excluded from normal OTA/offline one-click updates.
