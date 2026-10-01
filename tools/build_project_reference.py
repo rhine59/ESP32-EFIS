@@ -55,9 +55,10 @@ for idx,p in enumerate(files):
     story.append(Paragraph(inline(rel),styles["DocTitle"]))
     story.append(Paragraph("Repository source: "+inline(rel),styles["Path"]))
     in_code=False; buf=[]
-    def buf=flush_code(buf):
-        nonlocal buf
-        if buf: story.append(Preformatted("\n".join(buf),code));buf=[]
+    def flush_code(lines):
+        if lines:
+            story.append(Preformatted("\n".join(lines),code))
+        return []
     for raw in text.splitlines():
         line=raw.rstrip()
         if line.startswith("```"):
