@@ -112,3 +112,12 @@ The EIU is not provisioned with Internet/Wi-Fi credentials. Release metadata mus
 Horizon verification before CAN transfer is required but is not the final trust boundary: the EIU independently authenticates the image before boot. EIU persistent sensor mappings/calibration/identity remain outside the application slots.
 
 Extend the existing simulator/admin harness with an emulated EIU target and at least two visibly/version-distinct test images. Exercise successful update, wrong-hardware rejection, corrupt image/hash failure, interrupted transfer, activation, first-boot failure and rollback, EIU disappearance/reappearance, and preservation of commissioned configuration. Keep these results explicitly labelled simulation until real transceivers, real flash A/B behaviour and interruption tests pass on hardware.
+
+
+## Simulated EIU OTA implementation — 1 October 2026
+
+The first executable transport-neutral EIU update state machine is in `ota-server/admin/eiu_ota_sim.py`, with regression coverage in `ota-server/admin/test_eiu_ota.py`. The normal `scripts/rebuild-and-test.sh` runner now executes this suite inside the admin image after the existing isolated OTA-admin tests.
+
+Current simulation covers discovery/version reporting, target-hardware rejection, segmented transfer, end-to-end SHA-256 corruption detection, inactive-slot staging, RPM=0 activation gate, successful first-boot confirmation, failed-first-boot rollback and preservation of commissioned sensor configuration. Test payloads deliberately identify two distinct simulated releases (`EIU-V2-GREEN-LED` and `EIU-V3-BLUE-LED`).
+
+This remains a software model. It does not yet implement AEF-CAN frame segmentation, cryptographic signature verification, resume after interruption, ESP32 partition-table flashing or physical bootloader rollback. Those are subsequent gates and must not be described as hardware-validated.
