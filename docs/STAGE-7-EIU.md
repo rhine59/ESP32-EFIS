@@ -75,3 +75,36 @@ Passive/self-generating channels (notably K-type thermocouples) receive no suppl
 Oil-pressure and RPM interfaces are explicitly **sender/source dependent**. Earlier concept illustrations showing generic +5 V for these channels are illustrative only and must not be treated as a frozen pinout or electrical requirement.
 
 The preferred installation gives the EIU a protected aircraft-supply feed independent of the EFIS regulated rails. EIU power conversion, sensor excitation and faults are locally contained so an engine-monitoring failure cannot disable core Horizon functions. Final aircraft-power branching, grounding/reference, isolation and whether supply conductors share the AEF-CAN harness are deferred to the installation/electrical design gate.
+
+
+## EIU firmware update architecture — 1 October 2026
+
+The preferred production update path is **firmware service -> Horizon/EFIS -> AEF-CAN -> EIU**. The EIU does not require Wi-Fi, Internet access, cloud credentials or a separate user-facing updater.
+
+Horizon discovers the EIU hardware identity, board revision, bootloader version, running firmware version and AEF-CAN compatibility. It downloads only a compatible signed EIU image, validates package metadata/signature according to the project OTA trust model, then transfers the image over an AEF-CAN firmware-update service.
+
+The EIU must independently authenticate the candidate before execution. Trust in Horizon or a successful CAN transfer alone is not sufficient authorization to boot firmware.
+
+### EIU flash model
+
+The EIU shall reserve:
+- protected/recoverable bootloader;
+- application slot A;
+- application slot B;
+- separately versioned persistent configuration/calibration storage.
+
+An update is written only to the inactive application slot. Sensor assignments, calibration, EIU identity and commissioning data are not application-image payload and must survive firmware replacement. Configuration-format migration must be transactional/recoverable.
+
+After transfer the EIU verifies the complete candidate, marks it pending, reboots into it and performs startup self-test. The candidate becomes confirmed only after successful initialization and AEF-CAN communication/health confirmation. Failed boot, watchdog reset, failed self-test or missing confirmation causes automatic rollback to the previous known-good application.
+
+### Operational gate
+
+EIU update activation is a deliberate maintenance action. It shall not begin while the engine is running. Horizon must clearly warn that engine indications are unavailable during transfer/reboot and require explicit user activation. The final gate may include RPM=0 plus other stationary/maintenance-state evidence; exact policy remains to be frozen and tested.
+
+### Physical recovery
+
+The EIU PCB retains internal service/recovery pads or an equivalent programming/debug interface for bootloader recovery and manufacturing. Normal field updating does not require opening the EIU.
+
+### Test requirement
+
+The OTA harness shall gain a simulated AEF-CAN EIU node so the complete workflow can be exercised without aircraft hardware: discovery/version report, compatibility decision, image transfer with acknowledgements/retry, interruption/resume or clean restart policy, complete-image verification, pending activation, reboot, health confirmation, rollback and configuration preservation. Simulation is not physical CAN/flash validation.
