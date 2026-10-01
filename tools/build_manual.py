@@ -4,8 +4,9 @@ import re, html, json
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
+from reportlab.lib import colors
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate,Paragraph,Spacer,PageBreak,Preformatted,KeepTogether
+from reportlab.platypus import SimpleDocTemplate,Paragraph,Spacer,PageBreak,Preformatted,KeepTogether,Table,TableStyle
 from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
@@ -30,6 +31,8 @@ styles.add(ParagraphStyle(name="BodyX",parent=styles["BodyText"],fontSize=8.5,le
 styles.add(ParagraphStyle(name="Path",parent=styles["BodyText"],fontSize=7.5,leading=9,textColor="#555555",spaceAfter=8))
 styles.add(ParagraphStyle(name="Cover",parent=styles["Title"],fontSize=26,leading=31,alignment=TA_CENTER,spaceAfter=14))
 styles.add(ParagraphStyle(name="Small",parent=styles["BodyText"],fontSize=7.5,leading=9))
+styles.add(ParagraphStyle(name="TableCell",parent=styles["BodyText"],fontSize=6.2,leading=7.4,spaceAfter=0))
+styles.add(ParagraphStyle(name="TableHead",parent=styles["BodyText"],fontSize=6.2,leading=7.4,spaceAfter=0,fontName="Helvetica-Bold"))
 code=ParagraphStyle("CodeX",fontName="Courier",fontSize=6.5,leading=8,leftIndent=6,rightIndent=4,spaceAfter=5,backColor="#f4f4f4")
 
 def esc(s): return html.escape(s).replace("  "," &nbsp;")
@@ -59,25 +62,59 @@ for idx,p in enumerate(files):
         if lines:
             story.append(Preformatted("\n".join(lines),code))
         return []
-    for raw in text.splitlines():
-        line=raw.rstrip()
+    lines=text.splitlines()
+    i=0
+    while i < len(lines):
+        line=lines[i].rstrip()
         if line.startswith("```"):
             if in_code: buf=flush_code(buf)
-            in_code=not in_code; continue
-        if in_code: buf.append(line); continue
-        if not line.strip(): story.append(Spacer(1,2)); continue
-        m=re.match(r'^(#{1,6})\s+(.*)$',line)
+            in_code=not in_code; i+=1; continue
+        if in_code: buf.append(line); i+=1; continue
+        if not line.strip(): story.append(Spacer(1,2)); i+=1; continue
+        m=re.match(r'^(#{1,6})\\s+(.*)$',line)
         if m:
             lev=len(m.group(1)); title=m.group(2)
             st=styles["H1x"] if lev<=2 else styles["H2x"]
-            story.append(Paragraph(inline(title),st)); continue
+            story.append(Paragraph(inline(title),st)); i+=1; continue
         if line.startswith("|") and line.endswith("|"):
-            story.append(Paragraph(inline(line),styles["Small"])); continue
-        if re.match(r'^\s*[-*+]\s+',line):
-            story.append(Paragraph("• "+inline(re.sub(r'^\s*[-*+]\s+','',line)),styles["BodyX"]));continue
-        if re.match(r'^\s*\d+[.)]\s+',line):
-            story.append(Paragraph(inline(line),styles["BodyX"]));continue
-        story.append(Paragraph(inline(line),styles["BodyX"]))
+            table_lines=[]
+            while i < len(lines):
+                candidate=lines[i].strip()
+                if not (candidate.startswith("|") and candidate.endswith("|")): break
+                table_lines.append(candidate); i+=1
+            rows=[[cell.strip() for cell in row.strip("|").split("|")] for row in table_lines]
+            if len(rows)>1 and all(re.fullmatch(r":?-{3,}:?",cell.replace(" ","")) for cell in rows[1]):
+                rows.pop(1)
+            if rows:
+                n=max(len(row) for row in rows)
+                rows=[row+[""]*(n-len(row)) for row in rows]
+                if n==7:
+                    width_mm=[24,43,10,12,13,32,44]
+                elif n==6:
+                    width_mm=[27,42,12,31,25,41]
+                else:
+                    weights=[max(8,min(32,max(len(row[j]) for row in rows))) for j in range(n)]
+                    scale=178.0/sum(weights); width_mm=[w*scale for w in weights]
+                data=[]
+                for ri,row in enumerate(rows):
+                    style=styles["TableHead"] if ri==0 else styles["TableCell"]
+                    data.append([Paragraph(inline(cell),style) for cell in row])
+                table=Table(data,colWidths=[w*mm for w in width_mm],repeatRows=1,hAlign="LEFT")
+                table.setStyle(TableStyle([
+                    ("BACKGROUND",(0,0),(-1,0),colors.HexColor("#E8EDF2")),
+                    ("GRID",(0,0),(-1,-1),0.35,colors.HexColor("#777777")),
+                    ("VALIGN",(0,0),(-1,-1),"TOP"),
+                    ("LEFTPADDING",(0,0),(-1,-1),2.5),("RIGHTPADDING",(0,0),(-1,-1),2.5),
+                    ("TOPPADDING",(0,0),(-1,-1),2.5),("BOTTOMPADDING",(0,0),(-1,-1),2.5),
+                    ("ROWBACKGROUNDS",(0,1),(-1,-1),[colors.white,colors.HexColor("#F7F7F7")]),
+                ]))
+                story.append(table); story.append(Spacer(1,4))
+            continue
+        if re.match(r'^\\s*[-*+]\\s+',line):
+            story.append(Paragraph("• "+inline(re.sub(r'^\\s*[-*+]\\s+','',line)),styles["BodyX"])); i+=1; continue
+        if re.match(r'^\\s*\\d+[.)]\\s+',line):
+            story.append(Paragraph(inline(line),styles["BodyX"])); i+=1; continue
+        story.append(Paragraph(inline(line),styles["BodyX"])); i+=1
     buf=flush_code(buf)
     if idx<len(files)-1: story.append(PageBreak())
 
