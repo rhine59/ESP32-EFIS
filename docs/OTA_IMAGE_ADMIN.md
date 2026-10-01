@@ -99,3 +99,16 @@ Before any Internet-facing multi-user admin deployment add authentication, CSRF 
 The Docker admin code now implements separate staging and publishing, per-release metadata, SHA-256 calculation, republishing and protected deletion. The Swift simulator implements automatic-download preference, manual download, verified-ready state, explicit **ACTIVATE & REBOOT**, first-boot success and rollback simulation.
 
 **Not yet validated:** Docker build/runtime on Synology, public reverse-proxy deployment, physical ESP32 download/flash, real A/B boot selection, interruption recovery or signed-image verification. Simulator behaviour must not be represented as physical OTA validation.
+
+
+## Remote EIU firmware delivery — 1 October 2026
+
+Horizon is the update gateway for the Stage-7 EIU. Production flow is:
+
+`signed release service -> Horizon OTA client -> local verified staging -> AEF-CAN maintenance transfer -> EIU inactive A/B slot -> EIU verification -> explicit activation -> health confirmation/rollback`.
+
+The EIU is not provisioned with Internet/Wi-Fi credentials. Release metadata must distinguish Horizon images from EIU images and declare target product, supported hardware/board revision, minimum bootloader/protocol compatibility, version, size, digest and signature information.
+
+Horizon verification before CAN transfer is required but is not the final trust boundary: the EIU independently authenticates the image before boot. EIU persistent sensor mappings/calibration/identity remain outside the application slots.
+
+Extend the existing simulator/admin harness with an emulated EIU target and at least two visibly/version-distinct test images. Exercise successful update, wrong-hardware rejection, corrupt image/hash failure, interrupted transfer, activation, first-boot failure and rollback, EIU disappearance/reappearance, and preservation of commissioned configuration. Keep these results explicitly labelled simulation until real transceivers, real flash A/B behaviour and interruption tests pass on hardware.
