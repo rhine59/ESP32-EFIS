@@ -220,3 +220,10 @@ EIU USB-C remains the preferred local service/programming interface, but is not 
 ### Platform OTA facilities
 
 The required firmware behaviour is known-good -> candidate -> trial -> confirmed/rollback. Implement this using mature MCU/platform OTA/boot facilities where suitable rather than creating a bespoke boot manager without need. The EIU still independently verifies firmware authenticity before execution.
+
+
+### Phone-carried offline release sets
+
+The customer mobile app may pre-cache a compatible signed release set containing both Horizon and EIU firmware before travelling to an aircraft with no network coverage. The phone transfers the Horizon package to Horizon over the local maintenance connection; Horizon then remains the AEF-CAN maintenance gateway for EIU delivery.
+
+The phone does not directly program the EIU in V1. This preserves one CAN maintenance authority/path, keeps EIU transport/recovery policy inside Horizon, and avoids requiring a second phone-to-EIU radio/service protocol. The EIU independently authenticates its candidate exactly as it does for an Internet-originated update.
