@@ -64,3 +64,14 @@ Conventional Rotax analogue senders and K-type thermocouples are **not self-iden
 Subsequent starts should be automatic when hardware matches the stored configuration. New sensors on previously empty channels, missing commissioned sensors, incompatible electrical behaviour or changed EIU/configuration identity must generate an explicit discovery/change/fault state. They must not silently alter a channel mapping or leave a frozen plausible value on Horizon.
 
 Stage 7A therefore includes simulated discovery, capability enumeration, persistent mapping and stale/change/fault behaviour in addition to ordinary engine-value frames. Stage 7C validates the electrical detection limits of the real EIU front ends; simulation must not claim a sensor type can be distinguished unless the hardware can actually distinguish it.
+
+
+## Sensor power / excitation
+
+The EIU owns sender excitation and analogue conditioning. Horizon/EFIS shall not directly power individual engine sensors.
+
+Passive/self-generating channels (notably K-type thermocouples) receive no supply from the EIU. Resistive temperature channels use controlled low-level measurement excitation internal to the EIU rather than a generic sensor-power rail. Powered electronic senders receive only the supply required by their verified datasheet/installed configuration, generated and protected locally in the EIU.
+
+Oil-pressure and RPM interfaces are explicitly **sender/source dependent**. Earlier concept illustrations showing generic +5 V for these channels are illustrative only and must not be treated as a frozen pinout or electrical requirement.
+
+The preferred installation gives the EIU a protected aircraft-supply feed independent of the EFIS regulated rails. EIU power conversion, sensor excitation and faults are locally contained so an engine-monitoring failure cannot disable core Horizon functions. Final aircraft-power branching, grounding/reference, isolation and whether supply conductors share the AEF-CAN harness are deferred to the installation/electrical design gate.
