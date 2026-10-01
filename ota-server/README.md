@@ -158,3 +158,10 @@ The current admin application relies on LAN/VPN/private-proxy access as its auth
 ## Validation status
 
 **IMPLEMENTED / SYNOLOGY RUNTIME + PRIVATE ADMIN + PUBLIC OTA NETWORK PATH VALIDATED.** Static origin, private admin container, deployable Compose stack, staged release metadata, explicit Publish and stage-only CLI helper are in source control. Both images have been built and started on the Synology. Local health checks pass on the read-only origin (`127.0.0.1:8180`) and admin (`127.0.0.1:8090`). The private Synology HTTPS reverse proxy on source port 8447 has been verified to return the OTA Admin dashboard. The public read-only endpoint `https://granvillehouse.synology.me:8448` has been configured through Synology reverse proxy/router forwarding and externally health-checked. Physical ESP32 OTA validation remains pending. Real ESP32 HTTPS download, A/B flash, activation and rollback remain hardware-unvalidated. See `../docs/OTA_IMAGE_ADMIN.md`, `../docs/OTA_USER_SCENARIO.md`, `../docs/PHONE_NETWORK_AND_PUBLIC_OTA.md` and `../docs/REMOTE_UPDATES.md`.
+
+
+## Release sets and offline mobile delivery
+
+The distribution architecture now treats a signed multi-node release set as the deployment unit. Public serving reserves `/efis/release-set.json`; the release-set contains Horizon/EIU/future-node compatibility, capability and sequencing information and is what mobile clients cache for offline maintenance. Horizon remains responsible for local verification and AEF-CAN node sequencing.
+
+`admin/release_resolver.py` is the initial generic compatibility/order resolver. CI exercises resolver, offline-phone and existing OTA simulator tests. The existing legacy EIU CAN transport simulator still requires migration from its prototype framing/checkpoint behaviour to the adopted 7-byte FW_DATA, 4 KiB block CRC/ACK and 64 KiB durable checkpoint design; do not treat that legacy transport test as production-wire conformance.
