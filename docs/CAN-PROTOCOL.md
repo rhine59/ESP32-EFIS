@@ -394,3 +394,12 @@ Classical CAN bandwidth is acceptable because updates are infrequent and reliabi
 The EIU bootloader independently verifies firmware authenticity before execution. CAN transport integrity, Horizon verification and cryptographic image authenticity are distinct checks.
 
 Firmware update mode must not produce stale-but-plausible engine data: Horizon explicitly marks EIU engine indications unavailable/stale while the node is in maintenance/update/reboot state.
+
+
+### Executable V1 maintenance transport — 1 October 2026
+
+The first executable transport model is now implemented in `ota-server/admin/eiu_can_ota.py`. The canonical schema reserves 0x5C0-0x5FF for firmware maintenance and defines `FW_CONTROL_V1` (0x5C0), `FW_META_V1` (0x5C1), `FW_DATA_V1` (0x5C2) and `FW_STATUS_V1` (0x5C3).
+
+The V1 baseline deliberately uses simple stop-and-wait segmentation: each Classical CAN DATA frame contains a uint16 sequence number and up to six firmware bytes. The simulated EIU rejects out-of-order blocks and oversized data, acknowledges accepted sequence numbers, verifies the complete image digest before activation, retains the RPM=0 activation gate and exercises first-boot confirmation/configuration preservation. This simple baseline favours deterministic recovery and testability; a later additive windowed transport may improve throughput without redefining V1.
+
+`test_eiu_can_ota.py` is part of the normal Docker rebuild/test runner. This remains protocol simulation, not physical TWAI/CAN validation.
