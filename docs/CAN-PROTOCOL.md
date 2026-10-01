@@ -333,3 +333,51 @@ Initial implemented codecs cover `ENGINE_FAST_V1`, two-temperature frames used b
 Host regression is in `tests/aef_can_codec_test.c`; `scripts/test-aef-can-codec.sh` builds it with strict C11 warnings and compares encoded data with the frozen golden byte patterns. This is codec validation only, not TWAI/transceiver/bus validation.
 
 Next implementation increment: complete the remaining V1 message codecs, add a small AEF frame dispatcher/freshness model, then connect that abstraction to simulated EIU publication before adding the ESP-IDF TWAI transport.
+
+
+## 20. EIU and sensor discovery / commissioning architecture — 1 October 2026
+
+AEF-CAN shall support **device discovery and capability enumeration** rather than assuming a permanently hard-coded EIU node/address. Discovery is layered because conventional analogue and thermocouple senders cannot electronically identify their semantic role.
+
+### Discovery levels
+
+1. **Device discovery.** An EIU announces node identity, device class, hardware/firmware/protocol versions and channel capabilities. Horizon can therefore discover a compatible EIU without a pre-created per-device configuration.
+2. **Electrical discovery.** The EIU safely characterises each input as supported by its hardware: for example open/inactive, resistive, voltage, thermocouple or frequency/pulse. It reports raw diagnostic information and confidence/compatibility information where useful.
+3. **Semantic assignment.** Electrical characteristics alone generally cannot prove that a resistive sender is oil temperature rather than another compatible temperature sender, nor can a thermocouple identify itself as EGT 1 versus EGT 2. Horizon therefore presents compatible roles/profiles during commissioning and requires explicit user confirmation.
+
+### Persistent commissioning
+
+After confirmation, the channel-to-role/profile mapping is stored persistently with enough identity/version information to detect incompatible hardware or configuration changes. Normal subsequent boots should require no commissioning interaction when the discovered hardware matches the stored configuration.
+
+A stored mapping conceptually binds:
+- EIU identity / compatible device class;
+- physical channel;
+- electrical input type;
+- sender/profile identifier;
+- semantic aircraft role (for example OIL_TEMP or EGT_1);
+- calibration/configuration revision where applicable.
+
+### Change and fault detection
+
+The EIU continuously performs non-disruptive plausibility diagnostics appropriate to each configured channel. It shall distinguish, where electrically possible, valid measurement, open circuit, short circuit, out of range, missing sensor and unsupported/ambiguous state. Horizon must never turn these states into a plausible numeric indication.
+
+If an input previously stored as empty later contains a plausible sensor, the EIU reports a **new/unassigned sensor** condition and Horizon offers commissioning for that channel. If a commissioned sensor disappears or changes incompatibly, Horizon reports the fault/change rather than silently remapping it.
+
+Thermocouple discovery is deliberately limited: the EIU may detect a plausible thermocouple circuit/open circuit and its configured front-end type, but semantic cylinder/EGT assignment remains a commissioning decision.
+
+### Published measurement contract
+
+Normal AEF-CAN measurements should carry or be associated with:
+- semantic sensor/channel identity;
+- engineering value and defined units/scaling;
+- validity/diagnostic state;
+- sequence/freshness information;
+- sufficient raw/diagnostic data for maintenance where the message family defines it.
+
+Horizon shall invalidate stale data when freshness limits are exceeded. EIU reboot, sequence discontinuity, node loss/reappearance and configuration revision changes must be observable rather than hidden.
+
+### Extensibility
+
+The same mechanism is intended to support future EIU channels and other AEF-CAN sensor nodes (for example fuel pressure/level, manifold pressure or additional temperature modules) without embedding each physical product into Horizon UI logic. Producers publish identity, capabilities, facts and validity; Horizon owns semantic commissioning and presentation.
+
+The machine-readable AEF-CAN schema will require additive discovery/capability/configuration message definitions before this feature is considered wire-protocol complete.
