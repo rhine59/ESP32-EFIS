@@ -53,3 +53,14 @@ Stage 7D — engine/aircraft survey: freeze actual sender interfaces and harness
 Stage 7E — installed supplementary evaluation.
 
 No Stage 7 item is treated as flight-validated merely because it passes simulation or bench CAN tests.
+
+
+## Sensor auto-discovery and commissioning
+
+Stage 7 shall use the three-level AEF-CAN discovery model documented in `docs/CAN-PROTOCOL.md`: EIU device discovery, electrical channel discovery, then user-confirmed semantic assignment.
+
+Conventional Rotax analogue senders and K-type thermocouples are **not self-identifying devices**. The EIU may determine electrical class/presence and diagnose open/short/plausibility states, but it must not guess that a channel is “oil temperature”, “EGT 1”, etc. solely from a plausible electrical reading. First-run commissioning presents compatible assignments to the user and persists the confirmed mapping.
+
+Subsequent starts should be automatic when hardware matches the stored configuration. New sensors on previously empty channels, missing commissioned sensors, incompatible electrical behaviour or changed EIU/configuration identity must generate an explicit discovery/change/fault state. They must not silently alter a channel mapping or leave a frozen plausible value on Horizon.
+
+Stage 7A therefore includes simulated discovery, capability enumeration, persistent mapping and stale/change/fault behaviour in addition to ordinary engine-value frames. Stage 7C validates the electrical detection limits of the real EIU front ends; simulation must not claim a sensor type can be distinguished unless the hardware can actually distinguish it.
