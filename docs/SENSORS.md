@@ -86,3 +86,8 @@ Until sensors are physically connected and their installation mappings are verif
 ## Engine sensor threshold ownership
 
 For Stage 7 EIU channels, semantic channel assignment, sender-profile selection and operating thresholds are commissioned together through Horizon. Thresholds support low alarm, low caution, normal, high caution and high alarm regions even if V1 presents only a subset. Values are persisted/exchanged in canonical engineering units; Horizon controls user-selected display units and converts only for presentation. Profile defaults require explicit installer review/acceptance. See `docs/STAGE-7-EIU.md` for the authoritative EIU commissioning model.
+
+
+### Display units
+
+Horizon centrally owns presentation units and supports independent preferences by measurement type rather than a single metric/imperial switch. This permits aviation-specific combinations such as **oil pressure in psi and barometric pressure in hPa**. EIU channels inherit the Horizon unit associated with their semantic sensor function; no independent EIU/channel display-unit setting is stored. AEF-CAN measurements and persisted thresholds remain in canonical engineering representation, with Horizon performing conversion at the UI boundary.
