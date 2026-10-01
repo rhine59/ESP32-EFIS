@@ -81,3 +81,8 @@ The compass does not use raw magnetometer azimuth alone. Heading is produced fro
 ## Bench development
 
 Until sensors are physically connected and their installation mappings are verified, bench simulation supplies clearly synthetic values. Simulation must be disabled for aircraft-use firmware.
+
+
+## Engine sensor threshold ownership
+
+For Stage 7 EIU channels, semantic channel assignment, sender-profile selection and operating thresholds are commissioned together through Horizon. Thresholds support low alarm, low caution, normal, high caution and high alarm regions even if V1 presents only a subset. Values are persisted/exchanged in canonical engineering units; Horizon controls user-selected display units and converts only for presentation. Profile defaults require explicit installer review/acceptance. See `docs/STAGE-7-EIU.md` for the authoritative EIU commissioning model.
