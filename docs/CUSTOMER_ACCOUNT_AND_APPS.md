@@ -84,3 +84,14 @@ Rules:
 - it must come from the authoritative provisioned device identity, never a generated UI placeholder or MAC address;
 - if device identity is missing/corrupt, display a clear identity fault rather than inventing an ID, and record the fault in the persistent fault log;
 - displaying the ID must not require Wi-Fi, account access or a valid licence.
+
+
+## Offline firmware carrier
+
+The iPhone and Android apps shall support pre-caching signed firmware for a registered Horizon installation while Internet access is available. Cached release sets may contain the compatible Horizon image plus EIU/future-node images needed for that installation.
+
+The instrument-detail/update UI shall clearly distinguish server availability from **offline readiness**, including cached version, target Device ID/hardware compatibility, package integrity/signature metadata status and whether all required packages are present.
+
+At the aircraft the app connects directly to Horizon's local maintenance Wi-Fi and transfers the cached Horizon image without requiring Internet access. Horizon remains the verifier and update authority; the app cannot sign firmware, bypass compatibility/security checks, select the active partition directly, or override maintenance/activation gates. Horizon subsequently distributes compatible peripheral firmware over AEF-CAN using the normal EIU update architecture.
+
+Mobile firmware cache contents are replaceable distribution artifacts, not secrets. Account/session credentials remain protected by Keychain/Keystore, and the local maintenance session must authenticate/bind the intended instrument.
