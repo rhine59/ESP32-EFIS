@@ -52,7 +52,7 @@ id_ranges:
   - { start: 0x400, end: 0x47F, purpose: environmental }
   - { start: 0x480, end: 0x4FF, purpose: aircraft_state }
   - { start: 0x500, end: 0x57F, purpose: alerts_events }
-  - { start: 0x580, end: 0x5FF, purpose: configuration_service }
+  - { start: 0x580, end: 0x5BF, purpose: configuration_service }\n  - { start: 0x5C0, end: 0x5FF, purpose: firmware_maintenance }
   - { start: 0x600, end: 0x67F, purpose: diagnostics }
   - { start: 0x680, end: 0x6FF, purpose: logging_time }
   - { start: 0x700, end: 0x77F, purpose: experimental }
@@ -209,6 +209,47 @@ messages:
       - { name: health_flags, offset: 3, type: uint8, note: bitmask }
       - { name: tx_error_count, offset: 4, type: uint16 }
       - { name: rx_error_count, offset: 6, type: uint16 }
+
+
+  - name: FW_CONTROL_V1
+    id: 0x5C0
+    version: 1
+    rate_hz: event
+    fields:
+      - { name: node_instance, offset: 0, type: uint8 }
+      - { name: operation, offset: 1, type: uint8, note: "1=BEGIN, 2=FINISH, 3=ACTIVATE" }
+      - { name: transfer_id, offset: 2, type: uint16 }
+      - { name: argument, offset: 4, type: uint32, note: "operation-specific; reserved zero unless defined" }
+
+  - name: FW_META_V1
+    id: 0x5C1
+    version: 1
+    rate_hz: event
+    note: "Paged metadata. Complete product/hardware/version/size/digest/signature metadata is transferred before DATA; exact page catalogue remains additive."
+    fields:
+      - { name: node_instance, offset: 0, type: uint8 }
+      - { name: page, offset: 1, type: uint8 }
+      - { name: data, offset: 2, type: bytes, length: 6 }
+
+  - name: FW_DATA_V1
+    id: 0x5C2
+    version: 1
+    rate_hz: transfer
+    note: "Stop-and-wait V1 baseline: uint16 sequence plus up to six firmware bytes. More efficient additive transport may be defined later without changing this frame."
+    fields:
+      - { name: sequence, offset: 0, type: uint16 }
+      - { name: data, offset: 2, type: bytes, length: 6 }
+
+  - name: FW_STATUS_V1
+    id: 0x5C3
+    version: 1
+    rate_hz: event
+    fields:
+      - { name: node_instance, offset: 0, type: uint8 }
+      - { name: status, offset: 1, type: uint8, note: "1=READY, 2=ACK, 3=VERIFIED, 4=REJECTED, 5=REBOOT_PENDING" }
+      - { name: sequence, offset: 2, type: uint16, note: "last accepted or next expected sequence according to status" }
+      - { name: detail, offset: 4, type: uint16, note: "machine-readable reason code; catalogue TBD" }
+      - { name: reserved, offset: 6, type: uint16, required_value: 0 }
 
 compatibility:
   rules:
