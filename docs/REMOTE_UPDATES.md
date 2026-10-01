@@ -182,3 +182,37 @@ Offline delivery does not weaken maintenance gates. Horizon remains responsible 
 The local maintenance protocol must authenticate/bind the intended Horizon, reject unsolicited image injection, provide transfer integrity/resume or clean-restart behaviour, and avoid exposing normal flight operation to an unauthenticated maintenance endpoint. Exact Wi-Fi onboarding/authentication is an implementation design gate.
 
 Validation must cover: pre-download/cache without the aircraft, airplane-mode/offline phone-to-Horizon transfer, wrong-device/wrong-hardware/wrong-signature rejection, interrupted local Wi-Fi transfer, duplicate/replayed package handling, Horizon A/B rollback, and subsequent offline Horizon-to-EIU AEF-CAN update.
+
+
+## Multi-node release compatibility and dependency management — 1 October 2026
+
+**ADOPTED.** Horizon, EIU and future AEF-CAN node firmware versions are independently versioned. They are not required to share version numbers or be updated merely because another node has a newer build.
+
+Compatibility is determined at four levels:
+
+1. **Firmware version** identifies the concrete software build.
+2. **AEF-CAN protocol major/minor** identifies the wire-protocol contract. Incompatible semantic changes require a new major version; additive compatible evolution uses minor/capability changes.
+3. **Capabilities** advertise the concrete functions/messages a node implements. Feature dependencies should normally be expressed as required capabilities rather than arbitrary peer firmware-version comparisons.
+4. **Signed release-set manifest** records the firmware artifacts, compatibility constraints, tested combinations and required update sequence for a coordinated product release.
+
+A release-set manifest shall identify each artifact by product/node type, hardware compatibility, firmware version, image digest/signature metadata, AEF-CAN requirements/provisions and capability requirements/provisions. It may specify minimum peer firmware only where a capability/protocol constraint cannot adequately express the dependency.
+
+The release set is the unit cached by the mobile app for offline maintenance. "Latest Horizon" and "latest EIU" shall not be independently combined without compatibility evaluation.
+
+### Safe sequencing and rollback invariant
+
+A coordinated update may define an explicit node order; there is no hard-coded rule that EIU or Horizon always updates first. The release tooling chooses an order whose intermediate states are supported.
+
+**Publication invariant:** every normal multi-node OTA release must preserve a compatible, usable installation at every committed intermediate state and after rollback of any candidate that can still roll back independently.
+
+New firmware should therefore retain sufficient backward compatibility for at least the supported transition/rollback window. For example, if a new EIU capability is required by new Horizon firmware, the EIU can be upgraded first while continuing to provide the old capability; Horizon is upgraded only after the EIU confirms the new capability.
+
+If a change cannot satisfy this invariant, it is not an ordinary OTA release. It requires an explicit migration procedure with its own recovery plan and must not be published through the normal one-click/offline release-set workflow.
+
+### Runtime enforcement
+
+Before staging or activation, Horizon discovers installed AEF-CAN nodes and their protocol/capability advertisements and evaluates them against the release-set constraints. Missing required nodes, incompatible protocol major versions, absent required capabilities, wrong hardware, or an unsafe update sequence block activation with a specific diagnostic.
+
+After each node update/reboot, Horizon re-discovers and verifies the node before proceeding to the next dependency step. A failed verification stops the sequence and preserves/recovers the last known compatible state according to the manifest rollback plan.
+
+The same dependency engine and signed release-set manifest apply whether artifacts arrive directly from the OTA service or through the offline mobile cache.
