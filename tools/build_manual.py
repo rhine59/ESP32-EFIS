@@ -11,8 +11,8 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 
 ROOT=Path(__file__).resolve().parents[1]
-OUT=ROOT/"dist"/"MicroSky-Horizon-Complete-Project-Manual.pdf"
-OUT.parent.mkdir(exist_ok=True)
+OUT=ROOT/"docs"/"generated"/"MicroSky-Horizon-Complete-Project-Manual.pdf"
+OUT.parent.mkdir(parents=True,exist_ok=True)
 
 def wanted(p):
     s=p.relative_to(ROOT).as_posix()
