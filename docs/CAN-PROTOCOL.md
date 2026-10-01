@@ -456,3 +456,17 @@ AEF-CAN operational traffic is RAM-first. Receipt/transmission of a CAN frame, s
 For EIU firmware transfer, 4 KiB transfer-block CRC/ACK state is volatile; durable resume metadata is nominally committed every 64 KiB using an append-only rotating checkpoint journal (or demonstrably equivalent wear-levelled storage), never a repeatedly erased fixed metadata sector. A/B application slots remain the firmware rollback mechanism.
 
 Persistent storage is reserved for intentionally durable configuration/calibration/identity, wear-aware OTA metadata, and explicitly justified infrequent events. This rule applies to future AEF-CAN nodes as well as the initial EIU.
+
+
+## Firmware compatibility advertisements — 1 October 2026
+
+AEF-CAN discovery/capability information is the runtime basis for multi-node firmware compatibility. Nodes expose their own firmware identity, AEF-CAN protocol major/minor and supported capabilities; consumers must not infer feature support solely from a peer's firmware version.
+
+Compatibility rules:
+- protocol-major incompatibility is fail-closed for functions requiring that protocol;
+- additive functionality is capability-negotiated;
+- older capability/message behaviour required during a supported OTA transition remains available until the release-set rollback/transition window has closed;
+- unknown optional capabilities are ignored safely;
+- required missing capabilities block the dependent feature/update rather than producing plausible-but-invalid operation.
+
+The signed OTA release-set manifest supplies deployment constraints and ordering; AEF-CAN discovery supplies the observed installed state against which those constraints are evaluated.
