@@ -23,6 +23,9 @@ jobs:
       - name: Release dependency resolver
         working-directory: ota-server/admin
         run: python test_release_resolver.py
+      - name: Offline phone OTA simulator
+        working-directory: ota-server/admin
+        run: python test_offline_phone_ota.py
       - name: EIU OTA simulator
         working-directory: ota-server/admin
         run: python test_eiu_ota.py
