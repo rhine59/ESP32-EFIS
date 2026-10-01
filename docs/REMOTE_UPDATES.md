@@ -155,3 +155,30 @@ Offline flow: show Device ID and short registration code/QR-capable text; user o
 Payment integration is provider-adapter based. The account service creates checkout/customer-management requests and consumes verified payment webhooks; payment card data is handled by the payment provider, not stored by EFIS services. Payment status changes entitlements; a separate private signing worker/service generates signed licence payloads. Define explicit grace/revocation policy before subscriptions are enabled.
 
 Suggested containers: `efis-account` API/web portal; PostgreSQL account/device/entitlement store; private `efis-license-signer` with tightly restricted signing-key access; existing `efis-ota` and `efis-ota-admin`. Payment provider secrets live only in server-side secret storage.
+
+
+## Offline phone-carried OTA — 1 October 2026
+
+**ADOPTED.** iPhone and Android applications are first-class Horizon firmware delivery clients for locations where the aircraft has no usable Internet connection.
+
+When Internet is available, the mobile app may download and retain the signed firmware packages compatible with the customer's registered Horizon installation. The cache should include the Horizon image and compatible EIU/future-node images required for the selected release set. The app shall show whether the installation is ready for an offline update before the user travels to the aircraft.
+
+At the aircraft, the phone transfers the cached Horizon package directly to Horizon over a local maintenance connection. The V1 preferred bulk transport is a temporary Horizon-hosted/local Wi-Fi maintenance link; Bluetooth is not the primary multi-megabyte firmware transport. BLE may later assist discovery/pairing but is not required for V1.
+
+The delivery paths are deliberately equivalent:
+
+```text
+OTA service -> Horizon
+        or
+OTA service -> phone cache -> Horizon
+
+Horizon -> AEF-CAN -> EIU/future nodes
+```
+
+There is one firmware trust model and one signed artifact format. The mobile app is a carrier/cache, **not a firmware signing authority**. Horizon independently verifies product, hardware compatibility, version policy, complete-image digest and cryptographic signature before staging an image received from either the Internet or a phone. EIU/future nodes retain their own independent candidate-authentication requirement before execution.
+
+Offline delivery does not weaken maintenance gates. Horizon remains responsible for engine-stopped/stationary policy, adequate power, inactive A/B target selection, explicit activation, trial boot, confirmation and rollback. The phone cannot override these checks.
+
+The local maintenance protocol must authenticate/bind the intended Horizon, reject unsolicited image injection, provide transfer integrity/resume or clean-restart behaviour, and avoid exposing normal flight operation to an unauthenticated maintenance endpoint. Exact Wi-Fi onboarding/authentication is an implementation design gate.
+
+Validation must cover: pre-download/cache without the aircraft, airplane-mode/offline phone-to-Horizon transfer, wrong-device/wrong-hardware/wrong-signature rejection, interrupted local Wi-Fi transfer, duplicate/replayed package handling, Horizon A/B rollback, and subsequent offline Horizon-to-EIU AEF-CAN update.
