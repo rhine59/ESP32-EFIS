@@ -155,7 +155,7 @@ The direct engine-sensor connector at Horizon is superseded by a separate **Engi
 
 | EIU item/function | V1 direction | Status |
 |---|---|---|
-| EIU enclosure + sensor connector | Keyed, positively retained, environmentally appropriate | SELECTION REQUIRED |
+| EIU enclosure + sensor connectors | Compact black-plastic ULM/microlight-headset-style locking circular connectors; splash/water-resistant installation, not necessarily waterproof | SELECTION REQUIRED |
 | EIU processor | Small MCU with watchdog, CAN and adequate diagnostics | SELECTION REQUIRED |
 | Analogue conversion | External precision ADC / sender-specific front ends | SELECTION REQUIRED |
 | EGT channels | 2 × K-type thermocouple front ends with cold-junction compensation and open-sensor detection | SELECTION REQUIRED |
@@ -178,7 +178,7 @@ These items are **provisional** and are not instructions to purchase yet. Exact 
 | Horizon CAN transceiver | 3.3 V Classical CAN transceiver compatible with ESP32-S3 TWAI; protected interface | Horizon carrier | 1 | SELECTION REQUIRED |
 | CAN termination | 120 ohm, switchable/jumper-selectable on Horizon | Horizon carrier | 1 | DESIGN REQUIRED |
 | CAN protection | ESD/transient protection appropriate to final interface | Horizon carrier | 1 set | DESIGN REQUIRED |
-| CAN connector | keyed locking CAN-H/CAN-L/reference/shield provision | Horizon enclosure | 1 | SELECTION REQUIRED |
+| CAN connector | keyed locking CAN-H/CAN-L/reference/shield provision; coordinate with final Horizon enclosure interface | Horizon enclosure | 1 | SELECTION REQUIRED |
 | CAN cable | twisted pair, installation length after aircraft survey | aircraft harness | as required | DEFERRED |
 | EIU MCU | MCU with watchdog + Classical CAN; ESP32-class prototype acceptable | EIU | 1 | SELECTION REQUIRED |
 | EIU CAN transceiver | preferably galvanically isolated architecture for V1 installation | EIU | 1 | SELECTION REQUIRED |
@@ -189,8 +189,14 @@ These items are **provisional** and are not instructions to purchase yet. Exact 
 | Temperature sender interfaces | installed Rotax sender-specific | EIU | as required | SURVEY REQUIRED |
 | Oil-pressure interface | installed sender generation/range-specific | EIU | 1 | SURVEY REQUIRED |
 | RPM conditioner | protected interface appropriate to selected RPM source | EIU | 1 | SURVEY REQUIRED |
-| EIU sensor connector(s) | keyed/retained/environmentally appropriate | EIU | as required | SELECTION REQUIRED |
-| EIU enclosure | vibration/temperature/moisture appropriate | EIU | 1 | SELECTION REQUIRED |
+| EIU J1 ENGINE TEMP panel socket | Black-plastic ULM/microlight-headset-style circular positive-locking multiway panel connector; provisional 12-way concept, final count TBD | EIU | 1 | SELECTION REQUIRED — DO NOT ORDER |
+| J1 mating cable plug | Matching black-plastic locking cable plug, contacts/termination and strain relief/boot as required | engine harness | 1 | SELECTION REQUIRED — DO NOT ORDER |
+| EIU J2 ENGINE AUX panel socket | Black-plastic ULM/microlight-headset-style circular positive-locking multiway panel connector; provisional 12-way concept, final count TBD | EIU | 1 | SELECTION REQUIRED — DO NOT ORDER |
+| J2 mating cable plug | Matching black-plastic locking cable plug, contacts/termination and strain relief/boot as required | engine harness | 1 | SELECTION REQUIRED — DO NOT ORDER |
+| EIU J3 EFIS CAN panel socket | Smaller and/or differently keyed black-plastic ULM-style locking circular connector for protected power/ground + CAN-H/CAN-L; provisional 7-way concept | EIU | 1 | SELECTION REQUIRED — DO NOT ORDER |
+| J3 mating cable plug | Matching black-plastic locking cable plug, contacts/termination and strain relief/boot as required | EIU-to-Horizon harness | 1 | SELECTION REQUIRED — DO NOT ORDER |
+| Connector environmental accessories | Boots, heat-shrink, strain relief, sealing/grommet hardware as needed for splash/water-resistant installation; IP67 not required by current concept | EIU/harness | 1 set | DESIGN REQUIRED |
+| EIU enclosure | vibration/temperature/moisture appropriate; connector orientation should minimise direct splash ingress and permit drip loops | EIU | 1 | SELECTION REQUIRED |
 
 The Horizon-side CAN provision is part of making the core EFIS **Stage-7-ready**. The EIU and engine-sensor hardware remain optional/provisional.
 
@@ -208,3 +214,10 @@ The Horizon-side CAN provision is part of making the core EFIS **Stage-7-ready**
 | USB GPS mouse/receiver | USB-host compatible receiver/protocol and acceptable power demand | SELECTION REQUIRED |
 
 One external USB-C port serves both GPS host operation and computer service/programming. Routine field firmware updating is intended to use signed OTA, but USB programming/recovery remains a production requirement.
+
+
+### Stage 7 connector procurement note — 1 October 2026
+
+The EIU connector visual/mechanical target is the **small black-plastic locking circular style used on ULM/microlight headset installations**. Metal-bodied Binder/aerospace-style connectors and industrial M12 connectors shown in earlier concept work are not the current preferred production appearance.
+
+Do **not** purchase the provisional 12-way/12-way/7-way connector set yet. Those pin counts are packaging concepts only. Freeze the connector family and contact counts after confirming the actual Rotax 912 sensor set, EGT thermocouple termination strategy, wire gauges, contact ratings, temperature/vibration requirements and the final CAN/power pin allocation. The installation needs sensible splash/water resistance, not full waterproof/IP67 performance.
