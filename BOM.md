@@ -226,3 +226,22 @@ Do **not** purchase the provisional 12-way/12-way/7-way connector set yet. Those
 ### EIU sensor-power BOM rule — 1 October 2026
 
 Do not add a generic +5 V engine-sensor supply as a frozen BOM requirement. EGT thermocouples are self-generating; resistive temperature senders use EIU measurement excitation; oil-pressure and RPM power/interface requirements depend on the actual installed sender/source. Any required regulated sender supply is generated, protected and fault-contained locally within the EIU. The EIU itself should preferably use an independently protected aircraft-supply branch rather than the EFIS regulated electronics. Sender-specific regulator/current-limit/protection components remain **DESIGN/SURVEY REQUIRED**.
+
+
+### EIU USB-C SERVICE / factory-programming additions — 1 October 2026
+
+| Item | Requirement | Status |
+|---|---|---|
+| EIU USB-C SERVICE receptacle | External USB-C connector for factory flashing, development, diagnostics and recovery | DESIGN REQUIRED |
+| EIU USB CC/device circuitry | Correct ESP32-S3 USB-device/service role handling; native USB preferred | DESIGN REQUIRED |
+| EIU USB ESD protection | Low-capacitance protection and appropriate PCB layout at external service connector | DESIGN REQUIRED |
+| EIU USB bench-power path | Permit USB 5 V to power required service/digital circuitry for bench programming | DESIGN REQUIRED |
+| EIU power-path isolation | Reverse-current blocking/ORing/current limiting so USB VBUS and aircraft supply cannot back-feed each other | DESIGN REQUIRED |
+| EIU USB/service-present detection | Allow firmware/manufacturing harness to identify service/bench operation where useful | DESIGN REQUIRED |
+| EIU internal recovery pads | Fallback GND/reset/boot plus serial/debug/programming access appropriate to selected MCU | DESIGN REQUIRED |
+| EIU factory programming cable | USB-C data-capable cable for development/production station | ACQUIRE LATER |
+| EIU factory provisioning script | Flash bootloader/partition/factory app, provision identity, reboot/interrogate and record test result | SOFTWARE REQUIRED |
+
+The external USB-C SERVICE connector is now the preferred factory/development programming route. Pogo/test pads are retained as fallback/recovery rather than the primary operator interface. Routine production firmware upgrades remain signed Horizon -> AEF-CAN -> EIU updates.
+
+Do not freeze a USB power mux/ideal-diode/current-limit part until the EIU aircraft-input regulator and total bench-service power requirement are known. Likewise, do not enable irreversible ESP32 security/eFuse settings in the ordinary development flash process; production security provisioning requires a separate reviewed procedure.
