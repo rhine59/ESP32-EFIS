@@ -190,3 +190,19 @@ Routine production firmware updates should use the signed OTA path, but USB prog
 The final circuit must correctly implement USB-C role detection and protected VBUS switching. Horizon must not source VBUS while attached as a USB device to a computer; in host mode it must provide a protected/current-limited 5 V supply adequate for the validated GPS receiver. ESD protection, USB signal integrity, receiver power budget, connector retention and host/device firmware behaviour are PCB-release gates.
 
 No second external programming connector and no dedicated GNSS connector are required. The rear-panel designation is **USB-C — SERVICE / GPS**. Exact USB GPS receiver/protocol remains selection/validation required.
+
+
+### EIU connector concept — 1 October 2026
+
+**PROVISIONAL MECHANICAL/INTERCONNECT DIRECTION.** The preferred external EIU connectors are compact **black-plastic circular locking connectors in the style used on ULM/microlight headset systems**. The intent is a lightweight keyed connector with positive push/twist or equivalent locking, rather than a large metal aerospace connector or an industrial M12 connector.
+
+The installation does **not** require a fully waterproof/IP67 connector. It should instead be designed for reasonable water/splash resistance appropriate to the selected EIU mounting position, using sensible connector orientation, enclosure lips/seals, cable strain relief, heat-shrink/boots and drip loops as appropriate. Do not treat IP40 alone as water resistance; final connector selection must be checked against the actual installation environment.
+
+Provisional enclosure interface:
+- **J1 — ENGINE TEMP:** multiway ULM-style black-plastic locking circular connector for EGT/CHT and related temperature channels.
+- **J2 — ENGINE AUX:** multiway ULM-style black-plastic locking circular connector for oil pressure, oil temperature, coolant/water temperature and spare/provisional sensor channels.
+- **J3 — EFIS CAN:** smaller/differently keyed ULM-style black-plastic locking circular connector carrying protected power/ground and the EIU-to-Horizon CAN bus, with spare conductors only if justified.
+
+Use different pin counts and/or mechanical keying where practical so sensor and CAN/power harnesses cannot be cross-connected. Exact contact count, connector manufacturer/family and part numbers remain **TBD** until the Rotax 912 sender set, thermocouple wiring requirements, conductor sizes, current ratings, temperature/vibration limits and required degree of splash resistance are frozen.
+
+The visual target is the small black plastic connector style familiar from ULM headset installations. Earlier metal-bodied Binder-style illustrations are **not** the intended EIU production appearance.
