@@ -1,4 +1,4 @@
-# Thingy product branding
+# Lollipop Design product branding
 
 **Status:** WORKING BRAND / NOT LEGALLY CLEARED  
 **Adopted for development:** 2 October 2026
@@ -7,16 +7,16 @@
 
 The project will use the following customer-facing product identity during development:
 
-- **Master brand:** **Thingy**
+- **Master brand:** **Lollipop Design**
 - **EFIS / flight-display product:** **RedOne**
 - **Engine-interface product:** **BlueOne**
-- **Full product references:** **Thingy RedOne** and **Thingy BlueOne**
+- **Full product references:** **Lollipop Design RedOne** and **Lollipop Design BlueOne**
 - **Technical roles:** RedOne is the EFIS; BlueOne is the sensor multiplexer currently described technically in the architecture as the SMUX/SMUX.
 
 A simple instrument presentation may use:
 
 ```text
-Thingy
+Lollipop Design
 RedOne
 Flight Display
 ```
@@ -24,16 +24,16 @@ Flight Display
 The companion engine-interface enclosure, commissioning UI and support material should use:
 
 ```text
-Thingy
+Lollipop Design
 BlueOne
 sensor multiplexer
 ```
 
 ## Naming rule
 
-**Thingy** is the umbrella brand. **RedOne** and **BlueOne** are product names, not replacements for every engineering acronym.
+**Lollipop Design** is the umbrella brand. **RedOne** and **BlueOne** are product names, not replacements for every engineering acronym.
 
-Customer-facing documentation, boot/splash screens, support material, diagrams and future packaging should say **Thingy RedOne** and **Thingy BlueOne**. Technical prose may retain **EFIS** and **SMUX/SMUX** where those terms describe a system role, protocol endpoint or established implementation identifier.
+Customer-facing documentation, boot/splash screens, support material, diagrams and future packaging should say **Lollipop Design RedOne** and **Lollipop Design BlueOne**. Technical prose may retain **EFIS** and **SMUX/SMUX** where those terms describe a system role, protocol endpoint or established implementation identifier.
 
 This distinction is intentional: branding can evolve without silently changing wire protocols, firmware package identities, source-code symbols, device IDs or deployed service names.
 
@@ -54,8 +54,8 @@ Those require explicit migration decisions if they are ever changed.
 
 From this checkpoint:
 
-- use **Thingy RedOne** when referring to the customer product that provides the EFIS/flight-display functions;
-- use **Thingy BlueOne** when referring to the customer engine-interface product;
+- use **Lollipop Design RedOne** when referring to the customer product that provides the EFIS/flight-display functions;
+- use **Lollipop Design BlueOne** when referring to the customer engine-interface product;
 - use **RedOne** and **BlueOne** as the short product names once context is clear;
 - retain **EFIS**, **SMUX/SMUX**, AEF-CAN and other engineering terms when describing architecture;
 - do not introduce the superseded working names **MicroSky Avionics**, **MicroSky Horizon** or **Horizon** as the product name in new material.
@@ -68,4 +68,4 @@ These remain working names until appropriate trademark, company/trading-name, do
 
 ## Before commercial freeze
 
-Complete and document trademark/name/domain checks, final wordmark/logo and colour rules, enclosure marking rules, product-label/serial-number format, and the relationship between the Thingy trading brand and the legal manufacturer identity.
+Complete and document trademark/name/domain checks, final wordmark/logo and colour rules, enclosure marking rules, product-label/serial-number format, and the relationship between the Lollipop Design trading brand and the legal manufacturer identity.
