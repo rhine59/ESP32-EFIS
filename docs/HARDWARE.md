@@ -257,4 +257,4 @@ Factory provisioning should be scriptable over USB and may flash the bootloader,
 
 ## Thingies product naming
 
-The flight-display hardware described in this repository belongs to **Thingies red1**. The engine-interface hardware described as the EIU/ECI belongs to **Thingies yellow1**. EFIS/EIU/ECI remain engineering role names where useful; enclosure legends, product labels and customer-facing diagrams should use red1/yellow1.
+The flight-display hardware described in this repository belongs to **Thingies RedOne**. The engine-interface hardware described as the EIU/ECI belongs to **Thingies BlueOne**. EFIS/EIU/ECI remain engineering role names where useful; enclosure legends, product labels and customer-facing diagrams should use RedOne/BlueOne.
