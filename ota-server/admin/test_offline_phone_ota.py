@@ -12,17 +12,17 @@ class PhoneCache:
 
 installed={
  "horizon":NodeState("horizon","2.4.0",1,2,caps("ENGINE_DATA_V1","OTA_V1"),"H1"),
- "eiu":NodeState("eiu","1.7.0",1,2,caps("ENGINE_DATA_V1","OTA_V1"),"E1"),
+ "smux":NodeState("smux","1.7.0",1,2,caps("ENGINE_DATA_V1","OTA_V1"),"E1"),
 }
 release=[
- Artifact("eiu","1.9.0",1,3,caps("ENGINE_DATA_V1","ENGINE_DATA_V2","OTA_V1"),"E1"),
+ Artifact("smux","1.9.0",1,3,caps("ENGINE_DATA_V1","ENGINE_DATA_V2","OTA_V1"),"E1"),
  Artifact("horizon","2.5.0",1,3,caps("ENGINE_DATA_V1","ENGINE_DATA_V2","OTA_V1"),"H1",
-          (Requirement("eiu",1,3,caps("ENGINE_DATA_V2")),)),
+          (Requirement("smux",1,3,caps("ENGINE_DATA_V2")),)),
 ]
 phone=PhoneCache(); phone.cache(release)
 assert phone.offline_ready
 order=resolve_order(installed,phone.release)
-assert order==["eiu","horizon"]
+assert order==["smux","horizon"]
 ok,why=rollback_safe(installed,phone.release,order)
 assert ok,why
 print("PASS  phone caches complete release set before aircraft")
