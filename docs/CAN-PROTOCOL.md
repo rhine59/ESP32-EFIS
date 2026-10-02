@@ -470,3 +470,8 @@ Compatibility rules:
 - required missing capabilities block the dependent feature/update rather than producing plausible-but-invalid operation.
 
 The signed OTA release-set manifest supplies deployment constraints and ordering; AEF-CAN discovery supplies the observed installed state against which those constraints are evaluated.
+
+
+## Thingies product naming
+
+Within the Thingies product family, **red1** is the EFIS/flight-display node and **yellow1** is the engine-interface node. AEF-CAN remains product-name independent: existing node roles, message identifiers, capability names and compatibility rules are not renamed solely for branding. Technical references to EFIS and EIU/ECI therefore remain valid protocol terminology.
