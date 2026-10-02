@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""End-to-end resumable OTA simulation: release service -> Horizon -> AEF-CAN -> EIU."""
+"""End-to-end resumable OTA simulation: release service -> Horizon -> AEF-CAN -> SMUX."""
 from dataclasses import dataclass,field
 import hashlib,zlib
-from eiu_ota_sim import Image
-from eiu_can_ota import DATA_BYTES,BLOCK_BYTES
+from smux_ota_sim import Image
+from smux_can_ota import DATA_BYTES,BLOCK_BYTES
 EFIS_CHECKPOINT_BYTES=65536
 @dataclass
 class EFISStager:
