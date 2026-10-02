@@ -2,7 +2,7 @@
 
 Status: **ADOPTED design direction — validate by prototype test before production freeze.**
 
-This document records the current materials, enclosure fastening and thermal-management decisions for the Thingy **RedOne** EFIS and **BlueOne** Engine Interface Unit (EIU).
+This document records the current materials, enclosure fastening and thermal-management decisions for the Thingy **RedOne** EFIS and **BlueOne** Sensor Multiplexer (SMUX).
 
 ## 3D-printing materials
 
@@ -22,7 +22,7 @@ Documentation, CAD and BOMs shall use the term **heat-set threaded insert** for 
 
 Boss geometry shall be designed for the selected insert rather than using a generic printed hole. Provide adequate radial wall thickness, insertion lead-in, insert depth and local ribs/support. Insert installation temperature and process shall be validated on the final ASA grade.
 
-For BlueOne, heat-set inserts remain an option, but mechanically captive nuts or other metal insert systems remain candidates until the EIU mounting location, temperature and vibration environment are frozen and tested.
+For BlueOne, heat-set inserts remain an option, but mechanically captive nuts or other metal insert systems remain candidates until the SMUX mounting location, temperature and vibration environment are frozen and tested.
 
 ## RedOne thermal design
 
@@ -60,7 +60,7 @@ Test a representative assembled unit at minimum under:
 
 Record internal/PCB temperature and critical component temperatures until thermal equilibrium. Use the results to decide whether an internal aluminium spreader or other passive measure is required.
 
-## BlueOne EIU thermal design
+## BlueOne SMUX thermal design
 
 Do not assume the RedOne ASA enclosure solution automatically applies to BlueOne.
 
