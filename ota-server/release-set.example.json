@@ -3,7 +3,7 @@
   "release": "2026.10.1-example",
   "artifacts": [
     {
-      "node_type": "eiu",
+      "node_type": "smux",
       "firmware": "1.9.0",
       "hardware": "E1",
       "aef_can": {"major": 1, "minor": 3},
@@ -17,7 +17,7 @@
       "aef_can": {"major": 1, "minor": 3},
       "provides": ["ENGINE_DATA_V1", "ENGINE_DATA_V2", "OTA_V1"],
       "requires": [
-        {"node_type": "eiu", "aef_can_major": 1, "min_minor": 3, "capabilities": ["ENGINE_DATA_V2"]}
+        {"node_type": "smux", "aef_can_major": 1, "min_minor": 3, "capabilities": ["ENGINE_DATA_V2"]}
       ]
     }
   ],
