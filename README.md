@@ -131,7 +131,7 @@ ASI/IAS capability has been removed from scope. The BMP585 uses the aircraft **S
 
 The adopted development brand is **Thingy**. The EFIS/flight-display product is **RedOne** and the engine-interface product is **BlueOne**. Customer-facing references should therefore use **Thingy RedOne** and **Thingy BlueOne**.
 
-Engineering acronyms and stable implementation identifiers remain valid where they describe technical roles: RedOne is the EFIS; BlueOne is the engine interface (EIU/ECI in existing architecture material). Repository, protocol, Device ID, Docker, OTA and cryptographic identifiers are not automatically renamed by this branding decision. See `docs/BRANDING.md`.
+Engineering acronyms and stable implementation identifiers remain valid where they describe technical roles: RedOne is the EFIS; BlueOne is the sensor multiplexer (SMUX/SMUX in existing architecture material). Repository, protocol, Device ID, Docker, OTA and cryptographic identifiers are not automatically renamed by this branding decision. See `docs/BRANDING.md`.
 
 ## Customer support chatbot — 27 September 2026
 
@@ -145,7 +145,7 @@ The proposed server-side infrastructure baseline is a **£750-class, 64 GB RAM /
 
 ## AEF-CAN aircraft data bus — 30 September 2026
 
-**ADOPTED / PROTOCOL STAGED.** The project now defines **AEF-CAN (Aircraft Experimental Flight CAN)** as the extensible internal data bus for the proposed Thingy BlueOne engine interface (EIU/ECI), Thingy RedOne display and future aircraft modules. It is deliberately hardware-independent and describes aircraft measurements and validity rather than display presentation.
+**ADOPTED / PROTOCOL STAGED.** The project now defines **AEF-CAN (Aircraft Experimental Flight CAN)** as the extensible internal data bus for the proposed Thingy BlueOne sensor multiplexer (SMUX/SMUX), Thingy RedOne display and future aircraft modules. It is deliberately hardware-independent and describes aircraft measurements and validity rather than display presentation.
 
 V1 uses 500 kbit/s Classical CAN with 11-bit identifiers. The current ESP32-S3 TWAI controller requires an external CAN transceiver and is Classical-CAN-only; future CAN FD hardware can be added without redefining the application-level measurement semantics.
 
@@ -153,4 +153,4 @@ The protocol reserves functional CAN-ID ranges for engine, electrical, air data,
 
 `protocol/aef-can.yaml` is the machine-readable source of truth. The long-form rationale and implementation/testing rules are in `docs/CAN-PROTOCOL.md`. Future C/C++, Swift and Python codecs/test vectors should be generated or verified from the YAML to prevent firmware/simulator/documentation drift.
 
-The AEF-CAN/EIU system remains **secondary, supplementary and non-certified**. No CAN value may remain silently presented as live after its freshness timeout.
+The AEF-CAN/SMUX system remains **secondary, supplementary and non-certified**. No CAN value may remain silently presented as live after its freshness timeout.
