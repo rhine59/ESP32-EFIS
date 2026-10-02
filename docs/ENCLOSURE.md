@@ -58,14 +58,14 @@ Production power is nominal **12 V aircraft input** through an appropriate prote
 The previously reserved dedicated **GNSS connector is removed**. GNSS is instead intended to use an external **USB GPS mouse/receiver** connected through the instrument USB interface. This requires USB-host support, suitable receiver/protocol selection and a mechanically retained service/flight connection; do not assume an arbitrary USB GPS device is compatible until validated. The GPS unit may be physically passive from the pilot's perspective, but a USB receiver is an active powered electronic device.
 
 
-## Engine interface simplification — 30 September 2026
+## sensor multiplexer simplification — 30 September 2026
 
-The preferred engine-monitoring architecture now moves sender termination and analogue/thermocouple conditioning into a separate **Engine Interface Unit (EIU)**. Accordingly, the Horizon enclosure should not reserve a large direct sensor block. Reserve a compact, positively retained connector for the EIU digital bus and appropriate power/ground only. V1 preference is an isolated CAN link; connector family and pinout remain to be frozen. The EIU itself receives the grouped Rotax 912 sensor harness. This supersedes the earlier concept of bringing CHT/EGT/oil/coolant analogue signals directly into the Horizon enclosure.
+The preferred engine-monitoring architecture now moves sender termination and analogue/thermocouple conditioning into a separate **Sensor Multiplexer (SMUX)**. Accordingly, the Horizon enclosure should not reserve a large direct sensor block. Reserve a compact, positively retained connector for the SMUX digital bus and appropriate power/ground only. V1 preference is an isolated CAN link; connector family and pinout remain to be frozen. The SMUX itself receives the grouped Rotax 912 sensor harness. This supersedes the earlier concept of bringing CHT/EGT/oil/coolant analogue signals directly into the Horizon enclosure.
 
 
 ## Registration identity marking — 30 September 2026
 
-Reserve a non-prominent, readable area on the **rear enclosure** for the permanent Horizon identity/registration marking: MicroSky Avionics / HORIZON, immutable human-readable Device ID, versioned registration QR, and hardware revision. Keep it clear of STATIC, 12 V, EIU/CAN, USB, mounting fasteners and connector/cable service zones. The QR is identification/onboarding only and contains no reusable credential or customer PII. Exact label dimensions/material remain subject to physical scan and environmental testing. See `docs/DEVICE_REGISTRATION.md`.
+Reserve a non-prominent, readable area on the **rear enclosure** for the permanent Horizon identity/registration marking: MicroSky Avionics / HORIZON, immutable human-readable Device ID, versioned registration QR, and hardware revision. Keep it clear of STATIC, 12 V, SMUX/CAN, USB, mounting fasteners and connector/cable service zones. The QR is identification/onboarding only and contains no reusable credential or customer PII. Exact label dimensions/material remain subject to physical scan and environmental testing. See `docs/DEVICE_REGISTRATION.md`.
 
 
 ## USB-C SERVICE / GPS connector — 30 September 2026
