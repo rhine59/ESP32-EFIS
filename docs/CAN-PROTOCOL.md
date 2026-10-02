@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-AEF-CAN is the project CAN application protocol. It transports aircraft measurements and node health between independent modules such as an Engine Interface Unit (EIU), Horizon display, data logger, future air-data module, fuel module or second display.
+AEF-CAN is the project CAN application protocol. It transports aircraft measurements and node health between independent modules such as an Sensor Multiplexer (SMUX), Horizon display, data logger, future air-data module, fuel module or second display.
 
 The protocol describes **aircraft data, not screen layout**. Producers publish measurements and validity; consumers decide how to display, log or alert on them.
 
@@ -40,7 +40,7 @@ CAN FD is a possible future transport, but V1 does not require it. Application c
 
 ## 4. Network architecture
 
-Nodes are peers on a multi-master broadcast bus. The EIU does not send data "to the EFIS"; it publishes data onto the bus.
+Nodes are peers on a multi-master broadcast bus. The SMUX does not send data "to the EFIS"; it publishes data onto the bus.
 
 Example:
 
@@ -49,7 +49,7 @@ Example:
       |
       v
  +---------+       +---------+       +---------+
- |   EIU   |=======| Horizon |=======| Logger  |
+ |   SMUX   |=======| Horizon |=======| Logger  |
  +---------+ CAN   +---------+       +---------+
       |                                  |
  engine I/O                         optional storage
@@ -86,7 +86,7 @@ Lower CAN identifiers have higher arbitration priority. Allocation within ranges
 
 ## 6. Initial engine messages
 
-The first EIU implementation reserves:
+The first SMUX implementation reserves:
 
 | ID | Name | Nominal rate | Purpose |
 |---|---|---:|---|
@@ -96,9 +96,9 @@ The first EIU implementation reserves:
 | 0x102 | EGT_12_V1 | 5 Hz | EGT 1/2 |
 | 0x103 | EGT_34_V1 | 5 Hz | EGT 3/4 |
 | 0x104 | ENGINE_COOLING_V1 | 5 Hz | coolant temperature |
-| 0x180 | EIU_ELECTRICAL_V1 | 2 Hz | EIU supply voltage/current |
+| 0x180 | EIU_ELECTRICAL_V1 | 2 Hz | SMUX supply voltage/current |
 | 0x600 | SENSOR_STATUS_V1 | 2 Hz | sensor validity/fault bitmap |
-| 0x601 | EIU_HEALTH_V1 | 1 Hz | EIU health/reset/internal state |
+| 0x601 | EIU_HEALTH_V1 | 1 Hz | SMUX health/reset/internal state |
 | 0x091 | NODE_HEARTBEAT_V1 | 1 Hz | node alive/protocol version |
 
 Exact byte layouts are defined by `protocol/aef-can.yaml`, which is the machine-readable source of truth.
@@ -194,7 +194,7 @@ Firmware version and protocol version are independent.
 
 ## 10. Node identity and discovery
 
-Nodes must not assume that there is exactly one EIU or one display.
+Nodes must not assume that there is exactly one SMUX or one display.
 
 A node announcement exposes at least:
 - protocol major/minor;
@@ -279,7 +279,7 @@ Before an AEF-CAN implementation is called validated, test at least:
 - bus-off/recovery behaviour;
 - duplicate node-instance detection;
 - realistic bus-load calculation;
-- EIU-to-Horizon bench operation through real transceivers and termination.
+- SMUX-to-Horizon bench operation through real transceivers and termination.
 
 Simulation/codec tests do not constitute physical CAN validation.
 
@@ -290,7 +290,7 @@ Simulation/codec tests do not constitute physical CAN validation.
 3. ~~Generate or hand-verify initial golden test vectors.~~ **DONE: `protocol/golden-vectors.txt`; initial vectors independently byte-checked.**
 4. Implement a transport-neutral AEF data model.
 5. Implement Classical CAN codec.
-6. Add EIU simulator traffic.
+6. Add SMUX simulator traffic.
 7. Add Horizon consumer with stale/fault behaviour.
 8. Bench-test two physical transceivers with 120-ohm end termination.
 9. Add logging/diagnostic tooling.
@@ -321,7 +321,7 @@ The core V1 wire contract is now frozen sufficiently to start codecs and simulat
 
 Changing the meaning, offset, scaling, signedness or unit of a frozen V1 field is an incompatible change and must not be committed as an in-place edit. Additive reserved-field use must obey the compatibility rules; otherwise define a new message/version.
 
-The next implementation layer is a transport-neutral codec/model shared semantically across ESP-IDF C/C++, Swift and Python, followed by simulated EIU publication and Horizon freshness/fault consumption.
+The next implementation layer is a transport-neutral codec/model shared semantically across ESP-IDF C/C++, Swift and Python, followed by simulated SMUX publication and Horizon freshness/fault consumption.
 
 
 ## 19. C codec implementation
@@ -332,17 +332,17 @@ Initial implemented codecs cover `ENGINE_FAST_V1`, two-temperature frames used b
 
 Host regression is in `tests/aef_can_codec_test.c`; `scripts/test-aef-can-codec.sh` builds it with strict C11 warnings and compares encoded data with the frozen golden byte patterns. This is codec validation only, not TWAI/transceiver/bus validation.
 
-Next implementation increment: complete the remaining V1 message codecs, add a small AEF frame dispatcher/freshness model, then connect that abstraction to simulated EIU publication before adding the ESP-IDF TWAI transport.
+Next implementation increment: complete the remaining V1 message codecs, add a small AEF frame dispatcher/freshness model, then connect that abstraction to simulated SMUX publication before adding the ESP-IDF TWAI transport.
 
 
-## 20. EIU and sensor discovery / commissioning architecture — 1 October 2026
+## 20. SMUX and sensor discovery / commissioning architecture — 1 October 2026
 
-AEF-CAN shall support **device discovery and capability enumeration** rather than assuming a permanently hard-coded EIU node/address. Discovery is layered because conventional analogue and thermocouple senders cannot electronically identify their semantic role.
+AEF-CAN shall support **device discovery and capability enumeration** rather than assuming a permanently hard-coded SMUX node/address. Discovery is layered because conventional analogue and thermocouple senders cannot electronically identify their semantic role.
 
 ### Discovery levels
 
-1. **Device discovery.** An EIU announces node identity, device class, hardware/firmware/protocol versions and channel capabilities. Horizon can therefore discover a compatible EIU without a pre-created per-device configuration.
-2. **Electrical discovery.** The EIU safely characterises each input as supported by its hardware: for example open/inactive, resistive, voltage, thermocouple or frequency/pulse. It reports raw diagnostic information and confidence/compatibility information where useful.
+1. **Device discovery.** An SMUX announces node identity, device class, hardware/firmware/protocol versions and channel capabilities. Horizon can therefore discover a compatible SMUX without a pre-created per-device configuration.
+2. **Electrical discovery.** The SMUX safely characterises each input as supported by its hardware: for example open/inactive, resistive, voltage, thermocouple or frequency/pulse. It reports raw diagnostic information and confidence/compatibility information where useful.
 3. **Semantic assignment.** Electrical characteristics alone generally cannot prove that a resistive sender is oil temperature rather than another compatible temperature sender, nor can a thermocouple identify itself as EGT 1 versus EGT 2. Horizon therefore presents compatible roles/profiles during commissioning and requires explicit user confirmation.
 
 ### Persistent commissioning
@@ -350,7 +350,7 @@ AEF-CAN shall support **device discovery and capability enumeration** rather tha
 After confirmation, the channel-to-role/profile mapping is stored persistently with enough identity/version information to detect incompatible hardware or configuration changes. Normal subsequent boots should require no commissioning interaction when the discovered hardware matches the stored configuration.
 
 A stored mapping conceptually binds:
-- EIU identity / compatible device class;
+- SMUX identity / compatible device class;
 - physical channel;
 - electrical input type;
 - sender/profile identifier;
@@ -359,11 +359,11 @@ A stored mapping conceptually binds:
 
 ### Change and fault detection
 
-The EIU continuously performs non-disruptive plausibility diagnostics appropriate to each configured channel. It shall distinguish, where electrically possible, valid measurement, open circuit, short circuit, out of range, missing sensor and unsupported/ambiguous state. Horizon must never turn these states into a plausible numeric indication.
+The SMUX continuously performs non-disruptive plausibility diagnostics appropriate to each configured channel. It shall distinguish, where electrically possible, valid measurement, open circuit, short circuit, out of range, missing sensor and unsupported/ambiguous state. Horizon must never turn these states into a plausible numeric indication.
 
-If an input previously stored as empty later contains a plausible sensor, the EIU reports a **new/unassigned sensor** condition and Horizon offers commissioning for that channel. If a commissioned sensor disappears or changes incompatibly, Horizon reports the fault/change rather than silently remapping it.
+If an input previously stored as empty later contains a plausible sensor, the SMUX reports a **new/unassigned sensor** condition and Horizon offers commissioning for that channel. If a commissioned sensor disappears or changes incompatibly, Horizon reports the fault/change rather than silently remapping it.
 
-Thermocouple discovery is deliberately limited: the EIU may detect a plausible thermocouple circuit/open circuit and its configured front-end type, but semantic cylinder/EGT assignment remains a commissioning decision.
+Thermocouple discovery is deliberately limited: the SMUX may detect a plausible thermocouple circuit/open circuit and its configured front-end type, but semantic cylinder/EGT assignment remains a commissioning decision.
 
 ### Published measurement contract
 
@@ -374,11 +374,11 @@ Normal AEF-CAN measurements should carry or be associated with:
 - sequence/freshness information;
 - sufficient raw/diagnostic data for maintenance where the message family defines it.
 
-Horizon shall invalidate stale data when freshness limits are exceeded. EIU reboot, sequence discontinuity, node loss/reappearance and configuration revision changes must be observable rather than hidden.
+Horizon shall invalidate stale data when freshness limits are exceeded. SMUX reboot, sequence discontinuity, node loss/reappearance and configuration revision changes must be observable rather than hidden.
 
 ### Extensibility
 
-The same mechanism is intended to support future EIU channels and other AEF-CAN sensor nodes (for example fuel pressure/level, manifold pressure or additional temperature modules) without embedding each physical product into Horizon UI logic. Producers publish identity, capabilities, facts and validity; Horizon owns semantic commissioning and presentation.
+The same mechanism is intended to support future SMUX channels and other AEF-CAN sensor nodes (for example fuel pressure/level, manifold pressure or additional temperature modules) without embedding each physical product into Horizon UI logic. Producers publish identity, capabilities, facts and validity; Horizon owns semantic commissioning and presentation.
 
 The machine-readable AEF-CAN schema will require additive discovery/capability/configuration message definitions before this feature is considered wire-protocol complete.
 
@@ -391,25 +391,25 @@ Required transaction semantics include: target-node identity and hardware compat
 
 Classical CAN bandwidth is acceptable because updates are infrequent and reliability is preferred over speed. The exact segmentation/windowing scheme and CAN identifiers are **not yet frozen** and must be added additively to the machine-readable protocol schema.
 
-The EIU bootloader independently verifies firmware authenticity before execution. CAN transport integrity, Horizon verification and cryptographic image authenticity are distinct checks.
+The SMUX bootloader independently verifies firmware authenticity before execution. CAN transport integrity, Horizon verification and cryptographic image authenticity are distinct checks.
 
-Firmware update mode must not produce stale-but-plausible engine data: Horizon explicitly marks EIU engine indications unavailable/stale while the node is in maintenance/update/reboot state.
+Firmware update mode must not produce stale-but-plausible engine data: Horizon explicitly marks SMUX engine indications unavailable/stale while the node is in maintenance/update/reboot state.
 
 
 ### Executable V1 maintenance transport — 1 October 2026
 
 The first executable transport model is now implemented in `ota-server/admin/eiu_can_ota.py`. The canonical schema reserves 0x5C0-0x5FF for firmware maintenance and defines `FW_CONTROL_V1` (0x5C0), `FW_META_V1` (0x5C1), `FW_DATA_V1` (0x5C2) and `FW_STATUS_V1` (0x5C3).
 
-The V1 baseline deliberately uses simple stop-and-wait segmentation: each Classical CAN DATA frame contains a uint16 sequence number and up to six firmware bytes. The simulated EIU rejects out-of-order blocks and oversized data, acknowledges accepted sequence numbers, verifies the complete image digest before activation, retains the RPM=0 activation gate and exercises first-boot confirmation/configuration preservation. This simple baseline favours deterministic recovery and testability; a later additive windowed transport may improve throughput without redefining V1.
+The V1 baseline deliberately uses simple stop-and-wait segmentation: each Classical CAN DATA frame contains a uint16 sequence number and up to six firmware bytes. The simulated SMUX rejects out-of-order blocks and oversized data, acknowledges accepted sequence numbers, verifies the complete image digest before activation, retains the RPM=0 activation gate and exercises first-boot confirmation/configuration preservation. This simple baseline favours deterministic recovery and testability; a later additive windowed transport may improve throughput without redefining V1.
 
 `test_eiu_can_ota.py` is part of the normal Docker rebuild/test runner. This remains protocol simulation, not physical TWAI/CAN validation.
 
 
 ### Resumable firmware checkpoints — 1 October 2026
 
-Firmware delivery is resumable at both stages: release service -> Horizon staging and Horizon -> EIU. Progress is represented by an absolute byte offset, never by percentage on the wire.
+Firmware delivery is resumable at both stages: release service -> Horizon staging and Horizon -> SMUX. Progress is represented by an absolute byte offset, never by percentage on the wire.
 
-For the EIU leg, V1 uses a durable checkpoint after each complete **4 KiB** block. Individual Classical CAN DATA frames remain sequence checked; the checkpoint records transfer identity, image identity/digest, committed byte offset and block integrity. After interruption or power loss Horizon queries the EIU, compares transfer/image identity and resumes at the EIU's last committed offset. A mismatched image or transfer does not inherit an old checkpoint.
+For the SMUX leg, V1 uses a durable checkpoint after each complete **4 KiB** block. Individual Classical CAN DATA frames remain sequence checked; the checkpoint records transfer identity, image identity/digest, committed byte offset and block integrity. After interruption or power loss Horizon queries the SMUX, compares transfer/image identity and resumes at the SMUX's last committed offset. A mismatched image or transfer does not inherit an old checkpoint.
 
 Integrity is layered: CAN sequencing detects missing/out-of-order frames; checkpoint CRC detects block corruption; final SHA-256 and firmware signature authenticate/verify the complete image before activation. Checkpoints always concern the inactive A/B slot. The currently running known-good slot is never modified by an incomplete transfer.
 
@@ -442,7 +442,7 @@ The simulator must be revised to model block ACK/NACK, corruption inside a block
 
 ## 23. Operational independence and gateway role — 1 October 2026
 
-AEF-CAN remains peer-to-peer/multi-master. Horizon/EFIS may provide maintenance, firmware and commissioning gateway services, but it is **not the operational bus master**. Measurement producers publish independently of Horizon presence. Loss/reboot/update of Horizon must not stop an EIU, logger or other producer from continuing its normal protocol role.
+AEF-CAN remains peer-to-peer/multi-master. Horizon/EFIS may provide maintenance, firmware and commissioning gateway services, but it is **not the operational bus master**. Measurement producers publish independently of Horizon presence. Loss/reboot/update of Horizon must not stop an SMUX, logger or other producer from continuing its normal protocol role.
 
 The baseline physical interface is protected **non-isolated** Classical CAN with an explicit reference/ground design. Galvanic isolation is an installation-driven option, not a V1 default; add it only where grounding/common-mode/noise validation establishes a need. This avoids unnecessary isolated power, PCB area and component/failure complexity while preserving the option for installations that require isolation.
 
@@ -453,9 +453,9 @@ Firmware-maintenance traffic remains lower priority than operational measurement
 
 AEF-CAN operational traffic is RAM-first. Receipt/transmission of a CAN frame, sensor sampling, heartbeat generation, freshness tracking, diagnostic counters and ordinary changing measurement state must not trigger persistent flash writes.
 
-For EIU firmware transfer, 4 KiB transfer-block CRC/ACK state is volatile; durable resume metadata is nominally committed every 64 KiB using an append-only rotating checkpoint journal (or demonstrably equivalent wear-levelled storage), never a repeatedly erased fixed metadata sector. A/B application slots remain the firmware rollback mechanism.
+For SMUX firmware transfer, 4 KiB transfer-block CRC/ACK state is volatile; durable resume metadata is nominally committed every 64 KiB using an append-only rotating checkpoint journal (or demonstrably equivalent wear-levelled storage), never a repeatedly erased fixed metadata sector. A/B application slots remain the firmware rollback mechanism.
 
-Persistent storage is reserved for intentionally durable configuration/calibration/identity, wear-aware OTA metadata, and explicitly justified infrequent events. This rule applies to future AEF-CAN nodes as well as the initial EIU.
+Persistent storage is reserved for intentionally durable configuration/calibration/identity, wear-aware OTA metadata, and explicitly justified infrequent events. This rule applies to future AEF-CAN nodes as well as the initial SMUX.
 
 
 ## Firmware compatibility advertisements — 1 October 2026
@@ -474,4 +474,4 @@ The signed OTA release-set manifest supplies deployment constraints and ordering
 
 ## Thingies product naming
 
-Within the Thingies product family, **red1** is the EFIS/flight-display node and **yellow1** is the engine-interface node. AEF-CAN remains product-name independent: existing node roles, message identifiers, capability names and compatibility rules are not renamed solely for branding. Technical references to EFIS and EIU/ECI therefore remain valid protocol terminology.
+Within the Thingies product family, **red1** is the EFIS/flight-display node and **yellow1** is the engine-interface node. AEF-CAN remains product-name independent: existing node roles, message identifiers, capability names and compatibility rules are not renamed solely for branding. Technical references to EFIS and SMUX/SMUX therefore remain valid protocol terminology.
