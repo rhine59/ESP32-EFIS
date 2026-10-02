@@ -1,63 +1,71 @@
-# Product branding
+# Thingies product branding
 
 **Status:** WORKING BRAND / NOT LEGALLY CLEARED  
-**Adopted for development:** 27 September 2026
+**Adopted for development:** 2 October 2026
 
-## Working identity
+## Product family
 
-The project will use the following working commercial identity during development:
+The project will use the following customer-facing product identity during development:
 
-- **Brand / manufacturer identity:** **MicroSky Avionics**
-- **Product name:** **Horizon**
-- **Full product reference:** **MicroSky Avionics Horizon**
-- **Short customer-facing reference:** **MicroSky Horizon**
+- **Master brand:** **Thingies**
+- **EFIS / flight-display product:** **red1**
+- **Engine-interface product:** **yellow1**
+- **Full product references:** **Thingies red1** and **Thingies yellow1**
+- **Technical roles:** red1 is the EFIS; yellow1 is the engine interface currently described technically in the architecture as the EIU/ECI.
 
 A simple instrument presentation may use:
 
 ```text
-MicroSky Avionics
-HORIZON
+Thingies
+red1
 Flight Display
 ```
 
-The product name **Horizon** is distinct from the master brand. Future products should therefore be capable of using the same MicroSky Avionics identity without being tied to the Horizon name.
+The companion engine-interface enclosure, commissioning UI and support material should use:
 
-## Naming intent
+```text
+Thingies
+yellow1
+Engine Interface
+```
 
-**MicroSky** is intended to suggest microlight/light aviation without using technical electronics terminology. **Avionics** makes the business/product field explicit. **Horizon** describes the initial flight-display product in simple aviation language.
+## Naming rule
 
-The branding should remain approachable and non-geeky. Avoid incorporating development-platform terms such as ESP32, AHRS, MCU or similar implementation details into customer-facing product branding.
+**Thingies** is the umbrella brand. **red1** and **yellow1** are product names, not replacements for every engineering acronym.
 
-## Legal and commercial status
+Customer-facing documentation, boot/splash screens, support material, diagrams and future packaging should say **Thingies red1** and **Thingies yellow1**. Technical prose may retain **EFIS** and **EIU/ECI** where those terms describe a system role, protocol endpoint or established implementation identifier.
 
-These names are **working names only**. They are not recorded here as registered trademarks, legally cleared marks, available company names or guaranteed domain names.
+This distinction is intentional: branding can evolve without silently changing wire protocols, firmware package identities, source-code symbols, device IDs or deployed service names.
 
-Initial collision searching was encouraging enough to continue development under **MicroSky Avionics**, but formal trademark/company/domain clearance must be completed before commercial launch, packaging, significant marketing expenditure or trademark claims.
+## Technical identity stability
 
-The word **Horizon** has existing aviation/avionics usage, so the distinctive **MicroSky Avionics / MicroSky** brand should be presented prominently with the product name rather than relying on HORIZON alone.
+The branding decision does **not** by itself rename:
 
-## Development usage
+- repository `ESP32-EFIS`;
+- firmware project/internal identifiers such as `esp32_efis`;
+- existing `EFIS-...` Device IDs;
+- AEF-CAN protocol identifiers or message names;
+- Docker service names, URLs, signing identities or OTA product identifiers;
+- persisted configuration keys or compatibility metadata.
+
+Those require explicit migration decisions if they are ever changed.
+
+## Documentation usage
 
 From this checkpoint:
 
-- documentation and new concept material may refer to the product as **MicroSky Horizon**;
-- boot/splash-screen concepts may show **MicroSky Avionics** and **HORIZON**;
-- repository/internal technical identifiers do **not** need to be renamed from ESP32-EFIS yet;
-- existing Device ID conventions such as `EFIS-...` remain unchanged unless a separate identity-schema decision is made;
-- no existing URLs, Docker services, signing identities, OTA product identifiers or cryptographic/licensing identifiers should be renamed merely for branding at this stage.
+- use **Thingies red1** when referring to the customer product that provides the EFIS/flight-display functions;
+- use **Thingies yellow1** when referring to the customer engine-interface product;
+- use **red1** and **yellow1** as the short product names once context is clear;
+- retain **EFIS**, **EIU/ECI**, AEF-CAN and other engineering terms when describing architecture;
+- do not introduce the superseded working names **MicroSky Avionics**, **MicroSky Horizon** or **Horizon** as the product name in new material.
 
-This separation prevents a provisional marketing name from unnecessarily destabilising technical interfaces.
+Where older documentation uses “Horizon” to mean the **artificial-horizon/PFD page**, that instrument-page meaning is not a product-brand reference and may remain.
+
+## Legal and commercial status
+
+These remain working names until appropriate trademark, company/trading-name, domain and product-collision checks are completed. Do not use ™ or ® claims until the corresponding legal position is established.
 
 ## Before commercial freeze
 
-Complete and document:
-
-1. UK trademark search and professional clearance where appropriate;
-2. relevant international/EU searches if those markets are intended;
-3. company/trading-name checks;
-4. domain-name and appropriate social/account-name checks;
-5. aviation/avionics product-name collision review;
-6. final wordmark/logo and usage rules;
-7. decision on whether the legal manufacturer identity is MicroSky Avionics or a separate legal entity trading under that brand.
-
-Until those checks are complete, use **WORKING BRAND** rather than ™ or ® claims.
+Complete and document trademark/name/domain checks, final wordmark/logo and colour rules, enclosure marking rules, product-label/serial-number format, and the relationship between the Thingies trading brand and the legal manufacturer identity.
