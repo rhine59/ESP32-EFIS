@@ -255,6 +255,6 @@ Factory provisioning should be scriptable over USB and may flash the bootloader,
 - **Boot architecture:** use mature platform A/B OTA/rollback facilities where they meet the required known-good/candidate/trial/confirm behaviour rather than inventing a bespoke bootloader.
 
 
-## Thingies product naming
+## Thingy product naming
 
-The flight-display hardware described in this repository belongs to **Thingies RedOne**. The engine-interface hardware described as the EIU/ECI belongs to **Thingies BlueOne**. EFIS/EIU/ECI remain engineering role names where useful; enclosure legends, product labels and customer-facing diagrams should use RedOne/BlueOne.
+The flight-display hardware described in this repository belongs to **Thingy RedOne**. The engine-interface hardware described as the EIU/ECI belongs to **Thingy BlueOne**. EFIS/EIU/ECI remain engineering role names where useful; enclosure legends, product labels and customer-facing diagrams should use RedOne/BlueOne.
