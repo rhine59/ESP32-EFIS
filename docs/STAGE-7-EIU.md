@@ -284,6 +284,6 @@ An EIU channel inherits the applicable Horizon presentation-unit preference from
 The EIU and AEF-CAN remain unit-independent at the presentation layer: measurements and persisted thresholds use the defined canonical engineering representation. Horizon converts canonical values to the selected units for display and converts installer-entered threshold values back to canonical form before persistence/transfer. Changing display units therefore changes neither the physical measurement nor the underlying alarm/caution thresholds.
 
 
-## Product naming — Thingies BlueOne
+## Product naming — Thingy BlueOne
 
-The customer-facing name for this engine-interface product is **Thingies BlueOne**. This document retains **EIU** (and, where applicable, **ECI**) as engineering terminology for the engine-interface role, protocol node and existing implementation identifiers. References to the display/commissioning product as a product should use **Thingies RedOne**. This naming rule does not alter AEF-CAN compatibility or existing firmware/package identifiers.
+The customer-facing name for this engine-interface product is **Thingy BlueOne**. This document retains **EIU** (and, where applicable, **ECI**) as engineering terminology for the engine-interface role, protocol node and existing implementation identifiers. References to the display/commissioning product as a product should use **Thingy RedOne**. This naming rule does not alter AEF-CAN compatibility or existing firmware/package identifiers.
