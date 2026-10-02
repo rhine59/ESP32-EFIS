@@ -48,11 +48,11 @@ printf '\n'
 echo "== Isolated admin functional harness =="
 sudo docker compose run --rm --no-deps --entrypoint python efis-ota-admin /app/test_harness.py
 
-echo "== Simulated EIU OTA state machine =="
-sudo docker compose run --rm --no-deps --entrypoint python efis-ota-admin /app/test_eiu_ota.py
+echo "== Simulated SMUX OTA state machine =="
+sudo docker compose run --rm --no-deps --entrypoint python efis-ota-admin /app/test_smux_ota.py
 
-echo "== Simulated AEF-CAN EIU OTA transport =="
-sudo docker compose run --rm --no-deps --entrypoint python efis-ota-admin /app/test_eiu_can_ota.py
+echo "== Simulated AEF-CAN SMUX OTA transport =="
+sudo docker compose run --rm --no-deps --entrypoint python efis-ota-admin /app/test_smux_can_ota.py
 
 echo "== End-to-end resumable OTA simulation =="
 sudo docker compose run --rm --no-deps --entrypoint python efis-ota-admin /app/test_end_to_end_ota.py
