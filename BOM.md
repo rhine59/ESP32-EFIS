@@ -256,6 +256,6 @@ ESP32-S3 is not frozen for the EIU. Perform an MCU comparison before PCB freeze.
 V1 commissioning uses explicit channel role/sender-profile assignment plus automatic compatibility/fault detection, not semantic auto-identification. Horizon is a maintenance gateway rather than an AEF-CAN operational master.
 
 
-## Thingies product naming
+## Thingy product naming
 
-BOM items for the EFIS/flight-display product are associated with **Thingies RedOne**. BOM items for the engine-interface EIU/ECI are associated with **Thingies BlueOne**. Existing technical component and subsystem identifiers are retained for traceability.
+BOM items for the EFIS/flight-display product are associated with **Thingy RedOne**. BOM items for the engine-interface EIU/ECI are associated with **Thingy BlueOne**. Existing technical component and subsystem identifiers are retained for traceability.
