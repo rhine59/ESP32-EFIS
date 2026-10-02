@@ -258,4 +258,4 @@ V1 commissioning uses explicit channel role/sender-profile assignment plus autom
 
 ## Thingies product naming
 
-BOM items for the EFIS/flight-display product are associated with **Thingies red1**. BOM items for the engine-interface EIU/ECI are associated with **Thingies yellow1**. Existing technical component and subsystem identifiers are retained for traceability.
+BOM items for the EFIS/flight-display product are associated with **Thingies RedOne**. BOM items for the engine-interface EIU/ECI are associated with **Thingies BlueOne**. Existing technical component and subsystem identifiers are retained for traceability.
