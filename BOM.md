@@ -254,3 +254,8 @@ The EIU and Horizon use independent protected aircraft-power branches; EIU power
 ESP32-S3 is not frozen for the EIU. Perform an MCU comparison before PCB freeze. Likewise, the former 12/12/7 connector counts are packaging concepts only and must not drive the sensor/harness design. Actual Rotax installation/sender survey and thermocouple wiring requirements determine contacts and connector family.
 
 V1 commissioning uses explicit channel role/sender-profile assignment plus automatic compatibility/fault detection, not semantic auto-identification. Horizon is a maintenance gateway rather than an AEF-CAN operational master.
+
+
+## Thingies product naming
+
+BOM items for the EFIS/flight-display product are associated with **Thingies red1**. BOM items for the engine-interface EIU/ECI are associated with **Thingies yellow1**. Existing technical component and subsystem identifiers are retained for traceability.
