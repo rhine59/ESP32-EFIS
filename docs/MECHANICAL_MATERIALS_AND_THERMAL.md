@@ -1,8 +1,8 @@
-# Thingies RedOne / BlueOne mechanical materials and thermal standard
+# Thingy RedOne / BlueOne mechanical materials and thermal standard
 
 Status: **ADOPTED design direction — validate by prototype test before production freeze.**
 
-This document records the current materials, enclosure fastening and thermal-management decisions for the Thingies **RedOne** EFIS and **BlueOne** Engine Interface Unit (EIU).
+This document records the current materials, enclosure fastening and thermal-management decisions for the Thingy **RedOne** EFIS and **BlueOne** Engine Interface Unit (EIU).
 
 ## 3D-printing materials
 
