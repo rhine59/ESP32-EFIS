@@ -21,7 +21,7 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 - **Stage 4 — Physical interfaces / enclosure freeze:** optical window, static fittings, magnetometer harness, GNSS antenna/receiver interface, mounting and final enclosure details.
 - **Stage 5 — Custom carrier PCB:** fabricate/populate the integrated carrier only after bench and physical interfaces are mature.
 - **Stage 6 — Aircraft installation / validation:** final aircraft power protection, retained wiring/connectors, GNSS installation hardware, mounting hardware and installation-specific items.
-- **Stage 7 — PROVISIONAL Engine Sensor / EIU integration:** optional remote engine monitoring over AEF-CAN. Does not block Stages 1–6; see `docs/STAGE-7-EIU.md`.
+- **Stage 7 — PROVISIONAL Engine Sensor / SMUX integration:** optional remote engine monitoring over AEF-CAN. Does not block Stages 1–6; see `docs/STAGE-7-SMUX.md`.
 
 ## Purchasing status and sources
 
@@ -149,27 +149,27 @@ See `docs/PROCUREMENT_STATUS_2026-09-16.md`, `docs/GNSS_DISPLAY.md`, `docs/POWER
 - **Engine sensors:** add a keyed, positively retained enclosure-accessible multiway connector/harness provision for CHT, EGT, oil temperature, oil pressure and coolant/water temperature. Connector family, sender-specific conditioning and exact parts are **SELECTION REQUIRED**; nothing is ordered by this decision.
 - **GNSS:** supersede the earlier dedicated GNSS connector/bench-antenna direction with a **USB GPS mouse/receiver — SELECTION REQUIRED**. It must be validated for ESP32-S3 USB-host operation, protocol support, power demand and mechanical retention before procurement/freeze. A USB GPS mouse is an active USB-powered GNSS receiver, not a passive electrical device.
 
-## Remote Engine Interface Unit — planning BOM
+## Remote Sensor Multiplexer — planning BOM
 
-The direct engine-sensor connector at Horizon is superseded by a separate **Engine Interface Unit (EIU)**. For initial planning assume a conventional Rotax 912-series installation, while verifying the actual engine variant/serial/configuration before freezing sender curves, ranges or limits.
+The direct engine-sensor connector at Horizon is superseded by a separate **Sensor Multiplexer (SMUX)**. For initial planning assume a conventional Rotax 912-series installation, while verifying the actual engine variant/serial/configuration before freezing sender curves, ranges or limits.
 
-| EIU item/function | V1 direction | Status |
+| SMUX item/function | V1 direction | Status |
 |---|---|---|
-| EIU enclosure + sensor connectors | Compact black-plastic ULM/microlight-headset-style locking circular connectors; splash/water-resistant installation, not necessarily waterproof | SELECTION REQUIRED |
-| EIU processor | Small MCU with watchdog, CAN and adequate diagnostics | SELECTION REQUIRED |
+| SMUX enclosure + sensor connectors | Compact black-plastic ULM/microlight-headset-style locking circular connectors; splash/water-resistant installation, not necessarily waterproof | SELECTION REQUIRED |
+| SMUX processor | Small MCU with watchdog, CAN and adequate diagnostics | SELECTION REQUIRED |
 | Analogue conversion | External precision ADC / sender-specific front ends | SELECTION REQUIRED |
 | EGT channels | 2 × K-type thermocouple front ends with cold-junction compensation and open-sensor detection | SELECTION REQUIRED |
 | Head/coolant temperature | 2 channels, exact Rotax sender/transfer function selected by installation | SELECTION REQUIRED |
 | Oil temperature | Rotax-compatible sender conditioning | SELECTION REQUIRED |
 | Oil pressure | Sender-specific input; exact installed Rotax sender generation/range must be verified | SELECTION REQUIRED |
-| EIU ↔ Horizon bus | **Protected non-isolated Classical CAN** with explicit reference/ground strategy; galvanic isolation only if installation testing justifies it | ADOPTED BASELINE |
-| EIU power | Protected aircraft supply with local regulation/filtering | DESIGN REQUIRED |
+| SMUX ↔ Horizon bus | **Protected non-isolated Classical CAN** with explicit reference/ground strategy; galvanic isolation only if installation testing justifies it | ADOPTED BASELINE |
+| SMUX power | Protected aircraft supply with local regulation/filtering | DESIGN REQUIRED |
 | Diagnostics | Open/short/plausibility, sequence/freshness, raw + engineering values | DESIGN REQUIRED |
 
-The EIU is monitoring-only. It must not become necessary for engine operation and must not disturb an existing engine-control or required indication circuit. No EIU parts are marked ordered by this planning update.
+The SMUX is monitoring-only. It must not become necessary for engine operation and must not disturb an existing engine-control or required indication circuit. No SMUX parts are marked ordered by this planning update.
 
 
-## Stage 7 — provisional EIU / AEF-CAN BOM addition
+## Stage 7 — provisional SMUX / AEF-CAN BOM addition
 
 These items are **provisional** and are not instructions to purchase yet. Exact transceiver/isolation/protection and sensor-front-end parts will be frozen after electrical design and installed-engine survey.
 
@@ -180,25 +180,25 @@ These items are **provisional** and are not instructions to purchase yet. Exact 
 | CAN protection | ESD/transient protection appropriate to final interface | Horizon carrier | 1 set | DESIGN REQUIRED |
 | CAN connector | keyed locking CAN-H/CAN-L/reference/shield provision; coordinate with final Horizon enclosure interface | Horizon enclosure | 1 | SELECTION REQUIRED |
 | CAN cable | twisted pair, installation length after aircraft survey | aircraft harness | as required | DEFERRED |
-| EIU MCU | MCU with watchdog + Classical CAN; ESP32-S3 remains candidate but must be compared with suitable industrial/deterministic alternatives before PCB freeze | EIU | 1 | DESIGN REVIEW REQUIRED |
-| EIU CAN transceiver | 3.3 V compatible protected Classical CAN transceiver; non-isolated baseline, isolation only if testing/installation requires it | EIU | 1 | SELECTION REQUIRED |
-| EIU termination | 120 ohm if EIU is opposite physical bus end | EIU | 1 | DESIGN REQUIRED |
-| EIU protected power | aircraft input protection, filtering and local rails | EIU | 1 set | DESIGN REQUIRED |
-| Precision ADC/front ends | sender-specific analogue conversion | EIU | as required | DESIGN REQUIRED |
-| K-type thermocouple front ends | cold-junction compensation + open-sensor detection | EIU | provision for 4 EGT | DESIGN REQUIRED |
-| Temperature sender interfaces | installed Rotax sender-specific | EIU | as required | SURVEY REQUIRED |
-| Oil-pressure interface | installed sender generation/range-specific | EIU | 1 | SURVEY REQUIRED |
-| RPM conditioner | protected interface appropriate to selected RPM source | EIU | 1 | SURVEY REQUIRED |
-| EIU J1 ENGINE TEMP panel socket | Connector/contact count derived from actual sender/harness survey including thermocouple termination requirements; earlier 12-way concept is illustrative only | EIU | 1 | SURVEY + SELECTION REQUIRED — DO NOT ORDER |
+| SMUX MCU | MCU with watchdog + Classical CAN; ESP32-S3 remains candidate but must be compared with suitable industrial/deterministic alternatives before PCB freeze | SMUX | 1 | DESIGN REVIEW REQUIRED |
+| SMUX CAN transceiver | 3.3 V compatible protected Classical CAN transceiver; non-isolated baseline, isolation only if testing/installation requires it | SMUX | 1 | SELECTION REQUIRED |
+| SMUX termination | 120 ohm if SMUX is opposite physical bus end | SMUX | 1 | DESIGN REQUIRED |
+| SMUX protected power | aircraft input protection, filtering and local rails | SMUX | 1 set | DESIGN REQUIRED |
+| Precision ADC/front ends | sender-specific analogue conversion | SMUX | as required | DESIGN REQUIRED |
+| K-type thermocouple front ends | cold-junction compensation + open-sensor detection | SMUX | provision for 4 EGT | DESIGN REQUIRED |
+| Temperature sender interfaces | installed Rotax sender-specific | SMUX | as required | SURVEY REQUIRED |
+| Oil-pressure interface | installed sender generation/range-specific | SMUX | 1 | SURVEY REQUIRED |
+| RPM conditioner | protected interface appropriate to selected RPM source | SMUX | 1 | SURVEY REQUIRED |
+| SMUX J1 ENGINE TEMP panel socket | Connector/contact count derived from actual sender/harness survey including thermocouple termination requirements; earlier 12-way concept is illustrative only | SMUX | 1 | SURVEY + SELECTION REQUIRED — DO NOT ORDER |
 | J1 mating cable plug | Matching black-plastic locking cable plug, contacts/termination and strain relief/boot as required | engine harness | 1 | SELECTION REQUIRED — DO NOT ORDER |
-| EIU J2 ENGINE AUX panel socket | Connector/contact count derived from actual sender/harness survey; earlier 12-way concept is illustrative only | EIU | 1 | SURVEY + SELECTION REQUIRED — DO NOT ORDER |
+| SMUX J2 ENGINE AUX panel socket | Connector/contact count derived from actual sender/harness survey; earlier 12-way concept is illustrative only | SMUX | 1 | SURVEY + SELECTION REQUIRED — DO NOT ORDER |
 | J2 mating cable plug | Matching black-plastic locking cable plug, contacts/termination and strain relief/boot as required | engine harness | 1 | SELECTION REQUIRED — DO NOT ORDER |
-| EIU J3 AEF-CAN panel socket | Keyed connector for CAN-H/CAN-L/reference and only those installation conductors deliberately selected after power/harness design; earlier 7-way concept is illustrative only | EIU | 1 | DESIGN + SELECTION REQUIRED — DO NOT ORDER |
-| J3 mating cable plug | Matching black-plastic locking cable plug, contacts/termination and strain relief/boot as required | EIU-to-Horizon harness | 1 | SELECTION REQUIRED — DO NOT ORDER |
-| Connector environmental accessories | Boots, heat-shrink, strain relief, sealing/grommet hardware as needed for splash/water-resistant installation; IP67 not required by current concept | EIU/harness | 1 set | DESIGN REQUIRED |
-| EIU enclosure | vibration/temperature/moisture appropriate; connector orientation should minimise direct splash ingress and permit drip loops | EIU | 1 | SELECTION REQUIRED |
+| SMUX J3 AEF-CAN panel socket | Keyed connector for CAN-H/CAN-L/reference and only those installation conductors deliberately selected after power/harness design; earlier 7-way concept is illustrative only | SMUX | 1 | DESIGN + SELECTION REQUIRED — DO NOT ORDER |
+| J3 mating cable plug | Matching black-plastic locking cable plug, contacts/termination and strain relief/boot as required | SMUX-to-Horizon harness | 1 | SELECTION REQUIRED — DO NOT ORDER |
+| Connector environmental accessories | Boots, heat-shrink, strain relief, sealing/grommet hardware as needed for splash/water-resistant installation; IP67 not required by current concept | SMUX/harness | 1 set | DESIGN REQUIRED |
+| SMUX enclosure | vibration/temperature/moisture appropriate; connector orientation should minimise direct splash ingress and permit drip loops | SMUX | 1 | SELECTION REQUIRED |
 
-The Horizon-side CAN provision is part of making the core EFIS **Stage-7-ready**. The EIU and engine-sensor hardware remain optional/provisional.
+The Horizon-side CAN provision is part of making the core EFIS **Stage-7-ready**. The SMUX and engine-sensor hardware remain optional/provisional.
 
 
 ## USB-C dual-role production interface — 30 September 2026
@@ -218,44 +218,44 @@ One external USB-C port serves both GPS host operation and computer service/prog
 
 ### Stage 7 connector procurement note — 1 October 2026
 
-The EIU connector visual/mechanical target is the **small black-plastic locking circular style used on ULM/microlight headset installations**. Metal-bodied Binder/aerospace-style connectors and industrial M12 connectors shown in earlier concept work are not the current preferred production appearance.
+The SMUX connector visual/mechanical target is the **small black-plastic locking circular style used on ULM/microlight headset installations**. Metal-bodied Binder/aerospace-style connectors and industrial M12 connectors shown in earlier concept work are not the current preferred production appearance.
 
 Do **not** purchase the provisional 12-way/12-way/7-way connector set yet. Those pin counts are packaging concepts only. Freeze the connector family and contact counts after confirming the actual Rotax 912 sensor set, EGT thermocouple termination strategy, wire gauges, contact ratings, temperature/vibration requirements and the final CAN/power pin allocation. The installation needs sensible splash/water resistance, not full waterproof/IP67 performance.
 
 
-### EIU sensor-power BOM rule — 1 October 2026
+### SMUX sensor-power BOM rule — 1 October 2026
 
-Do not add a generic +5 V engine-sensor supply as a frozen BOM requirement. EGT thermocouples are self-generating; resistive temperature senders use EIU measurement excitation; oil-pressure and RPM power/interface requirements depend on the actual installed sender/source. Any required regulated sender supply is generated, protected and fault-contained locally within the EIU. The EIU itself should preferably use an independently protected aircraft-supply branch rather than the EFIS regulated electronics. Sender-specific regulator/current-limit/protection components remain **DESIGN/SURVEY REQUIRED**.
+Do not add a generic +5 V engine-sensor supply as a frozen BOM requirement. EGT thermocouples are self-generating; resistive temperature senders use SMUX measurement excitation; oil-pressure and RPM power/interface requirements depend on the actual installed sender/source. Any required regulated sender supply is generated, protected and fault-contained locally within the SMUX. The SMUX itself should preferably use an independently protected aircraft-supply branch rather than the EFIS regulated electronics. Sender-specific regulator/current-limit/protection components remain **DESIGN/SURVEY REQUIRED**.
 
 
-### EIU USB-C SERVICE / factory-programming additions — 1 October 2026
+### SMUX USB-C SERVICE / factory-programming additions — 1 October 2026
 
 | Item | Requirement | Status |
 |---|---|---|
-| EIU USB-C SERVICE receptacle | External USB-C connector for factory flashing, development, diagnostics and recovery | DESIGN REQUIRED |
-| EIU USB CC/device circuitry | Correct ESP32-S3 USB-device/service role handling; native USB preferred | DESIGN REQUIRED |
-| EIU USB ESD protection | Low-capacitance protection and appropriate PCB layout at external service connector | DESIGN REQUIRED |
-| EIU USB bench-power path | Permit USB 5 V to power required service/digital circuitry for bench programming | DESIGN REQUIRED |
-| EIU power-path isolation | Reverse-current blocking/ORing/current limiting so USB VBUS and aircraft supply cannot back-feed each other | DESIGN REQUIRED |
-| EIU USB/service-present detection | Allow firmware/manufacturing harness to identify service/bench operation where useful | DESIGN REQUIRED |
-| EIU internal recovery pads | Fallback GND/reset/boot plus serial/debug/programming access appropriate to selected MCU | DESIGN REQUIRED |
-| EIU factory programming cable | USB-C data-capable cable for development/production station | ACQUIRE LATER |
-| EIU factory provisioning script | Flash bootloader/partition/factory app, provision identity, reboot/interrogate and record test result | SOFTWARE REQUIRED |
+| SMUX USB-C SERVICE receptacle | External USB-C connector for factory flashing, development, diagnostics and recovery | DESIGN REQUIRED |
+| SMUX USB CC/device circuitry | Correct ESP32-S3 USB-device/service role handling; native USB preferred | DESIGN REQUIRED |
+| SMUX USB ESD protection | Low-capacitance protection and appropriate PCB layout at external service connector | DESIGN REQUIRED |
+| SMUX USB bench-power path | Permit USB 5 V to power required service/digital circuitry for bench programming | DESIGN REQUIRED |
+| SMUX power-path isolation | Reverse-current blocking/ORing/current limiting so USB VBUS and aircraft supply cannot back-feed each other | DESIGN REQUIRED |
+| SMUX USB/service-present detection | Allow firmware/manufacturing harness to identify service/bench operation where useful | DESIGN REQUIRED |
+| SMUX internal recovery pads | Fallback GND/reset/boot plus serial/debug/programming access appropriate to selected MCU | DESIGN REQUIRED |
+| SMUX factory programming cable | USB-C data-capable cable for development/production station | ACQUIRE LATER |
+| SMUX factory provisioning script | Flash bootloader/partition/factory app, provision identity, reboot/interrogate and record test result | SOFTWARE REQUIRED |
 
-The external USB-C SERVICE connector is now the preferred factory/development programming route. Pogo/test pads are retained as fallback/recovery rather than the primary operator interface. Routine production firmware upgrades remain signed Horizon -> AEF-CAN -> EIU updates.
+The external USB-C SERVICE connector is now the preferred factory/development programming route. Pogo/test pads are retained as fallback/recovery rather than the primary operator interface. Routine production firmware upgrades remain signed Horizon -> AEF-CAN -> SMUX updates.
 
-Do not freeze a USB power mux/ideal-diode/current-limit part until the EIU aircraft-input regulator and total bench-service power requirement are known. Likewise, do not enable irreversible ESP32 security/eFuse settings in the ordinary development flash process; production security provisioning requires a separate reviewed procedure.
+Do not freeze a USB power mux/ideal-diode/current-limit part until the SMUX aircraft-input regulator and total bench-service power requirement are known. Likewise, do not enable irreversible ESP32 security/eFuse settings in the ordinary development flash process; production security provisioning requires a separate reviewed procedure.
 
 
 ### Stage-7 architecture review — 1 October 2026
 
-The EIU and Horizon use independent protected aircraft-power branches; EIU power is not sourced from Horizon regulated rails. The CAN baseline is now protected **non-isolated** Classical CAN with deliberate reference/ground design. Galvanic isolation is retained as an option only when common-mode/noise/installation testing justifies its additional complexity.
+The SMUX and Horizon use independent protected aircraft-power branches; SMUX power is not sourced from Horizon regulated rails. The CAN baseline is now protected **non-isolated** Classical CAN with deliberate reference/ground design. Galvanic isolation is retained as an option only when common-mode/noise/installation testing justifies its additional complexity.
 
-ESP32-S3 is not frozen for the EIU. Perform an MCU comparison before PCB freeze. Likewise, the former 12/12/7 connector counts are packaging concepts only and must not drive the sensor/harness design. Actual Rotax installation/sender survey and thermocouple wiring requirements determine contacts and connector family.
+ESP32-S3 is not frozen for the SMUX. Perform an MCU comparison before PCB freeze. Likewise, the former 12/12/7 connector counts are packaging concepts only and must not drive the sensor/harness design. Actual Rotax installation/sender survey and thermocouple wiring requirements determine contacts and connector family.
 
 V1 commissioning uses explicit channel role/sender-profile assignment plus automatic compatibility/fault detection, not semantic auto-identification. Horizon is a maintenance gateway rather than an AEF-CAN operational master.
 
 
 ## Thingy product naming
 
-BOM items for the EFIS/flight-display product are associated with **Thingy RedOne**. BOM items for the engine-interface EIU/ECI are associated with **Thingy BlueOne**. Existing technical component and subsystem identifiers are retained for traceability.
+BOM items for the EFIS/flight-display product are associated with **Thingy RedOne**. BOM items for the engine-interface SMUX/SMUX are associated with **Thingy BlueOne**. Existing technical component and subsystem identifiers are retained for traceability.
