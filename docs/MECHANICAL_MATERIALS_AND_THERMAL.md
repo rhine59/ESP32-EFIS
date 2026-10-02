@@ -1,8 +1,8 @@
-# Thingies red1 / yellow1 mechanical materials and thermal standard
+# Thingies red1 / blue1 mechanical materials and thermal standard
 
 Status: **ADOPTED design direction — validate by prototype test before production freeze.**
 
-This document records the current materials, enclosure fastening and thermal-management decisions for the Thingies **red1** EFIS and **yellow1** Engine Interface Unit (EIU).
+This document records the current materials, enclosure fastening and thermal-management decisions for the Thingies **red1** EFIS and **blue1** Engine Interface Unit (EIU).
 
 ## 3D-printing materials
 
@@ -12,7 +12,7 @@ This document records the current materials, enclosure fastening and thermal-man
 - **PA-CF (carbon-fibre nylon)** — reserve for selected high-load/high-temperature parts where testing demonstrates a real advantage. Do not make it the default enclosure material merely for stiffness/appearance.
 - **TPU (nominally 95A unless testing selects otherwise)** — seals, feet and vibration-isolation components.
 
-ASA may be specified in different colours. Production BOM entries shall ultimately identify **manufacturer, exact ASA grade and colour**, not merely “ASA”, because pigment and formulation can affect thermal/UV behaviour. Enclosure colour and product identity are separate decisions; red1 need not have an all-red enclosure and yellow1 need not have an all-yellow enclosure.
+ASA may be specified in different colours. Production BOM entries shall ultimately identify **manufacturer, exact ASA grade and colour**, not merely “ASA”, because pigment and formulation can affect thermal/UV behaviour. Enclosure colour and product identity are separate decisions; red1 need not have an all-red enclosure and blue1 need not have an all-yellow enclosure.
 
 ## Threaded enclosure fasteners
 
@@ -22,7 +22,7 @@ Documentation, CAD and BOMs shall use the term **heat-set threaded insert** for 
 
 Boss geometry shall be designed for the selected insert rather than using a generic printed hole. Provide adequate radial wall thickness, insertion lead-in, insert depth and local ribs/support. Insert installation temperature and process shall be validated on the final ASA grade.
 
-For yellow1, heat-set inserts remain an option, but mechanically captive nuts or other metal insert systems remain candidates until the EIU mounting location, temperature and vibration environment are frozen and tested.
+For blue1, heat-set inserts remain an option, but mechanically captive nuts or other metal insert systems remain candidates until the EIU mounting location, temperature and vibration environment are frozen and tested.
 
 ## red1 thermal design
 
@@ -60,13 +60,13 @@ Test a representative assembled unit at minimum under:
 
 Record internal/PCB temperature and critical component temperatures until thermal equilibrium. Use the results to decide whether an internal aluminium spreader or other passive measure is required.
 
-## yellow1 EIU thermal design
+## blue1 EIU thermal design
 
-Do not assume the red1 ASA enclosure solution automatically applies to yellow1.
+Do not assume the red1 ASA enclosure solution automatically applies to blue1.
 
-The yellow1 mounting location may expose it to higher ambient temperature, vibration and harness/connector loads. Its PCB should use appropriate copper areas and thermal vias from the outset. An internal aluminium spreader, enclosure-coupled heat path, PA-CF enclosure component, or alternative enclosure/material may be selected after the actual installation environment is defined.
+The blue1 mounting location may expose it to higher ambient temperature, vibration and harness/connector loads. Its PCB should use appropriate copper areas and thermal vias from the outset. An internal aluminium spreader, enclosure-coupled heat path, PA-CF enclosure component, or alternative enclosure/material may be selected after the actual installation environment is defined.
 
-Before yellow1 enclosure freeze, establish and test its maximum/minimum ambient temperature, vibration, moisture/contamination exposure and connector mechanical loads.
+Before blue1 enclosure freeze, establish and test its maximum/minimum ambient temperature, vibration, moisture/contamination exposure and connector mechanical loads.
 
 ## Design principle
 
