@@ -496,3 +496,10 @@ EIU CAN simulator migration completed: it now models 7-byte FW_DATA, 4 KiB CRC/A
 ### Horizon per-measurement units — 1 October 2026
 
 **ADOPTED / IMPLEMENTATION PENDING.** Presentation units are centrally controlled by Horizon and independently selectable by measurement type, not by one global metric/imperial mode. Oil pressure can therefore use **psi** while barometric pressure uses **hPa**. EIU channels inherit units from their semantic function; EIU/AEF-CAN measurements and thresholds remain canonical and unit-independent. Changing presentation units does not alter persisted threshold meaning.
+
+
+## Thingies product-family naming — 2 October 2026
+
+**ADOPTED.** The umbrella customer brand is **Thingies**. The EFIS/flight-display product is **red1** and the engine-interface product is **yellow1**. Customer-facing documentation should use **Thingies red1** and **Thingies yellow1**.
+
+Existing technical terms remain meaningful: **EFIS** describes the red1 system role and **EIU/ECI** describes the yellow1 engine-interface role. Stable repository, firmware, AEF-CAN, Device ID, Docker, OTA, signing and compatibility identifiers are not renamed merely for branding. The previous **MicroSky Avionics / Horizon** product-brand decision is superseded. “Horizon” may still appear where it literally means the artificial-horizon/PFD instrument page.
