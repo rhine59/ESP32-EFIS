@@ -129,23 +129,23 @@ ASI/IAS capability has been removed from scope. The BMP585 uses the aircraft **S
 
 ## Product identity — 2 October 2026
 
-The adopted development brand is **Thingies**. The EFIS/flight-display product is **RedOne** and the engine-interface product is **BlueOne**. Customer-facing references should therefore use **Thingies RedOne** and **Thingies BlueOne**.
+The adopted development brand is **Thingy**. The EFIS/flight-display product is **RedOne** and the engine-interface product is **BlueOne**. Customer-facing references should therefore use **Thingy RedOne** and **Thingy BlueOne**.
 
 Engineering acronyms and stable implementation identifiers remain valid where they describe technical roles: RedOne is the EFIS; BlueOne is the engine interface (EIU/ECI in existing architecture material). Repository, protocol, Device ID, Docker, OTA and cryptographic identifiers are not automatically renamed by this branding decision. See `docs/BRANDING.md`.
 
 ## Customer support chatbot — 27 September 2026
 
-A Dockerized **Thingies RedOne Support** service is staged under `support-service/`. It retrieves approved product documentation, records customer interactions/feedback and builds a candidate Q&A queue. Customer conversations never become authoritative automatically: a human reviewer must validate candidates against current product documents before they enter the validated Q&A database. See `docs/SUPPORT_SERVICE.md` and `support-service/README.md`.
+A Dockerized **Thingy RedOne Support** service is staged under `support-service/`. It retrieves approved product documentation, records customer interactions/feedback and builds a candidate Q&A queue. Customer conversations never become authoritative automatically: a human reviewer must validate candidates against current product documents before they enter the validated Q&A database. See `docs/SUPPORT_SERVICE.md` and `support-service/README.md`.
 
 
 ## Server platform — 29 September 2026
 
-The proposed server-side infrastructure baseline is a **£750-class, 64 GB RAM / 1 TB NVMe virtualisation host** running Proxmox VE, with separate production Docker, development/test and monitoring VMs plus an optional k3s lab. Existing Docker Compose services should migrate first without requiring Kubernetes; k3s is a deliberate later evaluation path. This platform supports OTA, accounts/licensing, Thingies RedOne Support and related services and is **not part of the flight hardware baseline**. See `docs/SERVER_PLATFORM.md`.
+The proposed server-side infrastructure baseline is a **£750-class, 64 GB RAM / 1 TB NVMe virtualisation host** running Proxmox VE, with separate production Docker, development/test and monitoring VMs plus an optional k3s lab. Existing Docker Compose services should migrate first without requiring Kubernetes; k3s is a deliberate later evaluation path. This platform supports OTA, accounts/licensing, Thingy RedOne Support and related services and is **not part of the flight hardware baseline**. See `docs/SERVER_PLATFORM.md`.
 
 
 ## AEF-CAN aircraft data bus — 30 September 2026
 
-**ADOPTED / PROTOCOL STAGED.** The project now defines **AEF-CAN (Aircraft Experimental Flight CAN)** as the extensible internal data bus for the proposed Thingies BlueOne engine interface (EIU/ECI), Thingies RedOne display and future aircraft modules. It is deliberately hardware-independent and describes aircraft measurements and validity rather than display presentation.
+**ADOPTED / PROTOCOL STAGED.** The project now defines **AEF-CAN (Aircraft Experimental Flight CAN)** as the extensible internal data bus for the proposed Thingy BlueOne engine interface (EIU/ECI), Thingy RedOne display and future aircraft modules. It is deliberately hardware-independent and describes aircraft measurements and validity rather than display presentation.
 
 V1 uses 500 kbit/s Classical CAN with 11-bit identifiers. The current ESP32-S3 TWAI controller requires an external CAN transceiver and is Classical-CAN-only; future CAN FD hardware can be added without redefining the application-level measurement semantics.
 
