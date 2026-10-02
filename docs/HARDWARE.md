@@ -253,3 +253,8 @@ Factory provisioning should be scriptable over USB and may flash the bootloader,
 - **Connectors:** previous 12/12/7 pin counts are conceptual only. Freeze only after the installed engine/sender/harness survey, including thermocouple termination requirements.
 - **USB-C SERVICE:** retain as local factory/workshop interface, preferably recessed/protected. USB bench power is scoped to service/digital operation; it need not power the full sensor environment.
 - **Boot architecture:** use mature platform A/B OTA/rollback facilities where they meet the required known-good/candidate/trial/confirm behaviour rather than inventing a bespoke bootloader.
+
+
+## Thingies product naming
+
+The flight-display hardware described in this repository belongs to **Thingies red1**. The engine-interface hardware described as the EIU/ECI belongs to **Thingies yellow1**. EFIS/EIU/ECI remain engineering role names where useful; enclosure legends, product labels and customer-facing diagrams should use red1/yellow1.
