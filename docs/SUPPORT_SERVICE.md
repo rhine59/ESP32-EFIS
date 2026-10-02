@@ -1,11 +1,11 @@
-# MicroSky Horizon customer support chatbot
+# Thingies red1 customer support chatbot
 
 **Status:** ARCHITECTURE ADOPTED / MVP STAGED / RUNTIME VALIDATION PENDING  
 **Date:** 27 September 2026
 
 ## Objective
 
-Provide a Docker-hosted MicroSky Horizon customer support service with access to approved product documentation and a controlled learning loop that builds a useful, **validated Q&A knowledge base** from real customer interactions.
+Provide a Docker-hosted Thingies red1 customer support service with access to approved product documentation and a controlled learning loop that builds a useful, **validated Q&A knowledge base** from real customer interactions.
 
 ## Core design decision
 
@@ -55,7 +55,7 @@ Provider URL/key/model are runtime secrets/configuration, not repository content
 
 **IMPLEMENTED IN REPOSITORY / RUNTIME EVALUATION PENDING.** PostgreSQL is now based on the pgvector PG17 image. Approved document sections receive embeddings through a configurable OpenAI-compatible embedding endpoint. Natural-language questions are embedded and ranked against document vectors by cosine distance before grounded LLM generation. Lexical retrieval remains the fail-safe fallback if embeddings are not configured or the provider fails.
 
-Embedding model and dimensionality are deployment configuration and must be frozen per index generation. Model/dimension changes require controlled re-embedding/migration. Retrieval quality still requires a representative Horizon support-question test set before public launch.
+Embedding model and dimensionality are deployment configuration and must be frozen per index generation. Model/dimension changes require controlled re-embedding/migration. Retrieval quality still requires a representative red1 support-question test set before public launch.
 
 
 ## Answer status and customer resolution — 27 September 2026
@@ -87,7 +87,7 @@ The resolution question is available in both modes: tap Yes/No or answer an equi
 
 ### Implementation direction
 
-Add provider-neutral STT and TTS adapters so deployments can use hosted or local speech services. Web clients use browser microphone/audio capabilities where appropriate; iOS/Android customer apps use native microphone/audio APIs. Always provide keyboard fallback. Production gates include permission UX, transcription accuracy tests using MicroSky/Horizon terminology, noisy-cockpit testing where relevant, accessibility, latency/cost limits, privacy review and abuse/rate controls.
+Add provider-neutral STT and TTS adapters so deployments can use hosted or local speech services. Web clients use browser microphone/audio capabilities where appropriate; iOS/Android customer apps use native microphone/audio APIs. Always provide keyboard fallback. Production gates include permission UX, transcription accuracy tests using Thingies/red1/yellow1 terminology, noisy-cockpit testing where relevant, accessibility, latency/cost limits, privacy review and abuse/rate controls.
 
 
 ## Voice/chat implementation checkpoint — 27 September 2026
