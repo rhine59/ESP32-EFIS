@@ -282,3 +282,8 @@ At minimum, independent preferences shall be possible for speed, distance, altit
 An EIU channel inherits the applicable Horizon presentation-unit preference from its commissioned semantic function. For example, a channel assigned as OIL PRESSURE displays and accepts commissioning thresholds in the Horizon oil-pressure unit, such as psi. A unit selector exposed from a channel-commissioning screen is a shortcut to the corresponding Horizon unit preference; it must not create a second channel-local or EIU-local unit setting.
 
 The EIU and AEF-CAN remain unit-independent at the presentation layer: measurements and persisted thresholds use the defined canonical engineering representation. Horizon converts canonical values to the selected units for display and converts installer-entered threshold values back to canonical form before persistence/transfer. Changing display units therefore changes neither the physical measurement nor the underlying alarm/caution thresholds.
+
+
+## Product naming — Thingies yellow1
+
+The customer-facing name for this engine-interface product is **Thingies yellow1**. This document retains **EIU** (and, where applicable, **ECI**) as engineering terminology for the engine-interface role, protocol node and existing implementation identifiers. References to the display/commissioning product as a product should use **Thingies red1**. This naming rule does not alter AEF-CAN compatibility or existing firmware/package identifiers.
