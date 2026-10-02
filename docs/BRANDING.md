@@ -1,4 +1,4 @@
-# Thingies product branding
+# Thingy product branding
 
 **Status:** WORKING BRAND / NOT LEGALLY CLEARED  
 **Adopted for development:** 2 October 2026
@@ -7,16 +7,16 @@
 
 The project will use the following customer-facing product identity during development:
 
-- **Master brand:** **Thingies**
+- **Master brand:** **Thingy**
 - **EFIS / flight-display product:** **RedOne**
 - **Engine-interface product:** **BlueOne**
-- **Full product references:** **Thingies RedOne** and **Thingies BlueOne**
+- **Full product references:** **Thingy RedOne** and **Thingy BlueOne**
 - **Technical roles:** RedOne is the EFIS; BlueOne is the engine interface currently described technically in the architecture as the EIU/ECI.
 
 A simple instrument presentation may use:
 
 ```text
-Thingies
+Thingy
 RedOne
 Flight Display
 ```
@@ -24,16 +24,16 @@ Flight Display
 The companion engine-interface enclosure, commissioning UI and support material should use:
 
 ```text
-Thingies
+Thingy
 BlueOne
 Engine Interface
 ```
 
 ## Naming rule
 
-**Thingies** is the umbrella brand. **RedOne** and **BlueOne** are product names, not replacements for every engineering acronym.
+**Thingy** is the umbrella brand. **RedOne** and **BlueOne** are product names, not replacements for every engineering acronym.
 
-Customer-facing documentation, boot/splash screens, support material, diagrams and future packaging should say **Thingies RedOne** and **Thingies BlueOne**. Technical prose may retain **EFIS** and **EIU/ECI** where those terms describe a system role, protocol endpoint or established implementation identifier.
+Customer-facing documentation, boot/splash screens, support material, diagrams and future packaging should say **Thingy RedOne** and **Thingy BlueOne**. Technical prose may retain **EFIS** and **EIU/ECI** where those terms describe a system role, protocol endpoint or established implementation identifier.
 
 This distinction is intentional: branding can evolve without silently changing wire protocols, firmware package identities, source-code symbols, device IDs or deployed service names.
 
@@ -54,8 +54,8 @@ Those require explicit migration decisions if they are ever changed.
 
 From this checkpoint:
 
-- use **Thingies RedOne** when referring to the customer product that provides the EFIS/flight-display functions;
-- use **Thingies BlueOne** when referring to the customer engine-interface product;
+- use **Thingy RedOne** when referring to the customer product that provides the EFIS/flight-display functions;
+- use **Thingy BlueOne** when referring to the customer engine-interface product;
 - use **RedOne** and **BlueOne** as the short product names once context is clear;
 - retain **EFIS**, **EIU/ECI**, AEF-CAN and other engineering terms when describing architecture;
 - do not introduce the superseded working names **MicroSky Avionics**, **MicroSky Horizon** or **Horizon** as the product name in new material.
@@ -68,4 +68,4 @@ These remain working names until appropriate trademark, company/trading-name, do
 
 ## Before commercial freeze
 
-Complete and document trademark/name/domain checks, final wordmark/logo and colour rules, enclosure marking rules, product-label/serial-number format, and the relationship between the Thingies trading brand and the legal manufacturer identity.
+Complete and document trademark/name/domain checks, final wordmark/logo and colour rules, enclosure marking rules, product-label/serial-number format, and the relationship between the Thingy trading brand and the legal manufacturer identity.
