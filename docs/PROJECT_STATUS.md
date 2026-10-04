@@ -503,3 +503,5 @@ SMUX CAN simulator migration completed: it now models 7-byte FW_DATA, 4 KiB CRC/
 **ADOPTED.** The umbrella customer brand is **Thingies**. The EFIS/flight-display product is **red1** and the engine-interface product is **yellow1**. Customer-facing documentation should use **Thingies red1** and **Thingies yellow1**.
 
 Existing technical terms remain meaningful: **EFIS** describes the red1 system role and **SMUX/SMUX** describes the yellow1 engine-interface role. Stable repository, firmware, AEF-CAN, Device ID, Docker, OTA, signing and compatibility identifiers are not renamed merely for branding. The previous **MicroSky Avionics / Horizon** product-brand decision is superseded. “Horizon” may still appear where it literally means the artificial-horizon/PFD instrument page.
+
+Simulator deployment note: **8093 is the reserved Synology host port** for `efis-web-simulator`; 8088 is already allocated to the separate ATOM Monitor load balancer and must not be reused.
