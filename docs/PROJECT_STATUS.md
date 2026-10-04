@@ -538,3 +538,7 @@ The round-display firmware maintenance layout was also adjusted so all status/me
 ### Licence persistence simulation — 4 October 2026
 
 **IMPLEMENTED IN REPOSITORY / RUNTIME VALIDATION NEXT.** The EFIS web simulator now persists the original signed licence envelope and simulation-only verification trust key in a dedicated Docker volume. Startup reloads and locally re-verifies Ed25519 signature, schema, product and Device ID before restoring `VALID`, so the intended reboot path has no licence-service/network dependency. Candidate licences are verified before atomic persistent replacement; explicit Licence Reset removes the installed licence. Synology restart/offline validation is the next test. This does not validate ESP32 protected NVS or physical power-loss behaviour.
+
+### Licence offline reboot persistence test — PASS (2026-10-04)
+
+The Synology simulator successfully acquired and installed a signed DEVELOPMENT licence into the persistent simulator store, was then placed offline, restarted, and returned `VALID` with network offline. Startup therefore reloaded the persisted signed envelope and completed local verification without contacting the licence service. This validates the simulator persistence/offline-verification contract only; ESP32 protected-NVS, power-loss and physical hardware validation remain pending.
