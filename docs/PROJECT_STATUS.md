@@ -529,3 +529,8 @@ The simulator-only release `2.4.1-test.1` completed the full controlled OTA path
 This validates the service/distribution contract and explicit stage/activate separation in the simulator. It does **not** validate ESP32 flashing, A/B partitions, bootloader rollback, power-loss recovery or physical-device OTA. The test payload remains explicitly non-flashable.
 
 The round-display firmware maintenance layout was also adjusted so all status/menu content, including ACTIVATE & REBOOT and BACK, remains within the circular safe area.
+
+
+### Licence development vertical slice — 4 October 2026
+
+**IMPLEMENTED IN REPOSITORY / SYNOLOGY RUNTIME VALIDATION NEXT.** A simulator-only licence service now issues non-expiring DEVELOPMENT licences for the synthetic device through a short-lived challenge and proof-of-possession flow. Licence payloads use deterministic CBOR and Ed25519 exactly as adopted. The simulator retrieves the signed artefact and independently verifies signature, schema, product and immutable Device ID before marking the licence VALID. The signing private key is generated at runtime and retained in a Docker volume, never committed or passed to the simulator. Public-key retrieval is explicitly a simulation-only trust bootstrap; production hardware must receive trust anchors through controlled provisioning. Negative-path and persistence tests remain next.
