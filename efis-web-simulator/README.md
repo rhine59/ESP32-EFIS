@@ -84,3 +84,7 @@ The browser's **Install mock licence (bypass)** control remains only for isolate
 A successfully retrieved signed licence is now stored in the simulator's `efis_sim_state` Docker volume as the original base64url-transported CBOR envelope. The simulation-only public verification key used for that licence is cached separately in the same persistent volume. On process/container startup the simulator reloads the stored artefact and re-verifies the Ed25519 signature, schema, product and immutable Device ID locally before restoring `VALID`; no licence-service or Wi-Fi access is required for this boot check.
 
 Installation uses candidate-first semantics: the downloaded licence is fully verified before the persistent file is atomically replaced. Licence Reset removes the persisted installed licence. This models the intended ESP32 protected-NVS lifecycle, but Docker-volume persistence is not evidence of ESP32 NVS security, atomicity or flash behaviour.
+
+### Persistence runtime result
+
+**PASS — 4 October 2026.** After acquiring a signed DEVELOPMENT licence into the persistent store, the simulator was set offline and its container restarted. It returned `VALID` with network offline, confirming that startup can reload and locally verify the persisted signed licence without contacting the licence service. Physical ESP32 NVS/power-loss behaviour remains unvalidated.
