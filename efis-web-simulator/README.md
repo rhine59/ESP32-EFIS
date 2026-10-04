@@ -22,7 +22,7 @@ LICENSE exercises status/install/reset flows. FIRMWARE UPDATE exercises Wi-Fi st
 docker compose up --build
 ```
 
-Open `http://localhost:8088`.
+Open `http://localhost:8093`.
 
 ## Service integration
 
