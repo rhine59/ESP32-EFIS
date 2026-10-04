@@ -11,6 +11,7 @@ OTA=os.getenv("OTA_BASE_URL","").rstrip("/")
 LIC=os.getenv("LICENSE_BASE_URL","").rstrip("/")
 ALLOW=os.getenv("SIM_ALLOW_MUTATIONS","false").lower()=="true"
 DEVICE_SECRET=os.getenv("DEVICE_SECRET","simulator-development-secret-change-me").encode()
+LICENCE_STORE=Path(os.getenv("LICENSE_STORE","/data/licence.cbor.b64"))
 state={"device_id":DEVICE,"network":"offline","firmware":"2.4.0","staged":None,
        "eiu":{"firmware":"1.7.0","protocol":"1.2","capabilities":["ENGINE_DATA_V1","OTA_V1"]},
        "offline_cache":{"release":None,"ready":False,"sha256":None,"bytes":0},
@@ -27,6 +28,40 @@ def post_json(url, obj):
 def b64u(s):
     return base64.urlsafe_b64decode(s + "="*((4-len(s)%4)%4))
 
+def verify_license_blob(encoded, allow_network_trust=False):
+    env=cbor2.loads(b64u(encoded))
+    if env.get("v")!=1 or env.get("alg")!="Ed25519": raise RuntimeError("unsupported licence envelope")
+    trust_path=LICENCE_STORE.parent/("trust-"+env["kid"]+".pub")
+    if allow_network_trust:
+        trust=get_json(LIC+"/v1/trust/"+env["kid"])
+        if not trust.get("simulation_only"): raise RuntimeError("refusing non-simulator trust bootstrap")
+        pub=b64u(trust["public_key"])
+        trust_path.parent.mkdir(parents=True,exist_ok=True)
+        tmp=trust_path.with_suffix(".tmp"); tmp.write_bytes(pub); os.replace(tmp,trust_path)
+    elif trust_path.exists():
+        pub=trust_path.read_bytes()
+    else:
+        raise RuntimeError("trusted licence verification key not provisioned")
+    Ed25519PublicKey.from_public_bytes(pub).verify(env["sig"],env["payload"])
+    payload=cbor2.loads(env["payload"])
+    if payload.get(1)!=1: raise RuntimeError("unsupported licence schema")
+    if payload.get(2)!="ESP32-EFIS": raise RuntimeError("wrong product in licence")
+    if payload.get(3)!=DEVICE: raise RuntimeError("licence Device ID mismatch")
+    return {"status":"VALID","class":payload.get(7),"license_id":payload.get(4),"kid":env["kid"]}
+
+def persist_license(encoded):
+    LICENCE_STORE.parent.mkdir(parents=True,exist_ok=True)
+    tmp=LICENCE_STORE.with_suffix(".tmp")
+    tmp.write_text(encoded)
+    os.replace(tmp,LICENCE_STORE)
+
+def load_installed_license():
+    if not LICENCE_STORE.exists(): return
+    try:
+        state["license"]=verify_license_blob(LICENCE_STORE.read_text().strip(),False)
+    except Exception as e:
+        state["license"]={"status":"INVALID","class":None,"error":str(e)}
+
 def retrieve_and_verify_license():
     if state["network"]!="online": raise RuntimeError("maintenance Wi-Fi is offline")
     if not LIC: raise RuntimeError("licence service is not configured")
@@ -34,16 +69,9 @@ def retrieve_and_verify_license():
     nonce=ch["challenge"]
     proof=hmac.new(DEVICE_SECRET,(DEVICE+"\n"+nonce).encode(),hashlib.sha256).hexdigest()
     r=post_json(LIC+"/v1/device/license",{"device_id":DEVICE,"challenge":nonce,"proof":proof})
-    env=cbor2.loads(b64u(r["license"]))
-    if env.get("v")!=1 or env.get("alg")!="Ed25519": raise RuntimeError("unsupported licence envelope")
-    trust=get_json(LIC+"/v1/trust/"+env["kid"])
-    if not trust.get("simulation_only"): raise RuntimeError("refusing non-simulator trust bootstrap")
-    Ed25519PublicKey.from_public_bytes(b64u(trust["public_key"])).verify(env["sig"],env["payload"])
-    payload=cbor2.loads(env["payload"])
-    if payload.get(1)!=1: raise RuntimeError("unsupported licence schema")
-    if payload.get(2)!="ESP32-EFIS": raise RuntimeError("wrong product in licence")
-    if payload.get(3)!=DEVICE: raise RuntimeError("licence Device ID mismatch")
-    state["license"]={"status":"VALID","class":payload.get(7),"license_id":payload.get(4),"kid":env["kid"]}
+    candidate=verify_license_blob(r["license"],True)
+    persist_license(r["license"])
+    state["license"]=candidate
     return state["license"]
 
 def manifest():
@@ -121,7 +149,9 @@ class H(SimpleHTTPRequestHandler):
         if self.path=="/api/license/mock-install":
             state["license"]={"status":"VALID","class":body.get("class","DEVELOPMENT")}; return self.sendj(state)
         if self.path=="/api/license/mock-reset":
+            if LICENCE_STORE.exists(): LICENCE_STORE.unlink()
             state["license"]={"status":"NOT INSTALLED","class":None}; return self.sendj(state)
         return self.sendj({"error":"not found"},404)
 
+load_installed_license()
 ThreadingHTTPServer(("0.0.0.0",8080),H).serve_forever()
