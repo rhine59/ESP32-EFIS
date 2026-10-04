@@ -520,3 +520,12 @@ The Synology simulator now joins external Docker network `ota-server_default` an
 ### Simulator OTA test payload
 
 A deterministic non-flashable OTA payload generator is now provided at `ota-server/scripts/make-simulator-test-image.sh`. The first planned live distribution test is `2.4.1-test.1`; it is explicitly simulator-only and must never be flashed to ESP32 hardware. The test proves admin staging/publish, public manifest delivery, binary download, SHA-256 verification, simulator staging and explicit activation/reboot before physical firmware OTA is attempted.
+
+
+### First live OTA distribution test — PASS (2026-10-04)
+
+The simulator-only release `2.4.1-test.1` completed the full controlled OTA path successfully. The OTA Admin staged and explicitly published the deterministic 4096-byte non-flashable test payload; the public manifest exposed build `24101` and SHA-256 `d7c125b2857303970e36ca74d1536b7a99d02a916b9e8b448b1270075aefe5aa`. Horizon simulator CHECK FOR UPDATE consumed the live manifest, DOWNLOAD + VERIFY retrieved the published image and independently verified its SHA-256, STAGE VERIFIED IMAGE left installed Horizon at `2.4.0`, and ACTIVATE & REBOOT then changed the simulated installed version to `2.4.1-test.1` and cleared the staged state. The verified cache remained present.
+
+This validates the service/distribution contract and explicit stage/activate separation in the simulator. It does **not** validate ESP32 flashing, A/B partitions, bootloader rollback, power-loss recovery or physical-device OTA. The test payload remains explicitly non-flashable.
+
+The round-display firmware maintenance layout was also adjusted so all status/menu content, including ACTIVATE & REBOOT and BACK, remains within the circular safe area.
