@@ -78,3 +78,9 @@ Start `../license-service/compose.yml` first. The simulator joins the external `
 `LICENSE -> GET / REFRESH` now exercises the real development vertical slice: one-time challenge, HMAC proof of the synthetic provisioned device credential, entitlement lookup, deterministic-CBOR Ed25519 issuance, local signature/schema/product/Device-ID verification, then installation. The signer private key never enters the simulator. The trust-key HTTP bootstrap is explicitly simulation-only; production EFIS provisioning must embed/provision the trusted public key independently.
 
 The browser's **Install mock licence (bypass)** control remains only for isolated UI testing and must not be counted as licence validation.
+
+## Licence persistence and offline boot verification
+
+A successfully retrieved signed licence is now stored in the simulator's `efis_sim_state` Docker volume as the original base64url-transported CBOR envelope. The simulation-only public verification key used for that licence is cached separately in the same persistent volume. On process/container startup the simulator reloads the stored artefact and re-verifies the Ed25519 signature, schema, product and immutable Device ID locally before restoring `VALID`; no licence-service or Wi-Fi access is required for this boot check.
+
+Installation uses candidate-first semantics: the downloaded licence is fully verified before the persistent file is atomically replaced. Licence Reset removes the persisted installed licence. This models the intended ESP32 protected-NVS lifecycle, but Docker-volume persistence is not evidence of ESP32 NVS security, atomicity or flash behaviour.
