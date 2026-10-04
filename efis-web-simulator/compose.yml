@@ -10,6 +10,9 @@ services:
       LICENSE_BASE_URL: ${LICENSE_BASE_URL:-http://esp32-efis-license-service:8080}
       DEVICE_SECRET: ${DEVICE_SECRET:-simulator-development-secret-change-me}
       SIM_ALLOW_MUTATIONS: ${SIM_ALLOW_MUTATIONS:-false}
+      LICENSE_STORE: /data/licence.cbor.b64
+    volumes:
+      - efis_sim_state:/data
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/state', timeout=3).read()"]
       interval: 30s
@@ -28,3 +31,6 @@ networks:
     external: true
   efis-license:
     external: true
+
+volumes:
+  efis_sim_state:
