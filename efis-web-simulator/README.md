@@ -92,3 +92,7 @@ Installation uses candidate-first semantics: the downloaded licence is fully ver
 ## Non-destructive licence security tests
 
 The harness now includes explicit negative controls for a tampered signed payload, a corrupted Ed25519 signature and a licence payload carrying the wrong Device ID. Each test derives a candidate from the currently installed signed licence, verifies the candidate through the same local verification path, and passes only when the candidate is rejected. The installed valid licence is never replaced by the negative candidate. This allows rejection behaviour to be tested without deliberately corrupting the persistent baseline licence.
+
+## Checkpoint scripts
+
+From the repository root, `scripts/rebuild-synology.sh` validates and rebuilds the development licence service and EFIS web simulator, then reports Compose status. `scripts/test-license-harness.sh` is the non-destructive licence smoke/security harness: it acquires a real signed DEVELOPMENT licence, runs tampered-payload, bad-signature and wrong-Device-ID rejection checks, places the simulator offline and prints final state. The automated harness does not restart Docker itself; offline reboot persistence remains an explicit deployment test so a test script cannot unexpectedly disrupt the running service.
