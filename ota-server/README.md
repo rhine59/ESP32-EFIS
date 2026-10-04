@@ -165,3 +165,17 @@ The current admin application relies on LAN/VPN/private-proxy access as its auth
 The distribution architecture now treats a signed multi-node release set as the deployment unit. Public serving reserves `/efis/release-set.json`; the release-set contains Horizon/SMUX/future-node compatibility, capability and sequencing information and is what mobile clients cache for offline maintenance. Horizon remains responsible for local verification and AEF-CAN node sequencing.
 
 `admin/release_resolver.py` is the initial generic compatibility/order resolver. CI exercises resolver, offline-phone and existing OTA simulator tests. The SMUX CAN transport simulator now implements the adopted 7-byte FW_DATA, 4 KiB block CRC/ACK and 64 KiB append-only durable checkpoint journal model, including power-loss resume and corrupt/incomplete checkpoint rejection. It remains a software model; physical CAN timing, transceiver behaviour and real flash/bootloader validation are still required.
+
+
+## Simulator-only end-to-end OTA release
+
+Before physical ESP32 OTA testing, use a deterministic **non-flashable** payload to prove the distribution path. Generate it with:
+
+```bash
+chmod +x scripts/make-simulator-test-image.sh
+./scripts/make-simulator-test-image.sh 2.4.1-test.1 /tmp/esp32-efis-2.4.1-test.1.bin
+```
+
+The generated file is deliberately marked `NON-FLASHABLE TEST PAYLOAD`; it exists only to exercise upload/publish, manifest retrieval, download, SHA-256 verification, staging and simulated activation. Do not flash it to an ESP32.
+
+Stage it using the private OTA Admin dashboard with version `2.4.1-test.1`, build `24101`, minimum `0.0.0`, and release notes such as `Simulator OTA end-to-end test payload — NOT ESP32 firmware`. Review the calculated hash, then explicitly Publish. The web simulator can then run CHECK FOR UPDATE → DOWNLOAD + VERIFY → STAGE VERIFIED IMAGE → ACTIVATE & REBOOT.
