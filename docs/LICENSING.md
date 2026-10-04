@@ -295,3 +295,9 @@ Physical ESP32 tests are required. Simulator/API tests alone do not establish pr
 **Implemented/staged:** account-service prototype, PostgreSQL account/device/entitlement model, web portal prototype, iOS/Android customer skeletons, Device ID architecture, payment-provider abstraction requirements, transfer/grace policy and this process specification.
 
 **Development vertical slice implemented:** simulator challenge/proof authentication, DEVELOPMENT entitlement issuance, deterministic-CBOR Ed25519 signing, simulator-side signature/schema/product/Device-ID verification and explicit installation. The signer key is runtime-generated and volume-held; simulator trust bootstrap is explicitly non-production.\n\n**Pending:** production device provisioning mechanism and credentials, isolated production signer/key management, authenticated customer API, verified payment adapters, physical online/offline installation firmware, protected NVS licence store, transfer implementation, security hardening and physical validation.
+
+## Simulator persistence checkpoint — 4 October 2026
+
+The development simulator now models persistent installed-licence behaviour. A newly retrieved licence is verified before atomic replacement of the stored original signed envelope. The simulator also retains its simulation-only trusted public key separately from the licence artefact. At process/container startup it re-verifies the stored signature, schema, product and immutable Device ID locally and restores `VALID` without requiring Wi-Fi or the licence service. Explicit Licence Reset removes the installed licence but does not change the Device ID.
+
+This is a service/logic simulation of the production requirement. Docker-volume storage is **not** a substitute for protected/encrypted ESP32 NVS, secure provisioning, physical power-loss testing or hardware security validation.
