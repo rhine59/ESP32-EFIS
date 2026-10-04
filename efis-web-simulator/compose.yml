@@ -3,7 +3,7 @@ services:
     build: .
     container_name: esp32-efis-web-simulator
     ports:
-      - "127.0.0.1:8088:8080"
+      - "127.0.0.1:8093:8080"
     environment:
       DEVICE_ID: ${DEVICE_ID:-EFIS-SIM-0001}
       OTA_BASE_URL: ${OTA_BASE_URL:-}
