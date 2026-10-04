@@ -38,6 +38,8 @@ Default mode is safe mock mode and works without either upstream.
 
 Use the on-screen rotary buttons or keyboard: Up/Down = rotate, Enter = short press, Escape = back. State persists in the container only as test state and may be reset.
 
+The circular display is a hard layout constraint, not a rectangular browser viewport. Maintenance menus must keep every selectable item fully visible inside the safe central area of the round display. The firmware-update view therefore uses compact typography, line spacing and margins so `ACTIVATE & REBOOT` and `BACK` remain visible without scrolling or clipping.
+
 ## Safety
 
 Never configure the simulator with the private licence signing key, signer token, OTA admin session secret, payment secrets or real aircraft credentials. It is a client/service test harness, not an admin control plane.
