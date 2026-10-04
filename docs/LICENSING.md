@@ -305,3 +305,7 @@ This is a service/logic simulation of the production requirement. Docker-volume 
 ### Simulator offline reboot validation — PASS (4 October 2026)
 
 Runtime validation on Synology passed: after a signed DEVELOPMENT licence was acquired into the persistent store, the simulator was placed offline and its container restarted. On startup the licence returned `VALID` while the network remained offline, demonstrating local persisted-envelope verification without licence-service availability. This is simulator evidence only; equivalent protected-NVS and power-loss behaviour must still be proven on ESP32 hardware.
+
+### Simulator negative licence verification
+
+The simulator has non-destructive rejection tests for payload tampering, invalid Ed25519 signature and wrong Device ID. Test candidates are derived from an installed valid signed envelope and sent through the same local verifier. A test passes only if the candidate is rejected, and the installed valid licence is retained unchanged. Runtime PASS evidence is recorded only after these controls are exercised on the deployed Synology simulator.
