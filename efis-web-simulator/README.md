@@ -88,3 +88,7 @@ Installation uses candidate-first semantics: the downloaded licence is fully ver
 ### Persistence runtime result
 
 **PASS — 4 October 2026.** After acquiring a signed DEVELOPMENT licence into the persistent store, the simulator was set offline and its container restarted. It returned `VALID` with network offline, confirming that startup can reload and locally verify the persisted signed licence without contacting the licence service. Physical ESP32 NVS/power-loss behaviour remains unvalidated.
+
+## Non-destructive licence security tests
+
+The harness now includes explicit negative controls for a tampered signed payload, a corrupted Ed25519 signature and a licence payload carrying the wrong Device ID. Each test derives a candidate from the currently installed signed licence, verifies the candidate through the same local verification path, and passes only when the candidate is rejected. The installed valid licence is never replaced by the negative candidate. This allows rejection behaviour to be tested without deliberately corrupting the persistent baseline licence.
