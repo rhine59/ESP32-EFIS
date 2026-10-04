@@ -546,3 +546,7 @@ The Synology simulator successfully acquired and installed a signed DEVELOPMENT 
 ### Licence negative-test harness — 4 October 2026
 
 **IMPLEMENTED IN REPOSITORY / RUNTIME VALIDATION NEXT.** Simulator controls now generate non-destructive candidate licences for payload tampering, bad Ed25519 signature and wrong Device ID. Candidates use the normal local verifier and must be rejected while the existing installed valid licence remains untouched. No-entitlement, interrupted replacement and reset validation remain subsequent tests.
+
+### Licensing checkpoint — 4 October 2026
+
+**CHECKPOINTED.** Signed DEVELOPMENT licence acquisition and Ed25519/schema/product/Device-ID verification pass on Synology. Persistent signed-envelope installation and offline container-restart verification pass. Non-destructive tampered-payload, bad-signature and wrong-Device-ID tests are implemented and await runtime execution. Rebuild and test scripts are now in `scripts/rebuild-synology.sh` and `scripts/test-license-harness.sh`. Next licensing work: execute negative tests, add no-entitlement/interrupted-replacement/reset cases, then move protected-NVS and power-loss validation to physical ESP32 hardware when available.
