@@ -515,3 +515,8 @@ Docker health check for the simulator is implemented against internal `http://12
 
 
 The Synology simulator now joins external Docker network `ota-server_default` and reaches the public OTA container internally at `http://esp32-efis-ota:8080`; this avoids public reverse-proxy/hairpin routing for service-to-service testing and does not connect to the OTA admin service.
+
+
+### Simulator OTA test payload
+
+A deterministic non-flashable OTA payload generator is now provided at `ota-server/scripts/make-simulator-test-image.sh`. The first planned live distribution test is `2.4.1-test.1`; it is explicitly simulator-only and must never be flashed to ESP32 hardware. The test proves admin staging/publish, public manifest delivery, binary download, SHA-256 verification, simulator staging and explicit activation/reboot before physical firmware OTA is attempted.
