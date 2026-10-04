@@ -69,3 +69,12 @@ For Synology deployment, set `OTA_BASE_URL` to an address reachable **from insid
 ### Synology OTA network
 
 The Synology deployment joins the existing external Docker network `ota-server_default` and defaults `OTA_BASE_URL` to `http://esp32-efis-ota:8080`. This keeps simulator-to-OTA traffic inside Docker and avoids NAS public-hostname/NAT-loopback dependencies. The OTA admin container/network endpoint is not used.
+
+
+## Live development licence integration
+
+Start `../license-service/compose.yml` first. The simulator joins the external `efis-license` Docker network and defaults to `http://esp32-efis-license-service:8080`.
+
+`LICENSE -> GET / REFRESH` now exercises the real development vertical slice: one-time challenge, HMAC proof of the synthetic provisioned device credential, entitlement lookup, deterministic-CBOR Ed25519 issuance, local signature/schema/product/Device-ID verification, then installation. The signer private key never enters the simulator. The trust-key HTTP bootstrap is explicitly simulation-only; production EFIS provisioning must embed/provision the trusted public key independently.
+
+The browser's **Install mock licence (bypass)** control remains only for isolated UI testing and must not be counted as licence validation.
