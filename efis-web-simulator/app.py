@@ -1,4 +1,4 @@
-import hashlib, json, os, tempfile, urllib.request, urllib.error
+import base64, hashlib, hmac, json, os, tempfile, urllib.request, urllib.error\nimport cbor2\nfrom cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import urljoin
@@ -7,7 +7,7 @@ ROOT=Path(__file__).parent
 DEVICE=os.getenv("DEVICE_ID","EFIS-SIM-0001")
 OTA=os.getenv("OTA_BASE_URL","").rstrip("/")
 LIC=os.getenv("LICENSE_BASE_URL","").rstrip("/")
-ALLOW=os.getenv("SIM_ALLOW_MUTATIONS","false").lower()=="true"
+ALLOW=os.getenv("SIM_ALLOW_MUTATIONS","false").lower()=="true"\nDEVICE_SECRET=os.getenv("DEVICE_SECRET","simulator-development-secret-change-me").encode()
 state={"device_id":DEVICE,"network":"offline","firmware":"2.4.0","staged":None,
        "eiu":{"firmware":"1.7.0","protocol":"1.2","capabilities":["ENGINE_DATA_V1","OTA_V1"]},
        "offline_cache":{"release":None,"ready":False,"sha256":None,"bytes":0},
