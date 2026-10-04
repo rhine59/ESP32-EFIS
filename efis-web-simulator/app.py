@@ -1,4 +1,6 @@
-import base64, hashlib, hmac, json, os, tempfile, urllib.request, urllib.error\nimport cbor2\nfrom cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+import base64, hashlib, hmac, json, os, tempfile, urllib.request, urllib.error
+import cbor2
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import urljoin
@@ -7,7 +9,8 @@ ROOT=Path(__file__).parent
 DEVICE=os.getenv("DEVICE_ID","EFIS-SIM-0001")
 OTA=os.getenv("OTA_BASE_URL","").rstrip("/")
 LIC=os.getenv("LICENSE_BASE_URL","").rstrip("/")
-ALLOW=os.getenv("SIM_ALLOW_MUTATIONS","false").lower()=="true"\nDEVICE_SECRET=os.getenv("DEVICE_SECRET","simulator-development-secret-change-me").encode()
+ALLOW=os.getenv("SIM_ALLOW_MUTATIONS","false").lower()=="true"
+DEVICE_SECRET=os.getenv("DEVICE_SECRET","simulator-development-secret-change-me").encode()
 state={"device_id":DEVICE,"network":"offline","firmware":"2.4.0","staged":None,
        "eiu":{"firmware":"1.7.0","protocol":"1.2","capabilities":["ENGINE_DATA_V1","OTA_V1"]},
        "offline_cache":{"release":None,"ready":False,"sha256":None,"bytes":0},
@@ -15,6 +18,33 @@ state={"device_id":DEVICE,"network":"offline","firmware":"2.4.0","staged":None,
 
 def get_json(url):
     with urllib.request.urlopen(url,timeout=8) as r: return json.loads(r.read())
+
+def post_json(url, obj):
+    data=json.dumps(obj).encode()
+    req=urllib.request.Request(url,data=data,headers={"Content-Type":"application/json"},method="POST")
+    with urllib.request.urlopen(req,timeout=8) as r: return json.loads(r.read())
+
+def b64u(s):
+    return base64.urlsafe_b64decode(s + "="*((4-len(s)%4)%4))
+
+def retrieve_and_verify_license():
+    if state["network"]!="online": raise RuntimeError("maintenance Wi-Fi is offline")
+    if not LIC: raise RuntimeError("licence service is not configured")
+    ch=post_json(LIC+"/v1/device/challenge",{"device_id":DEVICE})
+    nonce=ch["challenge"]
+    proof=hmac.new(DEVICE_SECRET,(DEVICE+"\n"+nonce).encode(),hashlib.sha256).hexdigest()
+    r=post_json(LIC+"/v1/device/license",{"device_id":DEVICE,"challenge":nonce,"proof":proof})
+    env=cbor2.loads(b64u(r["license"]))
+    if env.get("v")!=1 or env.get("alg")!="Ed25519": raise RuntimeError("unsupported licence envelope")
+    trust=get_json(LIC+"/v1/trust/"+env["kid"])
+    if not trust.get("simulation_only"): raise RuntimeError("refusing non-simulator trust bootstrap")
+    Ed25519PublicKey.from_public_bytes(b64u(trust["public_key"])).verify(env["sig"],env["payload"])
+    payload=cbor2.loads(env["payload"])
+    if payload.get(1)!=1: raise RuntimeError("unsupported licence schema")
+    if payload.get(2)!="ESP32-EFIS": raise RuntimeError("wrong product in licence")
+    if payload.get(3)!=DEVICE: raise RuntimeError("licence Device ID mismatch")
+    state["license"]={"status":"VALID","class":payload.get(7),"license_id":payload.get(4),"kid":env["kid"]}
+    return state["license"]
 
 def manifest():
     if state["network"]!="online": raise RuntimeError("maintenance Wi-Fi is offline")
@@ -63,9 +93,7 @@ class H(SimpleHTTPRequestHandler):
             try: return self.sendj(manifest())
             except Exception as e: return self.sendj({"error":str(e)},502)
         if self.path=="/api/license/status":
-            if not LIC: return self.sendj({"mock":True,**state["license"]})
-            try: return self.sendj(get_json(LIC+"/v1/device/"+DEVICE+"/license"))
-            except Exception as e: return self.sendj({"error":str(e)},502)
+            return self.sendj(state["license"])
         return super().do_GET()
     def do_POST(self):
         n=int(self.headers.get("Content-Length","0")); body=json.loads(self.rfile.read(n) or b"{}")
@@ -87,6 +115,9 @@ class H(SimpleHTTPRequestHandler):
         if self.path=="/api/firmware/activate":
             if state["staged"]: state["firmware"],state["staged"]=state["staged"],None
             return self.sendj(state)
+        if self.path=="/api/license/refresh":
+            try: return self.sendj(retrieve_and_verify_license())
+            except Exception as e: return self.sendj({"error":str(e)},502)
         if self.path=="/api/license/mock-install":
             state["license"]={"status":"VALID","class":body.get("class","DEVELOPMENT")}; return self.sendj(state)
         if self.path=="/api/license/mock-reset":
