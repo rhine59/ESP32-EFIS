@@ -301,3 +301,7 @@ Physical ESP32 tests are required. Simulator/API tests alone do not establish pr
 The development simulator now models persistent installed-licence behaviour. A newly retrieved licence is verified before atomic replacement of the stored original signed envelope. The simulator also retains its simulation-only trusted public key separately from the licence artefact. At process/container startup it re-verifies the stored signature, schema, product and immutable Device ID locally and restores `VALID` without requiring Wi-Fi or the licence service. Explicit Licence Reset removes the installed licence but does not change the Device ID.
 
 This is a service/logic simulation of the production requirement. Docker-volume storage is **not** a substitute for protected/encrypted ESP32 NVS, secure provisioning, physical power-loss testing or hardware security validation.
+
+### Simulator offline reboot validation — PASS (4 October 2026)
+
+Runtime validation on Synology passed: after a signed DEVELOPMENT licence was acquired into the persistent store, the simulator was placed offline and its container restarted. On startup the licence returned `VALID` while the network remained offline, demonstrating local persisted-envelope verification without licence-service availability. This is simulator evidence only; equivalent protected-NVS and power-loss behaviour must still be proven on ESP32 hardware.
