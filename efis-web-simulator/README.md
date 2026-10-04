@@ -62,3 +62,8 @@ When `OTA_BASE_URL` is set, firmware testing uses the real public OTA service ra
 This path is intentionally read-only against the OTA server: it consumes the same public manifest/image interface as Horizon and does not need the OTA admin secret. A real release must be published before the live path can complete successfully.
 
 For Synology deployment, set `OTA_BASE_URL` to an address reachable **from inside the simulator container**. Do not assume the NAS public hostname will hairpin back through the router; verify reachability from the container before relying on it.
+
+
+### Synology OTA network
+
+The Synology deployment joins the existing external Docker network `ota-server_default` and defaults `OTA_BASE_URL` to `http://esp32-efis-ota:8080`. This keeps simulator-to-OTA traffic inside Docker and avoids NAS public-hostname/NAT-loopback dependencies. The OTA admin container/network endpoint is not used.
