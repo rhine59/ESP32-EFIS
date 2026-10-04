@@ -62,6 +62,26 @@ def load_installed_license():
     except Exception as e:
         state["license"]={"status":"INVALID","class":None,"error":str(e)}
 
+def run_license_negative_test(kind):
+    if not LICENCE_STORE.exists(): raise RuntimeError("install a valid signed licence first")
+    encoded=LICENCE_STORE.read_text().strip()
+    env=cbor2.loads(b64u(encoded))
+    if kind=="tamper":
+        raw=bytearray(env["payload"]); raw[-1]^=1; env["payload"]=bytes(raw)
+    elif kind=="bad-signature":
+        sig=bytearray(env["sig"]); sig[0]^=1; env["sig"]=bytes(sig)
+    elif kind=="wrong-device":
+        payload=cbor2.loads(env["payload"]); payload[3]="EFIS-SIM-WRONG"
+        env["payload"]=cbor2.dumps(payload,canonical=True)
+    else:
+        raise RuntimeError("unknown negative test")
+    candidate=base64.urlsafe_b64encode(cbor2.dumps(env,canonical=True)).decode().rstrip("=")
+    try:
+        verify_license_blob(candidate,False)
+    except Exception as e:
+        return {"result":"REJECTED","test":kind,"reason":str(e),"installed":state["license"]["status"]}
+    raise RuntimeError("SECURITY TEST FAILED: invalid licence was accepted")
+
 def retrieve_and_verify_license():
     if state["network"]!="online": raise RuntimeError("maintenance Wi-Fi is offline")
     if not LIC: raise RuntimeError("licence service is not configured")
@@ -143,6 +163,9 @@ class H(SimpleHTTPRequestHandler):
         if self.path=="/api/firmware/activate":
             if state["staged"]: state["firmware"],state["staged"]=state["staged"],None
             return self.sendj(state)
+        if self.path=="/api/license/test":
+            try: return self.sendj(run_license_negative_test(body.get("test","")))
+            except Exception as e: return self.sendj({"error":str(e)},409)
         if self.path=="/api/license/refresh":
             try: return self.sendj(retrieve_and_verify_license())
             except Exception as e: return self.sendj({"error":str(e)},502)
