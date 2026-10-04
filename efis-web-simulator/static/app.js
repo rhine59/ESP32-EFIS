@@ -7,7 +7,7 @@ function lines(items){return items.map((x,i)=>(i===sel?"> ":"  ")+x).join("\n")}
 function render(){let t="      EFIS BOOT\n   "+state.device_id+"\n\n";
  if(page==="boot")t+=lines(menus.boot);
  if(page==="license")t="       LICENSE\n\nDevice: "+state.device_id+"\nStatus: "+state.license.status+"\n\n"+lines(menus.license);
- if(page==="firmware")t="   FIRMWARE UPDATE\n\nHorizon: "+state.firmware+"\nEIU: "+state.eiu.firmware+"  CAN "+state.eiu.protocol+"\nCached: "+(state.offline_cache.ready?state.offline_cache.release+" ✓":"NO")+"\nStaged: "+(state.staged||"-")+"\nWi-Fi: "+state.network.toUpperCase()+"\n\n"+lines(menus.firmware);
+ if(page==="firmware")t="   FIRMWARE UPDATE\n\nHorizon  "+state.firmware+"\nCached   "+(state.offline_cache.ready?state.offline_cache.release+" ✓":"NO")+"\nStaged   "+(state.staged||"-")+"\nWi-Fi    "+state.network.toUpperCase()+"\n\n"+lines(menus.firmware);
  $("screen").textContent=t;$("summary").textContent="Device "+state.device_id+" • firmware "+state.firmware+" • licence "+state.license.status+" • network "+state.network}
 function move(d){let a=menus[page];sel=(sel+d+a.length)%a.length;render()}
 async function choose(){let x=menus[page][sel];log(page+": "+x);
