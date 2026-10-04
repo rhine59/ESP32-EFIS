@@ -309,3 +309,7 @@ Runtime validation on Synology passed: after a signed DEVELOPMENT licence was ac
 ### Simulator negative licence verification
 
 The simulator has non-destructive rejection tests for payload tampering, invalid Ed25519 signature and wrong Device ID. Test candidates are derived from an installed valid signed envelope and sent through the same local verifier. A test passes only if the candidate is rejected, and the installed valid licence is retained unchanged. Runtime PASS evidence is recorded only after these controls are exercised on the deployed Synology simulator.
+
+### Licence checkpoint tooling — 4 October 2026
+
+Repository checkpoint tooling now includes `scripts/rebuild-synology.sh` for Compose validation/rebuild/status of the development licence service and web simulator, plus `scripts/test-license-harness.sh` for signed acquisition and non-destructive rejection tests (tampered payload, bad signature, wrong Device ID). Offline reboot persistence has already passed manually; the harness leaves the simulator offline but deliberately does not restart Docker. Pending negative cases are no entitlement, interrupted candidate replacement, explicit reset persistence and subsequent physical ESP32/NVS tests.
