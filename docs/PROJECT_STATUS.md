@@ -542,3 +542,7 @@ The round-display firmware maintenance layout was also adjusted so all status/me
 ### Licence offline reboot persistence test — PASS (2026-10-04)
 
 The Synology simulator successfully acquired and installed a signed DEVELOPMENT licence into the persistent simulator store, was then placed offline, restarted, and returned `VALID` with network offline. Startup therefore reloaded the persisted signed envelope and completed local verification without contacting the licence service. This validates the simulator persistence/offline-verification contract only; ESP32 protected-NVS, power-loss and physical hardware validation remain pending.
+
+### Licence negative-test harness — 4 October 2026
+
+**IMPLEMENTED IN REPOSITORY / RUNTIME VALIDATION NEXT.** Simulator controls now generate non-destructive candidate licences for payload tampering, bad Ed25519 signature and wrong Device ID. Candidates use the normal local verifier and must be rejected while the existing installed valid licence remains untouched. No-entitlement, interrupted replacement and reset validation remain subsequent tests.
