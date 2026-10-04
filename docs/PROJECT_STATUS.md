@@ -512,3 +512,6 @@ Docker health check for the simulator is implemented against internal `http://12
 ### EFIS web simulator live OTA integration — 4 October 2026
 
 **IMPLEMENTED / SYNology RUNTIME VALIDATION NEXT.** The simulator now consumes the real public OTA manifest when `OTA_BASE_URL` is configured. It requires simulated maintenance Wi-Fi online, validates product/manifest fields, explicitly rejects the unpublished placeholder manifest, downloads the referenced firmware image, calculates and compares SHA-256, and permits staging only after successful verification. Activation/reboot remains a separate explicit operation. No OTA admin credential is used or exposed. The live path is therefore suitable for exercising the same public firmware-distribution contract intended for Horizon. Failure-path expansion (HTTP/TLS failure, malformed manifest, missing image, digest mismatch, downgrade/incompatibility and interruption) follows after the first successful real release test.
+
+
+The Synology simulator now joins external Docker network `ota-server_default` and reaches the public OTA container internally at `http://esp32-efis-ota:8080`; this avoids public reverse-proxy/hairpin routing for service-to-service testing and does not connect to the OTA admin service.
