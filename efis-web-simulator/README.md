@@ -53,3 +53,12 @@ This models control flow only. It is not evidence of physical Wi-Fi, flash, A/B 
 ## Health check
 
 The Compose service has a Docker health check against the simulator's internal `/api/state` endpoint. After startup, `docker compose ps` should report `(healthy)`. The check runs inside the container and does not depend on the Synology host-port assignment.
+
+
+## Real OTA integration
+
+When `OTA_BASE_URL` is set, firmware testing uses the real public OTA service rather than a synthetic manifest. The simulator requires maintenance Wi-Fi to be set online, retrieves `/efis/manifest.json`, validates the product and required fields, rejects the repository's unpublished CHANGE-ME/REPLACE placeholder, downloads the referenced firmware image, calculates SHA-256 over the received bytes, and refuses staging if the digest differs from the manifest. Only a verified cached image can be staged; activation remains a separate explicit action.
+
+This path is intentionally read-only against the OTA server: it consumes the same public manifest/image interface as Horizon and does not need the OTA admin secret. A real release must be published before the live path can complete successfully.
+
+For Synology deployment, set `OTA_BASE_URL` to an address reachable **from inside the simulator container**. Do not assume the NAS public hostname will hairpin back through the router; verify reachability from the container before relying on it.
