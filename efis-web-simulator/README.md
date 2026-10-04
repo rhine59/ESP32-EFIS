@@ -48,3 +48,8 @@ Never configure the simulator with the private licence signing key, signer token
 The simulator now exposes Horizon and EIU installed versions, release-set caching, local maintenance-network state, transfer/staging and dependency-ordered activation. The default mock release demonstrates EIU 1.7 -> 1.9 before Horizon 2.4 -> 2.5, with Horizon checking the required EIU capability before completing its own activation.
 
 This models control flow only. It is not evidence of physical Wi-Fi, flash, A/B boot or CAN behaviour.
+
+
+## Health check
+
+The Compose service has a Docker health check against the simulator's internal `/api/state` endpoint. After startup, `docker compose ps` should report `(healthy)`. The check runs inside the container and does not depend on the Synology host-port assignment.
