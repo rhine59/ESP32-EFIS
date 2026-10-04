@@ -6,7 +6,7 @@ services:
       - "127.0.0.1:8093:8080"
     environment:
       DEVICE_ID: ${DEVICE_ID:-EFIS-SIM-0001}
-      OTA_BASE_URL: ${OTA_BASE_URL:-}
+      OTA_BASE_URL: ${OTA_BASE_URL:-http://esp32-efis-ota:8080}
       LICENSE_BASE_URL: ${LICENSE_BASE_URL:-}
       SIM_ALLOW_MUTATIONS: ${SIM_ALLOW_MUTATIONS:-false}
     healthcheck:
@@ -16,3 +16,11 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
+    networks:
+      - default
+      - ota-server_default
+
+
+networks:
+  ota-server_default:
+    external: true
