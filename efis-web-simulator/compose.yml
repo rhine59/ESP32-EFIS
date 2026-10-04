@@ -7,7 +7,7 @@ services:
     environment:
       DEVICE_ID: ${DEVICE_ID:-EFIS-SIM-0001}
       OTA_BASE_URL: ${OTA_BASE_URL:-http://esp32-efis-ota:8080}
-      LICENSE_BASE_URL: ${LICENSE_BASE_URL:-}
+      LICENSE_BASE_URL: ${LICENSE_BASE_URL:-http://esp32-efis-license-service:8080}\n      DEVICE_SECRET: ${DEVICE_SECRET:-simulator-development-secret-change-me}
       SIM_ALLOW_MUTATIONS: ${SIM_ALLOW_MUTATIONS:-false}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/state', timeout=3).read()"]
@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
     networks:
       - default
-      - ota-server_default
+      - ota-server_default\n      - efis-license
 
 
 networks:
