@@ -248,3 +248,11 @@ The detailed historical decision register—including adopted, superseded, parke
 - A second attempt to claim the included year is rejected with HTTP 409.
 - Payment choices are not shown while the included first year is available.
 - Physical iPhone build succeeded and the updated app was installed and launched.
+
+## 2026-10-05 — tap-current-step workflow interaction
+- Adopted tap the current process step to advance as the canonical phone interaction.
+- Blue/current process rows can execute their state transition directly; grey future rows remain disabled and visually subdued.
+- Amber and red rows may expose safe waiting-state or corrective actions; completed green rows do not repeat state-changing operations.
+- Wired direct row actions for included-year activation, signed-licence acquisition and EFIS installation in the Buy/activate flow, and licence acquisition/installation in Setup and Receive flows.
+- Retained separate controls where user input or a choice is required.
+- Rebuilt, installed and launched the updated app on the physical iPhone 13 Pro Max.

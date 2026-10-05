@@ -409,12 +409,12 @@ private struct BuyLicenceFlowView: View {
                 ProcessGuidanceView(completed: completedText, next: nextText, complete: installed)
             }
             Section("Licence progress") {
-                ProcessStepRow(number: 1, title: "Identify RedOne", detail: model.deviceID, state: found ? .complete : .current)
+                ProcessStepRow(number: 1, title: "Identify RedOne", detail: found ? model.deviceID : "Tap to identify this RedOne", state: found ? .complete : .current, action: !found && !model.deviceID.isEmpty ? { Task { await model.loadManagement() } } : nil)
                 ProcessStepRow(number: 2, title: "Check included first year", detail: includedUnused ? "Included first year available" : active ? "Licence already active" : "Check entitlement before payment", state: found ? .complete : .waiting)
                 ProcessStepRow(number: 3, title: "Confirm owner", detail: found ? "Ownership record confirmed" : "Waiting for RedOne identification", state: found ? .complete : .waiting)
-                ProcessStepRow(number: 4, title: "Activate or buy licence", detail: active ? (model.account?.planName ?? "Active") : includedUnused ? "Activate included year — £0" : "Choose a paid licence", state: active ? .complete : found ? .current : .waiting)
-                ProcessStepRow(number: 5, title: "Obtain signed licence", detail: signed ? "Signed licence secured" : "Available after activation", state: signed ? .complete : active ? .current : .waiting)
-                ProcessStepRow(number: 6, title: "Install on EFIS", detail: installed ? "Installed" : "Waiting for signed licence", state: installed ? .complete : signed ? .current : .waiting)
+                ProcessStepRow(number: 4, title: "Activate or buy licence", detail: active ? (model.account?.planName ?? "Active") : includedUnused ? "Tap to activate included year — £0" : "Choose a paid licence below", state: active ? .complete : found ? .current : .waiting, action: includedUnused ? { Task { await model.activateIncludedYear() } } : nil)
+                ProcessStepRow(number: 5, title: "Obtain signed licence", detail: signed ? "Signed licence secured" : "Tap to obtain the signed licence", state: signed ? .complete : active ? .current : .waiting, action: active && !signed ? { Task { await model.getEntitlement() } } : nil)
+                ProcessStepRow(number: 6, title: "Install on EFIS", detail: installed ? "Installed" : "Tap to install the signed licence", state: installed ? .complete : signed ? .current : .waiting, action: signed && !installed ? { Task { await model.transferToEFIS() } } : nil)
                 ProcessStepRow(number: 7, title: "Verify VALID", detail: installed ? "EFIS reported VALID" : "Requires EFIS acknowledgement", state: installed ? .complete : .waiting)
                 ProcessStepRow(number: 8, title: "Show renewal date", detail: model.account?.validUntil ?? (installed ? "No expiry for this plan" : "Available after activation"), state: installed ? .complete : .waiting)
             }
@@ -480,8 +480,8 @@ private struct SetupNewEFISFlowView: View {
                 ProcessStepRow(number: 1, title: "Identify EFIS", detail: model.deviceID, state: accountLoaded ? .complete : .current)
                 ProcessStepRow(number: 2, title: "Register owner", detail: accountLoaded ? "Ownership record confirmed" : "Confirmed when the service recognises this EFIS", state: accountLoaded ? .complete : .waiting)
                 ProcessStepRow(number: 3, title: "Choose licence", detail: active ? (model.account?.planName ?? "ACTIVE entitlement") : "Choose an available licence plan", state: active ? .complete : (accountLoaded ? .current : .waiting))
-                ProcessStepRow(number: 4, title: "Obtain signed licence", detail: signed ? "Signed entitlement secured on this phone" : "Available after entitlement is active", state: signed ? .complete : (active ? .current : .waiting))
-                ProcessStepRow(number: 5, title: "Install on EFIS", detail: installed ? "EFIS acknowledged installation" : "Send the signed licence to the EFIS", state: installed ? .complete : (signed ? .current : .waiting))
+                ProcessStepRow(number: 4, title: "Obtain signed licence", detail: signed ? "Signed entitlement secured on this phone" : "Tap to obtain the signed licence", state: signed ? .complete : (active ? .current : .waiting), action: active && !signed ? { Task { await model.getEntitlement() } } : nil)
+                ProcessStepRow(number: 5, title: "Install on EFIS", detail: installed ? "EFIS acknowledged installation" : "Tap to install the signed licence", state: installed ? .complete : (signed ? .current : .waiting), action: signed && !installed ? { Task { await model.transferToEFIS() } } : nil)
                 ProcessStepRow(number: 6, title: "Verify installation", detail: installed ? "EFIS reported VALID" : "Requires explicit EFIS acknowledgement", state: installed ? .complete : .waiting)
             }
 
@@ -556,8 +556,8 @@ private struct ReceiveTransferredEFISFlowView: View {
                 ProcessStepRow(number: 1, title: "Find transferred EFIS", detail: model.deviceID, state: model.account != nil ? .complete : .current)
                 ProcessStepRow(number: 2, title: "Match buyer", detail: pending ? "Enter the invited buyer email" : accepted ? "Buyer matched transfer invitation" : "Requires a pending invitation", state: accepted ? .complete : pending ? .current : .waiting)
                 ProcessStepRow(number: 3, title: "Accept ownership", detail: accepted ? "Ownership changed atomically" : "Available after buyer match", state: accepted ? .complete : pending ? .current : .waiting)
-                ProcessStepRow(number: 4, title: "Obtain replacement licence", detail: signed ? "Signed entitlement secured" : "Issued after acceptance", state: signed ? .complete : accepted ? .current : .waiting)
-                ProcessStepRow(number: 5, title: "Install on EFIS", detail: installed ? "EFIS acknowledged installation" : "Install buyer entitlement", state: installed ? .complete : signed ? .current : .waiting)
+                ProcessStepRow(number: 4, title: "Obtain replacement licence", detail: signed ? "Signed entitlement secured" : "Tap to obtain the replacement licence", state: signed ? .complete : accepted ? .current : .waiting, action: accepted && !signed ? { Task { await model.getEntitlement() } } : nil)
+                ProcessStepRow(number: 5, title: "Install on EFIS", detail: installed ? "EFIS acknowledged installation" : "Tap to install the buyer entitlement", state: installed ? .complete : signed ? .current : .waiting, action: signed && !installed ? { Task { await model.transferToEFIS() } } : nil)
                 ProcessStepRow(number: 6, title: "Verify ownership", detail: installed ? "EFIS reported VALID" : "Requires explicit EFIS acknowledgement", state: installed ? .complete : .waiting)
             }
 
@@ -711,6 +711,7 @@ private struct ProcessStepRow: View {
     let title: String
     let detail: String
     let state: ProcessStepState
+    var action: (() -> Void)? = nil
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
@@ -731,5 +732,11 @@ private struct ProcessStepRow: View {
             }
         }
         .padding(.vertical, 5)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if (state == .current || state == .attention || state == .failed), let action { action() }
+        }
+        .opacity(state == .waiting ? 0.65 : 1)
+        .accessibilityAddTraits(action != nil && state != .waiting ? .isButton : [])
     }
 }
