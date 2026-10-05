@@ -574,3 +574,7 @@ Next UI validation is the user-triggered **Get / Refresh Signed Entitlement** ac
 ### iPhone signed-entitlement UI — PASS (2026-10-05)
 
 The first user-triggered phone acquisition completed successfully. An initial iOS Simulator Keychain write failed with OSStatus `-34018`; the project had been built with code signing disabled and the generated project forced an empty development team. The authoritative XcodeGen definition no longer forces an empty team, the simulator build is code-signed, and the rebuilt app successfully cached the signed entitlement. User-visible confirmation showed Device `EFIS-SIM-0001`, entitlement `ACTIVE` and a cached signed envelope. Relaunch persistence remains the next explicit check.
+
+### iPhone licence persistence — PASS (2026-10-05)
+
+After the signed entitlement was cached, the iOS Simulator was completely terminated. The original iPhone 17 Pro simulator was subsequently booted and EFIS Service launched directly, without pressing Get/Refresh. The user confirmed that the entitlement was immediately shown as `ACTIVE`. This validates the current development client's Keychain persistence across simulator shutdown/restart. It does not yet validate physical-iPhone Keychain behaviour. Next phone-client implementation is QR capture of the immutable EFIS Device ID.
