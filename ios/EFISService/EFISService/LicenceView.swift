@@ -6,7 +6,6 @@ struct LicenceView: View {
 
     var body: some View {
         NavigationStack {
-            GeometryReader { geometry in
             VStack(spacing: 0) {
                 HStack {
                     Text("Status: " + model.status)
@@ -111,14 +110,13 @@ struct LicenceView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal)
-                .padding(.bottom, max(16, geometry.safeAreaInsets.bottom))
+                .padding(.bottom, 40)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contentShape(Rectangle())
                 .scrollBounceBehavior(.always)
                 .scrollIndicators(.visible)
                 .scrollDismissesKeyboard(.interactively)
-            }
             }
             .navigationTitle("EFIS Licence")
             .fullScreenCover(isPresented: $showingScanner) {
