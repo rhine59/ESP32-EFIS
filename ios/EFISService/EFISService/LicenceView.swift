@@ -62,8 +62,8 @@ struct LicenceView: View {
                     }
                 }
 
-                if let account = model.account {
-                    Section("Manage licence") {
+                Section("Manage licence") {
+                    if let account = model.account {
                         if account.planID == "annual" {
                             Button("Renew / Enable Auto-Renewal") {
                                 Task { await model.manage("renew") }
@@ -89,6 +89,17 @@ struct LicenceView: View {
                                 .disabled(model.busy)
                             }
                         }
+                        if account.planID != "annual" && !account.transferable {
+                            Text("No management actions are available for this licence.")
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        Text("Load / Refresh Account to manage this licence.")
+                            .foregroundStyle(.secondary)
+                        Button("Load / Refresh Account") {
+                            Task { await model.loadManagement() }
+                        }
+                        .disabled(model.busy || model.deviceID.isEmpty)
                     }
                 }
 
