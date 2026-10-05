@@ -2,7 +2,7 @@
 
 **Status date:** 20 September 2026
 
-This is the authoritative project-level record of implementation, validation **and significant design decisions**. It records ideas that are adopted, proposed, parked, superseded or dismissed, including the reason, so rejected approaches are not accidentally reintroduced later.
+This is the authoritative project-level record of implementation, validation **and significant design decisions**. The chronological checkpoint/change record is `CHANGELOG.md`; every future checkpoint must update it. It records ideas that are adopted, proposed, parked, superseded or dismissed, including the reason, so rejected approaches are not accidentally reintroduced later.
 
 The project remains experimental **supplementary/non-primary**. Missing/invalid/stale real data fails obviously; synthetic data is never an automatic fallback. Build/simulation success is not physical validation.
 
@@ -570,3 +570,7 @@ Added `ios/EFISService/` SwiftUI prototype with immutable Device-ID entry, devel
 The EFIS Service SwiftUI app builds successfully under Xcode 26.6/iOS Simulator 26.5 and launches on the iPhone 17 Pro simulator. Its development entitlement path now targets the restricted Synology simulator broker rather than embedding a device credential. Live broker validation returned the expected simulator Device ID, product, ACTIVE entitlement and signed licence envelope. The updated app has been rebuilt, installed and relaunched from GitHub `main`.
 
 Next UI validation is the user-triggered **Get / Refresh Signed Entitlement** action and Keychain persistence/relaunch check, followed by QR Device-ID capture.
+
+### iPhone signed-entitlement UI — PASS (2026-10-05)
+
+The first user-triggered phone acquisition completed successfully. An initial iOS Simulator Keychain write failed with OSStatus `-34018`; the project had been built with code signing disabled and the generated project forced an empty development team. The authoritative XcodeGen definition no longer forces an empty team, the simulator build is code-signed, and the rebuilt app successfully cached the signed entitlement. User-visible confirmation showed Device `EFIS-SIM-0001`, entitlement `ACTIVE` and a cached signed envelope. Relaunch persistence remains the next explicit check.
