@@ -56,6 +56,8 @@ def persist_license(encoded):
     os.replace(tmp,LICENCE_STORE)
 
 def load_installed_license():
+    tmp=LICENCE_STORE.with_suffix(".tmp")
+    if tmp.exists(): tmp.unlink()
     if not LICENCE_STORE.exists(): return
     try:
         state["license"]=verify_license_blob(LICENCE_STORE.read_text().strip(),False)
