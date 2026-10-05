@@ -153,3 +153,12 @@ The detailed historical decision register—including adopted, superseded, parke
 - Identification-only security boundary is stated explicitly.
 - Synology simulator rebuilt successfully and live QR endpoint returned HTTP 200 with a generated PNG.
 - This provides the EFIS side of the phone QR acquisition workflow; real camera scan remains a physical-iPhone test.
+
+### Phone-to-EFIS signed licence transfer — IMPLEMENTED / BUILD-VALIDATED
+- Replaced the iPhone transfer placeholder with a local HTTP signed-envelope transfer client.
+- Added simulator `POST /api/phone/install-license`.
+- EFIS simulator checks Device ID, independently verifies the existing Ed25519 signed envelope against locally provisioned trust, validates schema/product/device binding, and only then atomically persists and activates it.
+- The phone sends the opaque signed envelope; it does not sign, reinterpret or grant the licence.
+- iOS Simulator target builds successfully and updated app was installed/launched.
+- Synology web simulator rebuilt with the receiving endpoint.
+- End-to-end user-triggered Transfer button validation remains the next test.
