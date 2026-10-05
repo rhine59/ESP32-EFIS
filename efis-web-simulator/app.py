@@ -192,6 +192,17 @@ class H(SimpleHTTPRequestHandler):
         if self.path=="/api/firmware/activate":
             if state["staged"]: state["firmware"],state["staged"]=state["staged"],None
             return self.sendj(state)
+        if self.path=="/api/phone/install-license":
+            if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)
+            encoded=body.get("license","")
+            if not encoded: return self.sendj({"error":"signed licence missing"},400)
+            try:
+                candidate=verify_license_blob(encoded,False)
+                persist_license(encoded)
+                state["license"]=candidate
+                return self.sendj({"simulation_only":True,"result":"INSTALLED","license":candidate})
+            except Exception as e:
+                return self.sendj({"error":str(e)},409)
         if self.path=="/api/phone/entitlement":
             if body.get("device_id")!=DEVICE:
                 return self.sendj({"error":"unknown device"},404)
