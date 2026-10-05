@@ -231,3 +231,11 @@ The detailed historical decision register—including adopted, superseded, parke
 - Setup progression now derives from account recognition, ACTIVE entitlement, signed licence cache and explicit EFIS installation acknowledgement.
 - Normal setup exposes only the next valid action: identify EFIS, choose licence, obtain signed licence, install on EFIS, then confirm VALID.
 - Retained the explicit EFIS acknowledgement requirement; reaching the installation screen alone never marks setup complete.
+
+## 2026-10-05 — receive transferred EFIS reference workflow
+- Added simulation-only buyer acceptance with pending-transfer and invited-email validation.
+- Buyer mismatch is rejected; acceptance changes the simulated owner atomically and records transfer status ACCEPTED.
+- Added a state-aware Receive a transferred EFIS workflow to the iOS app.
+- After acceptance the app obtains a replacement signed entitlement, installs it on the EFIS and requires explicit VALID acknowledgement before completion.
+- Production caveat is explicit: email matching is development validation, not buyer authentication. Production requires authenticated customer identity and a short-lived single-use transfer invitation credential.
+- Deployed the updated EFIS web simulator service and installed/launched the updated app on the physical iPhone 13 Pro Max.

@@ -24,7 +24,7 @@ Identify EFIS -> register owner -> choose licence -> obtain signed licence -> in
 ### Reassign / sell an EFIS
 Confirm current EFIS -> identify new owner -> buyer accepts ownership -> issue replacement licence -> install on EFIS -> verify new ownership.
 
-This is the first reference implementation. Current seller-side initiation/cancellation is wired to the lifecycle service. Buyer acceptance remains implementation-pending in the backend/client and therefore appears honestly as an amber waiting stage rather than being simulated as complete.
+This is the first reference implementation. Seller-side initiation/cancellation is wired to the lifecycle service. Buyer acceptance is now implemented end-to-end in the development simulator/client with invited-email validation; production buyer authentication and single-use invitation credentials remain implementation-pending.
 
 ### Receive a transferred EFIS
 Open transfer invitation -> authenticate buyer -> accept ownership -> obtain replacement licence -> install on EFIS -> verify ownership.
@@ -69,3 +69,9 @@ New user-facing EFIS Service functionality must be designed as a process/state t
 ## Physical-iPhone reference validation
 
 On 2026-10-05 EFISService was successfully built and code-signed for the paired iPhone 13 Pro Max, installed with bundle ID `uk.co.thingies.EFISService`, and launched on the physical device. `Set up a new EFIS` is now the second state-aware workflow after reassignment. Its progress is derived from real account recognition, ACTIVE entitlement, the protected signed-licence cache, and the explicit EFIS `VALID` installation acknowledgement.
+
+## Receive-transferred-EFIS reference workflow
+
+The development simulator now supports the complete process shape: locate a pending transfer, match the invited buyer, accept ownership atomically, obtain a replacement signed entitlement, install it on the EFIS, and finish only after the EFIS reports `VALID`. A buyer identity mismatch is rejected.
+
+The current email match is deliberately marked simulation-only and MUST NOT be promoted as production authentication. The production account service must authenticate the buyer independently and bind acceptance to a short-lived, single-use transfer invitation credential. The service, not the phone, owns the atomic ownership transition and audit event.

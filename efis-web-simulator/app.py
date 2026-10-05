@@ -14,7 +14,7 @@ LIC=os.getenv("LICENSE_BASE_URL","").rstrip("/")
 ALLOW=os.getenv("SIM_ALLOW_MUTATIONS","false").lower()=="true"
 DEVICE_SECRET=os.getenv("DEVICE_SECRET","simulator-development-secret-change-me").encode()
 LICENCE_STORE=Path(os.getenv("LICENSE_STORE","/data/licence.cbor.b64"))
-account={"ownership":"REGISTERED","entitlement":"ACTIVE","plan_id":"development","plan_name":"Development Licence","transferable":True,"renewal":"NONE","valid_until":None,"transfer_status":"NONE"}
+account={"ownership":"REGISTERED","entitlement":"ACTIVE","plan_id":"development","plan_name":"Development Licence","transferable":True,"renewal":"NONE","valid_until":None,"transfer_status":"NONE","pending_buyer_email":None,"owner_email":"seller@example.invalid"}
 plans=[
  {"id":"perpetual","name":"RedOne Perpetual","price_display":"£299 one-off","description":"Permanent RedOne licence for one EFIS Device ID."},
  {"id":"annual","name":"RedOne Annual","price_display":"£49/year","description":"Annual RedOne licence; renewal and expiry policy remains pre-production."}
@@ -225,11 +225,22 @@ class H(SimpleHTTPRequestHandler):
             email=body.get("buyer_email","").strip()
             if "@" not in email: return self.sendj({"error":"Buyer email is required"},400)
             account["transfer_status"]="PENDING"
+            account["pending_buyer_email"]=email.lower()
             return self.sendj({"simulation_only":True,"result":"TRANSFER_PENDING","buyer_email":email,"device_id":DEVICE,**account})
         if self.path=="/api/phone/cancel-transfer":
             if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)
-            account["transfer_status"]="NONE"
+            account["transfer_status"]="NONE"; account["pending_buyer_email"]=None
             return self.sendj({"simulation_only":True,"result":"TRANSFER_CANCELLED","device_id":DEVICE,**account})
+        if self.path=="/api/phone/accept-transfer":
+            if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)
+            if account.get("transfer_status")!="PENDING": return self.sendj({"error":"No ownership transfer is pending"},409)
+            email=body.get("buyer_email","").strip().lower()
+            if not email or email!=account.get("pending_buyer_email"): return self.sendj({"error":"Buyer does not match the pending transfer invitation"},403)
+            account["owner_email"]=email
+            account["pending_buyer_email"]=None
+            account["transfer_status"]="ACCEPTED"
+            account["ownership"]="REGISTERED"
+            return self.sendj({"simulation_only":True,"result":"TRANSFER_ACCEPTED","device_id":DEVICE,**account})
         if self.path=="/api/phone/install-license":
             if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)
             encoded=body.get("license","")

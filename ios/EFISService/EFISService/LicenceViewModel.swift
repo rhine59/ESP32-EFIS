@@ -66,6 +66,16 @@ final class LicenceViewModel: ObservableObject {
         } catch { status = error.localizedDescription; activitySeverity = .error }
     }
 
+    func acceptTransfer() async {
+        busy = true; activitySeverity = .info; status = "Accepting ownership transfer…"; defer { busy = false }
+        do {
+            guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
+            account = try await DevelopmentLicenceManagementService(baseURL: url).lifecycle(deviceID: deviceID, action: "accept-transfer", extra: ["buyer_email": buyerEmail])
+            status = "Ownership transfer accepted"; activitySeverity = .success
+            await getEntitlement()
+        } catch { status = error.localizedDescription; activitySeverity = .error }
+    }
+
     func getEntitlement() async {
         busy = true
         activitySeverity = .info

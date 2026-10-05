@@ -289,6 +289,8 @@ struct ProcessHomeView: View {
                                 SetupNewEFISFlowView()
                             } else if process.id == "reassign" {
                                 ReassignEFISFlowView()
+                            } else if process.id == "receive" {
+                                ReceiveTransferredEFISFlowView()
                             } else {
                                 GenericProcessFlowView(process: process)
                             }
@@ -421,6 +423,74 @@ private struct SetupNewEFISFlowView: View {
             }
         }
         .navigationTitle("Set up new EFIS")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct ReceiveTransferredEFISFlowView: View {
+    @EnvironmentObject var model: LicenceViewModel
+
+    private var pending: Bool { model.account?.transferStatus == "PENDING" }
+    private var accepted: Bool { model.account?.transferStatus == "ACCEPTED" }
+    private var signed: Bool { accepted && model.cached?.deviceID == model.deviceID }
+    private var installed: Bool { accepted && model.installedLicenceID != nil }
+
+    var body: some View {
+        List {
+            Section {
+                HStack {
+                    Image(systemName: installed ? "checkmark.circle.fill" : pending ? "arrow.right.circle.fill" : "info.circle.fill")
+                    Text(installed ? "Transfer complete — licence installed and verified" : accepted ? "Ownership accepted — continue installation" : pending ? "Transfer invitation found" : "Find your transfer invitation")
+                        .font(.headline)
+                }
+                .foregroundStyle(installed ? .green : accepted || pending ? .blue : .secondary)
+            }
+
+            Section("Transfer progress") {
+                ProcessStepRow(number: 1, title: "Find transferred EFIS", detail: model.deviceID, state: model.account != nil ? .complete : .current)
+                ProcessStepRow(number: 2, title: "Match buyer", detail: pending ? "Enter the invited buyer email" : accepted ? "Buyer matched transfer invitation" : "Requires a pending invitation", state: accepted ? .complete : pending ? .current : .waiting)
+                ProcessStepRow(number: 3, title: "Accept ownership", detail: accepted ? "Ownership changed atomically" : "Available after buyer match", state: accepted ? .complete : pending ? .current : .waiting)
+                ProcessStepRow(number: 4, title: "Obtain replacement licence", detail: signed ? "Signed entitlement secured" : "Issued after acceptance", state: signed ? .complete : accepted ? .current : .waiting)
+                ProcessStepRow(number: 5, title: "Install on EFIS", detail: installed ? "EFIS acknowledged installation" : "Install buyer entitlement", state: installed ? .complete : signed ? .current : .waiting)
+                ProcessStepRow(number: 6, title: "Verify ownership", detail: installed ? "EFIS reported VALID" : "Requires explicit EFIS acknowledgement", state: installed ? .complete : .waiting)
+            }
+
+            Section("Next action") {
+                if model.account == nil {
+                    TextField("EFIS Device ID", text: $model.deviceID)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                    Button("Find transfer") { Task { await model.loadManagement() } }
+                        .disabled(model.busy || model.deviceID.isEmpty)
+                } else if pending {
+                    TextField("Invited buyer email", text: $model.buyerEmail)
+                        .textInputAutocapitalization(.never)
+                        .keyboardType(.emailAddress)
+                        .autocorrectionDisabled()
+                    Button("Accept ownership transfer") { Task { await model.acceptTransfer() } }
+                        .disabled(model.busy || !model.buyerEmail.contains("@"))
+                    Text("Development validation: the email must exactly match the pending invitation. Production will replace this with authenticated buyer identity and a single-use invitation credential.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                } else if accepted && !signed {
+                    Button("Obtain replacement licence") { Task { await model.getEntitlement() } }
+                        .disabled(model.busy)
+                } else if accepted && !installed {
+                    Button("Install licence on EFIS") { Task { await model.transferToEFIS() } }
+                        .disabled(model.busy)
+                } else if installed {
+                    Label("Ownership transfer and licence installation are complete.", systemImage: "checkmark.seal.fill")
+                        .foregroundStyle(.green)
+                } else {
+                    Button("Refresh transfer status") { Task { await model.loadManagement() } }
+                        .disabled(model.busy)
+                }
+            }
+
+            Section("Status") {
+                Text(model.status).foregroundStyle(model.activitySeverity == .error ? .red : model.activitySeverity == .warning ? .orange : .secondary)
+            }
+        }
+        .navigationTitle("Receive transferred EFIS")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

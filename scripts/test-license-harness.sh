@@ -90,6 +90,12 @@ r=$(json_post /api/phone/install-license "$payload"); require "$r" '"result": "I
 restart_sim
 r=$(status); require "$r" '"status": "VALID"'; require "$r" '"network": "offline"'; echo "$r"
 
+echo "Ownership transfer buyer-acceptance checks"
+r=$(json_post /api/phone/transfer '{"device_id":"EFIS-SIM-0001","buyer_email":"buyer@example.com"}'); require "$r" '"transfer_status": "PENDING"'
+code=$(curl -sS -o "$TMP" -w '%{http_code}' -H 'Content-Type: application/json' -X POST -d '{"device_id":"EFIS-SIM-0001","buyer_email":"wrong@example.com"}' "$SIM/api/phone/accept-transfer")
+[ "$code" = "403" ] || { echo "FAIL: wrong buyer was not rejected"; cat "$TMP"; exit 1; }
+r=$(json_post /api/phone/accept-transfer '{"device_id":"EFIS-SIM-0001","buyer_email":"buyer@example.com"}'); require "$r" '"result": "TRANSFER_ACCEPTED"'; require "$r" '"transfer_status": "ACCEPTED"'; require "$r" '"owner_email": "buyer@example.com"'; echo "$r"
+
 echo "Final state"
 r=$(status); require "$r" '"status": "VALID"'; require "$r" '"network": "offline"'; echo "$r"
-echo "PASS: integrity, Device-ID binding, no-entitlement, interrupted replacement, reset, offline acquisition, corrupt-store recovery, offline phone transfer and offline restart persistence."
+echo "PASS: integrity, Device-ID binding, no-entitlement, interrupted replacement, reset, offline acquisition, corrupt-store recovery, offline phone transfer, offline restart persistence and buyer-acceptance validation."
