@@ -285,7 +285,9 @@ struct ProcessHomeView: View {
                 Section("Processes") {
                     ForEach(processCatalogue) { process in
                         NavigationLink {
-                            if process.id == "reassign" {
+                            if process.id == "setup" {
+                                SetupNewEFISFlowView()
+                            } else if process.id == "reassign" {
                                 ReassignEFISFlowView()
                             } else {
                                 GenericProcessFlowView(process: process)
@@ -338,6 +340,87 @@ private struct GenericProcessFlowView: View {
             }
         }
         .navigationTitle(process.title)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct SetupNewEFISFlowView: View {
+    @EnvironmentObject var model: LicenceViewModel
+
+    private var accountLoaded: Bool { model.account != nil }
+    private var active: Bool { model.account?.entitlement == "ACTIVE" }
+    private var signed: Bool { model.cached?.deviceID == model.deviceID }
+    private var installed: Bool { model.installedLicenceID != nil }
+
+    private var currentStep: Int {
+        if !accountLoaded { return 1 }
+        if !active { return 3 }
+        if !signed { return 4 }
+        if !installed { return 5 }
+        return 6
+    }
+
+    var body: some View {
+        List {
+            Section {
+                HStack {
+                    Image(systemName: installed ? "checkmark.circle.fill" : "arrow.right.circle.fill")
+                    Text(installed ? "Setup complete — licence installed and verified" : "Step \(currentStep) of 6")
+                        .font(.headline)
+                }
+                .foregroundStyle(installed ? .green : .blue)
+            }
+
+            Section("Setup progress") {
+                ProcessStepRow(number: 1, title: "Identify EFIS", detail: model.deviceID, state: accountLoaded ? .complete : .current)
+                ProcessStepRow(number: 2, title: "Register owner", detail: accountLoaded ? "Ownership record confirmed" : "Confirmed when the service recognises this EFIS", state: accountLoaded ? .complete : .waiting)
+                ProcessStepRow(number: 3, title: "Choose licence", detail: active ? (model.account?.planName ?? "ACTIVE entitlement") : "Choose an available licence plan", state: active ? .complete : (accountLoaded ? .current : .waiting))
+                ProcessStepRow(number: 4, title: "Obtain signed licence", detail: signed ? "Signed entitlement secured on this phone" : "Available after entitlement is active", state: signed ? .complete : (active ? .current : .waiting))
+                ProcessStepRow(number: 5, title: "Install on EFIS", detail: installed ? "EFIS acknowledged installation" : "Send the signed licence to the EFIS", state: installed ? .complete : (signed ? .current : .waiting))
+                ProcessStepRow(number: 6, title: "Verify installation", detail: installed ? "EFIS reported VALID" : "Requires explicit EFIS acknowledgement", state: installed ? .complete : .waiting)
+            }
+
+            Section("Next action") {
+                if !accountLoaded {
+                    TextField("EFIS Device ID", text: $model.deviceID)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                    Button("Identify EFIS") { Task { await model.loadManagement() } }
+                        .disabled(model.busy || model.deviceID.isEmpty)
+                } else if !active {
+                    if model.plans.isEmpty {
+                        Button("Refresh licence plans") { Task { await model.loadManagement() } }
+                            .disabled(model.busy)
+                    } else {
+                        ForEach(model.plans) { plan in
+                            Button("Choose \(plan.name) — \(plan.priceDisplay)") {
+                                Task { await model.purchase(plan) }
+                            }
+                            .disabled(model.busy)
+                        }
+                    }
+                } else if !signed {
+                    Button("Obtain signed licence") { Task { await model.getEntitlement() } }
+                        .disabled(model.busy)
+                } else if !installed {
+                    Button("Install licence on EFIS") { Task { await model.transferToEFIS() } }
+                        .disabled(model.busy)
+                } else {
+                    Label("EFIS setup is complete.", systemImage: "checkmark.seal.fill")
+                        .foregroundStyle(.green)
+                }
+            }
+
+            Section("Status") {
+                Text(model.status)
+                    .foregroundStyle(model.activitySeverity == .error ? .red : model.activitySeverity == .warning ? .orange : .secondary)
+                if let id = model.installedLicenceID {
+                    LabeledContent("Installed Licence ID", value: id)
+                        .textSelection(.enabled)
+                }
+            }
+        }
+        .navigationTitle("Set up new EFIS")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

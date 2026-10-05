@@ -65,3 +65,7 @@ Workflow progress must ultimately be resumable after app termination or phone re
 ## Migration rule
 
 New user-facing EFIS Service functionality must be designed as a process/state transition first. Adding a new collection of independent buttons or tabs requires an explicit diagnostic/advanced-use justification. Existing functional screens should be migrated behind guided workflows without removing their tested recovery value until the corresponding process has full acceptance coverage.
+
+## Physical-iPhone reference validation
+
+On 2026-10-05 EFISService was successfully built and code-signed for the paired iPhone 13 Pro Max, installed with bundle ID `uk.co.thingies.EFISService`, and launched on the physical device. `Set up a new EFIS` is now the second state-aware workflow after reassignment. Its progress is derived from real account recognition, ACTIVE entitlement, the protected signed-licence cache, and the explicit EFIS `VALID` installation acknowledgement.

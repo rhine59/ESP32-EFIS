@@ -224,3 +224,10 @@ The detailed historical decision register—including adopted, superseded, parke
 - Implemented Reassign EFIS as the first state-aware reference flow using the real account and ownership-transfer lifecycle state.
 - Kept the validated Licence/Purchase/Manage/Transfer interface under Advanced for diagnostics and manual recovery.
 - Buyer transfer acceptance remains explicitly implementation-pending and is shown as an amber waiting state rather than falsely completed.
+
+## 2026-10-05 — physical iPhone setup workflow
+- Built, signed, installed and launched EFISService on the paired iPhone 13 Pro Max using the existing Apple Development team.
+- Converted Set up a new EFIS from a process placeholder into a state-aware guided workflow.
+- Setup progression now derives from account recognition, ACTIVE entitlement, signed licence cache and explicit EFIS installation acknowledgement.
+- Normal setup exposes only the next valid action: identify EFIS, choose licence, obtain signed licence, install on EFIS, then confirm VALID.
+- Retained the explicit EFIS acknowledgement requirement; reaching the installation screen alone never marks setup complete.
