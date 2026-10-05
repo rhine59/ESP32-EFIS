@@ -578,3 +578,7 @@ The first user-triggered phone acquisition completed successfully. An initial iO
 ### iPhone licence persistence — PASS (2026-10-05)
 
 After the signed entitlement was cached, the iOS Simulator was completely terminated. The original iPhone 17 Pro simulator was subsequently booted and EFIS Service launched directly, without pressing Get/Refresh. The user confirmed that the entitlement was immediately shown as `ACTIVE`. This validates the current development client's Keychain persistence across simulator shutdown/restart. It does not yet validate physical-iPhone Keychain behaviour. Next phone-client implementation is QR capture of the immutable EFIS Device ID.
+
+### iPhone QR Device-ID scanner — IMPLEMENTED / BUILD-VALIDATED (2026-10-05)
+
+The EFIS Service client now has an AVFoundation QR scanner instead of the placeholder Scan Device QR action. It accepts a literal `EFIS-...` identifier or the URI form `efis://device/<Device-ID>`, populates the Device-ID field and leaves manual entry available as fallback. Camera usage is declared in the XcodeGen source of truth. Swift 6 concurrency checks pass and the iOS Simulator target builds successfully. Camera operation itself requires a physical iPhone and is therefore not yet runtime-validated.
