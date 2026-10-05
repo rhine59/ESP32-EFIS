@@ -550,3 +550,7 @@ The Synology simulator successfully acquired and installed a signed DEVELOPMENT 
 ### Licensing checkpoint — 4 October 2026
 
 **CHECKPOINTED.** Signed DEVELOPMENT licence acquisition and Ed25519/schema/product/Device-ID verification pass on Synology. Persistent signed-envelope installation and offline container-restart verification pass. Non-destructive tampered-payload, bad-signature and wrong-Device-ID tests are implemented and await runtime execution. Rebuild and test scripts are now in `scripts/rebuild-synology.sh` and `scripts/test-license-harness.sh`. Next licensing work: execute negative tests, add no-entitlement/interrupted-replacement/reset cases, then move protected-NVS and power-loss validation to physical ESP32 hardware when available.
+
+### Licensing security-test follow-up — 5 October 2026
+
+**UPDATED / RUNTIME RE-VALIDATION NEXT.** The first Synology negative-test run rejected tampered payload, bad signature and wrong-Device-ID candidates while preserving the installed VALID licence. Review found that the original wrong-device fixture invalidated the signature as a side effect, so it did not independently prove Device-ID binding. The test is now corrected: the simulator-only licence service creates a correctly signed licence for `EFIS-SIM-WRONG`, allowing signature verification to succeed before the EFIS verifier rejects the Device-ID mismatch. The rebuild script has also been corrected to use the deployment account's direct Docker access rather than interactive sudo.
