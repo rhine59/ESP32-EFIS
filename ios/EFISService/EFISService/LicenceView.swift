@@ -101,14 +101,20 @@ struct LicenceView: View {
                     if let account = model.account {
                         Section("Renewal") {
                             if account.planID == "annual" {
-                                Button("Renew / Enable Auto-Renewal") {
-                                    Task { await model.manage("renew") }
+                                if account.renewal == "CANCELLED" {
+                                    Button("Renew / Enable Auto-Renewal") {
+                                        Task { await model.manage("renew") }
+                                    }
+                                    .disabled(model.busy)
+                                    Text("Auto-renewal is cancelled. The current licence remains active until its expiry date.")
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                } else {
+                                    Button("Cancel Renewal", role: .destructive) {
+                                        Task { await model.manage("cancel-renewal") }
+                                    }
+                                    .disabled(model.busy)
                                 }
-                                .disabled(model.busy)
-                                Button("Cancel Renewal", role: .destructive) {
-                                    Task { await model.manage("cancel-renewal") }
-                                }
-                                .disabled(model.busy)
                             } else {
                                 Text("This licence does not require annual renewal.")
                                     .foregroundStyle(.secondary)
