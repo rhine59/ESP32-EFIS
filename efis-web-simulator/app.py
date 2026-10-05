@@ -14,7 +14,7 @@ LIC=os.getenv("LICENSE_BASE_URL","").rstrip("/")
 ALLOW=os.getenv("SIM_ALLOW_MUTATIONS","false").lower()=="true"
 DEVICE_SECRET=os.getenv("DEVICE_SECRET","simulator-development-secret-change-me").encode()
 LICENCE_STORE=Path(os.getenv("LICENSE_STORE","/data/licence.cbor.b64"))
-account={"ownership":"REGISTERED","entitlement":"ACTIVE","plan_id":"development","plan_name":"Development Licence","transferable":True,"renewal":"NONE","valid_until":None,"transfer_status":"NONE","pending_buyer_email":None,"owner_email":"seller@example.invalid"}
+account={"ownership":"REGISTERED","entitlement":"INCLUDED_UNUSED","entitlement_source":"INCLUDED","included_year_used":False,"plan_id":"included-year","plan_name":"RedOne Included First Year","transferable":True,"renewal":"NONE","valid_until":None,"transfer_status":"NONE","pending_buyer_email":None,"owner_email":"seller@example.invalid"}
 plans=[
  {"id":"perpetual","name":"RedOne Perpetual","price_display":"£299 one-off","description":"Permanent RedOne licence for one EFIS Device ID."},
  {"id":"annual","name":"RedOne Annual","price_display":"£49/year","description":"Annual RedOne licence; renewal and expiry policy remains pre-production."}
@@ -200,11 +200,20 @@ class H(SimpleHTTPRequestHandler):
         if self.path=="/api/firmware/activate":
             if state["staged"]: state["firmware"],state["staged"]=state["staged"],None
             return self.sendj(state)
+        if self.path=="/api/phone/activate-included":
+            if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)
+            if account.get("included_year_used") or account.get("entitlement")!="INCLUDED_UNUSED":
+                return self.sendj({"error":"Included first year is not available"},409)
+            from datetime import date, timedelta
+            account.update(entitlement="INCLUDED_ACTIVE",entitlement_source="INCLUDED",included_year_used=True,
+                           plan_id="included-year",plan_name="RedOne Included First Year",
+                           valid_until=(date.today()+timedelta(days=365)).isoformat(),renewal="NONE")
+            return self.sendj({"simulation_only":True,"result":"INCLUDED_YEAR_ACTIVATED","device_id":DEVICE,**account})
         if self.path=="/api/phone/purchase":
             if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)
             plan=next((p for p in plans if p["id"]==body.get("plan_id")),None)
             if not plan: return self.sendj({"error":"Unknown licence plan"},400)
-            account.update(entitlement="ACTIVE",plan_id=plan["id"],plan_name=plan["name"])
+            account.update(entitlement="PAID_ACTIVE",entitlement_source="PAID",plan_id=plan["id"],plan_name=plan["name"],renewal="AUTO" if plan["id"]=="annual" else "NONE")
             return self.sendj({"simulation_only":True,"result":"PURCHASED","device_id":DEVICE,**account})
         if self.path=="/api/phone/refresh-management":
             if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)

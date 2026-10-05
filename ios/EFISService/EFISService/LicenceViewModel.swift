@@ -66,6 +66,15 @@ final class LicenceViewModel: ObservableObject {
         } catch { status = error.localizedDescription; activitySeverity = .error }
     }
 
+    func activateIncludedYear() async {
+        busy = true; activitySeverity = .info; status = "Activating the included first year…"; defer { busy = false }
+        do {
+            guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
+            account = try await DevelopmentLicenceManagementService(baseURL: url).lifecycle(deviceID: deviceID, action: "activate-included")
+            status = "Included first year activated"; activitySeverity = .success
+        } catch { status = error.localizedDescription; activitySeverity = .error }
+    }
+
     func acceptTransfer() async {
         busy = true; activitySeverity = .info; status = "Accepting ownership transfer…"; defer { busy = false }
         do {

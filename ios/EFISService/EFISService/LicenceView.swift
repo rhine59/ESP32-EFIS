@@ -255,6 +255,7 @@ private struct ProcessDefinition: Identifiable {
 
 private let processCatalogue: [ProcessDefinition] = [
     .init(id: "setup", title: "Set up a new EFIS", subtitle: "Register, licence, install and verify a new unit", systemImage: "plus.circle", steps: ["Identify EFIS", "Register owner", "Choose licence", "Obtain signed licence", "Install on EFIS", "Verify installation"]),
+    .init(id: "buy", title: "Buy / activate a licence", subtitle: "Use the included first year or buy the next licence term", systemImage: "creditcard", steps: ["Identify RedOne", "Check included first year", "Confirm owner", "Activate or buy licence", "Obtain signed licence", "Install on EFIS", "Verify VALID", "Show renewal date"]),
     .init(id: "reassign", title: "Reassign / sell an EFIS", subtitle: "Transfer ownership safely to another user", systemImage: "person.2", steps: ["Confirm current EFIS", "Identify new owner", "Wait for buyer acceptance", "Issue replacement licence", "Install on EFIS", "Verify new ownership"]),
     .init(id: "receive", title: "Receive a transferred EFIS", subtitle: "Accept ownership and install your licence", systemImage: "person.crop.circle.badge.checkmark", steps: ["Open transfer invitation", "Authenticate buyer", "Accept ownership", "Obtain replacement licence", "Install on EFIS", "Verify ownership"]),
     .init(id: "renew", title: "Renew / manage a licence", subtitle: "Review entitlement and renewal state", systemImage: "arrow.triangle.2.circlepath", steps: ["Identify licence", "Review status", "Choose renewal action", "Confirm change", "Verify entitlement"]),
@@ -285,7 +286,9 @@ struct ProcessHomeView: View {
                 Section("Processes") {
                     ForEach(processCatalogue) { process in
                         NavigationLink {
-                            if process.id == "setup" {
+                            if process.id == "buy" {
+                                BuyLicenceFlowView()
+                            } else if process.id == "setup" {
                                 SetupNewEFISFlowView()
                             } else if process.id == "reassign" {
                                 ReassignEFISFlowView()
@@ -322,13 +325,40 @@ struct ProcessHomeView: View {
     }
 }
 
+private struct ProcessGuidanceView: View {
+    let completed: String
+    let next: String
+    var complete = false
+    var attention = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(complete ? "Process complete" : attention ? "Needs your attention" : "What to do next",
+                  systemImage: complete ? "checkmark.circle.fill" : attention ? "exclamationmark.triangle.fill" : "arrow.right.circle.fill")
+                .font(.headline)
+                .foregroundStyle(complete ? .green : attention ? .orange : .blue)
+            Text(next)
+                .font(.title3.weight(.semibold))
+            Divider()
+            Text("Completed")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+            Text(completed)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 6)
+    }
+}
+
 private struct GenericProcessFlowView: View {
     let process: ProcessDefinition
 
     var body: some View {
         List {
             Section {
-                Text(process.subtitle).foregroundStyle(.secondary)
+                ProcessGuidanceView(completed: "Nothing yet.", next: "Start by \(process.steps[0].lowercased()).")
             }
             Section("Process") {
                 ForEach(Array(process.steps.enumerated()), id: \.offset) { index, title in
@@ -346,11 +376,84 @@ private struct GenericProcessFlowView: View {
     }
 }
 
+private struct BuyLicenceFlowView: View {
+    @EnvironmentObject var model: LicenceViewModel
+
+    private var found: Bool { model.account != nil }
+    private var includedUnused: Bool { model.account?.entitlement == "INCLUDED_UNUSED" }
+    private var active: Bool { ["INCLUDED_ACTIVE", "PAID_ACTIVE", "ACTIVE"].contains(model.account?.entitlement ?? "") }
+    private var signed: Bool { active && model.cached?.deviceID == model.deviceID }
+    private var installed: Bool { active && model.installedLicenceID != nil }
+
+    private var completedText: String {
+        if installed { return "The RedOne is identified, its licence is active, and the signed licence is installed and verified." }
+        if signed { return "The RedOne is identified and its active signed licence is safely stored on this phone." }
+        if active { return "The RedOne is identified and its licence entitlement is active." }
+        if includedUnused { return "The RedOne is identified and its included first year is available at no charge." }
+        if found { return "The RedOne and its current licence status have been identified." }
+        return "Nothing yet."
+    }
+
+    private var nextText: String {
+        if installed { return "No further action is required. The renewal date is shown below." }
+        if signed { return "Install the signed licence on the RedOne and keep the phone connected until VALID is confirmed." }
+        if active { return "Obtain the signed licence for this RedOne." }
+        if includedUnused { return "Activate the included first year. There is nothing to pay." }
+        if found { return "Choose the licence term you want to buy." }
+        return "Enter or confirm the RedOne Device ID, then check its licence entitlement."
+    }
+
+    var body: some View {
+        List {
+            Section {
+                ProcessGuidanceView(completed: completedText, next: nextText, complete: installed)
+            }
+            Section("Licence progress") {
+                ProcessStepRow(number: 1, title: "Identify RedOne", detail: model.deviceID, state: found ? .complete : .current)
+                ProcessStepRow(number: 2, title: "Check included first year", detail: includedUnused ? "Included first year available" : active ? "Licence already active" : "Check entitlement before payment", state: found ? .complete : .waiting)
+                ProcessStepRow(number: 3, title: "Confirm owner", detail: found ? "Ownership record confirmed" : "Waiting for RedOne identification", state: found ? .complete : .waiting)
+                ProcessStepRow(number: 4, title: "Activate or buy licence", detail: active ? (model.account?.planName ?? "Active") : includedUnused ? "Activate included year — £0" : "Choose a paid licence", state: active ? .complete : found ? .current : .waiting)
+                ProcessStepRow(number: 5, title: "Obtain signed licence", detail: signed ? "Signed licence secured" : "Available after activation", state: signed ? .complete : active ? .current : .waiting)
+                ProcessStepRow(number: 6, title: "Install on EFIS", detail: installed ? "Installed" : "Waiting for signed licence", state: installed ? .complete : signed ? .current : .waiting)
+                ProcessStepRow(number: 7, title: "Verify VALID", detail: installed ? "EFIS reported VALID" : "Requires EFIS acknowledgement", state: installed ? .complete : .waiting)
+                ProcessStepRow(number: 8, title: "Show renewal date", detail: model.account?.validUntil ?? (installed ? "No expiry for this plan" : "Available after activation"), state: installed ? .complete : .waiting)
+            }
+            Section("Next action") {
+                if !found {
+                    TextField("RedOne Device ID", text: $model.deviceID).textInputAutocapitalization(.characters).autocorrectionDisabled()
+                    Button("Check licence entitlement") { Task { await model.loadManagement() } }.disabled(model.busy || model.deviceID.isEmpty)
+                } else if includedUnused {
+                    Button("Activate included first year — £0") { Task { await model.activateIncludedYear() } }.disabled(model.busy)
+                } else if !active {
+                    ForEach(model.plans) { plan in
+                        Button("Buy \(plan.name) — \(plan.priceDisplay)") { Task { await model.purchase(plan) } }.disabled(model.busy)
+                    }
+                } else if !signed {
+                    Button("Obtain signed licence") { Task { await model.getEntitlement() } }.disabled(model.busy)
+                } else if !installed {
+                    Button("Install licence on EFIS") { Task { await model.transferToEFIS() } }.disabled(model.busy)
+                } else {
+                    Label("Licence activation is complete.", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
+                }
+            }
+            if let account = model.account {
+                Section("Licence") {
+                    LabeledContent("Type", value: account.planName ?? account.entitlement)
+                    LabeledContent("Valid until", value: account.validUntil ?? "No expiry")
+                    LabeledContent("Renewal", value: account.renewal ?? "None")
+                }
+            }
+        }
+        .navigationTitle("Buy / activate licence")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
 private struct SetupNewEFISFlowView: View {
     @EnvironmentObject var model: LicenceViewModel
 
     private var accountLoaded: Bool { model.account != nil }
-    private var active: Bool { model.account?.entitlement == "ACTIVE" }
+    private var active: Bool { ["INCLUDED_ACTIVE", "PAID_ACTIVE", "ACTIVE"].contains(model.account?.entitlement ?? "") }
     private var signed: Bool { model.cached?.deviceID == model.deviceID }
     private var installed: Bool { model.installedLicenceID != nil }
 
@@ -367,7 +470,7 @@ private struct SetupNewEFISFlowView: View {
             Section {
                 HStack {
                     Image(systemName: installed ? "checkmark.circle.fill" : "arrow.right.circle.fill")
-                    Text(installed ? "Setup complete — licence installed and verified" : "Step \(currentStep) of 6")
+                    Text(installed ? "Completed: the licence is installed and verified. Next: nothing else is required." : "Completed: earlier green steps below. Next: complete step \(currentStep) shown in blue.")
                         .font(.headline)
                 }
                 .foregroundStyle(installed ? .green : .blue)
@@ -440,7 +543,10 @@ private struct ReceiveTransferredEFISFlowView: View {
             Section {
                 HStack {
                     Image(systemName: installed ? "checkmark.circle.fill" : pending ? "arrow.right.circle.fill" : "info.circle.fill")
-                    Text(installed ? "Transfer complete — licence installed and verified" : accepted ? "Ownership accepted — continue installation" : pending ? "Transfer invitation found" : "Find your transfer invitation")
+                    VStack(alignment: .leading) {
+                        Text(installed ? "Next: no further action." : accepted ? "Next: obtain and install the replacement licence." : pending ? "Next: enter the invited buyer email and accept ownership." : "Next: find the pending transfer.")
+                        Text(installed ? "Completed: ownership and licence installation." : accepted ? "Completed: invitation found and ownership accepted." : pending ? "Completed: transfer invitation found." : "Completed: nothing yet.").font(.subheadline).foregroundStyle(.secondary)
+                    }
                         .font(.headline)
                 }
                 .foregroundStyle(installed ? .green : accepted || pending ? .blue : .secondary)
@@ -505,7 +611,7 @@ private struct ReassignEFISFlowView: View {
     var body: some View {
         List {
             Section {
-                activityBanner
+                ProcessGuidanceView(completed: !hasAccount ? "Nothing yet." : isPending ? "The current EFIS is confirmed and the new owner has been identified." : "The current EFIS and its licence state have been confirmed.", next: !hasAccount ? "Load the current EFIS details." : isPending ? "Wait for the buyer to accept ownership. You can refresh the status here." : "Enter the new owner email and start the reassignment.", attention: isPending)
             }
 
             Section("Reassignment progress") {

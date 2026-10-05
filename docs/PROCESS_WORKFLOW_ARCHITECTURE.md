@@ -21,6 +21,13 @@ A workflow must derive progress from authoritative service/EFIS state wherever p
 ### Set up a new EFIS
 Identify EFIS -> register owner -> choose licence -> obtain signed licence -> install on EFIS -> verify installation.
 
+### Buy / activate a licence
+Identify RedOne -> check included first-year entitlement -> confirm owner -> activate included year OR buy a licence -> obtain signed licence -> install on EFIS -> verify VALID -> show renewal date.
+
+Commercial rule: a new RedOne includes its first year of licence service. The included year is an entitlement attached to that RedOne and starts on first activation, not manufacture. It may be consumed only once. A later ownership transfer does not create another free year; any remaining active term stays with the RedOne until its existing expiry. After the included term, normal paid renewal applies. A production implementation should also define a reasonable maximum period after purchase in which the included year may first be activated.
+
+The app must check this entitlement before presenting payment. If the included year is available, the primary action is **Activate included first year**, never **Buy**. Price/payment controls are shown only when no included entitlement and no suitable active licence exists.
+
 ### Reassign / sell an EFIS
 Confirm current EFIS -> identify new owner -> buyer accepts ownership -> issue replacement licence -> install on EFIS -> verify new ownership.
 
@@ -63,6 +70,8 @@ A production workflow must have stable process and step identifiers; explicit pr
 Workflow progress must ultimately be resumable after app termination or phone replacement. Persist only workflow identifiers and safe UI context locally; reconstruct authoritative progress from account, licence and EFIS state on resume. Secrets and signed licence material remain in their existing protected storage.
 
 ## Migration rule
+
+Every process screen must begin with a plain-language guidance panel stating (1) what has already been completed and (2) exactly what the user should do next. This guidance is derived from authoritative workflow state and must not require the user to interpret technical status fields or the flow diagram.
 
 New user-facing EFIS Service functionality must be designed as a process/state transition first. Adding a new collection of independent buttons or tabs requires an explicit diagnostic/advanced-use justification. Existing functional screens should be migrated behind guided workflows without removing their tested recovery value until the corresponding process has full acceptance coverage.
 

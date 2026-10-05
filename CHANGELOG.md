@@ -239,3 +239,12 @@ The detailed historical decision register—including adopted, superseded, parke
 - After acceptance the app obtains a replacement signed entitlement, installs it on the EFIS and requires explicit VALID acknowledgement before completion.
 - Production caveat is explicit: email matching is development validation, not buyer authentication. Production requires authenticated customer identity and a short-lived single-use transfer invitation credential.
 - Deployed the updated EFIS web simulator service and installed/launched the updated app on the physical iPhone 13 Pro Max.
+
+## 2026-10-05 — RedOne included first-year licence workflow
+- Added Buy / activate a licence as a first-class guided process with plain-language completed/next-step guidance.
+- Added development entitlement states INCLUDED_UNUSED, INCLUDED_ACTIVE and PAID_ACTIVE; EXPIRED is reserved for expiry processing.
+- New RedOne simulator state begins with one unused included first-year entitlement.
+- Activating the included year consumes it once, starts a 365-day term from activation and exposes the expiry/renewal date.
+- A second attempt to claim the included year is rejected with HTTP 409.
+- Payment choices are not shown while the included first year is available.
+- Physical iPhone build succeeded and the updated app was installed and launched.
