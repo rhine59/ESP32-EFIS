@@ -2,7 +2,7 @@
 
 **Status:** architecture adopted; implementation and production security validation pending.
 
-This document is the authoritative end-to-end product-licensing process for ESP32-EFIS. Licensing is a commercial entitlement mechanism, not a flight-safety dependency. Normal startup and safe/fail-obvious behaviour must not depend on Internet, account or payment availability.
+This document is the authoritative product-licensing specification for ESP32-EFIS. The consolidated component architecture, trust boundaries and step-by-step flows for all lifecycle use cases are in [`LICENSING_ARCHITECTURE_AND_FLOWS.md`](LICENSING_ARCHITECTURE_AND_FLOWS.md). Licensing is a commercial entitlement mechanism, not a flight-safety dependency. Normal startup and safe/fail-obvious behaviour must not depend on Internet, account or payment availability.
 
 ## 1. Trust boundaries
 
