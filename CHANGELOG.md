@@ -215,3 +215,12 @@ The detailed historical decision register—including adopted, superseded, parke
 - Strengthened phone-to-EFIS transfer so success requires explicit `INSTALLED` + `VALID` receiver acknowledgement after verification and persistence.
 - Proved the installed simulator licence survives EFIS container restart while offline.
 - Simplified the success banner and moved the returned installed licence ID into Transfer details.
+
+## 2026-10-05 — process-oriented EFIS Service UI architecture
+- Adopted guided process/state-machine interaction as the standard UI model for all EFIS Service use cases.
+- Replaced the normal app entry point with an outcome-oriented process catalogue.
+- Added common green/blue/grey/amber/red progression semantics and reusable step presentation.
+- Added process definitions for new setup, reassignment/sale, receiving a transfer, renewal, licence installation, EFIS replacement, recovery, firmware update, commissioning and diagnosis.
+- Implemented Reassign EFIS as the first state-aware reference flow using the real account and ownership-transfer lifecycle state.
+- Kept the validated Licence/Purchase/Manage/Transfer interface under Advanced for diagnostics and manual recovery.
+- Buyer transfer acceptance remains explicitly implementation-pending and is shown as an amber waiting state rather than falsely completed.

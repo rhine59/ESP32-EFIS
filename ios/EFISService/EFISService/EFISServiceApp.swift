@@ -6,7 +6,7 @@ struct EFISServiceApp: App {
 
     var body: some Scene {
         WindowGroup {
-            LicenceView()
+            ProcessHomeView()
                 .environmentObject(model)
         }
     }
