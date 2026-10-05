@@ -5,10 +5,25 @@ protocol EFISLicenceTransfer {
     func transferSignedEnvelope(_ envelope: String, deviceID: String) async throws
 }
 
-/// First-stage placeholder. The production implementation will use the same
-/// local phone-to-EFIS service transport selected for phone-mediated OTA.
-struct UnconfiguredEFISTransfer: EFISLicenceTransfer {
+struct LocalEFISLicenceTransfer: EFISLicenceTransfer {
+    let baseURL: URL
+
     func transferSignedEnvelope(_ envelope: String, deviceID: String) async throws {
-        throw LicenceAppError.transferUnavailable
+        let url = baseURL.appendingPathComponent("api/phone/install-license")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: [
+            "device_id": deviceID,
+            "license": envelope
+        ])
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw LicenceAppError.service("Invalid EFIS response")
+        }
+        guard (200..<300).contains(http.statusCode) else {
+            let detail = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["error"] as? String
+            throw LicenceAppError.service(detail ?? "EFIS rejected signed licence (HTTP \(http.statusCode))")
+        }
     }
 }
