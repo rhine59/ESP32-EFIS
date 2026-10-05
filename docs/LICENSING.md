@@ -337,3 +337,11 @@ The simulator does not currently model calibration or account-side ownership rec
 ### iPhone entitlement client — prototype started (2026-10-05)
 
 The customer/service phone client lives under `ios/EFISService/`. Its security boundary is explicit: the phone requests and caches an opaque **server-signed** entitlement but never owns the Ed25519 signing private key and never signs a licence. The prototype implements development challenge/HMAC acquisition against the existing service, Keychain storage using ThisDeviceOnly protection, entitlement/device display, and an explicit transfer abstraction. Local EFIS transfer is deliberately not faked: the transport currently reports unconfigured until it is connected to the phone-to-EFIS local service used for OTA. QR Device-ID capture, account authentication/ownership and payment remain subsequent increments.
+
+### Phone-mediated entitlement development path — LIVE (2026-10-05)
+
+The iPhone client now uses the Synology web simulator's restricted `POST /api/phone/entitlement` development broker. The broker accepts the configured simulator Device ID, performs the existing internal device challenge/HMAC exchange with the host-bound licence service, and returns only the resulting server-signed DEVELOPMENT licence response with `simulation_only=true`.
+
+The iPhone contains neither the device HMAC credential nor the Ed25519 signing private key. It rejects broker responses that are not explicitly marked simulation-only and checks that the returned Device ID matches the requested EFIS before caching the opaque signed envelope in Keychain.
+
+The broker has been exercised live through the simulator HTTPS reverse proxy and returned `ESP32-EFIS`, the expected simulator Device ID, ACTIVE entitlement and a non-empty signed licence. The raw licence service remains host-bound. This is a development integration boundary only; production replaces the broker with authenticated customer/account ownership and device-registration APIs.
