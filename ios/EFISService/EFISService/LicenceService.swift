@@ -2,21 +2,6 @@ import Foundation
 
 protocol LicenceServiceProtocol {
     func requestLicence(deviceID: String) async throws -> LicenceResponse
-    func lifecycle(deviceID: String, action: String, extra: [String:String] = [:]) async throws -> LicenceAccountStatus {
-        struct Wire: Decodable {
-            let simulation_only: Bool; let device_id: String; let ownership: String
-            let entitlement: String; let plan_id: String?; let plan_name: String?; let transferable: Bool
-            let renewal: String?; let valid_until: String?; let transfer_status: String?
-        }
-        var body = extra; body["device_id"] = deviceID
-        let data = try await request("/api/phone/" + action, body: body)
-        let wire = try JSONDecoder().decode(Wire.self, from: data)
-        guard wire.simulation_only, wire.device_id == deviceID else { throw LicenceAppError.service("Device/account mismatch.") }
-        return LicenceAccountStatus(deviceID: wire.device_id, ownership: wire.ownership, entitlement: wire.entitlement,
-                                    planID: wire.plan_id, planName: wire.plan_name, transferable: wire.transferable,
-                                    renewal: wire.renewal, validUntil: wire.valid_until, transferStatus: wire.transfer_status)
-    }
-
 }
 
 /// Development phone-facing broker. The app never receives the simulator
@@ -105,4 +90,20 @@ struct DevelopmentLicenceManagementService {
         return LicenceAccountStatus(deviceID: wire.device_id, ownership: wire.ownership, entitlement: wire.entitlement,
                                     planID: wire.plan_id, planName: wire.plan_name, transferable: wire.transferable, renewal: wire.renewal, validUntil: wire.valid_until, transferStatus: wire.transfer_status)
     }
+    func lifecycle(deviceID: String, action: String, extra: [String:String] = [:]) async throws -> LicenceAccountStatus {
+        struct Wire: Decodable {
+            let simulation_only: Bool; let device_id: String; let ownership: String
+            let entitlement: String; let plan_id: String?; let plan_name: String?; let transferable: Bool
+            let renewal: String?; let valid_until: String?; let transfer_status: String?
+        }
+        var body = extra
+        body["device_id"] = deviceID
+        let data = try await request("/api/phone/" + action, body: body)
+        let wire = try JSONDecoder().decode(Wire.self, from: data)
+        guard wire.simulation_only, wire.device_id == deviceID else { throw LicenceAppError.service("Device/account mismatch.") }
+        return LicenceAccountStatus(deviceID: wire.device_id, ownership: wire.ownership, entitlement: wire.entitlement,
+                                    planID: wire.plan_id, planName: wire.plan_name, transferable: wire.transferable,
+                                    renewal: wire.renewal, validUntil: wire.valid_until, transferStatus: wire.transfer_status)
+    }
+
 }
