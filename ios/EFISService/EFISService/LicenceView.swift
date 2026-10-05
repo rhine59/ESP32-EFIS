@@ -6,7 +6,7 @@ struct LicenceView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            VStack(spacing: 0) {\n                HStack {\n                    Text("Status: " + model.status)\n                        .font(.footnote)\n                        .lineLimit(2)\n                    Spacer()\n                    if model.busy { ProgressView() }\n                }\n                .padding(.horizontal)\n                .padding(.vertical, 8)\n\n                Form {
                 Section("EFIS") {
                     TextField("Device ID", text: $model.deviceID)
                         .textInputAutocapitalization(.characters)
