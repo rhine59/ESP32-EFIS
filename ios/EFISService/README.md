@@ -23,15 +23,11 @@ Account login, payment and production ownership registration are intentionally i
 
 Create/open an iOS SwiftUI target named **EFISService**, then add the Swift files in `ios/EFISService/EFISService/`. Minimum target iOS 17 is suitable for the prototype.
 
-The development service URL is configurable in the app. No device credential is committed to the Swift source or Xcode project. For development it is supplied at runtime either in the secure credential field or through the `EFIS_DEVICE_SECRET` process environment variable. The HMAC credential is simulator-only and exists solely to exercise the already-deployed development service.
+The development service URL is configurable in the app. No device credential or licence-signing key is present in the phone application.
 
-For Mac/iOS-Simulator testing, keep the Synology licence service host-bound and create a local SSH tunnel instead of exposing it publicly:
+For the current Synology simulation, the phone talks only to the simulator's restricted development broker at `/api/phone/entitlement` (reverse-proxied on the simulator endpoint). That broker holds the simulator-side device credential, calls the internal licence service, and returns only the already-signed DEVELOPMENT entitlement. The raw licence service and its simulator test endpoints remain host-bound and are not exposed to the phone.
 
-```sh
-ssh -N -L 18094:127.0.0.1:8094 <synology-host>
-```
-
-The app development default `http://127.0.0.1:18094` therefore reaches the restricted service through the developer's authenticated SSH connection. This is a development path, not the production customer API. Production will use authenticated account/device ownership flows over HTTPS.
+This broker is explicitly `simulation_only`; the iPhone client rejects a response that is not marked as such. It is not the production customer API. Production replaces it with authenticated account ownership/device-registration flows over HTTPS.
 
 ## Acceptance criteria
 
