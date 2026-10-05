@@ -302,3 +302,10 @@ The detailed historical decision register—including adopted, superseded, parke
 - Defined the production licence API requirement: stable public DNS, publicly trusted TLS, standard HTTPS TCP 443, and identical operation over ordinary Wi-Fi and cellular.
 - Explicitly prohibited customer requirements to change router/DNS settings, disable iOS privacy features, install certificates, hard-code private IPs, or edit backend URLs during normal setup.
 - Added pre-release validation requirements across home Wi-Fi, unrelated Wi-Fi and cellular with normal iOS privacy settings enabled.
+
+## 2026-10-05 — separate development and release licence endpoints
+- Moved the iOS licence-service endpoint behind `EFISServiceConfiguration`.
+- Debug builds retain the editable Synology development endpoint for simulator work.
+- Release builds read `EFISLicenceServiceURL` from application configuration and no longer expose a customer-editable backend URL.
+- Both Debug and Release simulator builds pass.
+- A production public HTTPS service is now an explicit release gate; the development NAS endpoint cannot silently ship as the customer backend.

@@ -181,9 +181,13 @@ struct LicenceView: View {
                 List {
                     Section { activityBanner }
                     Section("Entitlement service") {
-                        TextField("Service URL", text: $model.serviceURL)
+                        #if DEBUG
+                        TextField("Development service URL", text: $model.serviceURL)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
+                        #else
+                        LabeledContent("Service", value: "RedOne Licence Service")
+                        #endif
                         Button("Get / Refresh Signed Entitlement") {
                             Task { await model.getEntitlement() }
                         }

@@ -1,9 +1,17 @@
 import Foundation
 
+enum EFISServiceConfiguration {
+    #if DEBUG
+    static let licenceServiceURL = "https://granvillehouse.synology.me:8449"
+    #else
+    static let licenceServiceURL = Bundle.main.object(forInfoDictionaryKey: "EFISLicenceServiceURL") as? String ?? ""
+    #endif
+}
+
 @MainActor
 final class LicenceViewModel: ObservableObject {
     @Published var deviceID = "EFIS-SIM-0001"
-    @Published var serviceURL = "https://granvillehouse.synology.me:8449"
+    @Published var serviceURL = EFISServiceConfiguration.licenceServiceURL
     @Published var cached: LicenceSummary?
     enum ActivitySeverity { case info, success, warning, error }
 

@@ -383,3 +383,11 @@ Signed licences are cached in Apple Keychain. Runtime simulator testing must use
 Phone-to-EFIS transfer now has an explicit acknowledgement contract. HTTP success alone is insufficient. The phone requires the receiver response to contain result=INSTALLED and an installed licence with status=VALID. The EFIS receiver reaches that response only after Device-ID checking, signed-envelope verification, atomic persistence and activation. The phone then reports `Licence verified and installed on EFIS`; the returned licence ID is shown separately in the licence details rather than making the activity banner excessively tall.
 
 Live validation used EFIS-SIM-0001. After phone transfer, the receiver reported licence VALID, class DEVELOPMENT and signing key sim-dev-1. The simulator container was then restarted while its simulated network state was offline; the same licence ID reloaded as VALID, proving persistence across restart without licence-service access.
+
+## Zero-configuration mobile service endpoint — 5 October 2026
+
+The RedOne customer app must not ask the user to configure a licence-service URL or change network settings. Release builds obtain the public licence API endpoint from the application build configuration (`EFISLicenceServiceURL`). The endpoint must be a publicly routable, publicly trusted HTTPS service on TCP 443 and work unchanged on ordinary Wi-Fi and cellular networks.
+
+Debug builds may continue to use and expose the Synology development endpoint for simulator testing. That endpoint and any LAN/NAT-loopback workarounds are development-only and are prohibited from becoming release dependencies.
+
+A Release build is not production-ready until a real `EFISLicenceServiceURL` is supplied and validated over unrelated Wi-Fi and cellular with normal iOS privacy settings enabled.
