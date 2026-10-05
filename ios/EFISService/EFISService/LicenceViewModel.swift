@@ -8,7 +8,8 @@ final class LicenceViewModel: ObservableObject {
     @Published var status = "Ready"
     @Published var busy = false
     @Published var plans: [LicencePlan] = []
-    @Published var account: LicenceAccountStatus?\n    @Published var buyerEmail = ""
+    @Published var account: LicenceAccountStatus?
+    @Published var buyerEmail = ""
 
     private let keychain = KeychainStore()
 
