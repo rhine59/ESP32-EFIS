@@ -4,6 +4,9 @@ ROOT="${ROOT:-/volume1/docker/ESP32-EFIS}"
 SIM="${SIM_URL:-http://127.0.0.1:8093}"
 LIC="${LIC_URL:-http://127.0.0.1:8094}"
 TMP="/tmp/efis-license-test.$$"
+DOCKER="${DOCKER:-$(command -v docker 2>/dev/null || true)}"
+[ -n "$DOCKER" ] || [ ! -x /usr/local/bin/docker ] || DOCKER=/usr/local/bin/docker
+[ -n "$DOCKER" ] || { echo "FAIL: docker command not found"; exit 1; }
 trap 'rm -f "$TMP"' EXIT
 
 json_post(){ curl -fsS -H 'Content-Type: application/json' -X POST -d "$2" "$SIM$1"; }
@@ -18,7 +21,7 @@ expect_refresh_failure(){
   cat "$TMP"; echo
 }
 restart_sim(){
-  docker compose -f "$ROOT/efis-web-simulator/compose.yml" restart >/dev/null
+  "$DOCKER" compose -f "$ROOT/efis-web-simulator/compose.yml" restart >/dev/null
   i=0
   until curl -fsS "$SIM/api/state" >/dev/null 2>&1; do
     i=$((i+1)); [ "$i" -lt 30 ] || { echo "FAIL: simulator did not restart"; exit 1; }

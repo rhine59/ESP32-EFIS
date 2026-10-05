@@ -345,3 +345,11 @@ The iPhone client now uses the Synology web simulator's restricted `POST /api/ph
 The iPhone contains neither the device HMAC credential nor the Ed25519 signing private key. It rejects broker responses that are not explicitly marked simulation-only and checks that the returned Device ID matches the requested EFIS before caching the opaque signed envelope in Keychain.
 
 The broker has been exercised live through the simulator HTTPS reverse proxy and returned `ESP32-EFIS`, the expected simulator Device ID, ACTIVE entitlement and a non-empty signed licence. The raw licence service remains host-bound. This is a development integration boundary only; production replaces the broker with authenticated customer/account ownership and device-registration APIs.
+
+## iPhone operational UX and acknowledgement (validated 2026-10-05)
+
+EFIS Service uses Licence, Purchase, Manage and Transfer tabs. All operations publish a severity-coloured activity banner: blue=in progress/information, green=success, amber=warning/pending, red=error. Renewal and ownership-transfer controls are state-aware.
+
+The iPhone caches only the opaque server-signed licence envelope in Apple Keychain. Simulator runtime tests involving Keychain must use a normally signed simulator build; CODE_SIGNING_ALLOWED=NO is suitable only for compile validation.
+
+Transfer success is receiver-authoritative. The iPhone does not display installation success merely because POST `/api/phone/install-license` returned HTTP 2xx. It requires `result=INSTALLED` and installed licence `status=VALID`. The simulator returns this only after local signature/schema/product/Device-ID verification and persistent installation. The returned licence ID is retained for display in the Transfer details.

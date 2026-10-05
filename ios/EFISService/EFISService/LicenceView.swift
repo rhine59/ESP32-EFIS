@@ -194,6 +194,10 @@ struct LicenceView: View {
                             LabeledContent("Device", value: licence.deviceID)
                             LabeledContent("Entitlement", value: licence.entitlement)
                             LabeledContent("Cached", value: licence.cachedAt.formatted())
+                            if let installedLicenceID = model.installedLicenceID {
+                                LabeledContent("Installed Licence ID", value: installedLicenceID)
+                                    .textSelection(.enabled)
+                            }
                             Button("Transfer to EFIS") {
                                 Task { await model.transferToEFIS() }
                             }

@@ -367,3 +367,19 @@ No simulator result should be described as physical or production security valid
 The iPhone service client now exposes a development implementation of the customer licence-management surface. It can load the registered-device/account state, display ownership, entitlement, current plan and transferability, list available licence products, initiate a simulated purchase, automatically retrieve/cache the resulting signed entitlement, and retain the existing Transfer to EFIS workflow.
 
 The current purchase endpoint is deliberately **simulation only** and takes no payment. Product names/prices are development fixtures rather than an adopted commercial price list. Production purchase must replace this with authenticated account ownership plus a real payment-provider checkout flow and verified webhook before entitlement becomes ACTIVE. The phone must never treat its own button press or payment-provider redirect as proof of payment; only the server-side verified payment event may activate entitlement.
+
+## 2026-10-05 validated iPhone licence lifecycle checkpoint
+
+The EFIS Service iPhone application now presents licensing as four permanently accessible tabs: Licence, Purchase, Manage and Transfer. This replaces the earlier single long form and avoids critical lifecycle actions being obscured by the iOS floating tab bar.
+
+Every licence action uses a common activity banner at the top of the active tab. Blue means information or an operation in progress, green means successful completion, amber means a warning or pending user state, and red means failure. Significant account state takes precedence over a generic account-loaded message; in particular a pending ownership transfer is shown as an amber warning.
+
+Annual renewal cancellation and re-enablement were exercised end-to-end. Cancelling renewal leaves the current entitlement ACTIVE and changes renewal to CANCELLED. Re-enabling changes renewal to AUTO. Controls are state-aware so only the applicable action is offered.
+
+Ownership transfer initiation and cancellation were exercised end-to-end. A pending transfer leaves the current entitlement ACTIVE, exposes Cancel Pending Transfer as the primary transfer action, and suppresses starting another transfer until the pending operation is cancelled.
+
+Signed licences are cached in Apple Keychain. Runtime simulator testing must use a normally signed iOS Simulator build; builds made with CODE_SIGNING_ALLOWED=NO are compile-validation only and can fail Keychain access with OSStatus -34018.
+
+Phone-to-EFIS transfer now has an explicit acknowledgement contract. HTTP success alone is insufficient. The phone requires the receiver response to contain result=INSTALLED and an installed licence with status=VALID. The EFIS receiver reaches that response only after Device-ID checking, signed-envelope verification, atomic persistence and activation. The phone then reports `Licence verified and installed on EFIS`; the returned licence ID is shown separately in the licence details rather than making the activity banner excessively tall.
+
+Live validation used EFIS-SIM-0001. After phone transfer, the receiver reported licence VALID, class DEVELOPMENT and signing key sim-dev-1. The simulator container was then restarted while its simulated network state was offline; the same licence ID reloaded as VALID, proving persistence across restart without licence-service access.

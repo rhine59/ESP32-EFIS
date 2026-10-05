@@ -206,3 +206,12 @@ The detailed historical decision register—including adopted, superseded, parke
 - Lifecycle actions remain server-authoritative; the phone only requests changes.
 - Purchase/renewal/transfer endpoints remain development simulation and take no payment.
 - iOS build passes, updated app is installed/launched, and Synology simulator has been rebuilt.
+
+## 2026-10-05 — iPhone licence lifecycle and verified EFIS installation checkpoint
+- Reworked EFIS Service licensing into Licence, Purchase, Manage and Transfer tabs for reliable access on all phone screen sizes.
+- Added severity-coloured activity/progress banners across all licence actions.
+- Added state-aware renewal and ownership-transfer controls and validated cancel/re-enable/pending/cancel flows.
+- Confirmed Apple Keychain secure licence caching; documented that runtime Keychain testing requires a normally signed simulator build.
+- Strengthened phone-to-EFIS transfer so success requires explicit `INSTALLED` + `VALID` receiver acknowledgement after verification and persistence.
+- Proved the installed simulator licence survives EFIS container restart while offline.
+- Simplified the success banner and moved the returned installed licence ID into Transfer details.

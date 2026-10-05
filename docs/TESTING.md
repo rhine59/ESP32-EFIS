@@ -79,3 +79,13 @@ The required response to a real-source failure is a conspicuous invalid indicati
 A rotary-selectable **FULL TEST** boot option is now an adopted requirement. It runs deterministic electrical/component checks and reports PASS / FAIL / NOT TESTED plus stable documented `ECCC-NN` failure codes. Tests continue after non-dangerous failures to collect a complete fault list. Optional/unfitted hardware must not be reported as failed. Display/backlight tests include a human visual check.
 
 Implementation/validation proceeds from simulated PASS/FAIL cases through Phase-1 hardware, BMI088/BMP585, RM3100/GNSS and eventual production power/serial-interface tests. Each implemented test requires both a known-good PASS and an injected or realistic FAIL case. See `ELECTRICAL_TEST_HARNESS.md` for the code registry and staged implementation plan.
+
+## iPhone licensing regression checkpoint (2026-10-05)
+
+Validate the EFIS Service app with a normally signed iOS Simulator build whenever Keychain is exercised. Do not use CODE_SIGNING_ALLOWED=NO for runtime Keychain tests; it can produce OSStatus -34018.
+
+Manual lifecycle acceptance sequence: load account; cancel annual renewal and verify ACTIVE/CANCELLED; re-enable and verify ACTIVE/AUTO; start ownership transfer and verify ACTIVE/PENDING plus amber warning; cancel pending transfer and verify the transfer controls return; retrieve signed entitlement and verify secure cache; transfer to EFIS and require the green `Licence verified and installed on EFIS` acknowledgement.
+
+Receiver acceptance requires more than HTTP 2xx: `/api/phone/install-license` must return `result=INSTALLED` and licence `status=VALID`. After installation, restart the EFIS simulator while offline and verify `/api/state` reports the same VALID licence ID.
+
+The automated `scripts/test-license-harness.sh` remains the regression suite for signature integrity, Device-ID binding, entitlement refusal, interrupted replacement, reset, corrupt-store recovery, offline phone transfer and offline restart persistence.

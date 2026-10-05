@@ -13,6 +13,7 @@ final class LicenceViewModel: ObservableObject {
     @Published var plans: [LicencePlan] = []
     @Published var account: LicenceAccountStatus?
     @Published var buyerEmail = ""
+    @Published var installedLicenceID: String?
 
     private let keychain = KeychainStore()
 
@@ -102,11 +103,8 @@ final class LicenceViewModel: ObservableObject {
             guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
             let transfer = LocalEFISLicenceTransfer(baseURL: url)
             let acknowledgement = try await transfer.transferSignedEnvelope(cached.envelope, deviceID: cached.deviceID)
-            if let licenceID = acknowledgement.licenceID {
-                status = "Licence verified and installed on EFIS (\(licenceID))"
-            } else {
-                status = "Licence verified and installed on EFIS"
-            }
+            installedLicenceID = acknowledgement.licenceID
+            status = "Licence verified and installed on EFIS"
             activitySeverity = .success
         } catch {
             status = error.localizedDescription
