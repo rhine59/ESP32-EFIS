@@ -15,7 +15,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: uk.co.thingies.EFISService
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: EFIS Service\n        INFOPLIST_KEY_NSCameraUsageDescription: Scan the EFIS Device ID QR code to request its signed entitlement.
+        INFOPLIST_KEY_CFBundleDisplayName: EFIS Service
+        INFOPLIST_KEY_NSCameraUsageDescription: "Scan the EFIS Device ID QR code to request its signed entitlement."
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking: YES
