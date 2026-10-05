@@ -14,6 +14,11 @@ LIC=os.getenv("LICENSE_BASE_URL","").rstrip("/")
 ALLOW=os.getenv("SIM_ALLOW_MUTATIONS","false").lower()=="true"
 DEVICE_SECRET=os.getenv("DEVICE_SECRET","simulator-development-secret-change-me").encode()
 LICENCE_STORE=Path(os.getenv("LICENSE_STORE","/data/licence.cbor.b64"))
+account={"ownership":"REGISTERED","entitlement":"ACTIVE","plan_id":"development","plan_name":"Development Licence","transferable":True}
+plans=[
+ {"id":"perpetual","name":"RedOne Perpetual","price_display":"£299 one-off","description":"Permanent RedOne licence for one EFIS Device ID."},
+ {"id":"annual","name":"RedOne Annual","price_display":"£49/year","description":"Annual RedOne licence; renewal and expiry policy remains pre-production."}
+]
 state={"device_id":DEVICE,"network":"offline","firmware":"2.4.0","staged":None,
        "eiu":{"firmware":"1.7.0","protocol":"1.2","capabilities":["ENGINE_DATA_V1","OTA_V1"]},
        "offline_cache":{"release":None,"ready":False,"sha256":None,"bytes":0},
@@ -155,6 +160,9 @@ class H(SimpleHTTPRequestHandler):
         self.send_header("Content-Length",str(len(b))); self.end_headers(); self.wfile.write(b)
     def do_GET(self):
         if self.path=="/api/state": return self.sendj(state)
+        if self.path=="/api/phone/plans": return self.sendj({"simulation_only":True,"plans":plans})
+        if self.path.startswith("/api/phone/account"):
+            return self.sendj({"simulation_only":True,"device_id":DEVICE,**account})
         if self.path=="/api/device/qr":
             payload="efis://device/"+DEVICE
             image=qrcode.make(payload)
@@ -192,6 +200,15 @@ class H(SimpleHTTPRequestHandler):
         if self.path=="/api/firmware/activate":
             if state["staged"]: state["firmware"],state["staged"]=state["staged"],None
             return self.sendj(state)
+        if self.path=="/api/phone/purchase":
+            if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)
+            plan=next((p for p in plans if p["id"]==body.get("plan_id")),None)
+            if not plan: return self.sendj({"error":"Unknown licence plan"},400)
+            account.update(entitlement="ACTIVE",plan_id=plan["id"],plan_name=plan["name"])
+            return self.sendj({"simulation_only":True,"result":"PURCHASED","device_id":DEVICE,**account})
+        if self.path=="/api/phone/refresh-management":
+            if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)
+            return self.sendj({"simulation_only":True,"device_id":DEVICE,**account})
         if self.path=="/api/phone/install-license":
             if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)
             encoded=body.get("license","")
