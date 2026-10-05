@@ -19,6 +19,12 @@ struct LicenceView: View {
                     TextField("Service URL", text: $model.serviceURL)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+                    SecureField("Development device credential", text: $model.developmentCredential)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    Text("Development only. The credential is runtime input and is not stored in source control.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                     Button("Get / Refresh Signed Entitlement") {
                         Task { await model.getEntitlement() }
                     }
