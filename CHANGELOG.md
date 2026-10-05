@@ -1,0 +1,131 @@
+# Change History
+
+This file is the chronological checkpoint history for ESP32-EFIS. GitHub `main` is the authoritative source of truth. Every future project checkpoint must update this file in the same change set as the implementation/documentation checkpoint.
+
+For detailed design rationale, validation scope and superseded decisions, see `docs/PROJECT_STATUS.md`.
+
+## 2026-10-05
+
+### iPhone signed-entitlement acquisition — PASS
+- Fixed iOS Simulator Keychain failure `-34018` by restoring normal simulator code signing and removing the forced empty development-team setting from the generated project definition.
+- Rebuilt, code-signed, installed and relaunched EFIS Service.
+- User-confirmed **Get / Refresh Signed Entitlement** succeeds.
+- User-confirmed Keychain-backed UI shows Device `EFIS-SIM-0001`, entitlement `ACTIVE` and cached signed envelope.
+- Next validation: terminate/relaunch and confirm Keychain persistence.
+
+### iPhone entitlement live integration — PASS
+- Added restricted simulator phone entitlement broker.
+- Phone no longer contains the simulator device HMAC credential.
+- Broker performs internal challenge/HMAC exchange and returns only the already-signed DEVELOPMENT licence.
+- Live HTTPS broker test returned expected Device ID, product, ACTIVE entitlement and non-empty signed licence.
+- SwiftUI app builds and launches in iPhone 17 Pro simulator.
+
+### iPhone entitlement client — STARTED
+- Added `ios/EFISService/` SwiftUI application and XcodeGen project definition.
+- Added Device-ID entry, entitlement retrieval, Keychain cache, cached-licence display and explicit EFIS transfer boundary.
+- Phone has no Ed25519 licence-signing capability.
+- Fixed Swift 6 actor isolation in the transfer abstraction.
+
+### Docker licensing contract — COMPLETE FOR CURRENT SIMULATOR STAGE
+- Regression harness passes signed acquisition and local Ed25519/schema/product/Device-ID verification.
+- Verified persistence across offline restart.
+- Verified rejection of tampered payload, bad signature and correctly signed wrong-Device-ID licence.
+- Verified no-entitlement preservation of existing valid licence.
+- Verified interrupted replacement recovery and startup cleanup of orphan candidate.
+- Verified Licence Reset invariants, offline acquisition refusal, corrupt-store detection and signed recovery.
+- Physical protected-NVS, provisioning and real power-loss validation deliberately remain hardware work.
+
+### Licensing security regression — PASS
+- Added and executed non-destructive licence failure-path harness.
+- Corrected wrong-device test to use a valid signature for another Device ID, independently proving Device-ID binding.
+- Removed interactive `sudo` requirement from Synology rebuild workflow.
+
+## 2026-10-04
+
+### Signed licence service and persistence — PASS
+- Added development licence service using deterministic CBOR and Ed25519.
+- Added device challenge/HMAC authentication and simulator trust endpoint.
+- Simulator acquires, verifies and installs signed DEVELOPMENT licences.
+- Persisted signed envelope survives simulator restart and verifies locally while offline.
+- Added rebuild and licence test scripts.
+- Added negative-test fixtures for tampering, signature corruption and Device-ID mismatch.
+
+## 2026-10-02
+
+### Product naming and documentation
+- Consolidated customer-facing branding around Lollipop Design.
+- Canonical engineering product roles remain EFIS and SMUX.
+- Updated project documentation to avoid unstable branding leaking into protocol, Docker, OTA and cryptographic identifiers.
+
+### Enclosure/material decisions
+- Adopted ASA as the preferred enclosure material baseline.
+- Documented captive M5 lid-fastening approach and thermal considerations.
+
+## 2026-10-01
+
+### CAN and firmware architecture
+- Adopted AEF-CAN as the extensible aircraft data bus.
+- Established Classical CAN 500 kbit/s / 11-bit baseline while keeping application semantics future-compatible with CAN FD.
+- Added EFIS/SMUX firmware dependency and compatibility strategy.
+- Added phone-mediated OTA requirement for aircraft locations without Internet connectivity.
+- Added factory USB-C programming approach for SMUX.
+- Added staged/checkpointed firmware delivery and recovery architecture.
+- Reviewed and improved firmware transport and other sub-optimal architecture decisions.
+
+### SMUX sensor architecture
+- Documented sensor auto-discovery, EFIS↔SMUX connection, sensor harness bundling and sensor power.
+- Added Rotax 912 ULS battery voltage, fuel pressure and fuel-level input requirements.
+- Adopted EFIS-controlled engineering units and per-channel low/normal/high thresholds; oil pressure uses psi.
+
+### Documentation/manual
+- Added indexed project manual generation and commissioning-process documentation.
+- Corrected PDF BOM table formatting.
+
+## 2026-09-30
+
+### OTA physical-test planning
+- Defined minimal two-image ESP32 OTA harness with visibly different LED behaviour.
+- Documented publication, pull, staging and activation experiment.
+
+### CAN architecture start
+- Added provisional CAN/sensor phase to the project.
+- Established supplementary/non-certified role and future-proof protocol goals.
+
+## 2026-09-29
+
+### Speech/chat integration review
+- Reviewed server speech/chat changes and STT → chat → TTS integration/validation path.
+
+### Server platform
+- Documented proposed Docker/virtualisation host architecture, Proxmox/LXC/VM roles and later k3s option.
+- Added networking/switching and DNS considerations for the development infrastructure.
+
+## 2026-09-27
+
+### Customer support service
+- Added Dockerized Lollipop Design RedOne support-service architecture.
+- Established human validation boundary before customer Q&A becomes authoritative.
+
+## 2026-09-26
+
+### Boot, maintenance and diagnostics
+- Adopted rotary/push boot menu with START EFIS, FULL TEST and FIRMWARE UPDATE.
+- Added persistent fault-history requirement.
+- Added maintenance Wi-Fi/NVS/Forget-network behaviour and fail-independent normal startup.
+
+### Product licensing architecture
+- Adopted immutable EFIS Device ID and signed offline-verifiable licensing.
+- Separated account, entitlement/payment and private signing responsibilities.
+- Defined online and offline licence flows and explicit Licence Reset semantics.
+- Adopted deterministic CBOR + Ed25519 envelope architecture and key rotation identifier.
+- Established that licence verification is local and normal EFIS startup never depends on network/account availability.
+
+### Pressure scope
+- Explicitly removed ASI/IAS/PITOT/differential-pressure capability.
+- BMP585 is STATIC pressure only.
+
+## Earlier baseline checkpoints
+
+Earlier development established the project's supplementary/non-primary safety model, ESP32-S3-WROOM-1-N16R2 hardware baseline, Newhaven 480×480 round RGB565 display, Bourns rotary/push control, BMI088 attitude sensing, BMP585 static-pressure altitude source, RM3100 remote magnetometer, QEMU authoritative renderer, SwiftUI simulator, fail-obvious sensor validity, Synology-hosted OTA origin/admin services, separate Stage/Publish workflow, A/B OTA/rollback design and maintenance-only iPhone hotspot networking.
+
+The detailed historical decision register—including adopted, superseded, parked and dismissed alternatives—is retained in `docs/PROJECT_STATUS.md`. This summary does not replace that register.
