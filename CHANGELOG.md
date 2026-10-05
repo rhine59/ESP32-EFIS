@@ -6,6 +6,11 @@ For detailed design rationale, validation scope and superseded decisions, see `d
 
 ## 2026-10-05
 
+### Fix licence account/catalogue loading
+- Fixed iOS decoding of the server `price_display` field into the Swift `priceDisplay` model.
+- Account state now loads independently of the licence product catalogue so a catalogue failure cannot hide valid ownership/entitlement data.
+- Rebuilt and reinstalled EFIS Service in the iPhone 17 Pro simulator; build passes.
+
 ### iPhone signed-entitlement acquisition — PASS
 - Fixed iOS Simulator Keychain failure `-34018` by restoring normal simulator code signing and removing the forced empty development-team setting from the generated project definition.
 - Rebuilt, code-signed, installed and relaunched EFIS Service.
