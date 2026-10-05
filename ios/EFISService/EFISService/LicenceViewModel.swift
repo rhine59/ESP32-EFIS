@@ -29,7 +29,16 @@ final class LicenceViewModel: ObservableObject {
             account = try await service.account(deviceID: deviceID)
             do {
                 plans = try await service.plans()
-                status = "Licence account loaded"; activitySeverity = .success
+                if account?.transferStatus == "PENDING" {
+                    status = "Ownership transfer pending"
+                    activitySeverity = .warning
+                } else if account?.renewal == "CANCELLED" {
+                    status = "Auto-renewal is cancelled"
+                    activitySeverity = .warning
+                } else {
+                    status = "Licence account loaded"
+                    activitySeverity = .success
+                }
             } catch {
                 plans = []
                 status = "Account loaded; licence catalogue unavailable: " + error.localizedDescription; activitySeverity = .warning
