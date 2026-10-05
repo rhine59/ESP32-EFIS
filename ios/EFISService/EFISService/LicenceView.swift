@@ -25,6 +25,33 @@ struct LicenceView: View {
                         Button("Scan Device QR") { showingScanner = true }
                     }
 
+                    Section("Licence account") {
+                        Button("Load / Refresh Account") { Task { await model.loadManagement() } }
+                            .disabled(model.busy || model.deviceID.isEmpty)
+                        if let account = model.account {
+                            LabeledContent("Ownership", value: account.ownership)
+                            LabeledContent("Entitlement", value: account.entitlement)
+                            LabeledContent("Plan", value: account.planName ?? "None")
+                            LabeledContent("Transferable", value: account.transferable ? "Yes" : "No")
+                        }
+                    }
+
+                    if !model.plans.isEmpty {
+                        Section("Purchase licence — simulation") {
+                            ForEach(model.plans) { plan in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(plan.name).font(.headline)
+                                    Text(plan.priceDisplay)
+                                    Text(plan.description).font(.footnote).foregroundStyle(.secondary)
+                                    Button("Purchase " + plan.name) { Task { await model.purchase(plan) } }
+                                        .disabled(model.busy)
+                                }.padding(.vertical, 4)
+                            }
+                            Text("Development simulation only. No payment is taken.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }
+                    }
+
                     Section("Entitlement service") {
                         TextField("Service URL", text: $model.serviceURL)
                             .textInputAutocapitalization(.never)
