@@ -54,7 +54,7 @@ final class QRScannerViewController: UIViewController, @preconcurrency AVCapture
         layer.videoGravity = .resizeAspectFill
         view.layer.insertSublayer(layer, at: 0)
         preview = layer
-        Task.detached { [session] in session.startRunning() }
+        session.startRunning()
     }
 
     override func viewDidLayoutSubviews() {
