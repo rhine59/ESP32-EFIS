@@ -333,3 +333,7 @@ The Synology regression harness now covers the remaining simulator-level licence
 Together with the earlier tampered-payload, bad-signature, correctly-signed wrong-Device-ID and offline-reboot tests, this completes the intended **Docker/simulator licensing contract** for this stage. It does not validate ESP32 protected NVS, flash atomicity, brownout/power-loss behaviour, secure factory provisioning or physical-device trust-anchor protection; those remain hardware-stage gates.
 
 The simulator does not currently model calibration or account-side ownership records, so Licence Reset preservation of those items remains an architectural requirement rather than a claim from this harness.
+
+### iPhone entitlement client — prototype started (2026-10-05)
+
+The customer/service phone client lives under `ios/EFISService/`. Its security boundary is explicit: the phone requests and caches an opaque **server-signed** entitlement but never owns the Ed25519 signing private key and never signs a licence. The prototype implements development challenge/HMAC acquisition against the existing service, Keychain storage using ThisDeviceOnly protection, entitlement/device display, and an explicit transfer abstraction. Local EFIS transfer is deliberately not faked: the transport currently reports unconfigured until it is connected to the phone-to-EFIS local service used for OTA. QR Device-ID capture, account authentication/ownership and payment remain subsequent increments.
