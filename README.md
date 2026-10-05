@@ -174,91 +174,91 @@ This is the canonical index to the maintained project documentation. Each link i
 
 ### Project control, planning and procurement
 
-- [Bill of Materials and purchasing checklist](BOM.md) — Prototype BOM, quantities, sourcing, prices and acquisition/receipt status.
-- [Change history](CHANGELOG.md) — Chronological implementation and documentation checkpoints; `main` is the authoritative project history.
-- [Project status and decision record](docs/PROJECT_STATUS.md) — Current implementation/validation state plus adopted, proposed, parked, superseded and rejected design decisions.
-- [Project steps and validation gates](docs/PROJECT_STEPS.md) — Ordered development stages, dependencies and evidence required before progressing.
-- [Parts selection and sourcing](docs/PARTS_SELECTION.md) — Reference component choices and purchasing sources for the prototype hardware.
-- [Procurement status checkpoint](docs/PROCUREMENT_STATUS_2026-09-16.md) — Evidence-based snapshot of delivered and in-transit prototype parts.
-- [Parts cost model](docs/COST_MODEL.md) — Estimated repeatable production parts cost separated from development equipment and spares.
-- [Branding](docs/BRANDING.md) — Development product-family naming and branding status.
-- [Complete project manual PDF](docs/generated/MicroSky-Horizon-Complete-Project-Manual.pdf) — Generated indexed PDF compilation of project documentation for offline/reference use.
+- **[Bill of Materials and purchasing checklist](BOM.md)** — Prototype BOM, quantities, sourcing, prices and acquisition/receipt status.
+- **[Change history](CHANGELOG.md)** — Chronological implementation and documentation checkpoints; `main` is the authoritative project history.
+- **[Project status and decision record](docs/PROJECT_STATUS.md)** — Current implementation/validation state plus adopted, proposed, parked, superseded and rejected design decisions.
+- **[Project steps and validation gates](docs/PROJECT_STEPS.md)** — Ordered development stages, dependencies and evidence required before progressing.
+- **[Parts selection and sourcing](docs/PARTS_SELECTION.md)** — Reference component choices and purchasing sources for the prototype hardware.
+- **[Procurement status checkpoint](docs/PROCUREMENT_STATUS_2026-09-16.md)** — Evidence-based snapshot of delivered and in-transit prototype parts.
+- **[Parts cost model](docs/COST_MODEL.md)** — Estimated repeatable production parts cost separated from development equipment and spares.
+- **[Branding](docs/BRANDING.md)** — Development product-family naming and branding status.
+- **[Complete project manual PDF](docs/generated/MicroSky-Horizon-Complete-Project-Manual.pdf)** — Generated indexed PDF compilation of project documentation for offline/reference use.
 
 ### System, hardware and mechanical design
 
-- [Hardware design](docs/HARDWARE.md) — Processor, display, sensors, interfaces and reference hardware architecture.
-- [Wiring plan](docs/WIRING.md) — Prototype electrical architecture and frozen ESP32-S3 GPIO/signal allocation.
-- [Display design](docs/DISPLAY.md) — Newhaven round-display selection, geometry and display implementation requirements.
-- [Sensor architecture](docs/SENSORS.md) — Attitude, pressure, magnetic and related sensor roles, validity and freshness rules.
-- [AHRS / attitude solution](docs/AHRS.md) — BMI088 attitude-estimation implementation, limitations and physical-validation gate.
-- [GNSS display](docs/GNSS_DISPLAY.md) — Position, accuracy, fix-state and presentation requirements for Horizon and Compass pages.
-- [Calibration](docs/CALIBRATION.md) — Sensor-error and mechanical-alignment calibration requirements.
-- [Power budget](docs/POWER_BUDGET.md) — Preliminary current/power estimates and later measurement requirements.
-- [Enclosure](docs/ENCLOSURE.md) — Flight-development enclosure geometry, controls and mechanical packaging.
-- [Mechanical, materials and thermal standard](docs/MECHANICAL_MATERIALS_AND_THERMAL.md) — RedOne/SMUX materials, captive fasteners and thermal-management decisions.
-- [Carrier PCB requirements](hardware/pcb/README.md) — Revision-A custom carrier physical/layout requirements and board role.
-- [Carrier PCB schematic definition](hardware/schematics/CARRIER_PCB_SCHEMATIC.md) — Authoritative electrical definition for the first custom ESP32-S3 carrier.
-- [KiCad Carrier PCB Revision A](hardware/kicad/carrier_rev_a/README.md) — KiCad project scope, board construction and principal components.
-- [Electrical POST and test harness](docs/ELECTRICAL_TEST_HARNESS.md) — Boot-selectable component/interface self-test requirements and failure reporting.
-- [Design suggestion image register](docs/design-suggestions/README.md) — Non-authoritative visual inspiration register and rules for adopting ideas into the design.
-- [Project images](docs/images/README.md) — Register of regenerable architecture, roadmap and other documentation graphics.
+- **[Hardware design](docs/HARDWARE.md)** — Processor, display, sensors, interfaces and reference hardware architecture.
+- **[Wiring plan](docs/WIRING.md)** — Prototype electrical architecture and frozen ESP32-S3 GPIO/signal allocation.
+- **[Display design](docs/DISPLAY.md)** — Newhaven round-display selection, geometry and display implementation requirements.
+- **[Sensor architecture](docs/SENSORS.md)** — Attitude, pressure, magnetic and related sensor roles, validity and freshness rules.
+- **[AHRS / attitude solution](docs/AHRS.md)** — BMI088 attitude-estimation implementation, limitations and physical-validation gate.
+- **[GNSS display](docs/GNSS_DISPLAY.md)** — Position, accuracy, fix-state and presentation requirements for Horizon and Compass pages.
+- **[Calibration](docs/CALIBRATION.md)** — Sensor-error and mechanical-alignment calibration requirements.
+- **[Power budget](docs/POWER_BUDGET.md)** — Preliminary current/power estimates and later measurement requirements.
+- **[Enclosure](docs/ENCLOSURE.md)** — Flight-development enclosure geometry, controls and mechanical packaging.
+- **[Mechanical, materials and thermal standard](docs/MECHANICAL_MATERIALS_AND_THERMAL.md)** — RedOne/SMUX materials, captive fasteners and thermal-management decisions.
+- **[Carrier PCB requirements](hardware/pcb/README.md)** — Revision-A custom carrier physical/layout requirements and board role.
+- **[Carrier PCB schematic definition](hardware/schematics/CARRIER_PCB_SCHEMATIC.md)** — Authoritative electrical definition for the first custom ESP32-S3 carrier.
+- **[KiCad Carrier PCB Revision A](hardware/kicad/carrier_rev_a/README.md)** — KiCad project scope, board construction and principal components.
+- **[Electrical POST and test harness](docs/ELECTRICAL_TEST_HARNESS.md)** — Boot-selectable component/interface self-test requirements and failure reporting.
+- **[Design suggestion image register](docs/design-suggestions/README.md)** — Non-authoritative visual inspiration register and rules for adopting ideas into the design.
+- **[Project images](docs/images/README.md)** — Register of regenerable architecture, roadmap and other documentation graphics.
 
 ### Firmware, CAN, SMUX and deployment
 
-- [Firmware overview](firmware/README.md) — ESP-IDF target, multi-panel firmware structure and principal firmware capabilities.
-- [Firmware deployment](firmware/DEPLOYMENT.md) — macOS build, flash and monitor procedure for the ESP32-S3 hardware.
-- [macOS build and QEMU setup](docs/MACOS_BUILD_AND_QEMU_SETUP.md) — Authoritative Apple-Silicon development environment, ESP-IDF and QEMU runbook.
-- [AEF-CAN protocol](docs/CAN-PROTOCOL.md) — Adopted aircraft experimental CAN architecture and frozen V1 core wire contract.
-- [Stage 7 SMUX integration](docs/STAGE-7-SMUX.md) — Provisional Sensor Multiplexer/engine-monitoring expansion and EFIS integration boundary.
-- [Safety and airworthiness](docs/SAFETY.md) — Experimental supplementary-instrument status, limitations and safety principles.
-- [Testing plan](docs/TESTING.md) — Progressive validation programme from software through bench/hardware/aircraft testing.
+- **[Firmware overview](firmware/README.md)** — ESP-IDF target, multi-panel firmware structure and principal firmware capabilities.
+- **[Firmware deployment](firmware/DEPLOYMENT.md)** — macOS build, flash and monitor procedure for the ESP32-S3 hardware.
+- **[macOS build and QEMU setup](docs/MACOS_BUILD_AND_QEMU_SETUP.md)** — Authoritative Apple-Silicon development environment, ESP-IDF and QEMU runbook.
+- **[AEF-CAN protocol](docs/CAN-PROTOCOL.md)** — Adopted aircraft experimental CAN architecture and frozen V1 core wire contract.
+- **[Stage 7 SMUX integration](docs/STAGE-7-SMUX.md)** — Provisional Sensor Multiplexer/engine-monitoring expansion and EFIS integration boundary.
+- **[Safety and airworthiness](docs/SAFETY.md)** — Experimental supplementary-instrument status, limitations and safety principles.
+- **[Testing plan](docs/TESTING.md)** — Progressive validation programme from software through bench/hardware/aircraft testing.
 
 ### Simulation and demonstration
 
-- [Simulation architecture](docs/SIMULATION.md) — Bench/QEMU simulation policy, synthetic-data annunciation and accepted graphics state.
-- [QEMU video demonstration](docs/DEMONSTRATION.md) — Procedure and scope for recording the actual firmware renderer running under QEMU.
-- [EFIS simulator](simulator/README.md) — Swift simulator purpose, operation and relationship to the ESP32 renderer.
-- [Web simulator](efis-web-simulator/README.md) — Docker browser emulator for boot/maintenance, OTA and licensing workflows without physical hardware.
+- **[Simulation architecture](docs/SIMULATION.md)** — Bench/QEMU simulation policy, synthetic-data annunciation and accepted graphics state.
+- **[QEMU video demonstration](docs/DEMONSTRATION.md)** — Procedure and scope for recording the actual firmware renderer running under QEMU.
+- **[EFIS simulator](simulator/README.md)** — Swift simulator purpose, operation and relationship to the ESP32 renderer.
+- **[Web simulator](efis-web-simulator/README.md)** — Docker browser emulator for boot/maintenance, OTA and licensing workflows without physical hardware.
 
 ### OTA and remote updates
 
-- [Remote firmware updates](docs/REMOTE_UPDATES.md) — OTA architecture, rollback/fallback policy and ESP32 flash/update design.
-- [OTA image administration](docs/OTA_IMAGE_ADMIN.md) — Definitive Upload → Publish → Download → Activate administration workflow.
-- [OTA user scenario](docs/OTA_USER_SCENARIO.md) — User-facing OTA interaction model and separation of publication from activation.
-- [Physical OTA test node](docs/OTA_PHYSICAL_TEST_NODE.md) — Minimal ESP32-S3 fixture for exercising OTA independently of full EFIS hardware.
-- [Phone networking and public OTA](docs/PHONE_NETWORK_AND_PUBLIC_OTA.md) — Phone pairing, Wi-Fi/network path and public Synology OTA-access design.
-- [OTA server](ota-server/README.md) — Containerised OTA server implementation, manifest/image hosting and administration interface.
+- **[Remote firmware updates](docs/REMOTE_UPDATES.md)** — OTA architecture, rollback/fallback policy and ESP32 flash/update design.
+- **[OTA image administration](docs/OTA_IMAGE_ADMIN.md)** — Definitive Upload → Publish → Download → Activate administration workflow.
+- **[OTA user scenario](docs/OTA_USER_SCENARIO.md)** — User-facing OTA interaction model and separation of publication from activation.
+- **[Physical OTA test node](docs/OTA_PHYSICAL_TEST_NODE.md)** — Minimal ESP32-S3 fixture for exercising OTA independently of full EFIS hardware.
+- **[Phone networking and public OTA](docs/PHONE_NETWORK_AND_PUBLIC_OTA.md)** — Phone pairing, Wi-Fi/network path and public Synology OTA-access design.
+- **[OTA server](ota-server/README.md)** — Containerised OTA server implementation, manifest/image hosting and administration interface.
 
 ### Licensing, accounts and customer/service apps
 
-- [Product licensing specification](docs/LICENSING.md) — Authoritative entitlement model, trust boundaries and offline licensing rules.
-- [Licensing architecture and flows](docs/LICENSING_ARCHITECTURE_AND_FLOWS.md) — End-to-end actors, trust boundaries and lifecycle/recovery use cases.
-- [Process workflow architecture](docs/PROCESS_WORKFLOW_ARCHITECTURE.md) — Process-oriented EFIS Service UX/state-machine design and Advanced diagnostic boundary.
-- [Device registration](docs/DEVICE_REGISTRATION.md) — Initial ownership claiming, permanent Device ID and account-association design.
-- [Customer accounts and mobile apps](docs/CUSTOMER_ACCOUNT_AND_APPS.md) — Shared web/iOS/Android account, registration, payment and entitlement architecture.
-- [Production licence service](docs/PRODUCTION-LICENCE-SERVICE.md) — Synology-hosted production direction, zero-configuration network contract and production-readiness gates.
-- [RedOne licence network architecture and disaster recovery](docs/REDONE-LICENCE-NETWORK-ARCHITECTURE.md) — Public-first/local-fallback routing, mDNS, pinned TLS, trust boundaries, rebuild, backup and recovery procedure.
-- [EFIS Service iPhone app](ios/EFISService/README.md) — SwiftUI service/licensing app responsibilities and security boundary.
-- [Customer mobile apps](customer-app/README.md) — Shared role and security model for the native customer companion applications.
-- [Customer iOS app](customer-app/ios/EFISCustomer/README.md) — SwiftUI customer-app skeleton, secure storage and planned account/payment integration.
-- [Customer Android app](customer-app/android/README.md) — Kotlin/Compose customer-app skeleton, Keystore and planned account/payment integration.
-- [Account service](account-service/README.md) — Prototype account, EFIS registration and entitlement service plus its security boundary.
-- [Licence service development harness](license-service/README.md) — Development-only challenge, device proof, entitlement and signed-licence vertical slice.
-- [Licence signer](license-signer/README.md) — Private Ed25519/deterministic-CBOR signing service and key/network isolation boundary.
-- [Licence signer build and deployment](license-signer/BUILD-AND-DEPLOY.md) — Complete Synology build/run procedure for the private signing service.
-- [RedOne local licence gateway](local-license-gateway/README.md) — Authenticated LAN fallback gateway, Bonjour discovery and pinned-TLS design.
+- **[Product licensing specification](docs/LICENSING.md)** — Authoritative entitlement model, trust boundaries and offline licensing rules.
+- **[Licensing architecture and flows](docs/LICENSING_ARCHITECTURE_AND_FLOWS.md)** — End-to-end actors, trust boundaries and lifecycle/recovery use cases.
+- **[Process workflow architecture](docs/PROCESS_WORKFLOW_ARCHITECTURE.md)** — Process-oriented EFIS Service UX/state-machine design and Advanced diagnostic boundary.
+- **[Device registration](docs/DEVICE_REGISTRATION.md)** — Initial ownership claiming, permanent Device ID and account-association design.
+- **[Customer accounts and mobile apps](docs/CUSTOMER_ACCOUNT_AND_APPS.md)** — Shared web/iOS/Android account, registration, payment and entitlement architecture.
+- **[Production licence service](docs/PRODUCTION-LICENCE-SERVICE.md)** — Synology-hosted production direction, zero-configuration network contract and production-readiness gates.
+- **[RedOne licence network architecture and disaster recovery](docs/REDONE-LICENCE-NETWORK-ARCHITECTURE.md)** — Public-first/local-fallback routing, mDNS, pinned TLS, trust boundaries, rebuild, backup and recovery procedure.
+- **[EFIS Service iPhone app](ios/EFISService/README.md)** — SwiftUI service/licensing app responsibilities and security boundary.
+- **[Customer mobile apps](customer-app/README.md)** — Shared role and security model for the native customer companion applications.
+- **[Customer iOS app](customer-app/ios/EFISCustomer/README.md)** — SwiftUI customer-app skeleton, secure storage and planned account/payment integration.
+- **[Customer Android app](customer-app/android/README.md)** — Kotlin/Compose customer-app skeleton, Keystore and planned account/payment integration.
+- **[Account service](account-service/README.md)** — Prototype account, EFIS registration and entitlement service plus its security boundary.
+- **[Licence service development harness](license-service/README.md)** — Development-only challenge, device proof, entitlement and signed-licence vertical slice.
+- **[Licence signer](license-signer/README.md)** — Private Ed25519/deterministic-CBOR signing service and key/network isolation boundary.
+- **[Licence signer build and deployment](license-signer/BUILD-AND-DEPLOY.md)** — Complete Synology build/run procedure for the private signing service.
+- **[RedOne local licence gateway](local-license-gateway/README.md)** — Authenticated LAN fallback gateway, Bonjour discovery and pinned-TLS design.
 
 ### Support service
 
-- [Support-service architecture](docs/SUPPORT_SERVICE.md) — Customer-support chatbot architecture, approved-document knowledge base and controlled learning loop.
-- [Support-service implementation](support-service/README.md) — Docker service implementation, runtime/configuration and support API details.
+- **[Support-service architecture](docs/SUPPORT_SERVICE.md)** — Customer-support chatbot architecture, approved-document knowledge base and controlled learning loop.
+- **[Support-service implementation](support-service/README.md)** — Docker service implementation, runtime/configuration and support API details.
 
 ### Instrument user guides
 
-- [User-guide index](docs/user-guides/README.md) — Entry point for the panel-specific operator documentation.
-- [Artificial Horizon / PFD guide](docs/user-guides/HORIZON.md) — Horizon presentation, controls, indications and source-validity behaviour.
-- [Altimeter guide](docs/user-guides/ALTIMETER.md) — Classic analogue/digital altimeter presentation and operating notes.
-- [Compass guide](docs/user-guides/COMPASS.md) — Rotating compass-card presentation, heading bug and operating conventions.
+- **[User-guide index](docs/user-guides/README.md)** — Entry point for the panel-specific operator documentation.
+- **[Artificial Horizon / PFD guide](docs/user-guides/HORIZON.md)** — Horizon presentation, controls, indications and source-validity behaviour.
+- **[Altimeter guide](docs/user-guides/ALTIMETER.md)** — Classic analogue/digital altimeter presentation and operating notes.
+- **[Compass guide](docs/user-guides/COMPASS.md)** — Rotating compass-card presentation, heading bug and operating conventions.
 
 ### Rebuilding generated Xcode projects
 
