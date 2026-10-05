@@ -184,6 +184,18 @@ class H(SimpleHTTPRequestHandler):
         if self.path=="/api/firmware/activate":
             if state["staged"]: state["firmware"],state["staged"]=state["staged"],None
             return self.sendj(state)
+        if self.path=="/api/phone/entitlement":
+            if body.get("device_id")!=DEVICE:
+                return self.sendj({"error":"unknown device"},404)
+            try:
+                r=acquire_signed_blob()
+                return self.sendj({"simulation_only":True,**r})
+            except urllib.error.HTTPError as e:
+                try: detail=json.loads(e.read()).get("error","licence service refused request")
+                except Exception: detail="licence service refused request"
+                return self.sendj({"error":detail},e.code)
+            except Exception as e:
+                return self.sendj({"error":str(e)},502)
         if self.path=="/api/license/test":
             try: return self.sendj(run_license_negative_test(body.get("test","")))
             except Exception as e: return self.sendj({"error":str(e)},409)
