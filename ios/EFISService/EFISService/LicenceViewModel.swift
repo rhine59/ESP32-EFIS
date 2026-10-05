@@ -6,7 +6,9 @@ final class LicenceViewModel: ObservableObject {
     @Published var serviceURL = "https://granvillehouse.synology.me:8449"
     @Published var cached: LicenceSummary?
     @Published var status = "Ready"
-    @Published var busy = false\n    @Published var plans: [LicencePlan] = []\n    @Published var account: LicenceAccountStatus?
+    @Published var busy = false
+    @Published var plans: [LicencePlan] = []
+    @Published var account: LicenceAccountStatus?
 
     private let keychain = KeychainStore()
 
