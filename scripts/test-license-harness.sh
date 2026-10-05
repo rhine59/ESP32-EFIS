@@ -75,6 +75,18 @@ json_post /api/sim/network '{"state":"online"}' >/dev/null
 r=$(json_post /api/license/refresh '{}'); require "$r" '"status": "VALID"'; echo "$r"
 json_post /api/sim/network '{"state":"offline"}' >/dev/null
 
+echo "Offline phone transfer must verify/install without licence-service access"
+json_post /api/license/mock-reset '{}' >/dev/null
+r=$(status); require "$r" '"status": "NOT INSTALLED"'
+json_post /api/sim/network '{"state":"online"}' >/dev/null
+phone=$(json_post /api/phone/entitlement '{"device_id":"EFIS-SIM-0001"}')
+envelope=$(printf '%s' "$phone" | python3 -c 'import json,sys; print(json.load(sys.stdin)["license"])')
+json_post /api/sim/network '{"state":"offline"}' >/dev/null
+payload=$(python3 -c 'import json,sys; print(json.dumps({"device_id":"EFIS-SIM-0001","license":sys.argv[1]}))' "$envelope")
+r=$(json_post /api/phone/install-license "$payload"); require "$r" '"result": "INSTALLED"'; require "$r" '"status": "VALID"'; echo "$r"
+restart_sim
+r=$(status); require "$r" '"status": "VALID"'; require "$r" '"network": "offline"'; echo "$r"
+
 echo "Final state"
 r=$(status); require "$r" '"status": "VALID"'; require "$r" '"network": "offline"'; echo "$r"
-echo "PASS: integrity, Device-ID binding, no-entitlement, interrupted replacement, reset, offline acquisition and corrupt-store recovery."
+echo "PASS: integrity, Device-ID binding, no-entitlement, interrupted replacement, reset, offline acquisition, corrupt-store recovery, offline phone transfer and offline restart persistence."
