@@ -554,3 +554,9 @@ The Synology simulator successfully acquired and installed a signed DEVELOPMENT 
 ### Licensing security-test follow-up — 5 October 2026
 
 **PASS ON SYNOLOGY.** The negative-test harness rejects tampered payload and bad-signature candidates while preserving the installed VALID licence. The corrected wrong-device fixture is a correctly Ed25519-signed licence for `EFIS-SIM-WRONG`; runtime verification passed its signature and then rejected it explicitly with `licence Device ID mismatch`, independently proving Device-ID binding. The installed DEVELOPMENT licence remained VALID after all three attacks and the simulator returned offline with no faults. The rebuild script also completed using the deployment account's direct Docker access with no interactive sudo.
+
+### Docker licensing contract — COMPLETE FOR CURRENT SIMULATOR STAGE (2026-10-05)
+
+Synology runtime regression now passes signed acquisition, local Ed25519/schema/product/Device-ID verification, persistence across offline restart, tampered payload rejection, bad signature rejection, correctly signed wrong-Device-ID rejection, no-entitlement preservation, interrupted replacement/restart recovery, explicit Licence Reset invariants, offline acquisition refusal, corrupt-store detection and signed recovery. Interrupted candidate files are discarded on startup rather than promoted.
+
+The simulator finishes the harness offline with a valid signed DEVELOPMENT licence and no faults. Remaining licensing validation is intentionally physical-device work: protected NVS, atomic flash persistence under real power interruption/brownout, immutable Device-ID provisioning, protected trust-anchor provisioning and recovery behaviour on ESP32 hardware.
