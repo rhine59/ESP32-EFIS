@@ -594,3 +594,7 @@ The phone client now sends its cached opaque signed licence envelope to the EFIS
 ### Phone-to-EFIS signed licence transfer — END-TO-END PASS (2026-10-05)
 
 The user triggered Transfer to EFIS in the iOS Simulator and the phone reported completion. An independent post-transfer query of the EFIS simulator reported the installed licence as `VALID`, class `DEVELOPMENT`, using trust key `sim-dev-1`. This demonstrates that the signed envelope traversed the phone-to-EFIS interface and passed EFIS-side signature/schema/product/device verification before installation. The phone UI was also corrected so operation status remains visible. This validates the simulator/service contract, not yet physical ESP32 protected storage or physical-iPhone-to-EFIS local transport.
+
+### Offline phone licence workflow — PASS (2026-10-05)
+
+The automated regression harness now proves the intended disconnected-aircraft workflow. The signed envelope is obtained while service connectivity exists, then the EFIS is placed offline. With its trust anchor retained, the EFIS accepts the phone-transferred cached envelope only after local Ed25519/schema/product/device verification, persists it, and reports `VALID`. After restarting the simulator while still offline, the same licence reloads as `VALID` without contacting the licence service. The complete licensing regression harness passes. Physical ESP32 NVS/power-loss behaviour and physical phone-to-EFIS transport remain hardware-stage tests.
