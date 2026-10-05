@@ -136,3 +136,12 @@ The detailed historical decision register—including adopted, superseded, parke
 - User-confirmed the cached entitlement immediately returned as `ACTIVE`.
 - This validates iPhone-side Keychain persistence across simulator shutdown/restart for the current development client.
 - Next implementation checkpoint: QR acquisition of the immutable EFIS Device ID.
+
+### iPhone QR Device-ID scanner — IMPLEMENTED / BUILD-VALIDATED
+- Replaced the QR placeholder with an AVFoundation QR scanner.
+- Accepts either a direct `EFIS-...` Device ID or `efis://device/<Device-ID>` QR payload.
+- Valid scans populate the entitlement Device-ID field; manual entry remains available.
+- Added camera privacy usage text to the Git-authoritative XcodeGen project.
+- Resolved Swift 6 actor-isolation issues in the capture delegate.
+- Xcode iOS Simulator build passes.
+- Physical camera scanning cannot be validated in the iOS Simulator and remains a real-iPhone test.
