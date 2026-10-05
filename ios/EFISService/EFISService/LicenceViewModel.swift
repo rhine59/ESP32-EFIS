@@ -3,8 +3,7 @@ import Foundation
 @MainActor
 final class LicenceViewModel: ObservableObject {
     @Published var deviceID = "EFIS-SIM-0001"
-    @Published var serviceURL = "http://127.0.0.1:18094"
-    @Published var developmentCredential = ProcessInfo.processInfo.environment["EFIS_DEVICE_SECRET"] ?? ""
+    @Published var serviceURL = "https://granvillehouse.synology.me:8449"
     @Published var cached: LicenceSummary?
     @Published var status = "Ready"
     @Published var busy = false
@@ -17,15 +16,15 @@ final class LicenceViewModel: ObservableObject {
     }
 
     func getEntitlement() async {
-        busy = true; defer { busy = false }
+        busy = true
+        defer { busy = false }
         do {
             guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
-            // DEVELOPMENT ONLY. Production credentials must be provisioned securely.
-            let service = DevelopmentLicenceService(
-                baseURL: url,
-                deviceSecret: Data("simulator-development-secret-change-me".utf8)
-            )
+            let service = DevelopmentPhoneEntitlementService(baseURL: url)
             let response = try await service.requestLicence(deviceID: deviceID)
+            guard response.device_id == deviceID else {
+                throw LicenceAppError.service("Entitlement Device ID does not match the requested EFIS.")
+            }
             let summary = LicenceSummary(
                 deviceID: response.device_id,
                 entitlement: response.entitlement,
@@ -42,7 +41,8 @@ final class LicenceViewModel: ObservableObject {
 
     func transferToEFIS() async {
         guard let cached else { status = "No signed licence is cached"; return }
-        busy = true; defer { busy = false }
+        busy = true
+        defer { busy = false }
         do {
             try await transfer.transferSignedEnvelope(cached.envelope, deviceID: cached.deviceID)
             status = "Transferred; EFIS must verify and install"
@@ -52,6 +52,8 @@ final class LicenceViewModel: ObservableObject {
     }
 
     func clearCache() {
-        keychain.clear(); cached = nil; status = "Phone licence cache cleared"
+        keychain.clear()
+        cached = nil
+        status = "Phone licence cache cleared"
     }
 }
