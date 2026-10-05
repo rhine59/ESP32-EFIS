@@ -91,7 +91,11 @@ struct LicenceView: View {
                 .padding(.horizontal)
                 .padding(.bottom, max(16, geometry.safeAreaInsets.bottom))
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)\n                .contentShape(Rectangle())\n                .scrollBounceBehavior(.always)\n                .scrollIndicators(.visible)\n                .scrollDismissesKeyboard(.interactively)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
+                .scrollBounceBehavior(.always)
+                .scrollIndicators(.visible)
+                .scrollDismissesKeyboard(.interactively)
             }
             }
             .navigationTitle("EFIS Licence")
