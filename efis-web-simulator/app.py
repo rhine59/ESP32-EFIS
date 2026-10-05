@@ -1,5 +1,7 @@
 import base64, hashlib, hmac, json, os, tempfile, urllib.request, urllib.error
 import cbor2
+import qrcode
+from io import BytesIO
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
@@ -153,6 +155,12 @@ class H(SimpleHTTPRequestHandler):
         self.send_header("Content-Length",str(len(b))); self.end_headers(); self.wfile.write(b)
     def do_GET(self):
         if self.path=="/api/state": return self.sendj(state)
+        if self.path=="/api/device/qr":
+            payload="efis://device/"+DEVICE
+            image=qrcode.make(payload)
+            out=BytesIO(); image.save(out,format="PNG"); b=out.getvalue()
+            self.send_response(200); self.send_header("Content-Type","image/png")
+            self.send_header("Content-Length",str(len(b))); self.end_headers(); self.wfile.write(b); return
         if self.path=="/api/firmware/check":
             try: return self.sendj(manifest())
             except Exception as e: return self.sendj({"error":str(e)},502)
