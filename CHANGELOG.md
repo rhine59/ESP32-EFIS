@@ -6,6 +6,12 @@ For detailed design rationale, validation scope and superseded decisions, see `d
 
 ## 2026-10-05
 
+### Adaptive licence-management screen
+- Reworked the iPhone licence screen into an explicit full-height `ScrollView` with adaptive content width and safe-area bottom padding.
+- All licence/account, purchase, entitlement-service, cached-licence and explanatory content remains reachable on small and large iPhone displays rather than relying on a fixed visible form height.
+- Operation status remains pinned above the scrolling content.
+- Build passes and the updated app has been installed/launched in the simulator.
+
 ### Fix licence account/catalogue loading
 - Fixed iOS decoding of the server `price_display` field into the Swift `priceDisplay` model.
 - Account state now loads independently of the licence product catalogue so a catalogue failure cannot hide valid ownership/entitlement data.
