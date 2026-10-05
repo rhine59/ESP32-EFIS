@@ -68,3 +68,19 @@ ESP32 firmware still requires maintenance Wi-Fi station scanning/association, NV
 The maintenance network flow is entered from the rotary-controlled boot menu by selecting **FIRMWARE UPDATE**. Before manifest access, the EFIS presents a Wi-Fi dialog operable using rotate + press: connect to saved network, scan, manual entry, Forget, retry/change network, or Start EFIS without updating. A failed Wi-Fi/Internet/DNS/TLS/OTA-server step never prevents normal startup.
 
 SSID and credentials persist in a dedicated ESP-IDF NVS namespace. Production units require **NVS encryption** for Wi-Fi credentials; ordinary NVS is acceptable only during early prototype bring-up. The password is never redisplayed after entry, logged, included in diagnostics/test-harness output or transmitted to the OTA server. **Forget network** erases the stored credentials.
+
+## Local licence-service DNS — 5 October 2026
+
+The development EFIS Service iPhone app uses `https://granvillehouse.synology.me:8449`. On the home LAN this hostname must resolve to the NAS private address `192.168.1.99` so the phone does not hairpin through the public WAN address. TLS must still use the hostname; do not replace the service URL with the private IP and do not bypass certificate validation.
+
+A lightweight `dnsmasq` Docker service is deployed on the Synology as `local-dns`, publishing TCP/UDP 53. It overrides only:
+
+```text
+granvillehouse.synology.me -> 192.168.1.99
+```
+
+All other DNS is forwarded upstream. The FRITZ!Box DHCP IPv4 setting advertises `192.168.1.99` as the local DNS server.
+
+On the tested iPhone, **Limit IP Address Tracking** caused the application resolver path to bypass/interfere with the LAN split-DNS path: Safari could reach the service while EFIS Service returned `NSURLErrorDomain -1004`. Disabling Limit IP Address Tracking for the home Wi-Fi allowed the app to resolve the local service correctly and the licence account loaded successfully.
+
+This is a development/LAN deployment constraint, not a desirable production dependency. Production licence service should use a publicly routable HTTPS endpoint that works identically on Wi-Fi and cellular without requiring private DNS overrides or device privacy-setting changes.

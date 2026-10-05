@@ -289,3 +289,10 @@ The detailed historical decision register—including adopted, superseded, parke
 - The account request incorrectly used `URL.appending(path:)` with `?device_id=...`, causing `?` to be encoded as `%3F` and the query to become part of the path.
 - Account lookup now constructs `device_id` with `URLComponents` and `URLQueryItem`.
 - Rebuilt, installed and launched the corrected app on the physical iPhone.
+
+## 2026-10-05 — validate physical iPhone licence-service network path
+- Confirmed the physical iPhone can reach the Synology licence service and that the public TLS certificate for `granvillehouse.synology.me` is valid when the hostname is used.
+- Added a Synology `local-dns` dnsmasq service providing split DNS for `granvillehouse.synology.me -> 192.168.1.99`; FRITZ!Box DHCP now advertises the NAS as the LAN DNS server.
+- Diagnosed iOS `-1004` as a resolver/network-path issue rather than an EFIS licence API failure. The phone's Limit IP Address Tracking setting interfered with the private split-DNS path; disabling it for the home Wi-Fi allowed EFIS Service to load the licence account.
+- Removed the temporary direct-IP probe after diagnosis; TLS verification remains strict and the app continues to use the hostname rather than a private IP.
+- Documented that production must use a normal publicly routable HTTPS licence endpoint and must not depend on split DNS or changing iPhone privacy settings.
