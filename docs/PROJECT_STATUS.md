@@ -564,3 +564,9 @@ The simulator finishes the harness offline with a valid signed DEVELOPMENT licen
 ### iPhone entitlement client — STARTED (2026-10-05)
 
 Added `ios/EFISService/` SwiftUI prototype with immutable Device-ID entry, development signed-entitlement acquisition, secure Keychain cache, cached entitlement display and explicit phone-to-EFIS transfer boundary. The app cannot sign licences. QR scanning and the real local EFIS transport are the next implementation steps; account/payment integration remains intentionally outside this first development slice.
+
+### iPhone entitlement live integration — PASS (2026-10-05)
+
+The EFIS Service SwiftUI app builds successfully under Xcode 26.6/iOS Simulator 26.5 and launches on the iPhone 17 Pro simulator. Its development entitlement path now targets the restricted Synology simulator broker rather than embedding a device credential. Live broker validation returned the expected simulator Device ID, product, ACTIVE entitlement and signed licence envelope. The updated app has been rebuilt, installed and relaunched from GitHub `main`.
+
+Next UI validation is the user-triggered **Get / Refresh Signed Entitlement** action and Keychain persistence/relaunch check, followed by QR Device-ID capture.
