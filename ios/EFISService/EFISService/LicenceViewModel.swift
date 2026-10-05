@@ -101,8 +101,13 @@ final class LicenceViewModel: ObservableObject {
         do {
             guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
             let transfer = LocalEFISLicenceTransfer(baseURL: url)
-            try await transfer.transferSignedEnvelope(cached.envelope, deviceID: cached.deviceID)
-            status = "Transfer complete; EFIS must verify and install"; activitySeverity = .success
+            let acknowledgement = try await transfer.transferSignedEnvelope(cached.envelope, deviceID: cached.deviceID)
+            if let licenceID = acknowledgement.licenceID {
+                status = "Licence verified and installed on EFIS (\(licenceID))"
+            } else {
+                status = "Licence verified and installed on EFIS"
+            }
+            activitySeverity = .success
         } catch {
             status = error.localizedDescription
             activitySeverity = .error
