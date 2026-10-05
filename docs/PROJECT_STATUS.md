@@ -586,3 +586,7 @@ The EFIS Service client now has an AVFoundation QR scanner instead of the placeh
 ### Simulator Device-ID QR — PASS (2026-10-05)
 
 The web EFIS simulator now exposes and displays a locally generated QR code containing the canonical `efis://device/<Device-ID>` payload. No external QR generation service is involved. The Synology container was rebuilt and the live QR endpoint returned HTTP 200 with a PNG. The QR is identification only and does not replace device authentication, entitlement authorization, signed licence issuance or EFIS-side verification. Together with the iPhone scanner this completes the simulated QR identification path; physical camera validation remains pending.
+
+### Phone-to-EFIS signed licence transfer — IMPLEMENTED / BUILD-VALIDATED (2026-10-05)
+
+The phone client now sends its cached opaque signed licence envelope to the EFIS local service endpoint. The simulator independently checks Device ID and verifies Ed25519 signature, licence schema, product and device binding using its local trust material before atomically persisting and activating the candidate. The phone has no licence signing authority. The iOS target builds successfully, the updated app has been installed/launched in the simulator, and the Synology receiver has been rebuilt. User-triggered end-to-end Transfer validation is still pending.
