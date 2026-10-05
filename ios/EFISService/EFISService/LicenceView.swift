@@ -6,54 +6,57 @@ struct LicenceView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {\n                HStack {\n                    Text("Status: " + model.status)\n                        .font(.footnote)\n                        .lineLimit(2)\n                    Spacer()\n                    if model.busy { ProgressView() }\n                }\n                .padding(.horizontal)\n                .padding(.vertical, 8)\n\n                Form {
-                Section("EFIS") {
-                    TextField("Device ID", text: $model.deviceID)
-                        .textInputAutocapitalization(.characters)
-                        .autocorrectionDisabled()
-                    Button("Scan Device QR") {
-                        showingScanner = true
-                    }
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Status: " + model.status)
+                        .font(.footnote)
+                        .lineLimit(2)
+                    Spacer()
+                    if model.busy { ProgressView() }
                 }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
 
-                Section("Entitlement service") {
-                    TextField("Service URL", text: $model.serviceURL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    Button("Get / Refresh Signed Entitlement") {
-                        Task { await model.getEntitlement() }
+                Form {
+                    Section("EFIS") {
+                        TextField("Device ID", text: $model.deviceID)
+                            .textInputAutocapitalization(.characters)
+                            .autocorrectionDisabled()
+                        Button("Scan Device QR") { showingScanner = true }
                     }
-                    .disabled(model.busy || model.deviceID.isEmpty)
-                }
 
-                Section("Cached signed licence") {
-                    if let licence = model.cached {
-                        LabeledContent("Device", value: licence.deviceID)
-                        LabeledContent("Entitlement", value: licence.entitlement)
-                        LabeledContent("Cached", value: licence.cachedAt.formatted())
-                        Text("Signed envelope cached securely on this iPhone.")
+                    Section("Entitlement service") {
+                        TextField("Service URL", text: $model.serviceURL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                        Button("Get / Refresh Signed Entitlement") {
+                            Task { await model.getEntitlement() }
+                        }
+                        .disabled(model.busy || model.deviceID.isEmpty)
+                    }
+
+                    Section("Cached signed licence") {
+                        if let licence = model.cached {
+                            LabeledContent("Device", value: licence.deviceID)
+                            LabeledContent("Entitlement", value: licence.entitlement)
+                            LabeledContent("Cached", value: licence.cachedAt.formatted())
+                            Text("Signed envelope cached securely on this iPhone.")
+                                .font(.footnote)
+                            Button("Transfer to EFIS") {
+                                Task { await model.transferToEFIS() }
+                            }
+                            .disabled(model.busy)
+                            Button("Clear Phone Cache", role: .destructive) { model.clearCache() }
+                        } else {
+                            Text("No signed licence cached").foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Section {
+                        Text("The phone never signs a licence. The licence service signs it; the EFIS verifies it before installation.")
                             .font(.footnote)
-                        Button("Transfer to EFIS") {
-                            Task { await model.transferToEFIS() }
-                        }
-                        .disabled(model.busy)
-                        Button("Clear Phone Cache", role: .destructive) {
-                            model.clearCache()
-                        }
-                    } else {
-                        Text("No signed licence cached")
                             .foregroundStyle(.secondary)
                     }
-                }
-
-                Section("Status") {
-                    Text(model.status)
-                }
-
-                Section {
-                    Text("The phone never signs a licence. The licence service signs it; the EFIS verifies it before installation.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
                 }
             }
             .navigationTitle("EFIS Licence")
