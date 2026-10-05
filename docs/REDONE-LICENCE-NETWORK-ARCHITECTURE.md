@@ -110,3 +110,7 @@ Secure backup outside Git: gateway TLS key/certificate, licence/account persiste
 This makes the network route rebuildable and secure for the current Synology-only phase. It does not make the development licence backend production-ready; the gates in PRODUCTION-LICENCE-SERVICE.md still apply.
 
 The current pin is a leaf-certificate pin. It is secure but couples certificate rotation to an app rollout. A future improvement may pin a stable dedicated gateway public key, provided it remains fail-closed and key custody/rotation are documented and tested.
+
+## Xcode project recovery
+
+The iOS Xcode project bundle is generated output, not source of truth. After a fresh clone or disaster recovery, install XcodeGen and run `./scripts/generate-xcode-projects.sh`. This regenerates both `ios/EFISService/EFISService.xcodeproj` and `simulator/ESP32EFISSimulator.xcodeproj` from their tracked `project.yml` files. Do not preserve or manually back up `.xcodeproj`, `xcuserdata` or `.xcuserstate` files; any setting required to reproduce the product must be represented in `project.yml` or another tracked source file.

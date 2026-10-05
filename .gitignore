@@ -2,3 +2,8 @@
 # macOS Finder metadata
 .DS_Store
 **/.DS_Store
+
+# XcodeGen output and per-user Xcode state
+**/*.xcodeproj/
+**/xcuserdata/
+**/*.xcuserstate

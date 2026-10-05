@@ -346,3 +346,10 @@ The detailed historical decision register—including adopted, superseded, parke
 - Added gateway rebuild and strict smoke-test scripts; the main Synology rebuild now includes the authenticated local gateway.
 - Documented TLS-key backup, lost-key recovery and overlap-first certificate rotation; private keys remain outside Git.
 - Simplified process GUI: the top guidance contains only the next action/status; duplicate lower `Next action` sections were removed and progress/history remains in the numbered process list.
+
+## 2026-10-05 — make XcodeGen definitions authoritative
+- Reconciled local Xcode project drift back into tracked `project.yml` definitions.
+- Added the EFIS Service local-network usage description required by authenticated Synology fallback to its XcodeGen definition.
+- Confirmed the simulator XcodeGen project automatically includes `NetworkSetupView.swift` and `OTAFlowView.swift`.
+- Added `scripts/generate-xcode-projects.sh`; both EFIS Service and simulator projects regenerate and build successfully from Git definitions.
+- Removed generated simulator `.xcodeproj` files from version control and ignore generated Xcode projects plus per-user `xcuserdata`/`xcuserstate`.
