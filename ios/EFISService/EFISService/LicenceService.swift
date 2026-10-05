@@ -83,6 +83,7 @@ struct DevelopmentLicenceManagementService {
         struct Wire: Decodable {
             let simulation_only: Bool; let device_id: String; let ownership: String
             let entitlement: String; let plan_id: String?; let plan_name: String?; let transferable: Bool
+            let renewal: String?; let valid_until: String?; let transfer_status: String?
         }
         let data = try await request("/api/phone/purchase", body:["device_id":deviceID,"plan_id":planID])
         let wire = try JSONDecoder().decode(Wire.self, from:data)
