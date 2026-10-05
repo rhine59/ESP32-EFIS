@@ -582,3 +582,7 @@ After the signed entitlement was cached, the iOS Simulator was completely termin
 ### iPhone QR Device-ID scanner — IMPLEMENTED / BUILD-VALIDATED (2026-10-05)
 
 The EFIS Service client now has an AVFoundation QR scanner instead of the placeholder Scan Device QR action. It accepts a literal `EFIS-...` identifier or the URI form `efis://device/<Device-ID>`, populates the Device-ID field and leaves manual entry available as fallback. Camera usage is declared in the XcodeGen source of truth. Swift 6 concurrency checks pass and the iOS Simulator target builds successfully. Camera operation itself requires a physical iPhone and is therefore not yet runtime-validated.
+
+### Simulator Device-ID QR — PASS (2026-10-05)
+
+The web EFIS simulator now exposes and displays a locally generated QR code containing the canonical `efis://device/<Device-ID>` payload. No external QR generation service is involved. The Synology container was rebuilt and the live QR endpoint returned HTTP 200 with a PNG. The QR is identification only and does not replace device authentication, entitlement authorization, signed licence issuance or EFIS-side verification. Together with the iPhone scanner this completes the simulated QR identification path; physical camera validation remains pending.
