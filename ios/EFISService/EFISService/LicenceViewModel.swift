@@ -5,7 +5,10 @@ final class LicenceViewModel: ObservableObject {
     @Published var deviceID = "EFIS-SIM-0001"
     @Published var serviceURL = "https://granvillehouse.synology.me:8449"
     @Published var cached: LicenceSummary?
+    enum ActivitySeverity { case info, success, warning, error }
+
     @Published var status = "Ready"
+    @Published var activitySeverity: ActivitySeverity = .info
     @Published var busy = false
     @Published var plans: [LicencePlan] = []
     @Published var account: LicenceAccountStatus?
@@ -19,42 +22,44 @@ final class LicenceViewModel: ObservableObject {
     }
 
     func loadManagement() async {
-        busy = true; defer { busy = false }
+        busy = true; activitySeverity = .info; status = "Loading licence account…"; defer { busy = false }
         do {
             guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
             let service = DevelopmentLicenceManagementService(baseURL: url)
             account = try await service.account(deviceID: deviceID)
             do {
                 plans = try await service.plans()
-                status = "Licence account loaded"
+                status = "Licence account loaded"; activitySeverity = .success
             } catch {
                 plans = []
-                status = "Account loaded; licence catalogue unavailable: " + error.localizedDescription
+                status = "Account loaded; licence catalogue unavailable: " + error.localizedDescription; activitySeverity = .warning
             }
-        } catch { status = error.localizedDescription }
+        } catch { status = error.localizedDescription; activitySeverity = .error }
     }
 
     func purchase(_ plan: LicencePlan) async {
-        busy = true; defer { busy = false }
+        busy = true; activitySeverity = .info; status = "Processing licence purchase…"; defer { busy = false }
         do {
             guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
             account = try await DevelopmentLicenceManagementService(baseURL: url).purchase(deviceID: deviceID, planID: plan.id)
-            status = "Purchase simulated; entitlement ACTIVE"
+            status = "Purchase complete; entitlement ACTIVE"; activitySeverity = .success
             await getEntitlement()
-        } catch { status = error.localizedDescription }
+        } catch { status = error.localizedDescription; activitySeverity = .error }
     }
 
     func manage(_ action: String, extra: [String:String] = [:]) async {
-        busy = true; defer { busy = false }
+        busy = true; activitySeverity = .info; status = action == "transfer" ? "Starting ownership transfer…" : action == "cancel-transfer" ? "Cancelling ownership transfer…" : action == "renew" ? "Enabling auto-renewal…" : "Cancelling auto-renewal…"; defer { busy = false }
         do {
             guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
             account = try await DevelopmentLicenceManagementService(baseURL: url).lifecycle(deviceID: deviceID, action: action, extra: extra)
-            status = "Licence management updated"
-        } catch { status = error.localizedDescription }
+            status = action == "transfer" ? "Ownership transfer pending" : action == "cancel-transfer" ? "Ownership transfer cancelled" : action == "renew" ? "Auto-renewal enabled" : "Auto-renewal cancelled"; activitySeverity = action == "transfer" ? .warning : .success
+        } catch { status = error.localizedDescription; activitySeverity = .error }
     }
 
     func getEntitlement() async {
         busy = true
+        activitySeverity = .info
+        status = "Retrieving signed entitlement…"
         defer { busy = false }
         do {
             guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
@@ -71,29 +76,33 @@ final class LicenceViewModel: ObservableObject {
             )
             try keychain.save(summary)
             cached = summary
-            status = "Signed entitlement cached"
+            status = "Signed entitlement cached"; activitySeverity = .success
         } catch {
             status = error.localizedDescription
+            activitySeverity = .error
         }
     }
 
     func transferToEFIS() async {
-        guard let cached else { status = "No signed licence is cached"; return }
+        guard let cached else { status = "No signed licence is cached"; activitySeverity = .warning; return }
         busy = true
+        activitySeverity = .info
+        status = "Transferring signed licence to EFIS…"
         defer { busy = false }
         do {
             guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
             let transfer = LocalEFISLicenceTransfer(baseURL: url)
             try await transfer.transferSignedEnvelope(cached.envelope, deviceID: cached.deviceID)
-            status = "Transferred; EFIS must verify and install"
+            status = "Transfer complete; EFIS must verify and install"; activitySeverity = .success
         } catch {
             status = error.localizedDescription
+            activitySeverity = .error
         }
     }
 
     func clearCache() {
         keychain.clear()
         cached = nil
-        status = "Phone licence cache cleared"
+        status = "Phone licence cache cleared"; activitySeverity = .success
     }
 }

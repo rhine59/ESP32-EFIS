@@ -4,17 +4,40 @@ struct LicenceView: View {
     @EnvironmentObject var model: LicenceViewModel
     @State private var showingScanner = false
 
+    private var activityColour: Color {
+        if model.busy { return .blue }
+        switch model.activitySeverity {
+        case .info: return .blue
+        case .success: return .green
+        case .warning: return .orange
+        case .error: return .red
+        }
+    }
+
+    private var activityBanner: some View {
+        HStack(spacing: 12) {
+            if model.busy { ProgressView() }
+            Image(systemName: model.busy ? "hourglass" :
+                    model.activitySeverity == .success ? "checkmark.circle.fill" :
+                    model.activitySeverity == .warning ? "exclamationmark.triangle.fill" :
+                    model.activitySeverity == .error ? "xmark.octagon.fill" : "info.circle.fill")
+            Text(model.status)
+                .font(.subheadline)
+                .fontWeight(.medium)
+            Spacer()
+        }
+        .foregroundStyle(activityColour)
+        .padding(12)
+        .background(activityColour.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(activityColour.opacity(0.45), lineWidth: 1))
+    }
+
     var body: some View {
         TabView {
             NavigationStack {
                 List {
-                    Section {
-                        HStack {
-                            Text("Status: " + model.status).font(.footnote)
-                            Spacer()
-                            if model.busy { ProgressView() }
-                        }
-                    }
+                    Section { activityBanner }
                     Section("EFIS") {
                         TextField("Device ID", text: $model.deviceID)
                             .textInputAutocapitalization(.characters)
@@ -49,6 +72,7 @@ struct LicenceView: View {
 
             NavigationStack {
                 List {
+                    Section { activityBanner }
                     if !model.plans.isEmpty {
                         ForEach(model.plans) { plan in
                             Section(plan.name) {
@@ -78,6 +102,7 @@ struct LicenceView: View {
 
             NavigationStack {
                 List {
+                    Section { activityBanner }
                     Section("Account") {
                         if let account = model.account {
                             LabeledContent("Plan", value: account.planName ?? "None")
@@ -149,6 +174,7 @@ struct LicenceView: View {
 
             NavigationStack {
                 List {
+                    Section { activityBanner }
                     Section("Entitlement service") {
                         TextField("Service URL", text: $model.serviceURL)
                             .textInputAutocapitalization(.never)
