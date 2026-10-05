@@ -148,18 +148,22 @@ struct LicenceView: View {
 
                         Section("Ownership transfer") {
                             if account.transferable {
-                                TextField("Buyer email", text: $model.buyerEmail)
-                                    .textInputAutocapitalization(.never)
-                                    .autocorrectionDisabled()
-                                Button("Start Ownership Transfer") {
-                                    Task { await model.manage("transfer", extra: ["buyer_email": model.buyerEmail]) }
-                                }
-                                .disabled(model.busy || model.buyerEmail.isEmpty)
                                 if account.transferStatus == "PENDING" {
                                     Button("Cancel Pending Transfer", role: .destructive) {
                                         Task { await model.manage("cancel-transfer") }
                                     }
                                     .disabled(model.busy)
+                                    Text("Cancel the pending transfer before starting a new ownership transfer.")
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                } else {
+                                    TextField("Buyer email", text: $model.buyerEmail)
+                                        .textInputAutocapitalization(.never)
+                                        .autocorrectionDisabled()
+                                    Button("Start Ownership Transfer") {
+                                        Task { await model.manage("transfer", extra: ["buyer_email": model.buyerEmail]) }
+                                    }
+                                    .disabled(model.busy || model.buyerEmail.isEmpty)
                                 }
                             } else {
                                 Text("This licence is not transferable.")
