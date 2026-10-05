@@ -39,6 +39,9 @@ struct LicenceAccountStatus: Codable, Equatable {
     let planID: String?
     let planName: String?
     let transferable: Bool
+    let renewal: String?
+    let validUntil: String?
+    let transferStatus: String?
 }
 
 enum LicenceAppError: LocalizedError {
