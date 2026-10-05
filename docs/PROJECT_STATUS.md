@@ -590,3 +590,7 @@ The web EFIS simulator now exposes and displays a locally generated QR code cont
 ### Phone-to-EFIS signed licence transfer — IMPLEMENTED / BUILD-VALIDATED (2026-10-05)
 
 The phone client now sends its cached opaque signed licence envelope to the EFIS local service endpoint. The simulator independently checks Device ID and verifies Ed25519 signature, licence schema, product and device binding using its local trust material before atomically persisting and activating the candidate. The phone has no licence signing authority. The iOS target builds successfully, the updated app has been installed/launched in the simulator, and the Synology receiver has been rebuilt. User-triggered end-to-end Transfer validation is still pending.
+
+### Phone-to-EFIS signed licence transfer — END-TO-END PASS (2026-10-05)
+
+The user triggered Transfer to EFIS in the iOS Simulator and the phone reported completion. An independent post-transfer query of the EFIS simulator reported the installed licence as `VALID`, class `DEVELOPMENT`, using trust key `sim-dev-1`. This demonstrates that the signed envelope traversed the phone-to-EFIS interface and passed EFIS-side signature/schema/product/device verification before installation. The phone UI was also corrected so operation status remains visible. This validates the simulator/service contract, not yet physical ESP32 protected storage or physical-iPhone-to-EFIS local transport.
