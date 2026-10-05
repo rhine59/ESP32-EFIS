@@ -198,3 +198,11 @@ The detailed historical decision register—including adopted, superseded, parke
 - Existing QR, Keychain and Transfer to EFIS paths remain intact.
 - iOS Simulator build passes and updated app has been installed/launched.
 - Production gate remains authenticated customer accounts plus payment-provider checkout and verified webhook before entitlement activation.
+
+### Licence lifecycle management UI — IMPLEMENTED
+- Added simulated annual renewal/auto-renewal enablement and cancellation.
+- Added ownership-transfer initiation using buyer email plus cancellation of a pending transfer.
+- Account display now exposes renewal and pending-transfer state when applicable.
+- Lifecycle actions remain server-authoritative; the phone only requests changes.
+- Purchase/renewal/transfer endpoints remain development simulation and take no payment.
+- iOS build passes, updated app is installed/launched, and Synology simulator has been rebuilt.
