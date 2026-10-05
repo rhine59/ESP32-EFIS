@@ -1,14 +1,14 @@
 # RedOne production licence service deployment
 
-**Status:** release gate — production Internet host/domain not yet provisioned.
+**Status:** Synology-hosted deployment adopted for the current project phase; external managed hosting is deferred.
 
 ## Customer network contract
 
 EFIS Service must work without customer network configuration. The production API therefore requires one stable public DNS hostname, publicly trusted TLS, HTTPS on TCP 443, and identical behaviour over normal Wi-Fi and cellular. No split DNS, NAT-loopback dependency, private IP, custom certificate, VPN, router change, Private Relay/Limit IP Address Tracking change, or user-entered service URL is permitted.
 
-## Do not deploy the simulator service
+## Synology deployment boundary
 
-`license-service/` is a development harness. It has one synthetic device, an in-memory entitlement and a development signing key. `efis-web-simulator/` is also development-only. Neither is a production customer API.
+The services remain hosted on the project Synology for the current phase. `license-service/` and `efis-web-simulator/` are development harnesses and must not be mistaken for the hardened customer API; the Synology deployment must evolve to use the account/entitlement and private signer boundaries described below.
 
 `account-service/` is a prototype foundation, not yet a production security boundary. It requires authenticated mobile sessions/API tokens, email verification/recovery, authorization on every device/entitlement operation, database migrations/backups, rate limiting, audit retention, payment-provider webhook verification, and integration with an isolated licence signer before Internet exposure.
 
@@ -38,8 +38,8 @@ A release build with no valid production endpoint is intentionally non-operation
 
 ## Go-live gates
 
-1. Provision Internet hosting and a dedicated production DNS hostname.
-2. Provision managed PostgreSQL with encrypted backups and restore testing.
+1. Provide a stable public HTTPS hostname/path to the Synology-hosted customer API without requiring client/router configuration; an outbound tunnel/reverse-proxy is acceptable for this phase and avoids NAT-loopback dependence.
+2. Run PostgreSQL on the controlled Synology deployment with encrypted backups and restore testing; managed PostgreSQL may be adopted later.
 3. Establish production secrets/key custody and signer isolation/rotation.
 4. Implement authenticated customer/mobile API and authorization tests.
 5. Implement verified payment webhook adapters and idempotency.

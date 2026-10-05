@@ -315,3 +315,9 @@ The detailed historical decision register—including adopted, superseded, parke
 - Release EFIS Service now accepts only a configured HTTPS licence endpoint on the default HTTPS port or explicit TCP 443 and fails closed when no production endpoint is supplied.
 - Explicitly prohibited deploying the current simulator licence service as the customer backend.
 - Added security, hosting, database, signing, payment, monitoring and cross-network validation gates required before TestFlight uses the production service.
+
+## 2026-10-05 — retain Synology as current licence hosting platform
+- Confirmed the project Synology remains the hosting platform for the licence/account service during the current development and early distribution phase.
+- External managed/cloud hosting is deferred rather than treated as a current release prerequisite.
+- Zero-configuration client networking remains mandatory: users must not alter DNS/router/iOS privacy settings.
+- Preferred next deployment step is a stable public HTTPS route to the Synology that avoids local NAT-loopback dependence, while keeping the signer private and preserving the production service boundaries.
