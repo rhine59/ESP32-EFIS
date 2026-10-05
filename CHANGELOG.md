@@ -129,3 +129,10 @@ For detailed design rationale, validation scope and superseded decisions, see `d
 Earlier development established the project's supplementary/non-primary safety model, ESP32-S3-WROOM-1-N16R2 hardware baseline, Newhaven 480×480 round RGB565 display, Bourns rotary/push control, BMI088 attitude sensing, BMP585 static-pressure altitude source, RM3100 remote magnetometer, QEMU authoritative renderer, SwiftUI simulator, fail-obvious sensor validity, Synology-hosted OTA origin/admin services, separate Stage/Publish workflow, A/B OTA/rollback design and maintenance-only iPhone hotspot networking.
 
 The detailed historical decision register—including adopted, superseded, parked and dismissed alternatives—is retained in `docs/PROJECT_STATUS.md`. This summary does not replace that register.
+
+### iPhone Keychain persistence across simulator shutdown — PASS
+- Completely terminated the iOS Simulator after caching the signed entitlement.
+- Reopened the original iPhone 17 Pro simulator and launched EFIS Service without requesting or refreshing a licence.
+- User-confirmed the cached entitlement immediately returned as `ACTIVE`.
+- This validates iPhone-side Keychain persistence across simulator shutdown/restart for the current development client.
+- Next implementation checkpoint: QR acquisition of the immutable EFIS Device ID.
