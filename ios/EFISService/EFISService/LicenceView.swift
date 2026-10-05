@@ -6,6 +6,7 @@ struct LicenceView: View {
 
     var body: some View {
         NavigationStack {
+            GeometryReader { geometry in
             VStack(spacing: 0) {
                 HStack {
                     Text("Status: " + model.status)
@@ -17,15 +18,16 @@ struct LicenceView: View {
                 .padding(.horizontal)
                 .padding(.vertical, 8)
 
-                Form {
-                    Section("EFIS") {
+                ScrollView {
+                VStack(spacing: 18) {
+                    GroupBox("EFIS") { VStack(alignment: .leading, spacing: 12) {
                         TextField("Device ID", text: $model.deviceID)
                             .textInputAutocapitalization(.characters)
                             .autocorrectionDisabled()
                         Button("Scan Device QR") { showingScanner = true }
-                    }
+                    }.frame(maxWidth: .infinity, alignment: .leading) }
 
-                    Section("Licence account") {
+                    GroupBox("Licence account") { VStack(alignment: .leading, spacing: 12) {
                         Button("Load / Refresh Account") { Task { await model.loadManagement() } }
                             .disabled(model.busy || model.deviceID.isEmpty)
                         if let account = model.account {
@@ -34,10 +36,10 @@ struct LicenceView: View {
                             LabeledContent("Plan", value: account.planName ?? "None")
                             LabeledContent("Transferable", value: account.transferable ? "Yes" : "No")
                         }
-                    }
+                    }.frame(maxWidth: .infinity, alignment: .leading) }
 
                     if !model.plans.isEmpty {
-                        Section("Purchase licence — simulation") {
+                        GroupBox("Purchase licence — simulation") { VStack(alignment: .leading, spacing: 12) {
                             ForEach(model.plans) { plan in
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(plan.name).font(.headline)
@@ -49,10 +51,10 @@ struct LicenceView: View {
                             }
                             Text("Development simulation only. No payment is taken.")
                                 .font(.footnote).foregroundStyle(.secondary)
-                        }
+                        }.frame(maxWidth: .infinity, alignment: .leading) }
                     }
 
-                    Section("Entitlement service") {
+                    GroupBox("Entitlement service") { VStack(alignment: .leading, spacing: 12) {
                         TextField("Service URL", text: $model.serviceURL)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
@@ -60,9 +62,9 @@ struct LicenceView: View {
                             Task { await model.getEntitlement() }
                         }
                         .disabled(model.busy || model.deviceID.isEmpty)
-                    }
+                    }.frame(maxWidth: .infinity, alignment: .leading) }
 
-                    Section("Cached signed licence") {
+                    GroupBox("Cached signed licence") { VStack(alignment: .leading, spacing: 12) {
                         if let licence = model.cached {
                             LabeledContent("Device", value: licence.deviceID)
                             LabeledContent("Entitlement", value: licence.entitlement)
@@ -77,15 +79,20 @@ struct LicenceView: View {
                         } else {
                             Text("No signed licence cached").foregroundStyle(.secondary)
                         }
-                    }
+                    }.frame(maxWidth: .infinity, alignment: .leading) }
 
-                    Section {
+                    GroupBox {
                         Text("The phone never signs a licence. The licence service signs it; the EFIS verifies it before installation.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal)
+                .padding(.bottom, max(16, geometry.safeAreaInsets.bottom))
+                }
                 .scrollDismissesKeyboard(.interactively)
+            }
             }
             .navigationTitle("EFIS Licence")
             .fullScreenCover(isPresented: $showingScanner) {
