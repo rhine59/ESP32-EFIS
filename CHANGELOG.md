@@ -340,3 +340,9 @@ The detailed historical decision register—including adopted, superseded, parke
 - Local HTTPS is accepted only when the gateway leaf-certificate SHA-256 matches the pin embedded in the signed app; a discovered LAN service alone is not trusted.
 - Corrected mDNS advertisement to publish the NAS interface address dynamically rather than loopback.
 - Physical iPhone test passed: `Licence account loaded` with normal router/DNS settings and no external tunnel.
+
+## 2026-10-05 — make Synology licence path rebuildable and simplify workflow guidance
+- Added the detailed canonical RedOne licence network/disaster-recovery architecture and acceptance checklist.
+- Added gateway rebuild and strict smoke-test scripts; the main Synology rebuild now includes the authenticated local gateway.
+- Documented TLS-key backup, lost-key recovery and overlap-first certificate rotation; private keys remain outside Git.
+- Simplified process GUI: the top guidance contains only the next action/status; duplicate lower `Next action` sections were removed and progress/history remains in the numbered process list.

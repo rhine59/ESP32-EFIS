@@ -1,6 +1,10 @@
 services:
   redone-local-license-gateway:
-    build: .
+    build:
+      context: .
+      args:
+        REDONE_UID: "${REDONE_UID:-1040}"
+        REDONE_GID: "${REDONE_GID:-65539}"
     container_name: redone-local-license-gateway
     network_mode: host
     volumes:

@@ -9,7 +9,9 @@ echo "== Licence service =="
 docker compose -f license-service/compose.yml up -d --build
 echo "== Web simulator =="
 docker compose -f efis-web-simulator/compose.yml up -d --build
+echo "== Local licence gateway =="
+"$ROOT/scripts/rebuild-local-license-gateway.sh" "$ROOT"
 echo "== Status =="
 docker compose -f license-service/compose.yml ps
 docker compose -f efis-web-simulator/compose.yml ps
-echo "Rebuild complete. Both services should report healthy."
+echo "Rebuild complete. Licence service, simulator and authenticated local gateway should be running."

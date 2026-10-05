@@ -358,14 +358,6 @@ private struct ProcessGuidanceView: View {
             } else {
                 nextContent
             }
-            Divider()
-            Text("Completed")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
-            Text(completed)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
         }
         .padding(.vertical, 6)
     }
@@ -443,24 +435,6 @@ private struct BuyLicenceFlowView: View {
                 ProcessStepRow(number: 7, title: "Verify VALID", detail: installed ? "EFIS reported VALID" : "Requires EFIS acknowledgement", state: installed ? .complete : .waiting)
                 ProcessStepRow(number: 8, title: "Show renewal date", detail: model.account?.validUntil ?? (installed ? "No expiry for this plan" : "Available after activation"), state: installed ? .complete : .waiting)
             }
-            Section("Next action") {
-                if !found {
-                    TextField("RedOne Device ID", text: $model.deviceID).textInputAutocapitalization(.characters).autocorrectionDisabled()
-                    Button("Check licence entitlement") { Task { await model.loadManagement() } }.disabled(model.busy || model.deviceID.isEmpty)
-                } else if includedUnused {
-                    Button("Activate included first year — £0") { Task { await model.activateIncludedYear() } }.disabled(model.busy)
-                } else if !active {
-                    ForEach(model.plans) { plan in
-                        Button("Buy \(plan.name) — \(plan.priceDisplay)") { Task { await model.purchase(plan) } }.disabled(model.busy)
-                    }
-                } else if !signed {
-                    Button("Obtain signed licence") { Task { await model.getEntitlement() } }.disabled(model.busy)
-                } else if !installed {
-                    Button("Install licence on EFIS") { Task { await model.transferToEFIS() } }.disabled(model.busy)
-                } else {
-                    Label("Licence activation is complete.", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
-                }
-            }
             if let account = model.account {
                 Section("Licence") {
                     LabeledContent("Type", value: account.planName ?? account.entitlement)
@@ -531,40 +505,6 @@ private struct SetupNewEFISFlowView: View {
                 ProcessStepRow(number: 6, title: "Verify installation", detail: installed ? "EFIS reported VALID" : "Requires explicit EFIS acknowledgement", state: installed ? .complete : .waiting)
             }
 
-            Section("Next action") {
-                if !accountLoaded {
-                    TextField("EFIS Device ID", text: $model.deviceID)
-                        .textInputAutocapitalization(.characters)
-                        .autocorrectionDisabled()
-                    Button("Identify EFIS") { Task { await model.loadManagement() } }
-                        .disabled(model.busy || model.deviceID.isEmpty)
-                } else if includedUnused {
-                    Button("Activate included first year — £0") { Task { await model.activateIncludedYear() } }
-                        .disabled(model.busy)
-                } else if !active {
-                    if model.plans.isEmpty {
-                        Button("Refresh licence plans") { Task { await model.loadManagement() } }
-                            .disabled(model.busy)
-                    } else {
-                        ForEach(model.plans) { plan in
-                            Button("Choose \(plan.name) — \(plan.priceDisplay)") {
-                                Task { await model.purchase(plan) }
-                            }
-                            .disabled(model.busy)
-                        }
-                    }
-                } else if !signed {
-                    Button("Obtain signed licence") { Task { await model.getEntitlement() } }
-                        .disabled(model.busy)
-                } else if !installed {
-                    Button("Install licence on EFIS") { Task { await model.transferToEFIS() } }
-                        .disabled(model.busy)
-                } else {
-                    Label("EFIS setup is complete.", systemImage: "checkmark.seal.fill")
-                        .foregroundStyle(.green)
-                }
-            }
-
             Section("Status") {
                 Text(model.status)
                     .foregroundStyle(model.activitySeverity == .error ? .red : model.activitySeverity == .warning ? .orange : .secondary)
@@ -610,37 +550,6 @@ private struct ReceiveTransferredEFISFlowView: View {
                 ProcessStepRow(number: 6, title: "Verify ownership", detail: installed ? "EFIS reported VALID" : "Requires explicit EFIS acknowledgement", state: installed ? .complete : .waiting)
             }
 
-            Section("Next action") {
-                if model.account == nil {
-                    TextField("EFIS Device ID", text: $model.deviceID)
-                        .textInputAutocapitalization(.characters)
-                        .autocorrectionDisabled()
-                    Button("Find transfer") { Task { await model.loadManagement() } }
-                        .disabled(model.busy || model.deviceID.isEmpty)
-                } else if pending {
-                    TextField("Invited buyer email", text: $model.buyerEmail)
-                        .textInputAutocapitalization(.never)
-                        .keyboardType(.emailAddress)
-                        .autocorrectionDisabled()
-                    Button("Accept ownership transfer") { Task { await model.acceptTransfer() } }
-                        .disabled(model.busy || !model.buyerEmail.contains("@"))
-                    Text("Development validation: the email must exactly match the pending invitation. Production will replace this with authenticated buyer identity and a single-use invitation credential.")
-                        .font(.footnote).foregroundStyle(.secondary)
-                } else if accepted && !signed {
-                    Button("Obtain replacement licence") { Task { await model.getEntitlement() } }
-                        .disabled(model.busy)
-                } else if accepted && !installed {
-                    Button("Install licence on EFIS") { Task { await model.transferToEFIS() } }
-                        .disabled(model.busy)
-                } else if installed {
-                    Label("Ownership transfer and licence installation are complete.", systemImage: "checkmark.seal.fill")
-                        .foregroundStyle(.green)
-                } else {
-                    Button("Refresh transfer status") { Task { await model.loadManagement() } }
-                        .disabled(model.busy)
-                }
-            }
-
             Section("Status") {
                 Text(model.status).foregroundStyle(model.activitySeverity == .error ? .red : model.activitySeverity == .warning ? .orange : .secondary)
             }
@@ -660,7 +569,22 @@ private struct ReassignEFISFlowView: View {
     var body: some View {
         List {
             Section {
-                ProcessGuidanceView(completed: !hasAccount ? "Nothing yet." : isPending ? "The current EFIS is confirmed and the new owner has been identified." : "The current EFIS and its licence state have been confirmed.", next: !hasAccount ? "Load the current EFIS details." : isPending ? "Wait for the buyer to accept ownership. You can refresh the status here." : "Enter the new owner email and start the reassignment.", attention: isPending)
+                if !hasAccount {
+                    ProcessGuidanceView(completed: "", next: "Load the current EFIS details.", action: { Task { await model.loadManagement() } })
+                } else if isPending {
+                    ProcessGuidanceView(completed: "", next: "Wait for the buyer to accept ownership, then refresh the transfer status.", attention: true, action: { Task { await model.loadManagement() } })
+                    Button("Cancel reassignment", role: .destructive) { Task { await model.manage("cancel-transfer") } }
+                        .disabled(model.busy)
+                } else if account?.transferable == true {
+                    ProcessGuidanceView(completed: "", next: "Enter the new owner email and start the reassignment.")
+                    TextField("Buyer email", text: $model.buyerEmail)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    Button("Start reassignment") { Task { await model.manage("transfer", extra: ["buyer_email": model.buyerEmail]) } }
+                        .disabled(model.busy || model.buyerEmail.isEmpty)
+                } else {
+                    ProcessGuidanceView(completed: "", next: "This licence is not transferable.", attention: true)
+                }
             }
 
             Section("Reassignment progress") {
@@ -685,40 +609,6 @@ private struct ReassignEFISFlowView: View {
                 ProcessStepRow(number: 4, title: "Issue replacement licence", detail: "Begins after buyer acceptance", state: .waiting)
                 ProcessStepRow(number: 5, title: "Install licence on EFIS", detail: "Install the new owner's signed entitlement", state: .waiting)
                 ProcessStepRow(number: 6, title: "Verify reassignment", detail: "Finish only when EFIS reports VALID", state: .waiting)
-            }
-
-            Section("Next action") {
-                if !hasAccount {
-                    Button("Load current EFIS") {
-                        Task { await model.loadManagement() }
-                    }
-                    .disabled(model.busy)
-                } else if isPending {
-                    Label("Waiting for the new owner to accept the transfer.", systemImage: "clock")
-                        .foregroundStyle(.orange)
-                    Text("Buyer acceptance is part of the adopted architecture but is not yet implemented in the backend/client. This workflow will resume here when that capability is added.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                    Button("Refresh transfer status") {
-                        Task { await model.loadManagement() }
-                    }
-                    .disabled(model.busy)
-                    Button("Cancel reassignment", role: .destructive) {
-                        Task { await model.manage("cancel-transfer") }
-                    }
-                    .disabled(model.busy)
-                } else if account?.transferable == true {
-                    TextField("Buyer email", text: $model.buyerEmail)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    Button("Start reassignment") {
-                        Task { await model.manage("transfer", extra: ["buyer_email": model.buyerEmail]) }
-                    }
-                    .disabled(model.busy || model.buyerEmail.isEmpty)
-                } else {
-                    Label("This licence is not transferable.", systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.orange)
-                }
             }
 
             Section("Current state") {

@@ -15,3 +15,5 @@ Deployment requirements:
 - configure the proxy allow-list to `/api/phone/` and `/healthz` only;
 - embed the certificate/public-key SHA-256 pin in the signed iOS application;
 - rotate identity through an app release with overlapping old/new pins.
+
+The rebuild script passes the invoking Synology account UID/GID into the image build so the container can read a mode-0600 private key owned by that account. On a replacement NAS these values are discovered from `id`; they are not tied to the original NAS numeric IDs. Override `REDONE_UID` and `REDONE_GID` only when the TLS files belong to a dedicated service account.
