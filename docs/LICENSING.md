@@ -319,3 +319,17 @@ Repository checkpoint tooling now includes `scripts/rebuild-synology.sh` for Com
 The Synology simulator runtime harness **passes** the tampered-payload and bad-Ed25519-signature rejection tests without replacing the currently installed valid licence. The wrong-Device-ID case has been strengthened and runtime-validated: the simulator no longer mutates an already-signed payload. Instead, the simulator-only licence service issues a **correctly Ed25519-signed** DEVELOPMENT test licence bound to `EFIS-SIM-WRONG`; the normal EFIS verifier must therefore pass signature verification and then reject the candidate specifically at the immutable Device-ID binding check. The test fixture is explicitly simulation-only and is not a production issuance API.
 
 The Synology rebuild script now invokes Docker directly because the dedicated `chatgpt` deployment account has Docker access; it does not depend on an interactive `sudo` password.
+
+### Licence failure-path regression — PASS (2026-10-05)
+
+The Synology regression harness now covers the remaining simulator-level licence failure paths and passes end-to-end:
+
+- **No entitlement:** the authenticated licence request is refused and the previously installed valid licence remains unchanged.
+- **Interrupted replacement:** a newly signed and verified candidate is written only to the temporary candidate path; a simulated restart retains the previous installed licence and startup discards the orphan candidate.
+- **Licence Reset:** the installed licence and any temporary candidate are removed while the immutable Device ID, firmware identity and provisioned simulator trust anchor remain unchanged.
+- **Offline acquisition:** with no installed licence and maintenance networking offline, refresh fails cleanly; the boot menu's START EFIS action remains independent of licensing.
+- **Corrupt persistent licence:** startup detects the corrupt stored artefact and reports `INVALID`; it never silently accepts or regenerates it. A subsequent online, authenticated, signed acquisition restores `VALID`.
+
+Together with the earlier tampered-payload, bad-signature, correctly-signed wrong-Device-ID and offline-reboot tests, this completes the intended **Docker/simulator licensing contract** for this stage. It does not validate ESP32 protected NVS, flash atomicity, brownout/power-loss behaviour, secure factory provisioning or physical-device trust-anchor protection; those remain hardware-stage gates.
+
+The simulator does not currently model calibration or account-side ownership records, so Licence Reset preservation of those items remains an architectural requirement rather than a claim from this harness.
