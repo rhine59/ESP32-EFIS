@@ -1,4 +1,6 @@
 import Foundation
+import CryptoKit
+import Security
 
 protocol LicenceServiceProtocol {
     func requestLicence(deviceID: String) async throws -> LicenceResponse
@@ -8,6 +10,7 @@ protocol LicenceServiceProtocol {
 /// device HMAC credential and never receives a licence signing key.
 struct DevelopmentPhoneEntitlementService: LicenceServiceProtocol {
     let baseURL: URL
+    var session: URLSession = .shared
 
     func requestLicence(deviceID: String) async throws -> LicenceResponse {
         let url = baseURL.appending(path: "/api/phone/entitlement")
@@ -15,7 +18,7 @@ struct DevelopmentPhoneEntitlementService: LicenceServiceProtocol {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(["device_id": deviceID])
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse else {
             throw LicenceAppError.service("Invalid service response.")
         }
@@ -43,6 +46,7 @@ private struct PhoneLicenceResponse: Decodable {
 
 struct DevelopmentLicenceManagementService {
     let baseURL: URL
+    var session: URLSession = .shared
 
     private func request(_ path: String, body: [String:String]? = nil) async throws -> Data {
         let url = baseURL.appending(path: path)
@@ -52,7 +56,7 @@ struct DevelopmentLicenceManagementService {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try JSONEncoder().encode(body)
         }
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             let detail = (try? JSONSerialization.jsonObject(with: data) as? [String:Any])?["error"] as? String
             throw LicenceAppError.service(detail ?? "Licence management request failed.")
@@ -79,7 +83,7 @@ struct DevelopmentLicenceManagementService {
         }
         components.queryItems = [URLQueryItem(name: "device_id", value: deviceID)]
         guard let url = components.url else { throw LicenceAppError.invalidURL }
-        let (data, response) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await session.data(from: url)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             let detail = (try? JSONSerialization.jsonObject(with: data) as? [String:Any])?["error"] as? String
             throw LicenceAppError.service(detail ?? "Licence account request failed.")
@@ -118,4 +122,53 @@ struct DevelopmentLicenceManagementService {
                                     renewal: wire.renewal, validUntil: wire.valid_until, transferStatus: wire.transfer_status)
     }
 
+}
+
+final class RedOnePinnedTLSDelegate: NSObject, URLSessionDelegate {
+    private let allowedCertificateSHA256: Set<String>
+
+    init(allowedCertificateSHA256: Set<String>) {
+        self.allowedCertificateSHA256 = allowedCertificateSHA256
+    }
+
+    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge,
+                    completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+              let trust = challenge.protectionSpace.serverTrust,
+              let chain = SecTrustCopyCertificateChain(trust) as? [SecCertificate],
+              let certificate = chain.first else {
+            completionHandler(.performDefaultHandling, nil); return
+        }
+        let digest = SHA256.hash(data: SecCertificateCopyData(certificate) as Data)
+        let fingerprint = digest.map { String(format: "%02X", $0) }.joined()
+        guard allowedCertificateSHA256.contains(fingerprint) else {
+            completionHandler(.cancelAuthenticationChallenge, nil); return
+        }
+        completionHandler(.useCredential, URLCredential(trust: trust))
+    }
+}
+
+enum RedOneLocalGateway {
+    static let url = URL(string: "https://redone-license.local:9443")!
+    static let certificatePins: Set<String> = [
+        "4591A97263BA799075D3D38443B6C0FA0047BD6619B72FBE612764D5AF2C0C1A"
+    ]
+
+    static func session() -> URLSession {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.timeoutIntervalForRequest = 5
+        configuration.timeoutIntervalForResource = 10
+        return URLSession(configuration: configuration,
+                          delegate: RedOnePinnedTLSDelegate(allowedCertificateSHA256: certificatePins),
+                          delegateQueue: nil)
+    }
+
+    static func isAvailable() async -> Bool {
+        do {
+            let (data, response) = try await session().data(from: url.appending(path: "/healthz"))
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { return false }
+            let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+            return object?["service"] as? String == "redone-local-gateway"
+        } catch { return false }
+    }
 }

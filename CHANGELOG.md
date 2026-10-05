@@ -327,3 +327,16 @@ The detailed historical decision register—including adopted, superseded, parke
 - Adopted canonical public HTTPS first with automatic authenticated local-Synology fallback only when the app is on the hosting LAN and the public route is unreachable.
 - Local routing must use discovery rather than a hard-coded NAS IP and must preserve cryptographic server authentication; TLS validation may not be bypassed.
 - Removed the temporary Cloudflare Quick Tunnel container from the Synology.
+
+## 2026-10-05 — stage authenticated Synology LAN licence gateway
+- Added `local-license-gateway/` as the dedicated TLS-protected LAN fallback boundary.
+- Gateway exposes only `/api/phone/` plus a minimal health endpoint and proxies to the loopback-bound Synology simulator/API during development.
+- Local gateway uses a dedicated pinned TLS identity independent of DSM certificate renewal; private key remains on the NAS.
+- Bonjour `_redone-license._tcp` discovery and iOS certificate/public-key pin validation are mandatory before enabling fallback in the app.
+
+## 2026-10-05 — validate authenticated local licence fallback on physical iPhone
+- Added the Synology `redone-local-license-gateway` container with repository-owned mDNS advertisement and dedicated TLS identity.
+- Added iOS public-first/local-fallback routing for account management and signed-entitlement retrieval.
+- Local HTTPS is accepted only when the gateway leaf-certificate SHA-256 matches the pin embedded in the signed app; a discovered LAN service alone is not trusted.
+- Corrected mDNS advertisement to publish the NAS interface address dynamically rather than loopback.
+- Physical iPhone test passed: `Licence account loaded` with normal router/DNS settings and no external tunnel.

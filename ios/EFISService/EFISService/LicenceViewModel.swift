@@ -39,14 +39,34 @@ final class LicenceViewModel: ObservableObject {
         cached = keychain.load()
     }
 
+    private func withManagement<T>(_ operation: (DevelopmentLicenceManagementService) async throws -> T) async throws -> T {
+        guard let publicURL = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
+        do {
+            return try await operation(DevelopmentLicenceManagementService(baseURL: publicURL))
+        } catch let networkError as URLError {
+            guard await RedOneLocalGateway.isAvailable() else { throw networkError }
+            return try await operation(DevelopmentLicenceManagementService(baseURL: RedOneLocalGateway.url,
+                                                                           session: RedOneLocalGateway.session()))
+        }
+    }
+
+    private func requestEntitlementWithFallback() async throws -> LicenceResponse {
+        guard let publicURL = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
+        do {
+            return try await DevelopmentPhoneEntitlementService(baseURL: publicURL).requestLicence(deviceID: deviceID)
+        } catch let networkError as URLError {
+            guard await RedOneLocalGateway.isAvailable() else { throw networkError }
+            return try await DevelopmentPhoneEntitlementService(baseURL: RedOneLocalGateway.url,
+                                                                session: RedOneLocalGateway.session()).requestLicence(deviceID: deviceID)
+        }
+    }
+
     func loadManagement() async {
         busy = true; activitySeverity = .info; status = "Loading licence account…"; defer { busy = false }
         do {
-            guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
-            let service = DevelopmentLicenceManagementService(baseURL: url)
-            account = try await service.account(deviceID: deviceID)
+            account = try await withManagement { try await $0.account(deviceID: deviceID) }
             do {
-                plans = try await service.plans()
+                plans = try await withManagement { try await $0.plans() }
                 if account?.transferStatus == "PENDING" {
                     status = "Ownership transfer pending"
                     activitySeverity = .warning
@@ -74,8 +94,7 @@ final class LicenceViewModel: ObservableObject {
     func purchase(_ plan: LicencePlan) async {
         busy = true; activitySeverity = .info; status = "Processing licence purchase…"; defer { busy = false }
         do {
-            guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
-            account = try await DevelopmentLicenceManagementService(baseURL: url).purchase(deviceID: deviceID, planID: plan.id)
+            account = try await withManagement { try await $0.purchase(deviceID: deviceID, planID: plan.id) }
             status = "Purchase complete; entitlement ACTIVE"; activitySeverity = .success
             await getEntitlement()
         } catch { status = error.localizedDescription; activitySeverity = .error }
@@ -84,8 +103,7 @@ final class LicenceViewModel: ObservableObject {
     func manage(_ action: String, extra: [String:String] = [:]) async {
         busy = true; activitySeverity = .info; status = action == "transfer" ? "Starting ownership transfer…" : action == "cancel-transfer" ? "Cancelling ownership transfer…" : action == "renew" ? "Enabling auto-renewal…" : "Cancelling auto-renewal…"; defer { busy = false }
         do {
-            guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
-            account = try await DevelopmentLicenceManagementService(baseURL: url).lifecycle(deviceID: deviceID, action: action, extra: extra)
+            account = try await withManagement { try await $0.lifecycle(deviceID: deviceID, action: action, extra: extra) }
             status = action == "transfer" ? "Ownership transfer pending" : action == "cancel-transfer" ? "Ownership transfer cancelled" : action == "renew" ? "Auto-renewal enabled" : "Auto-renewal cancelled"; activitySeverity = action == "transfer" ? .warning : .success
         } catch { status = error.localizedDescription; activitySeverity = .error }
     }
@@ -93,8 +111,7 @@ final class LicenceViewModel: ObservableObject {
     func activateIncludedYear() async {
         busy = true; activitySeverity = .info; status = "Activating the included first year…"; defer { busy = false }
         do {
-            guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
-            account = try await DevelopmentLicenceManagementService(baseURL: url).lifecycle(deviceID: deviceID, action: "activate-included")
+            account = try await withManagement { try await $0.lifecycle(deviceID: deviceID, action: "activate-included") }
             status = "Included first year activated"; activitySeverity = .success
         } catch { status = error.localizedDescription; activitySeverity = .error }
     }
@@ -102,8 +119,7 @@ final class LicenceViewModel: ObservableObject {
     func acceptTransfer() async {
         busy = true; activitySeverity = .info; status = "Accepting ownership transfer…"; defer { busy = false }
         do {
-            guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
-            account = try await DevelopmentLicenceManagementService(baseURL: url).lifecycle(deviceID: deviceID, action: "accept-transfer", extra: ["buyer_email": buyerEmail])
+            account = try await withManagement { try await $0.lifecycle(deviceID: deviceID, action: "accept-transfer", extra: ["buyer_email": buyerEmail]) }
             status = "Ownership transfer accepted"; activitySeverity = .success
             await getEntitlement()
         } catch { status = error.localizedDescription; activitySeverity = .error }
@@ -115,9 +131,7 @@ final class LicenceViewModel: ObservableObject {
         status = "Retrieving signed entitlement…"
         defer { busy = false }
         do {
-            guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
-            let service = DevelopmentPhoneEntitlementService(baseURL: url)
-            let response = try await service.requestLicence(deviceID: deviceID)
+            let response = try await requestEntitlementWithFallback()
             guard response.device_id == deviceID else {
                 throw LicenceAppError.service("Entitlement Device ID does not match the requested EFIS.")
             }

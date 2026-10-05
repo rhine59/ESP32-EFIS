@@ -1,0 +1,12 @@
+services:
+  redone-local-license-gateway:
+    build: .
+    container_name: redone-local-license-gateway
+    network_mode: host
+    volumes:
+      - /volume1/docker/redone-local-license-gateway/tls:/run/redone-tls:ro
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL

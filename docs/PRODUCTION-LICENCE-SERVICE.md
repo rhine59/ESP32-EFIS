@@ -81,3 +81,11 @@ The local path is a hosting-site optimisation for the Synology LAN, not a config
 - disabling TLS validation.
 
 Before implementing local failover, define the authenticated discovery advertisement and local TLS identity/rotation mechanism. This security gate prevents a malicious device on an untrusted LAN from impersonating the licence service.
+
+### 2026-10-05 physical-device acceptance
+
+The Synology local fallback was validated on the physical iPhone 13 Pro Max with normal LAN settings. The canonical public development URL was unreachable from inside the LAN because the site router does not provide the required loopback path. The app then resolved the repository-managed `_redone-license._tcp` mDNS service, connected to `redone-license.local:9443`, accepted only the pinned dedicated gateway certificate, and successfully loaded the RedOne licence account.
+
+No FRITZ!Box DNS/NAT change, split DNS, `/etc/hosts` entry, external tunnel product, fixed NAS address in the app, certificate-validation bypass, or user service-URL change was required.
+
+The Synology gateway runs unprivileged, keeps its TLS private key on the NAS with restrictive permissions, exposes only the phone API and `/healthz`, and dynamically advertises the NAS LAN interface address. The app still tries the canonical public HTTPS service first and invokes the authenticated local route only after a connectivity failure.
