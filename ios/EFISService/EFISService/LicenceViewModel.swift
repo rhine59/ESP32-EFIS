@@ -22,11 +22,14 @@ final class LicenceViewModel: ObservableObject {
         do {
             guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
             let service = DevelopmentLicenceManagementService(baseURL: url)
-            async let loadedPlans = service.plans()
-            async let loadedAccount = service.account(deviceID: deviceID)
-            plans = try await loadedPlans
-            account = try await loadedAccount
-            status = "Licence account loaded"
+            account = try await service.account(deviceID: deviceID)
+            do {
+                plans = try await service.plans()
+                status = "Licence account loaded"
+            } catch {
+                plans = []
+                status = "Account loaded; licence catalogue unavailable: " + error.localizedDescription
+            }
         } catch { status = error.localizedDescription }
     }
 
