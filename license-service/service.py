@@ -9,6 +9,7 @@ DEVICE=os.getenv("DEVICE_ID","EFIS-SIM-0001")
 SECRET=os.getenv("DEVICE_SECRET","").encode()
 PRODUCT="ESP32-EFIS"; KID="sim-dev-1"; KEY=Path("/data/license-ed25519.key")
 challenges={}
+entitlement_active=True
 
 def b64(b): return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
 def unb64(s): return base64.urlsafe_b64decode(s+"="*((4-len(s)%4)%4))
@@ -34,6 +35,7 @@ class H(BaseHTTPRequestHandler):
         if self.path=="/v1/trust/"+KID: return self.sendj({"kid":KID,"alg":"Ed25519","public_key":b64(PUB),"simulation_only":True})
         return self.sendj({"error":"not found"},404)
     def do_POST(self):
+        global entitlement_active
         n=int(self.headers.get("Content-Length","0")); body=json.loads(self.rfile.read(n) or b"{}")
         if self.path=="/v1/device/challenge":
             d=body.get("device_id","")
@@ -46,9 +48,13 @@ class H(BaseHTTPRequestHandler):
             if d!=DEVICE or not expiry or expiry<time.time(): return self.sendj({"error":"invalid or expired challenge"},401)
             want=hmac.new(SECRET,(d+"\n"+nonce).encode(),hashlib.sha256).hexdigest()
             if not SECRET or not hmac.compare_digest(want,proof): return self.sendj({"error":"device authentication failed"},401)
+            if not entitlement_active: return self.sendj({"error":"no active entitlement","entitlement":"NONE"},403)
             return self.sendj({"device_id":d,"product":PRODUCT,"entitlement":"ACTIVE","license":issue(d)})
         if self.path=="/v1/test/wrong-device-license":
             return self.sendj({"simulation_only":True,"device_id":"EFIS-SIM-WRONG","license":issue("EFIS-SIM-WRONG")})
+        if self.path=="/v1/test/entitlement":
+            entitlement_active=bool(body.get("active",True))
+            return self.sendj({"simulation_only":True,"entitlement":"ACTIVE" if entitlement_active else "NONE"})
         return self.sendj({"error":"not found"},404)
     def log_message(self,*args): pass
 ThreadingHTTPServer(("0.0.0.0",8080),H).serve_forever()
