@@ -62,6 +62,12 @@ def load_installed_license():
     except Exception as e:
         state["license"]={"status":"INVALID","class":None,"error":str(e)}
 
+def acquire_signed_blob():
+    ch=post_json(LIC+"/v1/device/challenge",{"device_id":DEVICE})
+    nonce=ch["challenge"]
+    proof=hmac.new(DEVICE_SECRET,(DEVICE+"\n"+nonce).encode(),hashlib.sha256).hexdigest()
+    return post_json(LIC+"/v1/device/license",{"device_id":DEVICE,"challenge":nonce,"proof":proof})
+
 def run_license_negative_test(kind):
     if not LICENCE_STORE.exists(): raise RuntimeError("install a valid signed licence first")
     encoded=LICENCE_STORE.read_text().strip()
@@ -75,6 +81,14 @@ def run_license_negative_test(kind):
         test=post_json(LIC+"/v1/test/wrong-device-license",{})
         if not test.get("simulation_only"): raise RuntimeError("refusing non-simulator wrong-device fixture")
         candidate=test["license"]
+    elif kind=="interrupted-replacement":
+        if state["network"]!="online": raise RuntimeError("replacement test requires simulator network online")
+        r=acquire_signed_blob(); candidate=r["license"]
+        candidate_state=verify_license_blob(candidate,True)
+        tmp=LICENCE_STORE.with_suffix(".tmp")
+        tmp.write_text(candidate)
+        return {"result":"INTERRUPTED","test":kind,"candidate":candidate_state["license_id"],
+                "installed":state["license"]["license_id"],"temp_exists":tmp.exists()}
     else:
         raise RuntimeError("unknown negative test")
     if kind!="wrong-device":
@@ -88,10 +102,7 @@ def run_license_negative_test(kind):
 def retrieve_and_verify_license():
     if state["network"]!="online": raise RuntimeError("maintenance Wi-Fi is offline")
     if not LIC: raise RuntimeError("licence service is not configured")
-    ch=post_json(LIC+"/v1/device/challenge",{"device_id":DEVICE})
-    nonce=ch["challenge"]
-    proof=hmac.new(DEVICE_SECRET,(DEVICE+"\n"+nonce).encode(),hashlib.sha256).hexdigest()
-    r=post_json(LIC+"/v1/device/license",{"device_id":DEVICE,"challenge":nonce,"proof":proof})
+    r=acquire_signed_blob()
     candidate=verify_license_blob(r["license"],True)
     persist_license(r["license"])
     state["license"]=candidate
@@ -145,6 +156,11 @@ class H(SimpleHTTPRequestHandler):
             except Exception as e: return self.sendj({"error":str(e)},502)
         if self.path=="/api/license/status":
             return self.sendj(state["license"])
+        if self.path=="/api/license/test/storage":
+            trust=list(LICENCE_STORE.parent.glob("trust-*.pub"))
+            return self.sendj({"simulation_only":True,"licence_exists":LICENCE_STORE.exists(),
+                               "temp_exists":LICENCE_STORE.with_suffix(".tmp").exists(),
+                               "trust_key_count":len(trust)})
         return super().do_GET()
     def do_POST(self):
         n=int(self.headers.get("Content-Length","0")); body=json.loads(self.rfile.read(n) or b"{}")
@@ -176,7 +192,13 @@ class H(SimpleHTTPRequestHandler):
             state["license"]={"status":"VALID","class":body.get("class","DEVELOPMENT")}; return self.sendj(state)
         if self.path=="/api/license/mock-reset":
             if LICENCE_STORE.exists(): LICENCE_STORE.unlink()
+            tmp=LICENCE_STORE.with_suffix(".tmp")
+            if tmp.exists(): tmp.unlink()
             state["license"]={"status":"NOT INSTALLED","class":None}; return self.sendj(state)
+        if self.path=="/api/license/test/corrupt-store":
+            if not LICENCE_STORE.exists(): return self.sendj({"error":"no installed licence to corrupt"},409)
+            LICENCE_STORE.write_text("CORRUPTED-LICENCE")
+            return self.sendj({"simulation_only":True,"result":"CORRUPTED"})
         return self.sendj({"error":"not found"},404)
 
 load_installed_license()
