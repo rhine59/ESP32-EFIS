@@ -178,3 +178,12 @@ The detailed historical decision register—including adopted, superseded, parke
 - The cached signed envelope transferred successfully while EFIS was offline and was independently verified/installed as `VALID`.
 - Simulator restart while still offline reloaded the same licence as `VALID` without licence-service contact.
 - Full licence regression suite passed, including integrity, Device-ID binding, entitlement refusal, interrupted replacement, reset, corruption recovery, offline transfer and offline restart persistence.
+
+### iPhone licence purchase and management — DEVELOPMENT UI IMPLEMENTED
+- Added licence account management state to EFIS Service: ownership, entitlement, current plan and transferability.
+- Added server-provided licence plan catalogue and purchase actions.
+- Added development-only purchase API; it explicitly takes no payment and is not a production commerce path.
+- Successful simulated purchase activates the development entitlement and the phone then retrieves/caches the resulting server-signed licence.
+- Existing QR, Keychain and Transfer to EFIS paths remain intact.
+- iOS Simulator build passes and updated app has been installed/launched.
+- Production gate remains authenticated customer accounts plus payment-provider checkout and verified webhook before entitlement activation.
