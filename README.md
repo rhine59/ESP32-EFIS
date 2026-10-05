@@ -26,6 +26,8 @@ GNSS accuracy colour bands are: green <=1 m, light green >1–3 m, yellow >3–1
 
 See `docs/PROJECT_STATUS.md`, `docs/GNSS_DISPLAY.md`, `docs/SENSORS.md`, `docs/SIMULATION.md` and `docs/TESTING.md`.
 
+Project checkpoints are recorded chronologically in [`CHANGELOG.md`](CHANGELOG.md). Every future checkpoint must update that change history; GitHub `main` remains the authoritative source of truth.
+
 ## Instrument pages
 
 The EFIS has three pages on **one physical round display**, selected by the PEC09 rotary/push control:
