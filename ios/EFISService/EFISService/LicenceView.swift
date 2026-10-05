@@ -11,7 +11,7 @@ struct LicenceView: View {
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
                     Button("Scan Device QR") {
-                        model.status = "QR scanner is the next UI increment"
+                        showingScanner = true
                     }
                 }
 
@@ -56,6 +56,17 @@ struct LicenceView: View {
                 }
             }
             .navigationTitle("EFIS Licence")
+            .fullScreenCover(isPresented: $showingScanner) {
+                DeviceQRScannerView(
+                    onDeviceID: { id in
+                        model.deviceID = id
+                        model.status = "Scanned Device ID " + id
+                        showingScanner = false
+                    },
+                    onCancel: { showingScanner = false }
+                )
+                .ignoresSafeArea()
+            }
         }
     }
 }
