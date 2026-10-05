@@ -9,7 +9,7 @@ final class LicenceViewModel: ObservableObject {
     @Published var busy = false
 
     private let keychain = KeychainStore()
-    private let transfer: EFISLicenceTransfer = UnconfiguredEFISTransfer()
+
 
     init() {
         cached = keychain.load()
@@ -44,7 +44,7 @@ final class LicenceViewModel: ObservableObject {
         busy = true
         defer { busy = false }
         do {
-            try await transfer.transferSignedEnvelope(cached.envelope, deviceID: cached.deviceID)
+            guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }\n            let transfer = LocalEFISLicenceTransfer(baseURL: url)\n            try await transfer.transferSignedEnvelope(cached.envelope, deviceID: cached.deviceID)
             status = "Transferred; EFIS must verify and install"
         } catch {
             status = error.localizedDescription
