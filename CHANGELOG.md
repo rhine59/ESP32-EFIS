@@ -162,3 +162,11 @@ The detailed historical decision register—including adopted, superseded, parke
 - iOS Simulator target builds successfully and updated app was installed/launched.
 - Synology web simulator rebuilt with the receiving endpoint.
 - End-to-end user-triggered Transfer button validation remains the next test.
+
+### Phone-to-EFIS signed licence transfer — END-TO-END PASS
+- User-triggered Transfer to EFIS completed successfully from the iOS Simulator.
+- Phone UI reported transfer completion.
+- Independent query of the EFIS simulator after transfer reported licence `VALID`, class `DEVELOPMENT`, under trust key `sim-dev-1`.
+- This proves the simulated phone-to-EFIS path reaches the EFIS verifier and results in an installed, cryptographically verified licence rather than merely a successful HTTP submission.
+- Also corrected the iPhone UI so operation status is permanently visible at the top of the screen.
+- This remains a simulator/service-contract validation; physical ESP32 protected storage and real local phone transport remain later hardware validation.
