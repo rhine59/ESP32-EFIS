@@ -321,3 +321,9 @@ The detailed historical decision register—including adopted, superseded, parke
 - External managed/cloud hosting is deferred rather than treated as a current release prerequisite.
 - Zero-configuration client networking remains mandatory: users must not alter DNS/router/iOS privacy settings.
 - Preferred next deployment step is a stable public HTTPS route to the Synology that avoids local NAT-loopback dependence, while keeping the signer private and preserving the production service boundaries.
+
+## 2026-10-05 — adopt app-controlled Synology local/public routing
+- Rejected external tunnel products and router-specific DNS/NAT-loopback configuration as dependencies.
+- Adopted canonical public HTTPS first with automatic authenticated local-Synology fallback only when the app is on the hosting LAN and the public route is unreachable.
+- Local routing must use discovery rather than a hard-coded NAS IP and must preserve cryptographic server authentication; TLS validation may not be bypassed.
+- Removed the temporary Cloudflare Quick Tunnel container from the Synology.

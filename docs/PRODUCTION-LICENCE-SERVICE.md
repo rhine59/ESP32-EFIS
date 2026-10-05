@@ -54,3 +54,30 @@ A release build with no valid production endpoint is intentionally non-operation
 ## Required production endpoint contract
 
 The public service must preserve the mobile workflow semantics documented in `LICENSING_ARCHITECTURE_AND_FLOWS.md`: account/device lookup, included-first-year activation, plans/purchase state, renewal state, ownership transfer, buyer acceptance, signed entitlement acquisition and auditable lifecycle state. Simulator-only test mutation/trust-bootstrap endpoints must not exist in production.
+
+## Synology local/public routing decision
+
+**Adopted:** the iOS app owns route selection; router-specific DNS and third-party tunnels are not dependencies.
+
+The canonical service identity remains the public Synology HTTPS endpoint. Normal customers use that endpoint directly. When the app happens to be on the same LAN as the hosting Synology and the public route is unavailable because the site router does not provide NAT loopback, the app may automatically use a locally discovered Synology route. No user-entered IP address, DNS change or router configuration is permitted.
+
+Routing order is:
+
+1. try the canonical public HTTPS endpoint;
+2. only on a connectivity failure, attempt local service discovery;
+3. verify that the discovered endpoint is the expected RedOne service before sending account/licence requests;
+4. use a cryptographically authenticated local TLS channel; never disable TLS/certificate checks and never trust a discovered endpoint merely because it is on the LAN;
+5. prefer the canonical public endpoint again when it becomes reachable.
+
+The local path is a hosting-site optimisation for the Synology LAN, not a configuration burden placed on RedOne customers. Local discovery must not hard-code the current NAS address (`192.168.1.99`) or depend on a FRITZ!Box feature.
+
+### Rejected dependencies
+
+- Cloudflare/other external tunnel products for the current phase;
+- router-specific split DNS or NAT-loopback configuration;
+- permanent `/etc/hosts` entries;
+- asking users to disable iOS privacy/network features;
+- accepting a private-IP HTTPS certificate mismatch;
+- disabling TLS validation.
+
+Before implementing local failover, define the authenticated discovery advertisement and local TLS identity/rotation mechanism. This security gate prevents a malicious device on an untrusted LAN from impersonating the licence service.
