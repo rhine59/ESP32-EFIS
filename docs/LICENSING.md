@@ -313,3 +313,9 @@ The simulator has non-destructive rejection tests for payload tampering, invalid
 ### Licence checkpoint tooling — 4 October 2026
 
 Repository checkpoint tooling now includes `scripts/rebuild-synology.sh` for Compose validation/rebuild/status of the development licence service and web simulator, plus `scripts/test-license-harness.sh` for signed acquisition and non-destructive rejection tests (tampered payload, bad signature, wrong Device ID). Offline reboot persistence has already passed manually; the harness leaves the simulator offline but deliberately does not restart Docker. Pending negative cases are no entitlement, interrupted candidate replacement, explicit reset persistence and subsequent physical ESP32/NVS tests.
+
+### Negative licence security validation — 5 October 2026
+
+The Synology simulator runtime harness rejects tampered payloads and bad Ed25519 signatures without replacing the currently installed valid licence. The wrong-Device-ID case has been strengthened: the simulator no longer mutates an already-signed payload. Instead, the simulator-only licence service issues a **correctly Ed25519-signed** DEVELOPMENT test licence bound to `EFIS-SIM-WRONG`; the normal EFIS verifier must therefore pass signature verification and then reject the candidate specifically at the immutable Device-ID binding check. The test fixture is explicitly simulation-only and is not a production issuance API.
+
+The Synology rebuild script now invokes Docker directly because the dedicated `chatgpt` deployment account has Docker access; it does not depend on an interactive `sudo` password.
