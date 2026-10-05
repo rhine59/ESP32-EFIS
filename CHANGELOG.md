@@ -170,3 +170,11 @@ The detailed historical decision register—including adopted, superseded, parke
 - This proves the simulated phone-to-EFIS path reaches the EFIS verifier and results in an installed, cryptographically verified licence rather than merely a successful HTTP submission.
 - Also corrected the iPhone UI so operation status is permanently visible at the top of the screen.
 - This remains a simulator/service-contract validation; physical ESP32 protected storage and real local phone transport remain later hardware validation.
+
+### Offline phone licence transfer and restart — PASS
+- Extended the automated licence regression harness to model the aircraft-side offline scenario.
+- A signed licence was obtained while service connectivity was available and retained as the phone-side cached envelope.
+- EFIS simulator was then set offline and its installed licence cleared while preserving the provisioned trust anchor.
+- The cached signed envelope transferred successfully while EFIS was offline and was independently verified/installed as `VALID`.
+- Simulator restart while still offline reloaded the same licence as `VALID` without licence-service contact.
+- Full licence regression suite passed, including integrity, Device-ID binding, entitlement refusal, interrupted replacement, reset, corruption recovery, offline transfer and offline restart persistence.
