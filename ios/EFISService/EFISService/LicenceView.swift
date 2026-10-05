@@ -35,6 +35,8 @@ struct LicenceView: View {
                             LabeledContent("Entitlement", value: account.entitlement)
                             LabeledContent("Plan", value: account.planName ?? "None")
                             LabeledContent("Transferable", value: account.transferable ? "Yes" : "No")
+                            if let renewal = account.renewal, renewal != "NONE" { LabeledContent("Renewal", value: renewal) }
+                            if let transfer = account.transferStatus, transfer != "NONE" { LabeledContent("Transfer", value: transfer) }
                         }
                     }.frame(maxWidth: .infinity, alignment: .leading) }
 
@@ -51,6 +53,26 @@ struct LicenceView: View {
                             }
                             Text("Development simulation only. No payment is taken.")
                                 .font(.footnote).foregroundStyle(.secondary)
+                        }.frame(maxWidth: .infinity, alignment: .leading) }
+                    }
+
+                    if let account = model.account {
+                        GroupBox("Manage licence") { VStack(alignment: .leading, spacing: 12) {
+                            if account.planID == "annual" {
+                                Button("Renew / Enable Auto-Renewal") { Task { await model.manage("renew") } }.disabled(model.busy)
+                                Button("Cancel Renewal", role: .destructive) { Task { await model.manage("cancel-renewal") } }.disabled(model.busy)
+                            }
+                            if account.transferable {
+                                TextField("Buyer email", text: $model.buyerEmail)
+                                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                                Button("Start Ownership Transfer") {
+                                    Task { await model.manage("transfer", extra: ["buyer_email": model.buyerEmail]) }
+                                }.disabled(model.busy || model.buyerEmail.isEmpty)
+                                if account.transferStatus == "PENDING" {
+                                    Button("Cancel Pending Transfer", role: .destructive) { Task { await model.manage("cancel-transfer") } }
+                                        .disabled(model.busy)
+                                }
+                            }
                         }.frame(maxWidth: .infinity, alignment: .leading) }
                     }
 
