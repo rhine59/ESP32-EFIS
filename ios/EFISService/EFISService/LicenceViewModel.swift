@@ -8,7 +8,7 @@ final class LicenceViewModel: ObservableObject {
     @Published var status = "Ready"
     @Published var busy = false
     @Published var plans: [LicencePlan] = []
-    @Published var account: LicenceAccountStatus?
+    @Published var account: LicenceAccountStatus?\n    @Published var buyerEmail = ""
 
     private let keychain = KeychainStore()
 
@@ -40,6 +40,15 @@ final class LicenceViewModel: ObservableObject {
             account = try await DevelopmentLicenceManagementService(baseURL: url).purchase(deviceID: deviceID, planID: plan.id)
             status = "Purchase simulated; entitlement ACTIVE"
             await getEntitlement()
+        } catch { status = error.localizedDescription }
+    }
+
+    func manage(_ action: String, extra: [String:String] = [:]) async {
+        busy = true; defer { busy = false }
+        do {
+            guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
+            account = try await DevelopmentLicenceManagementService(baseURL: url).lifecycle(deviceID: deviceID, action: action, extra: extra)
+            status = "Licence management updated"
         } catch { status = error.localizedDescription }
     }
 
