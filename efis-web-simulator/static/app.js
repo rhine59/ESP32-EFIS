@@ -8,7 +8,7 @@ function render(){let t="      EFIS BOOT\n   "+state.device_id+"\n\n";
  if(page==="boot")t+=lines(menus.boot);
  if(page==="license")t="       LICENSE\n\nDevice: "+state.device_id+"\nStatus: "+state.license.status+"\n\n"+lines(menus.license);
  if(page==="firmware")t="   FIRMWARE UPDATE\n\nHorizon  "+state.firmware+"\nCached   "+(state.offline_cache.ready?state.offline_cache.release+" ✓":"NO")+"\nStaged   "+(state.staged||"-")+"\nWi-Fi    "+state.network.toUpperCase()+"\n\n"+lines(menus.firmware);
- $("screen").textContent=t;$("summary").textContent="Device "+state.device_id+" • firmware "+state.firmware+" • licence "+state.license.status+" • network "+state.network}
+ $("screen").textContent=t;if($("qrpayload"))$("qrpayload").textContent="efis://device/"+state.device_id;$("summary").textContent="Device "+state.device_id+" • firmware "+state.firmware+" • licence "+state.license.status+" • network "+state.network}
 function move(d){let a=menus[page];sel=(sel+d+a.length)%a.length;render()}
 async function choose(){let x=menus[page][sel];log(page+": "+x);
  if(page==="boot"){if(x==="LICENSE"){page="license";sel=0}else if(x==="FIRMWARE UPDATE"){page="firmware";sel=0}else if(x==="START EFIS")log("START EFIS simulated");else log(x+" simulated")}
