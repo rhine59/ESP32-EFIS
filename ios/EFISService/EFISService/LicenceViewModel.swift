@@ -6,13 +6,36 @@ final class LicenceViewModel: ObservableObject {
     @Published var serviceURL = "https://granvillehouse.synology.me:8449"
     @Published var cached: LicenceSummary?
     @Published var status = "Ready"
-    @Published var busy = false
+    @Published var busy = false\n    @Published var plans: [LicencePlan] = []\n    @Published var account: LicenceAccountStatus?
 
     private let keychain = KeychainStore()
 
 
     init() {
         cached = keychain.load()
+    }
+
+    func loadManagement() async {
+        busy = true; defer { busy = false }
+        do {
+            guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
+            let service = DevelopmentLicenceManagementService(baseURL: url)
+            async let loadedPlans = service.plans()
+            async let loadedAccount = service.account(deviceID: deviceID)
+            plans = try await loadedPlans
+            account = try await loadedAccount
+            status = "Licence account loaded"
+        } catch { status = error.localizedDescription }
+    }
+
+    func purchase(_ plan: LicencePlan) async {
+        busy = true; defer { busy = false }
+        do {
+            guard let url = URL(string: serviceURL) else { throw LicenceAppError.invalidURL }
+            account = try await DevelopmentLicenceManagementService(baseURL: url).purchase(deviceID: deviceID, planID: plan.id)
+            status = "Purchase simulated; entitlement ACTIVE"
+            await getEntitlement()
+        } catch { status = error.localizedDescription }
     }
 
     func getEntitlement() async {
