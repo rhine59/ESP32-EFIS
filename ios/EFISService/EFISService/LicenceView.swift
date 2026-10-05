@@ -336,7 +336,7 @@ private struct ProcessGuidanceView: View {
     private var nextContent: some View {
         Text(next)
             .font(.title3.weight(.semibold))
-            .foregroundStyle(action == nil ? Color.primary : attention ? Color.orange : Color.blue)
+            .foregroundStyle(action == nil ? Color.primary : Color.green)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
     }
@@ -780,7 +780,7 @@ private struct ProcessStepRow: View {
             Button(action: action) {
                 rowContent
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.borderless)
             .accessibilityHint("Double tap to perform this step")
         } else {
             rowContent

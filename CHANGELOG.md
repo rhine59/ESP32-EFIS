@@ -278,3 +278,8 @@ The detailed historical decision register—including adopted, superseded, parke
 - Active licence acquisition and EFIS installation remain available from both the current row and top guidance.
 - Replaced Setup’s old non-interactive status banner with the shared actionable `ProcessGuidanceView`.
 - Rebuilt, installed and launched the corrected app on the physical iPhone.
+
+## 2026-10-05 — List button hit-testing and guidance contrast
+- Changed actionable workflow row buttons from plain to borderless List buttons to avoid SwiftUI List row-selection/tap interference while preserving the full-row label hit area.
+- `What to do next` remains blue while its actionable instruction is now green, clearly separating the heading from the action offered beneath it.
+- Rebuilt, installed and launched the updated app on the physical iPhone.
