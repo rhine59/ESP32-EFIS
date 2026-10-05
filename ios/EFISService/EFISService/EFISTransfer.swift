@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 protocol EFISLicenceTransfer {
     func transferSignedEnvelope(_ envelope: String, deviceID: String) async throws
 }
