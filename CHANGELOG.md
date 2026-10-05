@@ -283,3 +283,9 @@ The detailed historical decision register—including adopted, superseded, parke
 - Changed actionable workflow row buttons from plain to borderless List buttons to avoid SwiftUI List row-selection/tap interference while preserving the full-row label hit area.
 - `What to do next` remains blue while its actionable instruction is now green, clearly separating the heading from the action offered beneath it.
 - Rebuilt, installed and launched the updated app on the physical iPhone.
+
+## 2026-10-05 — fix iOS account URL query construction
+- Diagnosed physical-iPhone `NSURLErrorDomain -1004` after confirming workflow taps were firing.
+- The account request incorrectly used `URL.appending(path:)` with `?device_id=...`, causing `?` to be encoded as `%3F` and the query to become part of the path.
+- Account lookup now constructs `device_id` with `URLComponents` and `URLQueryItem`.
+- Rebuilt, installed and launched the corrected app on the physical iPhone.

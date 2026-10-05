@@ -73,7 +73,18 @@ struct DevelopmentLicenceManagementService {
             let entitlement: String; let plan_id: String?; let plan_name: String?; let transferable: Bool
             let renewal: String?; let valid_until: String?; let transfer_status: String?
         }
-        let wire = try JSONDecoder().decode(Wire.self, from: try await request("/api/phone/account?device_id="+deviceID))
+        let accountURL = baseURL.appending(path: "/api/phone/account")
+        guard var components = URLComponents(url: accountURL, resolvingAgainstBaseURL: false) else {
+            throw LicenceAppError.invalidURL
+        }
+        components.queryItems = [URLQueryItem(name: "device_id", value: deviceID)]
+        guard let url = components.url else { throw LicenceAppError.invalidURL }
+        let (data, response) = try await URLSession.shared.data(from: url)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            let detail = (try? JSONSerialization.jsonObject(with: data) as? [String:Any])?["error"] as? String
+            throw LicenceAppError.service(detail ?? "Licence account request failed.")
+        }
+        let wire = try JSONDecoder().decode(Wire.self, from: data)
         guard wire.simulation_only, wire.device_id == deviceID else { throw LicenceAppError.service("Device/account mismatch.") }
         return LicenceAccountStatus(deviceID: wire.device_id, ownership: wire.ownership, entitlement: wire.entitlement,
                                     planID: wire.plan_id, planName: wire.plan_name, transferable: wire.transferable, renewal: wire.renewal, validUntil: wire.valid_until, transferStatus: wire.transfer_status)

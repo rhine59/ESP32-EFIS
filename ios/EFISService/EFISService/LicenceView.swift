@@ -422,6 +422,12 @@ private struct BuyLicenceFlowView: View {
         List {
             Section {
                 ProcessGuidanceView(completed: completedText, next: nextText, complete: installed, action: installed ? nil : includedUnused ? { Task { await model.activateIncludedYear() } } : active && !signed ? { Task { await model.getEntitlement() } } : signed && !installed ? { Task { await model.transferToEFIS() } } : nil)
+                HStack(spacing: 10) {
+                    if model.busy { ProgressView() }
+                    Text(model.busy ? "Working… \(model.status)" : model.status)
+                        .font(.subheadline.weight(.semibold))
+                }
+                .foregroundStyle(model.activitySeverity == .error ? .red : model.activitySeverity == .warning ? .orange : model.activitySeverity == .success ? .green : .blue)
             }
             Section("Licence progress") {
                 ProcessStepRow(number: 1, title: "Identify RedOne", detail: found ? model.deviceID : "Tap to identify this RedOne", state: found ? .complete : .current, action: !found && !model.deviceID.isEmpty ? { Task { await model.loadManagement() } } : nil)
@@ -504,6 +510,12 @@ private struct SetupNewEFISFlowView: View {
         List {
             Section {
                 ProcessGuidanceView(completed: completedText, next: nextText, complete: installed, action: nextAction)
+                HStack(spacing: 10) {
+                    if model.busy { ProgressView() }
+                    Text(model.busy ? "Working… \(model.status)" : model.status)
+                        .font(.subheadline.weight(.semibold))
+                }
+                .foregroundStyle(model.activitySeverity == .error ? .red : model.activitySeverity == .warning ? .orange : model.activitySeverity == .success ? .green : .blue)
             }
 
             Section("Setup progress") {

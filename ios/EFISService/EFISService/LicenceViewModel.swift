@@ -44,7 +44,14 @@ final class LicenceViewModel: ObservableObject {
                 plans = []
                 status = "Account loaded; licence catalogue unavailable: " + error.localizedDescription; activitySeverity = .warning
             }
-        } catch { status = error.localizedDescription; activitySeverity = .error }
+        } catch {
+            if let urlError = error as? URLError {
+                status = "Network error \(urlError.code.rawValue) (\(urlError.code)): \(urlError.localizedDescription) — \(urlError.failingURL?.absoluteString ?? serviceURL)"
+            } else {
+                status = "\(type(of: error)): \(error.localizedDescription)"
+            }
+            activitySeverity = .error
+        }
     }
 
     func purchase(_ plan: LicencePlan) async {
