@@ -20,6 +20,22 @@ struct LicenceSummary: Codable, Equatable {
     let cachedAt: Date
 }
 
+struct LicencePlan: Codable, Identifiable, Equatable {
+    let id: String
+    let name: String
+    let priceDisplay: String
+    let description: String
+}
+
+struct LicenceAccountStatus: Codable, Equatable {
+    let deviceID: String
+    let ownership: String
+    let entitlement: String
+    let planID: String?
+    let planName: String?
+    let transferable: Bool
+}
+
 enum LicenceAppError: LocalizedError {
     case invalidURL
     case service(String)
