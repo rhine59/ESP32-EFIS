@@ -3,7 +3,7 @@ import Foundation
 @MainActor
 final class LicenceViewModel: ObservableObject {
     @Published var deviceID = "EFIS-SIM-0001"
-    @Published var serviceURL = "https://granvillehouse.synology.me:8447"
+    @Published var serviceURL = "http://127.0.0.1:18094"\n    @Published var developmentCredential = ProcessInfo.processInfo.environment["EFIS_DEVICE_SECRET"] ?? ""
     @Published var cached: LicenceSummary?
     @Published var status = "Ready"
     @Published var busy = false
