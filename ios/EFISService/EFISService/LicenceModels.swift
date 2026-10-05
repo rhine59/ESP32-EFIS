@@ -25,6 +25,11 @@ struct LicencePlan: Codable, Identifiable, Equatable {
     let name: String
     let priceDisplay: String
     let description: String
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, description
+        case priceDisplay = "price_display"
+    }
 }
 
 struct LicenceAccountStatus: Codable, Equatable {
