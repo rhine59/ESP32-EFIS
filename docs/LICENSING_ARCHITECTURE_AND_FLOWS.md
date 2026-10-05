@@ -361,3 +361,9 @@ Before commercial release, policy must freeze subscription expiry, refunds/charg
 **Not yet established by simulator evidence:** physical camera scan; production account/ownership/payment flow; production signer/HSM/key recovery; physical ESP32 protected/encrypted NVS; physical maintenance Wi-Fi; real flash atomicity; brownout/power-loss installation recovery; factory provisioning; trustworthy time policy; commercial subscription/revocation/grace behavior.
 
 No simulator result should be described as physical or production security validation.
+
+## 30. Phone purchase and licence-management client
+
+The iPhone service client now exposes a development implementation of the customer licence-management surface. It can load the registered-device/account state, display ownership, entitlement, current plan and transferability, list available licence products, initiate a simulated purchase, automatically retrieve/cache the resulting signed entitlement, and retain the existing Transfer to EFIS workflow.
+
+The current purchase endpoint is deliberately **simulation only** and takes no payment. Product names/prices are development fixtures rather than an adopted commercial price list. Production purchase must replace this with authenticated account ownership plus a real payment-provider checkout flow and verified webhook before entitlement becomes ACTIVE. The phone must never treat its own button press or payment-provider redirect as proof of payment; only the server-side verified payment event may activate entitlement.
