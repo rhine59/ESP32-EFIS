@@ -713,8 +713,13 @@ private struct ProcessStepRow: View {
     let state: ProcessStepState
     var action: (() -> Void)? = nil
 
-    var body: some View {
-        HStack(alignment: .top, spacing: 14) {
+    private var actionable: Bool {
+        action != nil && (state == .current || state == .attention || state == .failed)
+    }
+
+    @ViewBuilder
+    private var rowContent: some View {
+        HStack(alignment: .center, spacing: 14) {
             ZStack {
                 Circle()
                     .fill(state.color)
@@ -730,13 +735,31 @@ private struct ProcessStepRow: View {
                     .font(.subheadline)
                     .foregroundStyle(state == .attention ? .orange : .secondary)
             }
+            Spacer(minLength: 8)
+            if actionable {
+                VStack(spacing: 2) {
+                    Image(systemName: "chevron.right.circle.fill")
+                        .font(.title2)
+                    Text("Tap")
+                        .font(.caption2.bold())
+                }
+                .foregroundStyle(state == .attention ? .orange : state == .failed ? .red : .blue)
+            }
         }
-        .padding(.vertical, 5)
+        .padding(.vertical, 8)
         .contentShape(Rectangle())
-        .onTapGesture {
-            if (state == .current || state == .attention || state == .failed), let action { action() }
+        .opacity(state == .waiting ? 0.55 : 1)
+    }
+
+    var body: some View {
+        if actionable, let action {
+            Button(action: action) {
+                rowContent
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Double tap to perform this step")
+        } else {
+            rowContent
         }
-        .opacity(state == .waiting ? 0.65 : 1)
-        .accessibilityAddTraits(action != nil && state != .waiting ? .isButton : [])
     }
 }

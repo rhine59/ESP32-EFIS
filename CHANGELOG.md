@@ -256,3 +256,10 @@ The detailed historical decision register—including adopted, superseded, parke
 - Wired direct row actions for included-year activation, signed-licence acquisition and EFIS installation in the Buy/activate flow, and licence acquisition/installation in Setup and Receive flows.
 - Retained separate controls where user input or a choice is required.
 - Rebuilt, installed and launched the updated app on the physical iPhone 13 Pro Max.
+
+## 2026-10-05 — explicit tappable workflow rows
+- Replaced implicit row tap gestures with native full-row Buttons for actionable workflow steps.
+- Actionable rows now show a prominent chevron-in-circle and `Tap` label on the right so the interaction is visually unambiguous.
+- Waiting rows remain non-interactive and visually subdued; completed rows remain confirmation only.
+- Added an accessibility hint to actionable workflow steps.
+- Rebuilt, installed and launched the corrected app on the physical iPhone.
