@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LicenceView: View {
     @EnvironmentObject var model: LicenceViewModel
+    @State private var showingScanner = false
 
     var body: some View {
         NavigationStack {
