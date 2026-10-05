@@ -158,3 +158,9 @@ The AEF-CAN/SMUX system remains **secondary, supplementary and non-certified**. 
 ### Licence negative-test correction — 5 October 2026
 
 The Synology licence harness now distinguishes cryptographic integrity from device binding. Tampered-payload and bad-signature candidates exercise Ed25519 rejection; the wrong-device case uses a correctly signed simulator-only licence for a different immutable Device ID and must be rejected by the explicit Device-ID check while the installed valid licence remains unchanged. `scripts/rebuild-synology.sh` uses direct Docker access and no longer requires interactive `sudo`.
+
+### Licensing simulator checkpoint — 5 October 2026
+
+The Synology licence regression harness now passes the complete current simulator contract: signed acquisition, offline persistence, cryptographic and Device-ID rejection, no-entitlement handling, interrupted replacement recovery, Licence Reset, offline acquisition refusal, corrupt persistent-store detection and signed recovery. Startup discards an orphan temporary candidate after an interrupted replacement and retains the previously committed valid licence.
+
+This closes the Docker/simulator licensing stage. Physical ESP32 protected-NVS, real power-loss atomicity and secure factory provisioning remain separate hardware validation gates.
