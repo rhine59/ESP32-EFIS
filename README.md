@@ -154,3 +154,7 @@ The protocol reserves functional CAN-ID ranges for engine, electrical, air data,
 `protocol/aef-can.yaml` is the machine-readable source of truth. The long-form rationale and implementation/testing rules are in `docs/CAN-PROTOCOL.md`. Future C/C++, Swift and Python codecs/test vectors should be generated or verified from the YAML to prevent firmware/simulator/documentation drift.
 
 The AEF-CAN/SMUX system remains **secondary, supplementary and non-certified**. No CAN value may remain silently presented as live after its freshness timeout.
+
+### Licence negative-test correction — 5 October 2026
+
+The Synology licence harness now distinguishes cryptographic integrity from device binding. Tampered-payload and bad-signature candidates exercise Ed25519 rejection; the wrong-device case uses a correctly signed simulator-only licence for a different immutable Device ID and must be rejected by the explicit Device-ID check while the installed valid licence remains unchanged. `scripts/rebuild-synology.sh` uses direct Docker access and no longer requires interactive `sudo`.
