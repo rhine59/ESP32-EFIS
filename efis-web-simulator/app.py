@@ -14,7 +14,7 @@ LIC=os.getenv("LICENSE_BASE_URL","").rstrip("/")
 ALLOW=os.getenv("SIM_ALLOW_MUTATIONS","false").lower()=="true"
 DEVICE_SECRET=os.getenv("DEVICE_SECRET","simulator-development-secret-change-me").encode()
 LICENCE_STORE=Path(os.getenv("LICENSE_STORE","/data/licence.cbor.b64"))
-account={"ownership":"REGISTERED","entitlement":"ACTIVE","plan_id":"development","plan_name":"Development Licence","transferable":True}
+account={"ownership":"REGISTERED","entitlement":"ACTIVE","plan_id":"development","plan_name":"Development Licence","transferable":True,"renewal":"NONE","valid_until":None,"transfer_status":"NONE"}
 plans=[
  {"id":"perpetual","name":"RedOne Perpetual","price_display":"£299 one-off","description":"Permanent RedOne licence for one EFIS Device ID."},
  {"id":"annual","name":"RedOne Annual","price_display":"£49/year","description":"Annual RedOne licence; renewal and expiry policy remains pre-production."}
@@ -209,6 +209,27 @@ class H(SimpleHTTPRequestHandler):
         if self.path=="/api/phone/refresh-management":
             if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)
             return self.sendj({"simulation_only":True,"device_id":DEVICE,**account})
+        if self.path=="/api/phone/renew":
+            if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)
+            if account.get("plan_id")!="annual": return self.sendj({"error":"Only annual licences renew"},409)
+            account.update(entitlement="ACTIVE",renewal="AUTO")
+            return self.sendj({"simulation_only":True,"result":"RENEWED","device_id":DEVICE,**account})
+        if self.path=="/api/phone/cancel-renewal":
+            if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)
+            if account.get("plan_id")!="annual": return self.sendj({"error":"Only annual licences have renewal"},409)
+            account["renewal"]="CANCELLED"
+            return self.sendj({"simulation_only":True,"result":"RENEWAL_CANCELLED","device_id":DEVICE,**account})
+        if self.path=="/api/phone/transfer":
+            if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)
+            if not account.get("transferable"): return self.sendj({"error":"Licence is not transferable"},409)
+            email=body.get("buyer_email","").strip()
+            if "@" not in email: return self.sendj({"error":"Buyer email is required"},400)
+            account["transfer_status"]="PENDING"
+            return self.sendj({"simulation_only":True,"result":"TRANSFER_PENDING","buyer_email":email,"device_id":DEVICE,**account})
+        if self.path=="/api/phone/cancel-transfer":
+            if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)
+            account["transfer_status"]="NONE"
+            return self.sendj({"simulation_only":True,"result":"TRANSFER_CANCELLED","device_id":DEVICE,**account})
         if self.path=="/api/phone/install-license":
             if body.get("device_id")!=DEVICE: return self.sendj({"error":"Device ID mismatch"},409)
             encoded=body.get("license","")
