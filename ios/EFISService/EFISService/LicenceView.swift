@@ -85,6 +85,7 @@ struct LicenceView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+                .scrollDismissesKeyboard(.interactively)
             }
             .navigationTitle("EFIS Licence")
             .fullScreenCover(isPresented: $showingScanner) {
