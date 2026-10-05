@@ -330,6 +330,16 @@ private struct ProcessGuidanceView: View {
     let next: String
     var complete = false
     var attention = false
+    var action: (() -> Void)? = nil
+
+    @ViewBuilder
+    private var nextContent: some View {
+        Text(next)
+            .font(.title3.weight(.semibold))
+            .foregroundStyle(action == nil ? Color.primary : attention ? Color.orange : Color.blue)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -337,8 +347,13 @@ private struct ProcessGuidanceView: View {
                   systemImage: complete ? "checkmark.circle.fill" : attention ? "exclamationmark.triangle.fill" : "arrow.right.circle.fill")
                 .font(.headline)
                 .foregroundStyle(complete ? .green : attention ? .orange : .blue)
-            Text(next)
-                .font(.title3.weight(.semibold))
+            if let action {
+                Button(action: action) { nextContent }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Double tap to perform the next process step")
+            } else {
+                nextContent
+            }
             Divider()
             Text("Completed")
                 .font(.caption.weight(.semibold))
@@ -406,7 +421,7 @@ private struct BuyLicenceFlowView: View {
     var body: some View {
         List {
             Section {
-                ProcessGuidanceView(completed: completedText, next: nextText, complete: installed)
+                ProcessGuidanceView(completed: completedText, next: nextText, complete: installed, action: installed ? nil : includedUnused ? { Task { await model.activateIncludedYear() } } : active && !signed ? { Task { await model.getEntitlement() } } : signed && !installed ? { Task { await model.transferToEFIS() } } : nil)
             }
             Section("Licence progress") {
                 ProcessStepRow(number: 1, title: "Identify RedOne", detail: found ? model.deviceID : "Tap to identify this RedOne", state: found ? .complete : .current, action: !found && !model.deviceID.isEmpty ? { Task { await model.loadManagement() } } : nil)
@@ -736,15 +751,6 @@ private struct ProcessStepRow: View {
                     .foregroundStyle(state == .attention ? .orange : .secondary)
             }
             Spacer(minLength: 8)
-            if actionable {
-                VStack(spacing: 2) {
-                    Image(systemName: "chevron.right.circle.fill")
-                        .font(.title2)
-                    Text("Tap")
-                        .font(.caption2.bold())
-                }
-                .foregroundStyle(state == .attention ? .orange : state == .failed ? .red : .blue)
-            }
         }
         .padding(.vertical, 8)
         .contentShape(Rectangle())

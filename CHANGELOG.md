@@ -263,3 +263,10 @@ The detailed historical decision register—including adopted, superseded, parke
 - Waiting rows remain non-interactive and visually subdued; completed rows remain confirmation only.
 - Added an accessibility hint to actionable workflow steps.
 - Rebuilt, installed and launched the corrected app on the physical iPhone.
+
+## 2026-10-05 — dual workflow action targets
+- Removed the explicit `Tap`/chevron affordance from actionable process rows.
+- The full current step row/text remains tappable.
+- The plain-language instruction under `What to do next` can invoke the same workflow action, giving the user two natural ways to advance.
+- Both interaction targets share the same authoritative state transition rather than duplicating workflow logic.
+- Updated the workflow architecture and rebuilt/installed the app on the physical iPhone.
