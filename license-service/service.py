@@ -47,6 +47,8 @@ class H(BaseHTTPRequestHandler):
             want=hmac.new(SECRET,(d+"\n"+nonce).encode(),hashlib.sha256).hexdigest()
             if not SECRET or not hmac.compare_digest(want,proof): return self.sendj({"error":"device authentication failed"},401)
             return self.sendj({"device_id":d,"product":PRODUCT,"entitlement":"ACTIVE","license":issue(d)})
+        if self.path=="/v1/test/wrong-device-license":
+            return self.sendj({"simulation_only":True,"device_id":"EFIS-SIM-WRONG","license":issue("EFIS-SIM-WRONG")})
         return self.sendj({"error":"not found"},404)
     def log_message(self,*args): pass
 ThreadingHTTPServer(("0.0.0.0",8080),H).serve_forever()
