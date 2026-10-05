@@ -309,3 +309,9 @@ The detailed historical decision register—including adopted, superseded, parke
 - Release builds read `EFISLicenceServiceURL` from application configuration and no longer expose a customer-editable backend URL.
 - Both Debug and Release simulator builds pass.
 - A production public HTTPS service is now an explicit release gate; the development NAS endpoint cannot silently ship as the customer backend.
+
+## 2026-10-05 — production licence-service release gate
+- Added a production deployment specification separating the public customer API, PostgreSQL entitlement/account state and private signing boundary from the simulator harness.
+- Release EFIS Service now accepts only a configured HTTPS licence endpoint on the default HTTPS port or explicit TCP 443 and fails closed when no production endpoint is supplied.
+- Explicitly prohibited deploying the current simulator licence service as the customer backend.
+- Added security, hosting, database, signing, payment, monitoring and cross-network validation gates required before TestFlight uses the production service.

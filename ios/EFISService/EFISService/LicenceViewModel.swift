@@ -4,7 +4,16 @@ enum EFISServiceConfiguration {
     #if DEBUG
     static let licenceServiceURL = "https://granvillehouse.synology.me:8449"
     #else
-    static let licenceServiceURL = Bundle.main.object(forInfoDictionaryKey: "EFISLicenceServiceURL") as? String ?? ""
+    static let licenceServiceURL: String = {
+        guard let value = Bundle.main.object(forInfoDictionaryKey: "EFISLicenceServiceURL") as? String,
+              let url = URL(string: value),
+              url.scheme == "https",
+              url.host != nil,
+              url.port == nil || url.port == 443 else {
+            return ""
+        }
+        return value
+    }()
     #endif
 }
 
