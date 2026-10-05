@@ -145,3 +145,11 @@ The detailed historical decision register—including adopted, superseded, parke
 - Resolved Swift 6 actor-isolation issues in the capture delegate.
 - Xcode iOS Simulator build passes.
 - Physical camera scanning cannot be validated in the iOS Simulator and remains a real-iPhone test.
+
+### Simulator Device-ID QR — PASS
+- Web simulator now generates a canonical QR payload `efis://device/<Device-ID>`.
+- QR is rendered locally as PNG by the simulator; no external QR service is used.
+- Simulator UI displays both QR and textual payload.
+- Identification-only security boundary is stated explicitly.
+- Synology simulator rebuilt successfully and live QR endpoint returned HTTP 200 with a generated PNG.
+- This provides the EFIS side of the phone QR acquisition workflow; real camera scan remains a physical-iPhone test.
