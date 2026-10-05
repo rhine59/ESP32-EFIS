@@ -168,7 +168,7 @@ struct LicenceView: View {
                         }
                     }
                 }
-                .safeAreaPadding(.bottom, 70)
+                .contentMargins(.bottom, 110, for: .scrollContent)
                 .navigationTitle("Manage Licence")
             }
             .tabItem { Label("Manage", systemImage: "slider.horizontal.3") }
