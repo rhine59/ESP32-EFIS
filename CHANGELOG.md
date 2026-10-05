@@ -296,3 +296,9 @@ The detailed historical decision register—including adopted, superseded, parke
 - Diagnosed iOS `-1004` as a resolver/network-path issue rather than an EFIS licence API failure. The phone's Limit IP Address Tracking setting interfered with the private split-DNS path; disabling it for the home Wi-Fi allowed EFIS Service to load the licence account.
 - Removed the temporary direct-IP probe after diagnosis; TLS verification remains strict and the app continues to use the hostname rather than a private IP.
 - Documented that production must use a normal publicly routable HTTPS licence endpoint and must not depend on split DNS or changing iPhone privacy settings.
+
+## 2026-10-05 — reject split DNS as customer licence architecture
+- Reclassified the Synology split-DNS configuration as a development diagnostic only, not a supported RedOne deployment requirement.
+- Defined the production licence API requirement: stable public DNS, publicly trusted TLS, standard HTTPS TCP 443, and identical operation over ordinary Wi-Fi and cellular.
+- Explicitly prohibited customer requirements to change router/DNS settings, disable iOS privacy features, install certificates, hard-code private IPs, or edit backend URLs during normal setup.
+- Added pre-release validation requirements across home Wi-Fi, unrelated Wi-Fi and cellular with normal iOS privacy settings enabled.

@@ -69,18 +69,20 @@ The maintenance network flow is entered from the rotary-controlled boot menu by 
 
 SSID and credentials persist in a dedicated ESP-IDF NVS namespace. Production units require **NVS encryption** for Wi-Fi credentials; ordinary NVS is acceptable only during early prototype bring-up. The password is never redisplayed after entry, logged, included in diagnostics/test-harness output or transmitted to the OTA server. **Forget network** erases the stored credentials.
 
-## Local licence-service DNS — 5 October 2026
+## Licence-service network requirement — 5 October 2026
 
-The development EFIS Service iPhone app uses `https://granvillehouse.synology.me:8449`. On the home LAN this hostname must resolve to the NAS private address `192.168.1.99` so the phone does not hairpin through the public WAN address. TLS must still use the hostname; do not replace the service URL with the private IP and do not bypass certificate validation.
+The customer-facing EFIS Service app must use a stable, publicly routable HTTPS licence API on standard TCP 443. The same service hostname must work unchanged on ordinary home/club Wi-Fi and cellular networks. Customers must **not** be required to change router DNS, configure split DNS, disable Limit IP Address Tracking/Private Relay, install certificates, expose NAS ports, or edit a service URL.
 
-A lightweight `dnsmasq` Docker service is deployed on the Synology as `local-dns`, publishing TCP/UDP 53. It overrides only:
+The current `granvillehouse.synology.me:8449` endpoint is a development service only. Testing exposed a NAT-loopback/resolver interaction on the development LAN; a temporary split-DNS service was used to prove the API and iPhone client path. That workaround is not part of the RedOne product architecture and must not be shipped or documented as a customer setup step.
 
-```text
-granvillehouse.synology.me -> 192.168.1.99
-```
+Production requirements:
 
-All other DNS is forwarded upstream. The FRITZ!Box DHCP IPv4 setting advertises `192.168.1.99` as the local DNS server.
+- public DNS hostname dedicated to the RedOne licence API;
+- valid publicly trusted TLS certificate and normal certificate/hostname validation;
+- HTTPS on TCP 443;
+- reachable directly from both Wi-Fi and cellular without LAN-specific DNS;
+- no user-editable backend URL in the normal workflow;
+- development/staging endpoint selection restricted to build configuration or Advanced diagnostics;
+- no certificate bypass, private-IP hard coding, or dependence on iOS privacy settings.
 
-On the tested iPhone, **Limit IP Address Tracking** caused the application resolver path to bypass/interfere with the LAN split-DNS path: Safari could reach the service while EFIS Service returned `NSURLErrorDomain -1004`. Disabling Limit IP Address Tracking for the home Wi-Fi allowed the app to resolve the local service correctly and the licence account loaded successfully.
-
-This is a development/LAN deployment constraint, not a desirable production dependency. Production licence service should use a publicly routable HTTPS endpoint that works identically on Wi-Fi and cellular without requiring private DNS overrides or device privacy-setting changes.
+Before TestFlight/public distribution, validate the production endpoint from at least home Wi-Fi, unrelated Wi-Fi and cellular with normal iOS privacy settings enabled.
