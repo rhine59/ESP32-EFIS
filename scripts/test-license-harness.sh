@@ -49,7 +49,7 @@ r=$(json_post /api/license/test '{"test":"interrupted-replacement"}')
 require "$r" '"result": "INTERRUPTED"'; require "$r" '"temp_exists": true'; echo "$r"
 restart_sim
 r=$(status); require "$r" '"status": "VALID"'; require "$r" "$baseline"
-s=$(storage); require "$s" '"licence_exists": true'; echo "$s"
+s=$(storage); require "$s" '"licence_exists": true'; require "$s" '"temp_exists": false'; echo "$s"
 
 echo "Licence Reset must preserve Device ID, firmware and trust anchor"
 before=$(status); device=$(field "$before" device_id); firmware=$(field "$before" firmware)
