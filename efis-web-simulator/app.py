@@ -71,11 +71,14 @@ def run_license_negative_test(kind):
     elif kind=="bad-signature":
         sig=bytearray(env["sig"]); sig[0]^=1; env["sig"]=bytes(sig)
     elif kind=="wrong-device":
-        payload=cbor2.loads(env["payload"]); payload[3]="EFIS-SIM-WRONG"
-        env["payload"]=cbor2.dumps(payload,canonical=True)
+        if state["network"]!="online": raise RuntimeError("wrong-device test requires simulator network online")
+        test=post_json(LIC+"/v1/test/wrong-device-license",{})
+        if not test.get("simulation_only"): raise RuntimeError("refusing non-simulator wrong-device fixture")
+        candidate=test["license"]
     else:
         raise RuntimeError("unknown negative test")
-    candidate=base64.urlsafe_b64encode(cbor2.dumps(env,canonical=True)).decode().rstrip("=")
+    if kind!="wrong-device":
+        candidate=base64.urlsafe_b64encode(cbor2.dumps(env,canonical=True)).decode().rstrip("=")
     try:
         verify_license_blob(candidate,False)
     except Exception as e:
