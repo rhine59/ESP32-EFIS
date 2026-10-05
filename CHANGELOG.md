@@ -270,3 +270,11 @@ The detailed historical decision register—including adopted, superseded, parke
 - The plain-language instruction under `What to do next` can invoke the same workflow action, giving the user two natural ways to advance.
 - Both interaction targets share the same authoritative state transition rather than duplicating workflow logic.
 - Updated the workflow architecture and rebuilt/installed the app on the physical iPhone.
+
+## 2026-10-05 — repair Setup workflow tap path
+- Corrected `Set up a new EFIS`, where blue/current rows could previously be rendered without an attached action.
+- The current Identify EFIS row and top guidance now invoke EFIS identification directly.
+- Setup now recognises `INCLUDED_UNUSED` and offers/executes the included first-year activation instead of falling through to paid plan selection.
+- Active licence acquisition and EFIS installation remain available from both the current row and top guidance.
+- Replaced Setup’s old non-interactive status banner with the shared actionable `ProcessGuidanceView`.
+- Rebuilt, installed and launched the corrected app on the physical iPhone.

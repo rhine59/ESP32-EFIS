@@ -468,33 +468,48 @@ private struct SetupNewEFISFlowView: View {
     @EnvironmentObject var model: LicenceViewModel
 
     private var accountLoaded: Bool { model.account != nil }
+    private var includedUnused: Bool { model.account?.entitlement == "INCLUDED_UNUSED" }
     private var active: Bool { ["INCLUDED_ACTIVE", "PAID_ACTIVE", "ACTIVE"].contains(model.account?.entitlement ?? "") }
-    private var signed: Bool { model.cached?.deviceID == model.deviceID }
-    private var installed: Bool { model.installedLicenceID != nil }
+    private var signed: Bool { active && model.cached?.deviceID == model.deviceID }
+    private var installed: Bool { active && model.installedLicenceID != nil }
 
-    private var currentStep: Int {
-        if !accountLoaded { return 1 }
-        if !active { return 3 }
-        if !signed { return 4 }
-        if !installed { return 5 }
-        return 6
+    private var completedText: String {
+        if installed { return "The EFIS is identified, licensed, and the installed licence has been verified VALID." }
+        if signed { return "The EFIS is identified and its signed licence is stored on this phone." }
+        if active { return "The EFIS is identified and its licence is active." }
+        if includedUnused { return "The EFIS is identified and its included first year is available." }
+        if accountLoaded { return "The EFIS and ownership record have been identified." }
+        return "Nothing yet."
+    }
+
+    private var nextText: String {
+        if installed { return "Setup is complete. No further action is required." }
+        if signed { return "Install the signed licence on the EFIS." }
+        if active { return "Obtain the signed licence for this EFIS." }
+        if includedUnused { return "Activate the included first year. There is nothing to pay." }
+        if accountLoaded { return "Choose a licence term below." }
+        return "Identify this EFIS using the Device ID shown below."
+    }
+
+    private var nextAction: (() -> Void)? {
+        if installed { return nil }
+        if signed { return { Task { await model.transferToEFIS() } } }
+        if active { return { Task { await model.getEntitlement() } } }
+        if includedUnused { return { Task { await model.activateIncludedYear() } } }
+        if !accountLoaded && !model.deviceID.isEmpty { return { Task { await model.loadManagement() } } }
+        return nil
     }
 
     var body: some View {
         List {
             Section {
-                HStack {
-                    Image(systemName: installed ? "checkmark.circle.fill" : "arrow.right.circle.fill")
-                    Text(installed ? "Completed: the licence is installed and verified. Next: nothing else is required." : "Completed: earlier green steps below. Next: complete step \(currentStep) shown in blue.")
-                        .font(.headline)
-                }
-                .foregroundStyle(installed ? .green : .blue)
+                ProcessGuidanceView(completed: completedText, next: nextText, complete: installed, action: nextAction)
             }
 
             Section("Setup progress") {
-                ProcessStepRow(number: 1, title: "Identify EFIS", detail: model.deviceID, state: accountLoaded ? .complete : .current)
+                ProcessStepRow(number: 1, title: "Identify EFIS", detail: accountLoaded ? model.deviceID : "Press this step to identify \(model.deviceID)", state: accountLoaded ? .complete : .current, action: !accountLoaded && !model.deviceID.isEmpty ? { Task { await model.loadManagement() } } : nil)
                 ProcessStepRow(number: 2, title: "Register owner", detail: accountLoaded ? "Ownership record confirmed" : "Confirmed when the service recognises this EFIS", state: accountLoaded ? .complete : .waiting)
-                ProcessStepRow(number: 3, title: "Choose licence", detail: active ? (model.account?.planName ?? "ACTIVE entitlement") : "Choose an available licence plan", state: active ? .complete : (accountLoaded ? .current : .waiting))
+                ProcessStepRow(number: 3, title: includedUnused ? "Activate included first year" : "Choose licence", detail: active ? (model.account?.planName ?? "ACTIVE entitlement") : includedUnused ? "Included first year — £0" : "Choose an available licence plan below", state: active ? .complete : (accountLoaded ? .current : .waiting), action: includedUnused ? { Task { await model.activateIncludedYear() } } : nil)
                 ProcessStepRow(number: 4, title: "Obtain signed licence", detail: signed ? "Signed entitlement secured on this phone" : "Tap to obtain the signed licence", state: signed ? .complete : (active ? .current : .waiting), action: active && !signed ? { Task { await model.getEntitlement() } } : nil)
                 ProcessStepRow(number: 5, title: "Install on EFIS", detail: installed ? "EFIS acknowledged installation" : "Tap to install the signed licence", state: installed ? .complete : (signed ? .current : .waiting), action: signed && !installed ? { Task { await model.transferToEFIS() } } : nil)
                 ProcessStepRow(number: 6, title: "Verify installation", detail: installed ? "EFIS reported VALID" : "Requires explicit EFIS acknowledgement", state: installed ? .complete : .waiting)
@@ -507,6 +522,9 @@ private struct SetupNewEFISFlowView: View {
                         .autocorrectionDisabled()
                     Button("Identify EFIS") { Task { await model.loadManagement() } }
                         .disabled(model.busy || model.deviceID.isEmpty)
+                } else if includedUnused {
+                    Button("Activate included first year — £0") { Task { await model.activateIncludedYear() } }
+                        .disabled(model.busy)
                 } else if !active {
                     if model.plans.isEmpty {
                         Button("Refresh licence plans") { Task { await model.loadManagement() } }
