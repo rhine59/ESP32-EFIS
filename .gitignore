@@ -7,3 +7,6 @@
 **/*.xcodeproj/
 **/xcuserdata/
 **/*.xcuserstate
+
+__pycache__/
+*.pyc

@@ -29,7 +29,7 @@ The service binds to NAS loopback only. Publish it only through an authenticated
 
 ## Still required before production
 
-Login/session or OIDC, email verification/password reset/MFA, CSRF/rate limiting, admin RBAC, migrations/backups, verified payment-provider webhook adapters, device challenge authentication, private licence signer integration, privacy/retention controls, tests and security review.
+Login/session or OIDC, password reset/MFA, CSRF/rate limiting, admin RBAC, migrations/backups, verified payment-provider webhook adapters, device challenge authentication, private licence signer integration, privacy/retention controls, tests and security review.
 
 
 ## Customer web portal
@@ -47,3 +47,9 @@ The phone registration URL is a separate public HTTPS boundary. For the current 
 ### Validated development route
 
 As of 2026-10-06 the development route `https://granvillehouse.synology.me:8450/register` is deployed and externally reachable. `/healthz` returns HTTP 200 with normal TLS certificate validation. DSM terminates HTTPS on 8450 and proxies only to the loopback account origin on 8091; port 8091 remains private.
+
+## Email verification
+
+New accounts are created in an unverified state. Registration sends a single-use verification link to the supplied address; the token is stored only as a SHA-256 hash and expires after `EMAIL_VERIFY_MINUTES` (30 minutes by default). Sign-in and authenticated portal access are denied until `email_verified_at` is set by a valid verification link. Requesting another link invalidates earlier unused links. Registration/resend responses deliberately avoid confirming whether an email address already exists.
+
+Outbound delivery uses standard SMTP configured only through the runtime `.env`: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` and `SMTP_SSL`. `PUBLIC_BASE_URL` determines the verification-link origin. SMTP credentials must never be committed.

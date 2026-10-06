@@ -371,3 +371,9 @@ The detailed historical decision register—including adopted, superseded, parke
 - External validation returned HTTP 200 from `/healthz` with successful TLS certificate verification (`ssl_verify_result=0`).
 - External `/register` validation confirmed the Lollipop Account page and Lollipop branding.
 - The EFIS Service development build already targets `https://granvillehouse.synology.me:8450/register`; no client URL change was required.
+
+## 2026-10-06 — require Lollipop email verification
+- New Lollipop accounts remain unverified until the registered email address opens a single-use authentication link.
+- Verification tokens are random, stored only as SHA-256 hashes, expire after 30 minutes by default, and are invalidated when a replacement is requested.
+- Sign-in and portal sessions fail closed for unverified accounts.
+- Added SMTP-configurable transactional delivery without coupling the account service to a hosted mail provider.
