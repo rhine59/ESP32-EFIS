@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS devices(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFER
 CREATE TABLE IF NOT EXISTS entitlements(id BIGSERIAL PRIMARY KEY,device_id BIGINT REFERENCES devices(id) ON DELETE CASCADE,product TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'active',provider TEXT,provider_reference TEXT,updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS audit_events(id BIGSERIAL PRIMARY KEY,event TEXT NOT NULL,subject TEXT,created_at TIMESTAMPTZ NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS email_verification_tokens(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,token_hash TEXT UNIQUE NOT NULL,expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now());
-ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ;"""
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ;
+CREATE TABLE IF NOT EXISTS password_reset_tokens(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,token_hash TEXT UNIQUE NOT NULL,expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now());"""
 def db(): return psycopg.connect(DATABASE_URL,row_factory=dict_row)
 
 def send_verification_email(user_id:int,email:str):
@@ -120,6 +121,48 @@ def resend_verification(request:Request,email:str=Form(...)):
     with db() as c:u=c.execute("SELECT id,email,email_verified_at FROM users WHERE email=%s",(normalized,)).fetchone()
     if u and not u["email_verified_at"]: issue_verification(u["id"],u["email"])
     return templates.TemplateResponse(request,"verify_pending.html",{"email":normalized},status_code=202)
+
+def send_password_reset_email(user_id:int,email:str):
+    token=secrets.token_urlsafe(32); token_hash=hashlib.sha256(token.encode()).hexdigest()
+    expires=datetime.now(timezone.utc)+timedelta(minutes=int(os.getenv("PASSWORD_RESET_MINUTES","30")))
+    with db() as c:
+        row=c.execute("INSERT INTO password_reset_tokens(user_id,token_hash,expires_at) VALUES(%s,%s,%s) RETURNING id",(user_id,token_hash,expires)).fetchone(); c.commit()
+    base=os.environ["PUBLIC_BASE_URL"].rstrip("/")
+    msg=EmailMessage(); msg["Subject"]="Reset your Lollipop password"; msg["From"]=os.environ["SMTP_FROM"]; msg["To"]=email
+    msg.set_content(f"Reset your Lollipop password by opening this link:\n\n{base}/reset-password?token={token}\n\nThis link expires in {os.getenv('PASSWORD_RESET_MINUTES','30')} minutes and can be used once.")
+    host=os.environ["SMTP_HOST"]; port=int(os.getenv("SMTP_PORT","465")); user=os.getenv("SMTP_USER",""); password=os.getenv("SMTP_PASSWORD","")
+    if os.getenv("SMTP_SSL","1")=="1":
+        with smtplib.SMTP_SSL(host,port,context=ssl.create_default_context()) as smtp:
+            if user: smtp.login(user,password)
+            smtp.send_message(msg)
+    else:
+        with smtplib.SMTP(host,port) as smtp:
+            smtp.starttls(context=ssl.create_default_context())
+            if user: smtp.login(user,password)
+            smtp.send_message(msg)
+    with db() as c:c.execute("UPDATE password_reset_tokens SET used_at=now() WHERE user_id=%s AND id<>%s AND used_at IS NULL",(user_id,row["id"]));c.commit()
+
+@app.get("/forgot-password",response_class=HTMLResponse)
+def forgot_password_page(request:Request):return templates.TemplateResponse(request,"forgot_password.html",{})
+@app.post("/forgot-password",response_class=HTMLResponse)
+def forgot_password(request:Request,email:str=Form(...)):
+    normalized=email.lower().strip()
+    with db() as c:u=c.execute("SELECT id,email FROM users WHERE email=%s",(normalized,)).fetchone()
+    if u:
+        try: send_password_reset_email(u["id"],u["email"])
+        except Exception as exc: logger.error("Password reset email delivery failed for %s: %s: %s",normalized,type(exc).__name__,exc)
+    return templates.TemplateResponse(request,"forgot_password_sent.html",{})
+@app.get("/reset-password",response_class=HTMLResponse)
+def reset_password_page(request:Request,token:str):return templates.TemplateResponse(request,"reset_password.html",{"token":token,"error":None})
+@app.post("/reset-password",response_class=HTMLResponse)
+def reset_password(request:Request,token:str=Form(...),password:str=Form(...)):
+    if len(password)<12:return templates.TemplateResponse(request,"reset_password.html",{"token":token,"error":"Use at least 12 characters."},status_code=400)
+    th=hashlib.sha256(token.encode()).hexdigest()
+    with db() as c:
+        row=c.execute("SELECT id,user_id FROM password_reset_tokens WHERE token_hash=%s AND used_at IS NULL AND expires_at>now() FOR UPDATE",(th,)).fetchone()
+        if not row:return templates.TemplateResponse(request,"reset_password.html",{"token":"","error":"This reset link is invalid or has expired."},status_code=400)
+        c.execute("UPDATE users SET password_hash=%s WHERE id=%s",(password_hash.hash(password),row["user_id"])); c.execute("UPDATE password_reset_tokens SET used_at=now() WHERE user_id=%s AND used_at IS NULL",(row["user_id"],)); c.execute("INSERT INTO audit_events(event,subject) VALUES('password_reset',%s)",(str(row["user_id"]),)); c.commit()
+    request.session.clear(); return templates.TemplateResponse(request,"reset_password_done.html",{})
 
 @app.post("/logout")
 def logout(request:Request):request.session.clear();return RedirectResponse("/",303)
