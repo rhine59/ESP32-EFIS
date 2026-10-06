@@ -134,7 +134,8 @@ def welcome(request:Request):
 @app.get("/app-login/{token}/qr.svg")
 def app_login_qr(token:str):
     import qrcode, io
-    img=qrcode.make(f"efisservice://login?code={token}",image_factory=qrcode.image.svg.SvgPathImage)
+    from qrcode.image.svg import SvgPathImage
+    img=qrcode.make(f"efisservice://login?code={token}",image_factory=SvgPathImage)
     b=io.BytesIO(); img.save(b)
     return Response(b.getvalue(),media_type="image/svg+xml")
 
