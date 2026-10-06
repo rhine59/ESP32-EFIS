@@ -30,6 +30,7 @@ services:
       SMTP_FROM: ${SMTP_FROM:-}
       SMTP_SSL: ${SMTP_SSL:-1}
       EMAIL_VERIFY_MINUTES: ${EMAIL_VERIFY_MINUTES:-30}
+      ENABLE_DEV_RESET: ${ENABLE_DEV_RESET:-0}
     depends_on:
       db:
         condition: service_healthy
