@@ -38,3 +38,4 @@ services:
 
 volumes:
   efis-account-db:
+    name: esp32-efis_efis-account-db
