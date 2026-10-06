@@ -38,19 +38,21 @@ final class LicenceViewModel: ObservableObject {
     @Published var account: LicenceAccountStatus?
     @Published var buyerEmail = ""
     @Published var installedLicenceID: String?
+    @Published var lollipopAccount: AccountSession?
 
     private let keychain = KeychainStore()
 
 
     init() {
         cached = keychain.load()
+        lollipopAccount = keychain.loadAccount()
     }
 
     func handleAccountLogin(url: URL) async {
         guard url.scheme == "efisservice", url.host == "login", let code = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "code" })?.value else { return }
         guard let endpoint = URL(string: EFISServiceConfiguration.accountServiceURL + "/v1/app-login/exchange") else { return }
         var req = URLRequest(url: endpoint); req.httpMethod = "POST"; req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type"); req.httpBody = "code=".appending(code.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "").data(using: .utf8)
-        do { let (data,response)=try await URLSession.shared.data(for:req); guard let h=response as? HTTPURLResponse,h.statusCode==200 else { throw LicenceAppError.service("Account sign-in code was rejected or expired.") }; struct R:Decodable { let authenticated:Bool; let user_id:Int; let email:String }; let r=try JSONDecoder().decode(R.self,from:data); status="Signed in as " + r.email; activitySeverity = .success } catch { status=error.localizedDescription; activitySeverity = .error }
+        do { let (data,response)=try await URLSession.shared.data(for:req); guard let h=response as? HTTPURLResponse,h.statusCode==200 else { throw LicenceAppError.service("Account sign-in code was rejected or expired.") }; struct R:Decodable { let authenticated:Bool; let user_id:Int; let email:String }; let r=try JSONDecoder().decode(R.self,from:data); let session=AccountSession(userID:r.user_id,email:r.email); try keychain.saveAccount(session); lollipopAccount=session; status="Signed in as " + r.email; activitySeverity = .success } catch { status=error.localizedDescription; activitySeverity = .error }
     }
 
     private func withManagement<T>(_ operation: (DevelopmentLicenceManagementService) async throws -> T) async throws -> T {

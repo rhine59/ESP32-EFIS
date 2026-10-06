@@ -44,3 +44,16 @@ struct KeychainStore {
 }
 
 struct AccountSession: Codable { let userID: Int; let email: String }
+
+extension KeychainStore {
+    func saveAccount(_ session: AccountSession) throws {
+        let data = try JSONEncoder().encode(session)
+        let q: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: "lollipop-account"]
+        SecItemDelete(q as CFDictionary); var a=q; a[kSecValueData as String]=data; a[kSecAttrAccessible as String]=kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        guard SecItemAdd(a as CFDictionary,nil) == errSecSuccess else { throw LicenceAppError.service("Could not securely save Lollipop account.") }
+    }
+    func loadAccount() -> AccountSession? {
+        let q: [String: Any] = [kSecClass as String:kSecClassGenericPassword,kSecAttrService as String:service,kSecAttrAccount as String:"lollipop-account",kSecReturnData as String:true,kSecMatchLimit as String:kSecMatchLimitOne]; var item: CFTypeRef?
+        guard SecItemCopyMatching(q as CFDictionary,&item)==errSecSuccess, let data=item as? Data else{return nil}; return try? JSONDecoder().decode(AccountSession.self,from:data)
+    }
+}

@@ -259,7 +259,6 @@ private struct ProcessDefinition: Identifiable {
 }
 
 private let processCatalogue: [ProcessDefinition] = [
-    .init(id: "account", title: "Create a Lollipop account", subtitle: "Sign up to manage your RedOne products and licences", systemImage: "person.crop.circle.badge.plus", steps: ["Open secure signup", "Create account", "Confirm account", "Return to EFIS Service"]),
     .init(id: "setup", title: "Set up a new EFIS", subtitle: "Register, licence, install and verify a new unit", systemImage: "plus.circle", steps: ["Identify EFIS", "Register owner", "Choose licence", "Obtain signed licence", "Install on EFIS", "Verify installation"]),
     .init(id: "buy", title: "Buy / activate a licence", subtitle: "Use the included first year or buy the next licence term", systemImage: "creditcard", steps: ["Identify RedOne", "Check included first year", "Confirm owner", "Activate or buy licence", "Obtain signed licence", "Install on EFIS", "Verify VALID", "Show renewal date"]),
     .init(id: "reassign", title: "Reassign / sell an EFIS", subtitle: "Transfer ownership safely to another user", systemImage: "person.2", steps: ["Confirm current EFIS", "Identify new owner", "Wait for buyer acceptance", "Issue replacement licence", "Install on EFIS", "Verify new ownership"]),
@@ -292,9 +291,7 @@ struct ProcessHomeView: View {
                 Section("Processes") {
                     ForEach(processCatalogue) { process in
                         NavigationLink {
-                            if process.id == "account" {
-                                LollipopAccountFlowView()
-                            } else if process.id == "buy" {
+                            if process.id == "buy" {
                                 BuyLicenceFlowView()
                             } else if process.id == "setup" {
                                 SetupNewEFISFlowView()
@@ -328,7 +325,7 @@ struct ProcessHomeView: View {
                     }
                 }
             }
-            .navigationTitle("EFIS Service")
+            .navigationTitle("Lollipop")
         }
     }
 }
