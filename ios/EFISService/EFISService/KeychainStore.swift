@@ -42,3 +42,5 @@ struct KeychainStore {
         ] as CFDictionary)
     }
 }
+
+struct AccountSession: Codable { let userID: Int; let email: String }

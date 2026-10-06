@@ -8,6 +8,7 @@ struct EFISServiceApp: App {
         WindowGroup {
             ProcessHomeView()
                 .environmentObject(model)
+                .onOpenURL { url in Task { await model.handleAccountLogin(url: url) } }
         }
     }
 }

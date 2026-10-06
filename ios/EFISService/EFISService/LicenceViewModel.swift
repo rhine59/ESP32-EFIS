@@ -4,6 +4,7 @@ enum EFISServiceConfiguration {
     #if DEBUG
     static let licenceServiceURL = "https://granvillehouse.synology.me:8449"
     static let accountRegistrationURL = "https://granvillehouse.synology.me:8450/register"
+    static let accountServiceURL = "https://granvillehouse.synology.me:8450"
     #else
     static let licenceServiceURL: String = {
         guard let value = Bundle.main.object(forInfoDictionaryKey: "EFISLicenceServiceURL") as? String,
@@ -43,6 +44,13 @@ final class LicenceViewModel: ObservableObject {
 
     init() {
         cached = keychain.load()
+    }
+
+    func handleAccountLogin(url: URL) async {
+        guard url.scheme == "efisservice", url.host == "login", let code = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "code" })?.value else { return }
+        guard let endpoint = URL(string: EFISServiceConfiguration.accountServiceURL + "/v1/app-login/exchange") else { return }
+        var req = URLRequest(url: endpoint); req.httpMethod = "POST"; req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type"); req.httpBody = "code=".appending(code.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "").data(using: .utf8)
+        do { let (data,response)=try await URLSession.shared.data(for:req); guard let h=response as? HTTPURLResponse,h.statusCode==200 else { throw LicenceAppError.service("Account sign-in code was rejected or expired.") }; struct R:Decodable { let authenticated:Bool; let user_id:Int; let email:String }; let r=try JSONDecoder().decode(R.self,from:data); status="Signed in as " + r.email; activitySeverity = .success } catch { status=error.localizedDescription; activitySeverity = .error }
     }
 
     private func withManagement<T>(_ operation: (DevelopmentLicenceManagementService) async throws -> T) async throws -> T {
