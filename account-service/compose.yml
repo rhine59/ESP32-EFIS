@@ -31,6 +31,8 @@ services:
       SMTP_SSL: ${SMTP_SSL:-1}
       EMAIL_VERIFY_MINUTES: ${EMAIL_VERIFY_MINUTES:-30}
       ENABLE_DEV_RESET: ${ENABLE_DEV_RESET:-0}
+      APP_SESSION_DAYS: ${APP_SESSION_DAYS:-90}
+      APP_LOGIN_MINUTES: ${APP_LOGIN_MINUTES:-5}
     depends_on:
       db:
         condition: service_healthy

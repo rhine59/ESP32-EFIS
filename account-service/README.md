@@ -53,3 +53,11 @@ As of 2026-10-06 the development route `https://granvillehouse.synology.me:8450/
 New accounts are created in an unverified state. Registration sends a single-use verification link to the supplied address; the token is stored only as a SHA-256 hash and expires after `EMAIL_VERIFY_MINUTES` (30 minutes by default). Sign-in and authenticated portal access are denied until `email_verified_at` is set by a valid verification link. Requesting another link invalidates earlier unused links. Registration/resend responses deliberately avoid confirming whether an email address already exists.
 
 Outbound delivery uses standard SMTP configured only through the runtime `.env`: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` and `SMTP_SSL`. `PUBLIC_BASE_URL` determines the verification-link origin. SMTP credentials must never be committed.
+
+## Mobile session API
+
+Verified users can authenticate Lollipop with a five-minute single-use challenge. `POST /v1/app-login/exchange` atomically consumes the challenge and returns a 90-day opaque mobile session; only its SHA-256 hash is persisted. `GET /v1/me` validates an `Authorization: Bearer` session and `POST /v1/logout` revokes it. `POST /v1/app-login/email` issues a fresh challenge email for reauthentication. Runtime lifetimes are `APP_SESSION_DAYS` (default 90) and `APP_LOGIN_MINUTES` (default 5).
+
+The 90-day lifetime is deliberately hard rather than sliding. At expiry the mobile client requests a fresh login email. Development `ENABLE_DEV_RESET` must remain disabled outside the controlled development environment.
+
+Full NAS configuration, reverse proxy, persistence, SMTP and rebuild requirements are documented in `docs/SYNOLOGY_CONFIGURATION.md`.

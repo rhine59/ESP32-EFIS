@@ -391,3 +391,6 @@ The RedOne customer app must not ask the user to configure a licence-service URL
 Debug builds may continue to use and expose the Synology development endpoint for simulator testing. That endpoint and any LAN/NAT-loopback workarounds are development-only and are prohibited from becoming release dependencies.
 
 A Release build is not production-ready until a real `EFISLicenceServiceURL` is supplied and validated over unrelated Wi-Fi and cellular with normal iOS privacy settings enabled.
+
+## Mobile account session boundary — 6 October 2026
+Lollipop authentication is independent of an EFIS licence. A verified account obtains a five-minute one-use login challenge and exchanges it for a hard 90-day revocable bearer session. iOS protects the credential in Keychain; Android protects it with Android Keystore-backed AES-GCM storage. Mobile calls requiring account authority must use the authenticated session; Device ID knowledge alone never grants ownership or licence authority. Session expiry triggers a new email challenge and does not alter an already installed signed EFIS entitlement.

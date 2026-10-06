@@ -377,3 +377,11 @@ The detailed historical decision register—including adopted, superseded, parke
 - Verification tokens are random, stored only as SHA-256 hashes, expire after 30 minutes by default, and are invalidated when a replacement is requested.
 - Sign-in and portal sessions fail closed for unverified accounts.
 - Added SMTP-configurable transactional delivery without coupling the account service to a hosted mail provider.
+
+## 2026-10-06 — Lollipop persistent authentication and Android parity
+- Added five-minute single-use QR/deep-link app login challenges and hard 90-day revocable mobile sessions.
+- Added `/v1/me`, `/v1/logout` and reauthentication email support; server stores token hashes only.
+- iOS Lollipop stores its session in Keychain and silently validates it after restart; QR login and restart persistence physically validated.
+- Added Android Lollipop implementation with matching process catalogue, QR/deep-link login, Android Keystore-backed encrypted session persistence, `/v1/me` validation, expiry reauthentication and sign-out.
+- Added Synology configuration runbook and Android build script.
+- Root Synology rebuild now validates/rebuilds the account service as part of the repository stack.

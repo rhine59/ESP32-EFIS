@@ -86,3 +86,6 @@ On 2026-10-05 EFISService was successfully built and code-signed for the paired 
 The development simulator now supports the complete process shape: locate a pending transfer, match the invited buyer, accept ownership atomically, obtain a replacement signed entitlement, install it on the EFIS, and finish only after the EFIS reports `VALID`. A buyer identity mismatch is rejected.
 
 The current email match is deliberately marked simulation-only and MUST NOT be promoted as production authentication. The production account service must authenticate the buyer independently and bind acceptance to a short-lived, single-use transfer invitation credential. The service, not the phone, owns the atomic ownership transition and audit event.
+
+## Cross-platform Lollipop rule — 6 October 2026
+The iOS and Android Lollipop clients share one canonical process catalogue and one server-side account/licensing state model. Authentication, session lifetime and process ordering must remain behaviourally equivalent. Platform-specific secure storage differs only at the OS boundary (iOS Keychain versus Android Keystore). New customer processes must be reflected in both apps and this document rather than implemented as platform-specific business logic.

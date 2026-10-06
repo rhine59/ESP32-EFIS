@@ -1,6 +1,6 @@
 # Customer account, licensing and mobile applications
 
-Status: architecture adopted; account/web prototype implemented; native mobile prototypes staged; production security/payment/licence signer pending.
+Status: architecture adopted; account/web service implemented; iOS authentication physically validated; Android Lollipop client implemented and build-tested; production hardening/payment/licence signer pending.
 
 ## Ecosystem
 Web portal, iPhone app and Android app use the same versioned HTTPS API from efis-account. efis-account owns users, provisioned EFIS Device IDs and entitlements; PostgreSQL stores account/device/audit metadata; payment adapters handle provider-hosted card, Apple Pay, Google Pay and PayPal checkout; a separate private efis-license-signer issues signed licences. Normal EFIS operation remains offline-capable after licence installation.
@@ -98,3 +98,11 @@ Mobile firmware cache contents are replaceable distribution artifacts, not secre
 
 ## EFIS Service account signup entry point — 6 October 2026
 EFIS Service now presents **Create a Lollipop account** as a first-class phone process. Account creation is deliberately separate from RedOne registration and licence purchase. The app opens the secure Lollipop account-service registration flow rather than processing account credentials through the licence simulator. Debug and production account-registration URLs are configuration boundaries; production must use the dedicated HTTPS account-service origin. The existing PostgreSQL-backed `account-service` remains the account authority. The service must be deployed and exposed through its production HTTPS route before this workflow is considered end-to-end validated.
+
+## Validated Lollipop authentication — 6 October 2026
+
+The canonical onboarding flow is now registration-service first: the web registration page creates the Lollipop account, email verification establishes ownership of the address, and the verified welcome page generates a five-minute single-use QR/deep-link challenge. Lollipop exchanges that challenge for a hard 90-day mobile session. The server stores only SHA-256 hashes of mobile tokens. iOS stores the raw token in Keychain with `ThisDeviceOnly`; Android encrypts it with AES-GCM using a non-exportable Android Keystore key.
+
+On launch each app validates the retained credential with `GET /v1/me`; a normal app restart therefore requires no QR scan. `POST /v1/logout` revokes the server session and local sign-out removes the device copy. At hard expiry/revocation the client clears the credential and requests a new single-use sign-in email. The email supports QR scanning from another screen and the same-phone deep link. Passwords are never stored by the mobile app. The QR login and iOS persistence path have been physically validated; Android is implemented and build-tested but still requires physical Android device validation.
+
+The mobile process catalogue is identical on iOS and Android: setup, buy/activate, reassign/sell, receive transfer, renew/manage, install/update licence, replace, recover, firmware update, commission and diagnose. Commercial/licensing state remains server-authoritative; platform clients must not diverge in business rules.

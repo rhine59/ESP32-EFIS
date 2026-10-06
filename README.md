@@ -170,6 +170,9 @@ This closes the Docker/simulator licensing stage. Physical ESP32 protected-NVS, 
 
 ## Documentation index
 
+- [Synology NAS configuration](docs/SYNOLOGY_CONFIGURATION.md)
+- [Lollipop Android app](customer-app/android/README.md)
+
 This is the canonical index to the maintained project documentation. Each link is relative so it works directly in GitHub and in a local clone. Documentation supplied inside third-party `firmware/managed_components` dependencies is intentionally excluded.
 
 ### Project control, planning and procurement

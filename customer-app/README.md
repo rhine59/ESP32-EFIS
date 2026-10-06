@@ -12,4 +12,4 @@ Shared functions: account access, instrument registration, licence status, provi
 
 The iOS and Android prototypes now model the adopted multi-node/offline workflow: download/cache a complete signed release set while online, show offline readiness, connect to Horizon's local maintenance Wi-Fi at the aircraft, and transfer the cached set to Horizon. Horizon remains the update/security authority and delivers EIU/future-node firmware over AEF-CAN according to the release-set dependency order. The phone never signs firmware or directly programs the EIU.
 
-The current screens are architecture prototypes; network transfer, cryptographic verification and production account integration remain to be implemented and device-tested.
+Account authentication is now integrated: iOS is physically validated and Android is build-tested against the same account API with OS secure storage. OTA transfer/cryptographic release handling and the remaining server-backed licence operations still require end-to-end device validation.

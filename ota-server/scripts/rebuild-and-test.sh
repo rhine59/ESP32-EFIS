@@ -3,29 +3,34 @@ set -eu
 
 COMPOSE_PROJECT_NAME="esp32-efis"
 export COMPOSE_PROJECT_NAME
+DOCKER="$(command -v docker 2>/dev/null || true)"
+[ -n "$DOCKER" ] || DOCKER=/usr/local/bin/docker
+[ -x "$DOCKER" ] || { echo "docker not found" >&2; exit 1; }
+if "$DOCKER" info >/dev/null 2>&1; then D="$DOCKER"; else D="sudo $DOCKER"; fi
+DC="$D compose"
 cd "$(dirname "$0")/.."
 
 echo "== Validate Compose =="
-sudo docker compose config --quiet
+$DC config --quiet
 
 echo "== Rebuild from source =="
-sudo docker compose build --pull
+$DC build --pull
 
 echo "== Start/recreate stack =="
-sudo docker compose up -d --force-recreate
+$DC up -d --force-recreate
 
 echo "== Wait for container health =="
 for service in efis-ota efis-ota-admin; do
-  cid="$(sudo docker compose ps -q "$service")"
+  cid="$($DC ps -q "$service")"
   [ -n "$cid" ] || { echo "FAIL: $service container was not created"; exit 1; }
   i=0
   status=starting
   while [ "$i" -lt 45 ]; do
-    status="$(sudo docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$cid")"
+    status="$($D inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$cid")"
     [ "$status" = "healthy" ] && break
     if [ "$status" = "unhealthy" ]; then
       echo "FAIL: $service became unhealthy"
-      sudo docker compose logs --tail=100 "$service"
+      $DC logs --tail=100 "$service"
       exit 1
     fi
     sleep 1
@@ -33,14 +38,14 @@ for service in efis-ota efis-ota-admin; do
   done
   if [ "$status" != "healthy" ]; then
     echo "FAIL: timeout waiting for $service health (last status: $status)"
-    sudo docker compose logs --tail=100 "$service"
+    $DC logs --tail=100 "$service"
     exit 1
   fi
   echo "PASS  $service healthy"
 done
 
 echo "== Container status =="
-sudo docker compose ps
+$DC ps
 
 echo "== Local service health =="
 curl -fsS --retry 3 --retry-delay 1 http://127.0.0.1:8180/healthz
@@ -49,16 +54,16 @@ curl -fsS --retry 3 --retry-delay 1 http://127.0.0.1:8090/healthz
 printf '\n'
 
 echo "== Isolated admin functional harness =="
-sudo docker compose run --rm --no-deps --entrypoint python efis-ota-admin /app/test_harness.py
+$DC run --rm --no-deps --entrypoint python efis-ota-admin /app/test_harness.py
 
 echo "== Simulated SMUX OTA state machine =="
-sudo docker compose run --rm --no-deps --entrypoint python efis-ota-admin /app/test_smux_ota.py
+$DC run --rm --no-deps --entrypoint python efis-ota-admin /app/test_smux_ota.py
 
 echo "== Simulated AEF-CAN SMUX OTA transport =="
-sudo docker compose run --rm --no-deps --entrypoint python efis-ota-admin /app/test_smux_can_ota.py
+$DC run --rm --no-deps --entrypoint python efis-ota-admin /app/test_smux_can_ota.py
 
 echo "== End-to-end resumable OTA simulation =="
-sudo docker compose run --rm --no-deps --entrypoint python efis-ota-admin /app/test_end_to_end_ota.py
+$DC run --rm --no-deps --entrypoint python efis-ota-admin /app/test_end_to_end_ota.py
 
 echo "== Public origin manifest =="
 curl -fsS http://127.0.0.1:8180/efis/manifest.json

@@ -137,7 +137,7 @@ def welcome(request:Request):
     u=current_user(request)
     if not u:return RedirectResponse("/login",303)
     token=secrets.token_urlsafe(32); th=hashlib.sha256(token.encode()).hexdigest()
-    expires=datetime.now(timezone.utc)+timedelta(minutes=5)
+    expires=datetime.now(timezone.utc)+timedelta(minutes=int(os.getenv("APP_LOGIN_MINUTES","5")))
     with db() as c:
         c.execute("UPDATE app_login_tokens SET used_at=now() WHERE user_id=%s AND used_at IS NULL",(u["id"],))
         c.execute("INSERT INTO app_login_tokens(user_id,token_hash,expires_at) VALUES(%s,%s,%s)",(u["id"],th,expires)); c.commit()
@@ -160,7 +160,7 @@ def exchange_app_login(code:str=Form(...)):
     with db() as c:
         row=c.execute("SELECT t.id,t.user_id,u.email FROM app_login_tokens t JOIN users u ON u.id=t.user_id WHERE t.token_hash=%s AND t.used_at IS NULL AND t.expires_at>now() AND u.email_verified_at IS NOT NULL FOR UPDATE",(th,)).fetchone()
         if not row:raise HTTPException(400,"login code invalid or expired")
-        session_token=secrets.token_urlsafe(48); session_hash=hashlib.sha256(session_token.encode()).hexdigest(); session_expires=datetime.now(timezone.utc)+timedelta(days=90)
+        session_token=secrets.token_urlsafe(48); session_hash=hashlib.sha256(session_token.encode()).hexdigest(); session_expires=datetime.now(timezone.utc)+timedelta(days=int(os.getenv("APP_SESSION_DAYS","90")))
         c.execute("UPDATE app_login_tokens SET used_at=now() WHERE id=%s",(row["id"],))
         c.execute("INSERT INTO app_sessions(user_id,token_hash,expires_at,last_used_at) VALUES(%s,%s,%s,now())",(row["user_id"],session_hash,session_expires)); c.commit()
     return {"authenticated":True,"user_id":row["user_id"],"email":row["email"],"session_token":session_token,"expires_at":session_expires.isoformat()}
@@ -187,12 +187,12 @@ def app_logout(authorization:str|None=Header(None)):
 def send_app_login_email(user_id:int,email:str):
     import io, qrcode
     from qrcode.image.svg import SvgPathImage
-    token=secrets.token_urlsafe(32); th=hashlib.sha256(token.encode()).hexdigest(); expires=datetime.now(timezone.utc)+timedelta(minutes=5)
+    token=secrets.token_urlsafe(32); th=hashlib.sha256(token.encode()).hexdigest(); expires=datetime.now(timezone.utc)+timedelta(minutes=int(os.getenv("APP_LOGIN_MINUTES","5")))
     with db() as c:
         c.execute("UPDATE app_login_tokens SET used_at=now() WHERE user_id=%s AND used_at IS NULL",(user_id,)); c.execute("INSERT INTO app_login_tokens(user_id,token_hash,expires_at) VALUES(%s,%s,%s)",(user_id,th,expires)); c.commit()
     app_url=f"efisservice://login?code={token}"; image=qrcode.make(app_url,image_factory=SvgPathImage); buf=io.BytesIO(); image.save(buf)
     msg=EmailMessage(); msg["Subject"]="Sign in to Lollipop"; msg["From"]=os.environ["SMTP_FROM"]; msg["To"]=email
-    msg.set_content(f"Your Lollipop sign-in has expired. Open this email on another screen and scan the attached QR code from Lollipop, or on this phone open:\n\n{app_url}\n\nThis sign-in is single-use and expires in 5 minutes.")
+    msg.set_content(f"Your Lollipop sign-in has expired. Open this email on another screen and scan the attached QR code from Lollipop, or on this phone open:\n\n{app_url}\n\nThis sign-in is single-use and expires in {os.getenv('APP_LOGIN_MINUTES','5')} minutes.")
     msg.add_attachment(buf.getvalue(),maintype="image",subtype="svg+xml",filename="lollipop-sign-in.svg")
     host=os.environ["SMTP_HOST"]; port=int(os.getenv("SMTP_PORT","465")); user=os.getenv("SMTP_USER",""); password=os.getenv("SMTP_PASSWORD","")
     with smtplib.SMTP_SSL(host,port,context=ssl.create_default_context()) as smtp:

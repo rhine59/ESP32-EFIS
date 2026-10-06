@@ -598,3 +598,7 @@ The user triggered Transfer to EFIS in the iOS Simulator and the phone reported 
 ### Offline phone licence workflow — PASS (2026-10-05)
 
 The automated regression harness now proves the intended disconnected-aircraft workflow. The signed envelope is obtained while service connectivity exists, then the EFIS is placed offline. With its trust anchor retained, the EFIS accepts the phone-transferred cached envelope only after local Ed25519/schema/product/device verification, persists it, and reports `VALID`. After restarting the simulator while still offline, the same licence reloads as `VALID` without contacting the licence service. The complete licensing regression harness passes. Physical ESP32 NVS/power-loss behaviour and physical phone-to-EFIS transport remain hardware-stage tests.
+
+
+## 6 October 2026 checkpoint — Lollipop authentication
+QR account authentication and 90-day iOS Keychain persistence are validated on the physical iPhone, including successful silent sign-in after app restart. The server session is revocable and hard-expires at 90 days, after which a fresh five-minute single-use email challenge is required. Android Lollipop parity has been implemented with Android Keystore-backed storage and the same process catalogue/API contract; physical Android validation remains outstanding. See `CUSTOMER_ACCOUNT_AND_APPS.md` and `SYNOLOGY_CONFIGURATION.md`.
