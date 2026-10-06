@@ -290,7 +290,10 @@ struct ProcessHomeView: View {
                 }
 
                 Section("Lollipop account") {
-                    if let account=model.lollipopAccount { Label("Signed in as \(account.email)",systemImage:"person.crop.circle.badge.checkmark").foregroundStyle(.green) } else { Button { scanningLogin=true } label: { Label("Scan sign-in QR code",systemImage:"qrcode.viewfinder") } }
+                    if let account=model.lollipopAccount {
+                        Label("Signed in as \(account.email)",systemImage:"person.crop.circle.badge.checkmark").foregroundStyle(.green)
+                        Button(role:.destructive) { Task { await model.signOut() } } label: { Label("Sign out",systemImage:"rectangle.portrait.and.arrow.right") }
+                    } else { Button { scanningLogin=true } label: { Label("Scan sign-in QR code",systemImage:"qrcode.viewfinder") } }
                 }
 
                 Section("Processes") {
