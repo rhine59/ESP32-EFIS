@@ -258,6 +258,7 @@ private struct ProcessDefinition: Identifiable {
 }
 
 private let processCatalogue: [ProcessDefinition] = [
+    .init(id: "account", title: "Create a Lollipop account", subtitle: "Sign up to manage your RedOne products and licences", systemImage: "person.crop.circle.badge.plus", steps: ["Open secure signup", "Create account", "Confirm account", "Return to EFIS Service"]),
     .init(id: "setup", title: "Set up a new EFIS", subtitle: "Register, licence, install and verify a new unit", systemImage: "plus.circle", steps: ["Identify EFIS", "Register owner", "Choose licence", "Obtain signed licence", "Install on EFIS", "Verify installation"]),
     .init(id: "buy", title: "Buy / activate a licence", subtitle: "Use the included first year or buy the next licence term", systemImage: "creditcard", steps: ["Identify RedOne", "Check included first year", "Confirm owner", "Activate or buy licence", "Obtain signed licence", "Install on EFIS", "Verify VALID", "Show renewal date"]),
     .init(id: "reassign", title: "Reassign / sell an EFIS", subtitle: "Transfer ownership safely to another user", systemImage: "person.2", steps: ["Confirm current EFIS", "Identify new owner", "Wait for buyer acceptance", "Issue replacement licence", "Install on EFIS", "Verify new ownership"]),
@@ -290,7 +291,9 @@ struct ProcessHomeView: View {
                 Section("Processes") {
                     ForEach(processCatalogue) { process in
                         NavigationLink {
-                            if process.id == "buy" {
+                            if process.id == "account" {
+                                LollipopAccountFlowView()
+                            } else if process.id == "buy" {
                                 BuyLicenceFlowView()
                             } else if process.id == "setup" {
                                 SetupNewEFISFlowView()
@@ -360,6 +363,41 @@ private struct ProcessGuidanceView: View {
             }
         }
         .padding(.vertical, 6)
+    }
+}
+
+private struct LollipopAccountFlowView: View {
+    private var registrationURL: URL? { URL(string: EFISServiceConfiguration.accountRegistrationURL) }
+
+    var body: some View {
+        List {
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Create your Lollipop account", systemImage: "person.crop.circle.badge.plus")
+                        .font(.headline).foregroundStyle(.blue)
+                    Text("Your Lollipop account will own your RedOne registrations and licence entitlements. Account creation is separate from buying a licence.")
+                        .font(.subheadline)
+                    if let registrationURL {
+                        Link(destination: registrationURL) {
+                            Label("Create Lollipop account", systemImage: "arrow.up.right.square")
+                                .font(.headline)
+                        }
+                    } else {
+                        Label("Account signup service is not configured in this build.", systemImage: "exclamationmark.triangle")
+                            .foregroundStyle(.orange)
+                    }
+                }
+                .padding(.vertical, 6)
+            }
+            Section("Account progress") {
+                ProcessStepRow(number: 1, title: "Open secure signup", detail: "Tap Create Lollipop account above", state: .current)
+                ProcessStepRow(number: 2, title: "Create account", detail: "Enter your account details in the secure Lollipop service", state: .waiting)
+                ProcessStepRow(number: 3, title: "Confirm account", detail: "Account service confirms creation", state: .waiting)
+                ProcessStepRow(number: 4, title: "Return to EFIS Service", detail: "Continue with RedOne setup or licensing", state: .waiting)
+            }
+        }
+        .navigationTitle("Lollipop Account")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

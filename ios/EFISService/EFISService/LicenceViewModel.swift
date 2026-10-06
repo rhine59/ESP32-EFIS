@@ -3,6 +3,7 @@ import Foundation
 enum EFISServiceConfiguration {
     #if DEBUG
     static let licenceServiceURL = "https://granvillehouse.synology.me:8449"
+    static let accountRegistrationURL = "https://granvillehouse.synology.me:8450/register"
     #else
     static let licenceServiceURL: String = {
         guard let value = Bundle.main.object(forInfoDictionaryKey: "EFISLicenceServiceURL") as? String,
@@ -12,6 +13,11 @@ enum EFISServiceConfiguration {
               url.port == nil || url.port == 443 else {
             return ""
         }
+        return value
+    }()
+    static let accountRegistrationURL: String = {
+        guard let value = Bundle.main.object(forInfoDictionaryKey: "LollipopAccountRegistrationURL") as? String,
+              let url = URL(string: value), url.scheme == "https", url.host != nil else { return "" }
         return value
     }()
     #endif

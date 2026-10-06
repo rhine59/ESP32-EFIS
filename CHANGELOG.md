@@ -353,3 +353,9 @@ The detailed historical decision register—including adopted, superseded, parke
 - Confirmed the simulator XcodeGen project automatically includes `NetworkSetupView.swift` and `OTAFlowView.swift`.
 - Added `scripts/generate-xcode-projects.sh`; both EFIS Service and simulator projects regenerate and build successfully from Git definitions.
 - Removed generated simulator `.xcodeproj` files from version control and ignore generated Xcode projects plus per-user `xcuserdata`/`xcuserstate`.
+
+## 2026-10-06 — Lollipop account signup in EFIS Service
+- Added **Create a Lollipop account** as a first-class process on the phone home screen.
+- Added a guided account workflow separating account creation from RedOne registration/licensing.
+- Account credentials remain owned by the dedicated account service; EFIS Service opens the secure registration flow rather than routing credentials through the licence simulator.
+- Debug/release registration URLs are separated in app configuration; production remains fail-closed until the account-service HTTPS route is configured.
