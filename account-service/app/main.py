@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-import hashlib, os, secrets, smtplib, ssl
+import hashlib, os, secrets, smtplib, ssl, logging
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 from fastapi import FastAPI, HTTPException, Request, Form
@@ -12,7 +12,7 @@ from pwdlib import PasswordHash
 import psycopg
 from psycopg.rows import dict_row
 DATABASE_URL=os.environ["DATABASE_URL"]; SESSION_SECRET=os.environ["SESSION_SECRET"]
-password_hash=PasswordHash.recommended(); templates=Jinja2Templates(directory="app/templates")
+password_hash=PasswordHash.recommended(); templates=Jinja2Templates(directory="app/templates"); logger=logging.getLogger("uvicorn.error")
 SCHEMA="""CREATE TABLE IF NOT EXISTS users(id BIGSERIAL PRIMARY KEY,email TEXT UNIQUE NOT NULL,password_hash TEXT NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS devices(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,device_id TEXT UNIQUE NOT NULL,mac_fingerprint TEXT,registration_hash TEXT,created_at TIMESTAMPTZ NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS entitlements(id BIGSERIAL PRIMARY KEY,device_id BIGINT REFERENCES devices(id) ON DELETE CASCADE,product TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'active',provider TEXT,provider_reference TEXT,updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
@@ -53,7 +53,8 @@ def issue_verification(user_id:int,email:str):
     try:
         send_verification_email(user_id,email)
         return True
-    except Exception:
+    except Exception as exc:
+        logger.error("Verification email delivery failed for %s: %s: %s", email, type(exc).__name__, exc)
         with db() as c:
             c.execute("DELETE FROM email_verification_tokens WHERE user_id=%s AND used_at IS NULL AND created_at > now() - interval '1 minute'",(user_id,))
             c.execute("INSERT INTO audit_events(event,subject) VALUES('verification_delivery_failed',%s)",(email,))

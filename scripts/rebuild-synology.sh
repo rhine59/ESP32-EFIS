@@ -1,5 +1,8 @@
 #!/bin/sh
 set -eu
+
+COMPOSE_PROJECT_NAME="ESP32-EFIS"
+export COMPOSE_PROJECT_NAME
 ROOT="${1:-/volume1/docker/ESP32-EFIS}"
 cd "$ROOT"
 echo "== Validate compose =="

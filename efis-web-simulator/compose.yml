@@ -1,7 +1,7 @@
+name: ESP32-EFIS
 services:
   efis-web-simulator:
     build: .
-    container_name: esp32-efis-web-simulator
     ports:
       - "127.0.0.1:8093:8080"
     environment:

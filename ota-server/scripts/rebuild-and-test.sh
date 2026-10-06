@@ -1,5 +1,8 @@
 #!/bin/sh
 set -eu
+
+COMPOSE_PROJECT_NAME="ESP32-EFIS"
+export COMPOSE_PROJECT_NAME
 cd "$(dirname "$0")/.."
 
 echo "== Validate Compose =="

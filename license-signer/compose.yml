@@ -1,7 +1,7 @@
+name: ESP32-EFIS
 services:
   signer:
     build: .
-    container_name: esp32-efis-license-signer
     restart: unless-stopped
     environment:
       SIGNER_API_TOKEN: ${SIGNER_API_TOKEN:?set_SIGNER_API_TOKEN}

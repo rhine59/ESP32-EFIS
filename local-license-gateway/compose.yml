@@ -1,3 +1,4 @@
+name: ESP32-EFIS
 services:
   redone-local-license-gateway:
     build:
@@ -5,7 +6,6 @@ services:
       args:
         REDONE_UID: "${REDONE_UID:-1040}"
         REDONE_GID: "${REDONE_GID:-65539}"
-    container_name: redone-local-license-gateway
     network_mode: host
     volumes:
       - /volume1/docker/redone-local-license-gateway/tls:/run/redone-tls:ro

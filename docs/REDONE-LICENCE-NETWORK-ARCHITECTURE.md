@@ -114,3 +114,7 @@ The current pin is a leaf-certificate pin. It is secure but couples certificate 
 ## Xcode project recovery
 
 The iOS Xcode project bundle is generated output, not source of truth. After a fresh clone or disaster recovery, install XcodeGen and run `./scripts/generate-xcode-projects.sh`. This regenerates both `ios/EFISService/EFISService.xcodeproj` and `simulator/ESP32EFISSimulator.xcodeproj` from their tracked `project.yml` files. Do not preserve or manually back up `.xcodeproj`, `xcuserdata` or `.xcuserstate` files; any setting required to reproduce the product must be represented in `project.yml` or another tracked source file.
+
+### Docker container naming rule
+
+All Docker Compose projects in this repository MUST use the Git repository name `ESP32-EFIS` as the Compose project name. Do not set individual `container_name` values. Compose therefore generates container names beginning `ESP32-EFIS-`, followed by the service name and replica number. This is a permanent repository convention and applies to all existing and future Compose stacks and rebuild/deployment scripts.
