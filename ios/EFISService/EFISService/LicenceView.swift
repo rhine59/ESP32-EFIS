@@ -274,6 +274,7 @@ private let processCatalogue: [ProcessDefinition] = [
 
 struct ProcessHomeView: View {
     @EnvironmentObject var model: LicenceViewModel
+    @State private var scanningLogin = false
 
     var body: some View {
         NavigationStack {
@@ -286,6 +287,10 @@ struct ProcessHomeView: View {
                             .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 6)
+                }
+
+                Section("Lollipop account") {
+                    if let account=model.lollipopAccount { Label("Signed in as \(account.email)",systemImage:"person.crop.circle.badge.checkmark").foregroundStyle(.green) } else { Button { scanningLogin=true } label: { Label("Scan sign-in QR code",systemImage:"qrcode.viewfinder") } }
                 }
 
                 Section("Processes") {
@@ -326,6 +331,7 @@ struct ProcessHomeView: View {
                 }
             }
             .navigationTitle("Lollipop")
+            .sheet(isPresented:$scanningLogin) { DeviceQRScannerView(onDeviceID:{ value in scanningLogin=false; if let url=URL(string:value) { Task { await model.handleAccountLogin(url:url) } } },onCancel:{ scanningLogin=false },acceptsLogin:true).ignoresSafeArea() }
         }
     }
 }

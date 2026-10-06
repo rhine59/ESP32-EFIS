@@ -16,7 +16,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: uk.co.thingies.EFISService
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Lollipop
-        INFOPLIST_KEY_NSCameraUsageDescription: "Scan the EFIS Device ID QR code to request its signed entitlement."
+        INFOPLIST_KEY_NSCameraUsageDescription: "Scan Lollipop sign-in and EFIS Device ID QR codes."
         INFOPLIST_KEY_NSLocalNetworkUsageDescription: "Connect to the EFIS and local EFIS services on your network."
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES

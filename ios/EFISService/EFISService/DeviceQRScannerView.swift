@@ -5,11 +5,13 @@ import UIKit
 struct DeviceQRScannerView: UIViewControllerRepresentable {
     let onDeviceID: (String) -> Void
     let onCancel: () -> Void
+    var acceptsLogin = false
 
     func makeUIViewController(context: Context) -> QRScannerViewController {
         let controller = QRScannerViewController()
         controller.onDeviceID = onDeviceID
         controller.onCancel = onCancel
+        controller.acceptsLogin = acceptsLogin
         return controller
     }
 
@@ -20,6 +22,7 @@ struct DeviceQRScannerView: UIViewControllerRepresentable {
 final class QRScannerViewController: UIViewController, @preconcurrency AVCaptureMetadataOutputObjectsDelegate {
     var onDeviceID: ((String) -> Void)?
     var onCancel: (() -> Void)?
+    var acceptsLogin = false
     private let session = AVCaptureSession()
     private var preview: AVCaptureVideoPreviewLayer?
 
@@ -73,9 +76,15 @@ final class QRScannerViewController: UIViewController, @preconcurrency AVCapture
                         didOutput metadataObjects: [AVMetadataObject],
                         from connection: AVCaptureConnection) {
         guard let value = (metadataObjects.first as? AVMetadataMachineReadableCodeObject)?.stringValue,
-              let id = Self.parseDeviceID(value) else { return }
+              let result = acceptsLogin ? Self.parseLogin(value) : Self.parseDeviceID(value) else { return }
         session.stopRunning()
-        onDeviceID?(id)
+        onDeviceID?(result)
+    }
+
+    static func parseLogin(_ value: String) -> String? {
+        let trimmed=value.trimmingCharacters(in:.whitespacesAndNewlines)
+        guard let url=URL(string:trimmed), url.scheme=="efisservice", url.host=="login" else{return nil}
+        return trimmed
     }
 
     static func parseDeviceID(_ value: String) -> String? {
