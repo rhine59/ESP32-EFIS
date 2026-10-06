@@ -117,4 +117,4 @@ The iOS Xcode project bundle is generated output, not source of truth. After a f
 
 ### Docker container naming rule
 
-All Docker Compose projects in this repository MUST use the Git repository name `ESP32-EFIS` as the Compose project name. Do not set individual `container_name` values. Compose therefore generates container names beginning `ESP32-EFIS-`, followed by the service name and replica number. This is a permanent repository convention and applies to all existing and future Compose stacks and rebuild/deployment scripts.
+All Docker Compose projects in this repository MUST use the Git repository name `esp32-efis` (the Docker-safe lowercase form of the Git repository name `ESP32-EFIS`) as the Compose project name. Do not set individual `container_name` values. Compose therefore generates container names beginning `esp32-efis-`, followed by the service name and replica number. This is a permanent repository convention and applies to all existing and future Compose stacks and rebuild/deployment scripts.

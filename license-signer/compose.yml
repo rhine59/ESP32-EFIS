@@ -1,4 +1,4 @@
-name: ESP32-EFIS
+name: esp32-efis
 services:
   signer:
     build: .

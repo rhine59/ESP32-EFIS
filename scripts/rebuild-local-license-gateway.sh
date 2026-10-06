@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-COMPOSE_PROJECT_NAME="ESP32-EFIS"
+COMPOSE_PROJECT_NAME="esp32-efis"
 export COMPOSE_PROJECT_NAME
 
 ROOT="${1:-/volume1/docker/ESP32-EFIS}"
