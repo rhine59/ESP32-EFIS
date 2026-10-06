@@ -359,3 +359,9 @@ The detailed historical decision register—including adopted, superseded, parke
 - Added a guided account workflow separating account creation from RedOne registration/licensing.
 - Account credentials remain owned by the dedicated account service; EFIS Service opens the secure registration flow rather than routing credentials through the licence simulator.
 - Debug/release registration URLs are separated in app configuration; production remains fail-closed until the account-service HTTPS route is configured.
+
+## 2026-10-06 — deploy Lollipop account authority on Synology
+- Provisioned the existing PostgreSQL-backed `account-service` on the Synology with runtime-only database/session secrets.
+- Verified PostgreSQL healthy, account service running on loopback `127.0.0.1:8091`, `/healthz` HTTP 200 and `/register` rendering.
+- Updated account portal branding from EFIS to Lollipop/RedOne.
+- Kept the account origin loopback-only; public phone registration requires the DSM HTTPS reverse-proxy boundary rather than exposing Docker port 8091.

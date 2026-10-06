@@ -37,3 +37,9 @@ Login/session or OIDC, email verification/password reset/MFA, CSRF/rate limiting
 The container now includes a responsive owner portal at `/` with account registration/sign-in, session-backed dashboard, registered-instrument display and EFIS Device ID registration. Payment and licence-generation controls remain deliberately inactive until verified provider-webhook and private signer integrations are implemented.
 
 Production hardening still requires CSRF protection, rate limiting, email verification/password reset/MFA, session expiry/revocation, admin RBAC and end-to-end security tests before public exposure.
+
+## Synology deployment
+
+The Lollipop account authority runs as `account-service` plus PostgreSQL and binds only to NAS loopback `127.0.0.1:8091`. Create `account-service/.env` on the Synology from `.env.example` using long random `POSTGRES_PASSWORD` and `SESSION_SECRET` values; `.env` is secret runtime state and must not be committed. Build/start with `docker compose --env-file .env up -d --build`, then require `GET http://127.0.0.1:8091/healthz` to return `{"status":"ok"}`.
+
+The phone registration URL is a separate public HTTPS boundary. For the current development deployment configure DSM Reverse Proxy as HTTPS `granvillehouse.synology.me:8450` -> HTTP `127.0.0.1:8091`; the phone opens `/register`. Do not expose port 8091 directly. Production replaces the development port with the canonical default-443 Lollipop account hostname/route.
