@@ -369,6 +369,7 @@ private struct ProcessGuidanceView: View {
 
 private struct LollipopAccountFlowView: View {
     @State private var showingSignup = false
+    @State private var signupReturned = false
     private var registrationURL: URL? { URL(string: EFISServiceConfiguration.accountRegistrationURL) }
 
     var body: some View {
@@ -392,9 +393,9 @@ private struct LollipopAccountFlowView: View {
                 .padding(.vertical, 6)
             }
             Section("Account progress") {
-                ProcessStepRow(number: 1, title: "Open secure signup", detail: "Tap Create Lollipop account above", state: .current)
-                ProcessStepRow(number: 2, title: "Create account", detail: "Enter your account details in the secure Lollipop service", state: .waiting)
-                ProcessStepRow(number: 3, title: "Confirm account", detail: "Account service confirms creation", state: .waiting)
+                ProcessStepRow(number: 1, title: "Open secure signup", detail: signupReturned ? "Secure signup opened" : "Tap Create Lollipop account above", state: signupReturned ? .complete : .current)
+                ProcessStepRow(number: 2, title: "Create account", detail: signupReturned ? "Account details submitted" : "Enter your account details in the secure Lollipop service", state: signupReturned ? .complete : .waiting)
+                ProcessStepRow(number: 3, title: "Confirm account", detail: signupReturned ? "Verify the account using the link sent by email" : "Waiting for account creation", state: signupReturned ? .current : .waiting)
                 ProcessStepRow(number: 4, title: "Return to EFIS Service", detail: "Continue with RedOne setup or licensing", state: .waiting)
             }
         }
@@ -406,7 +407,7 @@ private struct LollipopAccountFlowView: View {
                     SafariView(url: registrationURL)
                         .navigationTitle("Create Lollipop Account")
                         .navigationBarTitleDisplayMode(.inline)
-                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Return to EFIS Service") { showingSignup = false } } }
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Return to EFIS Service") { signupReturned = true; showingSignup = false } } }
                 }
             }
         }
