@@ -91,7 +91,7 @@ def login(request:Request,email:str=Form(...),password:str=Form(...)):
     if not u["email_verified_at"]: return templates.TemplateResponse(request,"login.html",{"error":"Verify your email address before signing in."},status_code=403)
     request.session.clear();request.session["uid"]=u["id"];return RedirectResponse("/dashboard",303)
 @app.get("/register",response_class=HTMLResponse)
-def register_page(request:Request):return templates.TemplateResponse(request,"register.html",{"error":None})
+def register_page(request:Request):return templates.TemplateResponse(request,"register.html",{"error":None,"dev_reset_enabled":os.getenv("ENABLE_DEV_RESET","0")=="1"})
 @app.post("/register")
 def register_web(request:Request,email:str=Form(...),password:str=Form(...)):
     if len(password)<12:return templates.TemplateResponse(request,"register.html",{"error":"Use at least 12 characters."},status_code=400)
@@ -103,6 +103,20 @@ def register_web(request:Request,email:str=Form(...),password:str=Form(...)):
         return templates.TemplateResponse(request,"verify_pending.html",{"email":email.lower().strip()},status_code=202)
     issue_verification(u["id"],email.lower().strip())
     return templates.TemplateResponse(request,"verify_pending.html",{"email":email.lower().strip()},status_code=202)
+@app.post("/dev/reset-registration")
+def dev_reset_registration(request:Request,email:str=Form(...)):
+    if os.getenv("ENABLE_DEV_RESET","0") != "1": raise HTTPException(404)
+    normalized=email.lower().strip()
+    with db() as c:
+        u=c.execute("SELECT id FROM users WHERE email=%s",(normalized,)).fetchone()
+        if u:
+            c.execute("UPDATE users SET email_verified_at=NULL WHERE id=%s",(u["id"],))
+            c.execute("UPDATE email_verification_tokens SET used_at=now() WHERE user_id=%s AND used_at IS NULL",(u["id"],))
+            c.execute("UPDATE app_login_tokens SET used_at=now() WHERE user_id=%s AND used_at IS NULL",(u["id"],))
+            c.execute("INSERT INTO audit_events(event,subject) VALUES('dev_registration_reset',%s)",(normalized,)); c.commit()
+            issue_verification(u["id"],normalized)
+    return templates.TemplateResponse(request,"verify_pending.html",{"email":normalized},status_code=202)
+
 @app.get("/verify-email",response_class=HTMLResponse)
 def verify_email(request:Request,token:str):
     token_hash=hashlib.sha256(token.encode()).hexdigest()
