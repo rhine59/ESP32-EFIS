@@ -1,4 +1,5 @@
 import SwiftUI
+import SafariServices
 
 struct LicenceView: View {
     @EnvironmentObject var model: LicenceViewModel
@@ -367,6 +368,7 @@ private struct ProcessGuidanceView: View {
 }
 
 private struct LollipopAccountFlowView: View {
+    @State private var showingSignup = false
     private var registrationURL: URL? { URL(string: EFISServiceConfiguration.accountRegistrationURL) }
 
     var body: some View {
@@ -378,8 +380,8 @@ private struct LollipopAccountFlowView: View {
                     Text("Your Lollipop account will own your RedOne registrations and licence entitlements. Account creation is separate from buying a licence.")
                         .font(.subheadline)
                     if let registrationURL {
-                        Link(destination: registrationURL) {
-                            Label("Create Lollipop account", systemImage: "arrow.up.right.square")
+                        Button { showingSignup = true } label: {
+                            Label("Create Lollipop account", systemImage: "person.crop.circle.badge.plus")
                                 .font(.headline)
                         }
                     } else {
@@ -398,7 +400,23 @@ private struct LollipopAccountFlowView: View {
         }
         .navigationTitle("Lollipop Account")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showingSignup) {
+            if let registrationURL {
+                NavigationStack {
+                    SafariView(url: registrationURL)
+                        .navigationTitle("Create Lollipop Account")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Return to EFIS Service") { showingSignup = false } } }
+                }
+            }
+        }
     }
+}
+
+private struct SafariView: UIViewControllerRepresentable {
+    let url: URL
+    func makeUIViewController(context: Context) -> SFSafariViewController { SFSafariViewController(url: url) }
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
 }
 
 private struct GenericProcessFlowView: View {
