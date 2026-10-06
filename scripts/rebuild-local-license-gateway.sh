@@ -3,6 +3,9 @@ set -eu
 
 COMPOSE_PROJECT_NAME="esp32-efis"
 export COMPOSE_PROJECT_NAME
+DOCKER="$(command -v docker 2>/dev/null || true)"
+[ -n "$DOCKER" ] || DOCKER=/usr/local/bin/docker
+[ -x "$DOCKER" ] || { echo "docker not found" >&2; exit 1; }
 
 ROOT="${1:-/volume1/docker/ESP32-EFIS}"
 RUNTIME="${REDONE_GATEWAY_RUNTIME:-/volume1/docker/redone-local-license-gateway}"
@@ -31,10 +34,10 @@ if [ ! -s "$TLS_DIR/tls.key" ] || [ ! -s "$TLS_DIR/tls.crt" ]; then
 fi
 
 cd "$RUNTIME"
-docker compose config --quiet
-docker compose up -d --build
+$DOCKER compose config --quiet
+$DOCKER compose up -d --build
 
 echo "Gateway certificate:"
 openssl x509 -in "$TLS_DIR/tls.crt" -noout -subject -dates -fingerprint -sha256
 echo "Gateway container:"
-docker compose ps
+$DOCKER compose ps

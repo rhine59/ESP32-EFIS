@@ -3,9 +3,12 @@ set -eu
 
 COMPOSE_PROJECT_NAME="esp32-efis"
 export COMPOSE_PROJECT_NAME
+DOCKER="$(command -v docker 2>/dev/null || true)"
+[ -n "$DOCKER" ] || DOCKER=/usr/local/bin/docker
+[ -x "$DOCKER" ] || { echo "docker not found" >&2; exit 1; }
 cd "$(dirname "$0")/../license-signer"
-docker compose build signer
-docker compose up -d signer
-docker compose ps
+$DOCKER compose build signer
+$DOCKER compose up -d signer
+$DOCKER compose ps
 curl -fsS http://127.0.0.1:8092/healthz
 echo
