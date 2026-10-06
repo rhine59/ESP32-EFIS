@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 import hashlib, os, secrets, smtplib, ssl, logging
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
-from fastapi import FastAPI, HTTPException, Request, Form
+from fastapi import FastAPI, HTTPException, Request, Form, Header
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS audit_events(id BIGSERIAL PRIMARY KEY,event TEXT NOT 
 CREATE TABLE IF NOT EXISTS email_verification_tokens(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,token_hash TEXT UNIQUE NOT NULL,expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now());
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ;
 CREATE TABLE IF NOT EXISTS password_reset_tokens(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,token_hash TEXT UNIQUE NOT NULL,expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now());
-CREATE TABLE IF NOT EXISTS app_login_tokens(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,token_hash TEXT UNIQUE NOT NULL,expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now());"""
+CREATE TABLE IF NOT EXISTS app_login_tokens(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,token_hash TEXT UNIQUE NOT NULL,expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS app_sessions(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,token_hash TEXT UNIQUE NOT NULL,expires_at TIMESTAMPTZ NOT NULL,revoked_at TIMESTAMPTZ,last_used_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now());"""
 def db(): return psycopg.connect(DATABASE_URL,row_factory=dict_row)
 
 def send_verification_email(user_id:int,email:str):
@@ -159,8 +160,51 @@ def exchange_app_login(code:str=Form(...)):
     with db() as c:
         row=c.execute("SELECT t.id,t.user_id,u.email FROM app_login_tokens t JOIN users u ON u.id=t.user_id WHERE t.token_hash=%s AND t.used_at IS NULL AND t.expires_at>now() AND u.email_verified_at IS NOT NULL FOR UPDATE",(th,)).fetchone()
         if not row:raise HTTPException(400,"login code invalid or expired")
-        c.execute("UPDATE app_login_tokens SET used_at=now() WHERE id=%s",(row["id"],)); c.commit()
-    return {"authenticated":True,"user_id":row["user_id"],"email":row["email"]}
+        session_token=secrets.token_urlsafe(48); session_hash=hashlib.sha256(session_token.encode()).hexdigest(); session_expires=datetime.now(timezone.utc)+timedelta(days=90)
+        c.execute("UPDATE app_login_tokens SET used_at=now() WHERE id=%s",(row["id"],))
+        c.execute("INSERT INTO app_sessions(user_id,token_hash,expires_at,last_used_at) VALUES(%s,%s,%s,now())",(row["user_id"],session_hash,session_expires)); c.commit()
+    return {"authenticated":True,"user_id":row["user_id"],"email":row["email"],"session_token":session_token,"expires_at":session_expires.isoformat()}
+
+def bearer_user(authorization:str|None):
+    if not authorization or not authorization.startswith("Bearer "): raise HTTPException(401,"authentication required")
+    th=hashlib.sha256(authorization[7:].encode()).hexdigest()
+    with db() as c:
+        row=c.execute("SELECT s.id,u.id user_id,u.email,s.expires_at FROM app_sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=%s AND s.revoked_at IS NULL AND s.expires_at>now() AND u.email_verified_at IS NOT NULL",(th,)).fetchone()
+        if not row: raise HTTPException(401,"session expired or revoked")
+        c.execute("UPDATE app_sessions SET last_used_at=now() WHERE id=%s",(row["id"],)); c.commit(); return row
+
+@app.get("/v1/me")
+def app_me(authorization:str|None=Header(None)):
+    u=bearer_user(authorization); return {"user_id":u["user_id"],"email":u["email"],"expires_at":u["expires_at"].isoformat()}
+
+@app.post("/v1/logout")
+def app_logout(authorization:str|None=Header(None)):
+    if authorization and authorization.startswith("Bearer "):
+        th=hashlib.sha256(authorization[7:].encode()).hexdigest()
+        with db() as c:c.execute("UPDATE app_sessions SET revoked_at=now() WHERE token_hash=%s AND revoked_at IS NULL",(th,));c.commit()
+    return {"signed_out":True}
+
+def send_app_login_email(user_id:int,email:str):
+    import io, qrcode
+    from qrcode.image.svg import SvgPathImage
+    token=secrets.token_urlsafe(32); th=hashlib.sha256(token.encode()).hexdigest(); expires=datetime.now(timezone.utc)+timedelta(minutes=5)
+    with db() as c:
+        c.execute("UPDATE app_login_tokens SET used_at=now() WHERE user_id=%s AND used_at IS NULL",(user_id,)); c.execute("INSERT INTO app_login_tokens(user_id,token_hash,expires_at) VALUES(%s,%s,%s)",(user_id,th,expires)); c.commit()
+    app_url=f"efisservice://login?code={token}"; image=qrcode.make(app_url,image_factory=SvgPathImage); buf=io.BytesIO(); image.save(buf)
+    msg=EmailMessage(); msg["Subject"]="Sign in to Lollipop"; msg["From"]=os.environ["SMTP_FROM"]; msg["To"]=email
+    msg.set_content(f"Your Lollipop sign-in has expired. Open this email on another screen and scan the attached QR code from Lollipop, or on this phone open:\n\n{app_url}\n\nThis sign-in is single-use and expires in 5 minutes.")
+    msg.add_attachment(buf.getvalue(),maintype="image",subtype="svg+xml",filename="lollipop-sign-in.svg")
+    host=os.environ["SMTP_HOST"]; port=int(os.getenv("SMTP_PORT","465")); user=os.getenv("SMTP_USER",""); password=os.getenv("SMTP_PASSWORD","")
+    with smtplib.SMTP_SSL(host,port,context=ssl.create_default_context()) as smtp:
+        if user:smtp.login(user,password)
+        smtp.send_message(msg)
+
+@app.post("/v1/app-login/email")
+def app_login_email(email:str=Form(...)):
+    normalized=email.lower().strip()
+    with db() as c:u=c.execute("SELECT id,email FROM users WHERE email=%s AND email_verified_at IS NOT NULL",(normalized,)).fetchone()
+    if u: send_app_login_email(u["id"],u["email"])
+    return {"sent":True}
 
 @app.post("/resend-verification",response_class=HTMLResponse)
 def resend_verification(request:Request,email:str=Form(...)):
