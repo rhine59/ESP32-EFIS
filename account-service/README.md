@@ -43,3 +43,7 @@ Production hardening still requires CSRF protection, rate limiting, email verifi
 The Lollipop account authority runs as `account-service` plus PostgreSQL and binds only to NAS loopback `127.0.0.1:8091`. Create `account-service/.env` on the Synology from `.env.example` using long random `POSTGRES_PASSWORD` and `SESSION_SECRET` values; `.env` is secret runtime state and must not be committed. Build/start with `docker compose --env-file .env up -d --build`, then require `GET http://127.0.0.1:8091/healthz` to return `{"status":"ok"}`.
 
 The phone registration URL is a separate public HTTPS boundary. For the current development deployment configure DSM Reverse Proxy as HTTPS `granvillehouse.synology.me:8450` -> HTTP `127.0.0.1:8091`; the phone opens `/register`. Do not expose port 8091 directly. Production replaces the development port with the canonical default-443 Lollipop account hostname/route.
+
+### Validated development route
+
+As of 2026-10-06 the development route `https://granvillehouse.synology.me:8450/register` is deployed and externally reachable. `/healthz` returns HTTP 200 with normal TLS certificate validation. DSM terminates HTTPS on 8450 and proxies only to the loopback account origin on 8091; port 8091 remains private.

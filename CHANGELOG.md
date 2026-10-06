@@ -365,3 +365,9 @@ The detailed historical decision register—including adopted, superseded, parke
 - Verified PostgreSQL healthy, account service running on loopback `127.0.0.1:8091`, `/healthz` HTTP 200 and `/register` rendering.
 - Updated account portal branding from EFIS to Lollipop/RedOne.
 - Kept the account origin loopback-only; public phone registration requires the DSM HTTPS reverse-proxy boundary rather than exposing Docker port 8091.
+
+## 2026-10-06 — validate public Lollipop account registration route
+- DSM HTTPS reverse proxy on `granvillehouse.synology.me:8450` is live and forwards to the loopback-only account origin on `127.0.0.1:8091`.
+- External validation returned HTTP 200 from `/healthz` with successful TLS certificate verification (`ssl_verify_result=0`).
+- External `/register` validation confirmed the Lollipop Account page and Lollipop branding.
+- The EFIS Service development build already targets `https://granvillehouse.synology.me:8450/register`; no client URL change was required.
