@@ -3,7 +3,7 @@ import hashlib, os, secrets, smtplib, ssl, logging
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 from fastapi import FastAPI, HTTPException, Request, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS entitlements(id BIGSERIAL PRIMARY KEY,device_id BIGIN
 CREATE TABLE IF NOT EXISTS audit_events(id BIGSERIAL PRIMARY KEY,event TEXT NOT NULL,subject TEXT,created_at TIMESTAMPTZ NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS email_verification_tokens(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,token_hash TEXT UNIQUE NOT NULL,expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now());
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ;
-CREATE TABLE IF NOT EXISTS password_reset_tokens(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,token_hash TEXT UNIQUE NOT NULL,expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now());"""
+CREATE TABLE IF NOT EXISTS password_reset_tokens(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,token_hash TEXT UNIQUE NOT NULL,expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS app_login_tokens(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,token_hash TEXT UNIQUE NOT NULL,expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now());"""
 def db(): return psycopg.connect(DATABASE_URL,row_factory=dict_row)
 
 def send_verification_email(user_id:int,email:str):
@@ -113,7 +114,38 @@ def verify_email(request:Request,token:str):
         c.execute("UPDATE email_verification_tokens SET used_at=now() WHERE user_id=%s AND used_at IS NULL",(row["user_id"],))
         c.execute("INSERT INTO audit_events(event,subject) VALUES('email_verified',%s)",(str(row["user_id"]),))
         c.commit()
-    return templates.TemplateResponse(request,"verify_result.html",{"success":True})
+    request.session.clear(); request.session["uid"]=row["user_id"]
+    return RedirectResponse("/welcome",303)
+
+@app.get("/welcome",response_class=HTMLResponse)
+def welcome(request:Request):
+    u=current_user(request)
+    if not u:return RedirectResponse("/login",303)
+    token=secrets.token_urlsafe(32); th=hashlib.sha256(token.encode()).hexdigest()
+    expires=datetime.now(timezone.utc)+timedelta(minutes=5)
+    with db() as c:
+        c.execute("UPDATE app_login_tokens SET used_at=now() WHERE user_id=%s AND used_at IS NULL",(u["id"],))
+        c.execute("INSERT INTO app_login_tokens(user_id,token_hash,expires_at) VALUES(%s,%s,%s)",(u["id"],th,expires)); c.commit()
+    base=os.environ["PUBLIC_BASE_URL"].rstrip("/")
+    qr_url=f"{base}/app-login/{token}/qr.svg"
+    app_url=f"efisservice://login?code={token}"
+    return templates.TemplateResponse(request,"welcome.html",{"user":u,"qr_url":qr_url,"app_url":app_url,"ios_install_url":os.getenv("IOS_INSTALL_URL",""),"android_install_url":os.getenv("ANDROID_INSTALL_URL","")})
+
+@app.get("/app-login/{token}/qr.svg")
+def app_login_qr(token:str):
+    import qrcode, io
+    img=qrcode.make(f"efisservice://login?code={token}",image_factory=qrcode.image.svg.SvgPathImage)
+    b=io.BytesIO(); img.save(b)
+    return Response(b.getvalue(),media_type="image/svg+xml")
+
+@app.post("/v1/app-login/exchange")
+def exchange_app_login(code:str=Form(...)):
+    th=hashlib.sha256(code.encode()).hexdigest()
+    with db() as c:
+        row=c.execute("SELECT t.id,t.user_id,u.email FROM app_login_tokens t JOIN users u ON u.id=t.user_id WHERE t.token_hash=%s AND t.used_at IS NULL AND t.expires_at>now() AND u.email_verified_at IS NOT NULL FOR UPDATE",(th,)).fetchone()
+        if not row:raise HTTPException(400,"login code invalid or expired")
+        c.execute("UPDATE app_login_tokens SET used_at=now() WHERE id=%s",(row["id"],)); c.commit()
+    return {"authenticated":True,"user_id":row["user_id"],"email":row["email"]}
 
 @app.post("/resend-verification",response_class=HTMLResponse)
 def resend_verification(request:Request,email:str=Form(...)):
