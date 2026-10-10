@@ -610,3 +610,7 @@ Approved direction: dual EFIS OTA application slots with ESP-IDF rollback, plus 
 ## 10 October 2026 — Physical ESP32-S3 boot lab
 
 Two independent lab images compiled successfully and Image A was flashed and verified on the connected ESP32-S3-N16R8. Serial heartbeat not yet observed; boot validation, B-slot OTA, rollback and recovery are outstanding. See `hardware/boot-recovery-lab/README.md`.
+
+## 10 October 2026 — ESP32-S3 A/B switching validated
+
+On the N16R8 test board, serial boot selection successfully switched factory Image A to `ota_0` Image B and then to `ota_1` Image A, with partition labels, firmware identities and heartbeats confirmed. Images were staged using direct Mac flashing; actual OTA transfer, automatic rollback and recovery partition selection are not yet validated. See `hardware/boot-recovery-lab/README.md`.
