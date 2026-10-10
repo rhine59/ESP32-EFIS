@@ -330,6 +330,14 @@ struct ProcessHomeView: View {
                     }
                 }
 
+                Section("RedOne connection") {
+                    NavigationLink {
+                        EFISWiFiView()
+                    } label: {
+                        Label("Connect to RedOne EFIS", systemImage: "wifi")
+                    }
+                }
+
                 Section("Advanced") {
                     NavigationLink {
                         LicenceView()
