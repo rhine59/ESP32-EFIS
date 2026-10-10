@@ -3,6 +3,15 @@ import NetworkExtension
 import UniformTypeIdentifiers
 import CryptoKit
 
+private struct PublishedFirmware: Decodable {
+    let product: String
+    let version: String
+    let hardware_profile: String
+    let image_url: URL
+    let sha256: String
+    let release_notes: String?
+}
+
 private struct RedOneStatus: Decodable {
     let device: String
     let version: String
@@ -26,6 +35,10 @@ struct EFISWiFiView: View {
     @State private var firmwareDigest: String?
     @State private var firmwareError: String?
     @State private var preparingFirmware = false
+    @State private var publishedFirmware: PublishedFirmware?
+    @State private var firmwareSource = "publisher"
+    @State private var firmwareAssessment = "No release verified"
+    private let publisherURL = URL(string: "https://granvillehouse.synology.me:8448/efis/manifest.json")!
     @AppStorage("redone.savedMacAddress") private var savedMacAddress = ""
     @State private var macAddress = ""
     @State private var showingSavedNetworkChoice = false
@@ -90,8 +103,26 @@ struct EFISWiFiView: View {
                     Text("Connect to and verify your RedOne to inspect firmware.")
                         .foregroundStyle(.secondary)
                 }
-                Button("Select firmware file") { showingFirmwarePicker = true }
-                    .disabled(verified == nil || preparingFirmware)
+                Picker("Firmware source", selection: $firmwareSource) {
+                    Text("Publishing service").tag("publisher")
+                    Text("Downloaded copy").tag("local")
+                }
+                .pickerStyle(.segmented)
+                if firmwareSource == "publisher" {
+                    Button("Check published firmware") { Task { await fetchPublishedFirmware() } }
+                        .disabled(preparingFirmware)
+                    if let publishedFirmware {
+                        LabeledContent("Published version", value: publishedFirmware.version)
+                        LabeledContent("Hardware", value: publishedFirmware.hardware_profile)
+                        if let notes = publishedFirmware.release_notes { Text(notes).font(.footnote) }
+                        Button("Download published copy") { Task { await downloadPublishedFirmware() } }
+                            .disabled(preparingFirmware)
+                    }
+                } else {
+                    Button("Choose downloaded firmware") { showingFirmwarePicker = true }
+                        .disabled(preparingFirmware)
+                }
+                Text(firmwareAssessment).font(.footnote).foregroundStyle(.secondary)
                 if preparingFirmware { ProgressView("Inspecting firmware file…") }
                 if let firmwareName {
                     LabeledContent("Selected file", value: firmwareName)
@@ -113,6 +144,61 @@ struct EFISWiFiView: View {
         .navigationTitle("EFIS Wi-Fi")
         .onAppear {
             if !savedMacAddress.isEmpty { macAddress = savedMacAddress }
+        }
+    }
+
+    @MainActor
+    private func fetchPublishedFirmware() async {
+        preparingFirmware = true
+        defer { preparingFirmware = false }
+        publishedFirmware = nil
+        firmwareError = nil
+        firmwareAssessment = "Checking publisher…"
+        do {
+            var request = URLRequest(url: publisherURL)
+            request.cachePolicy = .reloadIgnoringLocalCacheData
+            request.timeoutInterval = 15
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard (response as? HTTPURLResponse)?.statusCode == 200, data.count < 65536 else { throw URLError(.badServerResponse) }
+            let release = try JSONDecoder().decode(PublishedFirmware.self, from: data)
+            guard release.product == "ESP32-EFIS", release.hardware_profile == "s3-n16r2-v1",
+                  release.image_url.scheme == "https", release.image_url.host == publisherURL.host,
+                  release.image_url.port == publisherURL.port,
+                  release.sha256.count == 64,
+                  release.sha256.allSatisfy({ $0.isHexDigit }) else { throw URLError(.cannotParseResponse) }
+            publishedFirmware = release
+            firmwareAssessment = "Publisher metadata retrieved; not cryptographically certified"
+        } catch { firmwareAssessment = "Publisher unavailable"; firmwareError = error.localizedDescription }
+    }
+
+    @MainActor
+    private func downloadPublishedFirmware() async {
+        guard let release = publishedFirmware else { return }
+        preparingFirmware = true
+        defer { preparingFirmware = false }
+        firmwareError = nil
+        firmwareAssessment = "Downloading and checking checksum…"
+        do {
+            var request = URLRequest(url: release.image_url)
+            request.timeoutInterval = 60
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard (response as? HTTPURLResponse)?.statusCode == 200,
+                  data.count >= 1024, data.count <= 16 * 1024 * 1024 else { throw URLError(.badServerResponse) }
+            let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+            guard digest.caseInsensitiveCompare(release.sha256) == .orderedSame else { throw URLError(.cannotDecodeContentData) }
+            let folder = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("Firmware", isDirectory: true)
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            let destination = folder.appendingPathComponent(release.image_url.lastPathComponent)
+            try data.write(to: destination, options: .atomic)
+            firmwareName = destination.lastPathComponent
+            firmwareSize = Int64(data.count)
+            firmwareDigest = digest
+            firmwareAssessment = "Checksum matches published manifest; signature verification still required"
+        } catch {
+            firmwareName = nil; firmwareSize = nil; firmwareDigest = nil
+            firmwareAssessment = "Download verification failed"
+            firmwareError = error.localizedDescription
         }
     }
 
@@ -142,6 +228,12 @@ struct EFISWiFiView: View {
             firmwareName = url.lastPathComponent
             firmwareSize = Int64(data.count)
             firmwareDigest = digest.map { String(format: "%02x", $0) }.joined()
+            if let publishedFirmware,
+               firmwareDigest?.caseInsensitiveCompare(publishedFirmware.sha256) == .orderedSame {
+                firmwareAssessment = "Matches publisher checksum; signature verification still required"
+            } else {
+                firmwareAssessment = "Local copy inspected, NOT certified; signed release proof required"
+            }
         } catch { firmwareError = "Cannot inspect firmware: \(error.localizedDescription)" }
     }
 
