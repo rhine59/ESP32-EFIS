@@ -6,6 +6,10 @@ private struct RedOneStatus: Decodable {
     let version: String
     let running: String
     let next: String
+    let rollbackAvailable: Bool?
+    let rollbackReason: String?
+    let previousVersion: String?
+    let updateReady: Bool?
 }
 
 struct EFISWiFiView: View {
@@ -60,9 +64,26 @@ struct EFISWiFiView: View {
                 }
                 .disabled(checking)
             }
-            Section("Firmware update") {
-                Text("Firmware upload remains disabled until update validation is tested.")
-                    .foregroundStyle(.secondary)
+            Section("Firmware management") {
+                if let verified {
+                    LabeledContent("Installed version", value: verified.version)
+                    LabeledContent("Active partition", value: verified.running)
+                    LabeledContent("Update destination", value: verified.next)
+                    LabeledContent("Previous version", value: verified.previousVersion ?? "Not reported")
+                    LabeledContent("Rollback", value: verified.rollbackAvailable == true ? "Available" : "Unavailable")
+                    if let reason = verified.rollbackReason, verified.rollbackAvailable != true {
+                        Text(reason).font(.footnote).foregroundStyle(.secondary)
+                    }
+                } else {
+                    Text("Connect to and verify your RedOne to inspect firmware.")
+                        .foregroundStyle(.secondary)
+                }
+                Button("Select firmware and upgrade") { }
+                    .disabled(true)
+                Button("Roll back to previous firmware") { }
+                    .disabled(true)
+                Text("Firmware changes are locked until signed-image validation, device authentication and A/B recovery testing pass. No firmware will be changed by this screen.")
+                    .font(.footnote).foregroundStyle(.secondary)
             }
         }
         .navigationTitle("EFIS Wi-Fi")

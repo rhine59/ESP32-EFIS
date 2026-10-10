@@ -64,7 +64,7 @@ static esp_err_t status(httpd_req_t *req) {
     const esp_app_desc_t *app = esp_app_get_description();
     char response[256];
     snprintf(response, sizeof(response),
-        "{\"device\":\"RedOne\",\"version\":\"%s\",\"running\":\"%s\",\"next\":\"%s\"}",
+        "{\"device\":\"RedOne\",\"version\":\"%s\",\"running\":\"%s\",\"next\":\"%s\",\"rollbackAvailable\":false,\"rollbackReason\":\"Rollback not yet validated on bench\",\"updateReady\":false}",
         app->version, running ? running->label : "unknown", next ? next->label : "unknown");
     httpd_resp_set_type(req, "application/json");
     return httpd_resp_sendstr(req, response);
