@@ -399,7 +399,7 @@ private struct LollipopAccountFlowView: View {
                         .font(.headline).foregroundStyle(.blue)
                     Text("Your Lollipop account will own your RedOne registrations and licence entitlements. Account creation is separate from buying a licence.")
                         .font(.subheadline)
-                    if let registrationURL {
+                    if registrationURL != nil {
                         Button { showingSignup = true } label: {
                             Label("Create Lollipop account", systemImage: "person.crop.circle.badge.plus")
                                 .font(.headline)
