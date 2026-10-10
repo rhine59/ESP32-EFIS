@@ -1,7 +1,7 @@
 FROM python:3.13-alpine
 WORKDIR /app
-RUN pip install --no-cache-dir flask==3.1.2 gunicorn==23.0.0
-COPY app.py test_harness.py release_resolver.py test_release_resolver.py smux_ota_sim.py smux_can_ota.py end_to_end_ota_sim.py test_smux_ota.py test_smux_can_ota.py test_end_to_end_ota.py test_offline_phone_ota.py /app/
+RUN pip install --no-cache-dir flask==3.1.2 gunicorn==23.0.0 cryptography==46.0.2
+COPY release_signing.py app.py test_harness.py release_resolver.py test_release_resolver.py smux_ota_sim.py smux_can_ota.py end_to_end_ota_sim.py test_smux_ota.py test_smux_can_ota.py test_end_to_end_ota.py test_offline_phone_ota.py /app/
 RUN addgroup -S otaadmin && adduser -S -G otaadmin otaadmin
 USER otaadmin
 EXPOSE 8090

@@ -61,7 +61,15 @@ def inventory():
 def publish_manifest(version,image):
     m=metadata(version)
     if not m:abort(409,'Release metadata missing')
-    atomic_json(MANIFEST,{'product':PRODUCT,'version':version,'build':int(m['build']),'hardware_profile':HARDWARE,'idf':IDF,'image_url':f'{BASE_URL}/efis/releases/{version}/{image.name}','sha256':sha256(image),'minimum_allowed_version':m['minimum_allowed_version'],'release_notes':m['release_notes']})
+    manifest = {'product':PRODUCT,'version':version,'build':int(m['build']),'hardware_profile':HARDWARE,'idf':IDF,'image_url':f'{BASE_URL}/efis/releases/{version}/{image.name}','sha256':sha256(image),'minimum_allowed_version':m['minimum_allowed_version'],'release_notes':m['release_notes']}
+    signing_key = os.environ.get('OTA_ED25519_PRIVATE_KEY_PATH')
+    if signing_key:
+        from release_signing import sign_release
+        signed = sign_release(manifest, signing_key, os.environ.get('OTA_SIGNING_KEY_ID', 'redone-v1'))
+        atomic_json(EFIS / 'manifest.signed.json', signed)
+    else:
+        (EFIS / 'manifest.signed.json').unlink(missing_ok=True)
+    atomic_json(MANIFEST, manifest)
 
 @app.get('/')
 def index():
