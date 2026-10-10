@@ -272,7 +272,7 @@ private let processCatalogue: [ProcessDefinition] = [
     .init(id: "install", title: "Install / update a licence", subtitle: "Securely install a signed entitlement", systemImage: "checkmark.seal", steps: ["Connect to EFIS", "Obtain signed entitlement", "Transfer to EFIS", "Verify signature and device", "Persist licence", "Confirm VALID"]),
     .init(id: "replace", title: "Replace an EFIS", subtitle: "Move service to replacement hardware", systemImage: "rectangle.2.swap", steps: ["Identify old EFIS", "Identify replacement", "Check eligibility", "Migrate entitlement", "Install licence", "Retire old association"]),
     .init(id: "recover", title: "Recover licence access", subtitle: "Recover after phone replacement or lost cache", systemImage: "lifepreserver", steps: ["Authenticate", "Find owned EFIS", "Retrieve entitlement", "Reconnect to EFIS", "Install licence", "Verify"]),
-    .init(id: "firmware", title: "Update EFIS firmware", subtitle: "Guided OTA with compatibility and recovery checks", systemImage: "arrow.down.circle", steps: ["Identify EFIS", "Check versions", "Check compatibility", "Acquire firmware", "Transfer and validate", "Activate and reboot", "Post-update checks"]),
+    .init(id: "firmware", title: "Update an EFIS", subtitle: "Download, connect, push, verify, activate or roll back", systemImage: "arrow.down.circle", steps: ["Download published firmware", "Connect to EFIS", "Push firmware", "Verify staged firmware", "Activate firmware", "Roll back if necessary"]),
     .init(id: "commission", title: "Commission an EFIS", subtitle: "Bring a complete EFIS / SMUX installation into service", systemImage: "checklist", steps: ["Connect", "Identify hardware", "Check firmware", "Check licence", "Discover SMUX / CAN", "Configure sensors", "Set units and thresholds", "Validate displays", "Complete commissioning"]),
     .init(id: "diagnose", title: "Diagnose a problem", subtitle: "Collect state, guide checks and verify the repair", systemImage: "stethoscope", steps: ["Connect", "Collect system state", "Identify affected subsystem", "Run guided checks", "Apply corrective action", "Retest", "Record result"])
 ]
@@ -310,6 +310,8 @@ struct ProcessHomeView: View {
                                 SetupNewEFISFlowView()
                             } else if process.id == "reassign" {
                                 ReassignEFISFlowView()
+                            } else if process.id == "firmware" {
+                                UpdateEFISFlowView()
                             } else if process.id == "receive" {
                                 ReceiveTransferredEFISFlowView()
                             } else {
