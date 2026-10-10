@@ -22,8 +22,10 @@ services:
 
 volumes:
   license_keys:
+    external: true
     name: esp32-efis_license_keys
 
 networks:
   efis-license:
+    external: true
     name: efis-license

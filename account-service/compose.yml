@@ -41,4 +41,5 @@ services:
 
 volumes:
   efis-account-db:
+    external: true
     name: esp32-efis_efis-account-db

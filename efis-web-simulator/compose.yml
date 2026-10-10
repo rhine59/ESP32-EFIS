@@ -34,4 +34,5 @@ networks:
 
 volumes:
   efis_sim_state:
+    external: true
     name: esp32-efis_efis_sim_state
