@@ -311,7 +311,7 @@ struct ProcessHomeView: View {
                             } else if process.id == "reassign" {
                                 ReassignEFISFlowView()
                             } else if process.id == "firmware" {
-                                UpdateEFISFlowView()
+                                EFISWiFiView()
                             } else if process.id == "receive" {
                                 ReceiveTransferredEFISFlowView()
                             } else {
@@ -329,14 +329,6 @@ struct ProcessHomeView: View {
                             }
                             .padding(.vertical, 5)
                         }
-                    }
-                }
-
-                Section("EFIS and SMUX devices") {
-                    NavigationLink {
-                        DeviceManagementView()
-                    } label: {
-                        Label("Manage EFIS and SMUX", systemImage: "cpu")
                     }
                 }
 

@@ -51,7 +51,26 @@ struct EFISWiFiView: View {
 
     var body: some View {
         List {
-            Section("RedOne EFIS") {
+            Section("1. Download published firmware") {
+                if downloadedReleases.isEmpty {
+                    Text("No published firmware downloaded. Prepare while online before visiting the aircraft.")
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(downloadedReleases) { release in
+                    Button {
+                        selectCachedRelease(release)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("RedOne \(release.version)").font(.headline)
+                            Text(release.hardwareProfile).font(.caption)
+                            Text(release.downloadedAt, style: .date).font(.caption)
+                            Text(FirmwareLibrary.verify(release) ? "Checksum verified; signature pending" : "Missing or damaged file")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            Section("2. Connect to RedOne EFIS") {
                 Text("Enter the 12-digit Wi-Fi MAC address printed on your EFIS or its QR label.")
                     .font(.footnote).foregroundStyle(.secondary)
                 if !savedMacAddress.isEmpty {
@@ -88,26 +107,7 @@ struct EFISWiFiView: View {
                 }
                 .disabled(checking)
             }
-            Section("Offline firmware library") {
-                if downloadedReleases.isEmpty {
-                    Text("No published firmware downloaded. Prepare while online before visiting the aircraft.")
-                        .foregroundStyle(.secondary)
-                }
-                ForEach(downloadedReleases) { release in
-                    Button {
-                        selectCachedRelease(release)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("RedOne \(release.version)").font(.headline)
-                            Text(release.hardwareProfile).font(.caption)
-                            Text(release.downloadedAt, style: .date).font(.caption)
-                            Text(FirmwareLibrary.verify(release) ? "Checksum verified; signature pending" : "Missing or damaged file")
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
-            Section("Firmware management") {
+            Section("3–6. Firmware transfer and recovery") {
                 if let verified {
                     LabeledContent("Installed version", value: verified.version)
                     LabeledContent("Active partition", value: verified.running)
@@ -161,7 +161,7 @@ struct EFISWiFiView: View {
         .fileImporter(isPresented: $showingFirmwarePicker, allowedContentTypes: [.data], allowsMultipleSelection: false) { result in
             Task { await inspectFirmware(result) }
         }
-        .navigationTitle("EFIS Wi-Fi")
+        .navigationTitle("Update an EFIS")
         .onAppear {
             if !savedMacAddress.isEmpty { macAddress = savedMacAddress }
             reloadLibrary()
