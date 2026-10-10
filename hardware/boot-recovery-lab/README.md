@@ -24,3 +24,7 @@ Before flashing, confirm the serial port and module identification. Flashing ove
 The code currently confirms pending OTA images after basic startup; this is intentionally only a lab health check, not production EFIS commissioning validation. Do not connect the lab image to aircraft instrumentation.
 
 Next: implement a simple authenticated offline update sender and deliberate rollback/failure-injection modes, then implement the factory recovery image and tested physical selection mechanism described in `docs/EFIS_BOOT_AND_RECOVERY_ARCHITECTURE.md`.
+
+## Physical bench checkpoint — 10 October 2026
+
+Mac connected to ESP32-S3-N16R8 using `/dev/cu.usbmodem1101` after entering ROM download mode. `esptool flash_id` confirmed ESP32-S3 rev 0.2, 16 MB flash and 8 MB PSRAM. Both A and B images built successfully (~198 KB each). `idf.py -B build-A -p /dev/cu.usbmodem1101 flash` successfully wrote and verified the bootloader, partition table, OTA metadata and Image A, then reset. Serial heartbeat was **not yet observed**; verify boot/console configuration before claiming running Image A. Image B has **not** been flashed and OTA/rollback has **not** been exercised.

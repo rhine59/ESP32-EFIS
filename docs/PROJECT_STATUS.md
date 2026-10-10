@@ -606,3 +606,7 @@ QR account authentication and 90-day iOS Keychain persistence are validated on t
 ## 10 October 2026 — Boot and recovery architecture checkpoint
 
 Approved direction: dual EFIS OTA application slots with ESP-IDF rollback, plus a minimal independent factory recovery application subject to the 16 MB flash budget, and ROM USB recovery as the final service fallback. Physical recovery selection, security/eFuse policy, partition sizing and fault-injection tests remain open. Details: `EFIS_BOOT_AND_RECOVERY_ARCHITECTURE.md`.
+
+## 10 October 2026 — Physical ESP32-S3 boot lab
+
+Two independent lab images compiled successfully and Image A was flashed and verified on the connected ESP32-S3-N16R8. Serial heartbeat not yet observed; boot validation, B-slot OTA, rollback and recovery are outstanding. See `hardware/boot-recovery-lab/README.md`.
