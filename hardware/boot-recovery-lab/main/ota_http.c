@@ -62,10 +62,23 @@ static esp_err_t status(httpd_req_t *req) {
     const esp_partition_t *running = esp_ota_get_running_partition();
     const esp_partition_t *next = esp_ota_get_next_update_partition(NULL);
     const esp_app_desc_t *app = esp_app_get_description();
-    char response[256];
+    esp_ota_img_states_t state = ESP_OTA_IMG_UNDEFINED;
+    bool known = running && esp_ota_get_state_partition(running, &state) == ESP_OK;
+    const char *boot_state = "unknown";
+    if (known) {
+        switch (state) {
+            case ESP_OTA_IMG_NEW: boot_state = "new"; break;
+            case ESP_OTA_IMG_PENDING_VERIFY: boot_state = "pending_verify"; break;
+            case ESP_OTA_IMG_VALID: boot_state = "valid"; break;
+            case ESP_OTA_IMG_INVALID: boot_state = "invalid"; break;
+            case ESP_OTA_IMG_ABORTED: boot_state = "aborted"; break;
+            default: boot_state = "undefined"; break;
+        }
+    }
+    char response[512];
     snprintf(response, sizeof(response),
-        "{\"device\":\"RedOne\",\"version\":\"%s\",\"running\":\"%s\",\"next\":\"%s\",\"rollbackAvailable\":false,\"rollbackReason\":\"Rollback not yet validated on bench\",\"updateReady\":false}",
-        app->version, running ? running->label : "unknown", next ? next->label : "unknown");
+        "{\"device\":\"RedOne\",\"version\":\"%s\",\"running\":\"%s\",\"next\":\"%s\",\"rollbackAvailable\":false,\"rollbackReason\":\"Rollback not yet validated on bench\",\"updateReady\":false,\"apiVersion\":1,\"bootState\":\"%s\"}",
+        app->version, running ? running->label : "unknown", next ? next->label : "unknown", boot_state);
     httpd_resp_set_type(req, "application/json");
     return httpd_resp_sendstr(req, response);
 }

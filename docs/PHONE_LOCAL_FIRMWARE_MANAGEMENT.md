@@ -11,6 +11,9 @@ Required legacy fields: `device`, `version`, `running`, `next`. Optional forward
 ## Safety gates
 The upgrade and rollback buttons remain disabled in milestone 1. Do not enable until the local protocol authenticates the device and requester, validates signed images and compatibility/security versions, proves maintenance mode and supply voltage, and completes physical A/B boot and rollback tests. The existing bench `/update` endpoint is NOT production safe: it uses a static lab token and directly selects/reboots a candidate. Never expose it beyond the isolated bench network or invoke it from the customer app.
 
+## Milestone 2 — boot-state telemetry
+The bench `/status` response now advertises `apiVersion: 1` and `bootState`, derived from `esp_ota_get_state_partition()` for the running application. Values include `new`, `pending_verify`, `valid`, `invalid`, `aborted`, `undefined`, and `unknown` if the state cannot be read. The iPhone displays these fields when present and supports older firmware where they are absent. This is read-only telemetry, **not authentication** and not authorization to update. The legacy lab `/update` endpoint remains unsafe for production and is not used by the phone.
+
 ## Next milestones
 1. Implement a versioned authenticated local management API with firmware metadata, partition health and rollback eligibility derived from ESP-IDF OTA state.
 2. Add signed firmware package selection, compatibility checks, transfer progress, and staged activation with explicit confirmation.

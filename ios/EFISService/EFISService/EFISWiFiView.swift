@@ -10,6 +10,8 @@ private struct RedOneStatus: Decodable {
     let rollbackReason: String?
     let previousVersion: String?
     let updateReady: Bool?
+    let apiVersion: Int?
+    let bootState: String?
 }
 
 struct EFISWiFiView: View {
@@ -68,6 +70,8 @@ struct EFISWiFiView: View {
                 if let verified {
                     LabeledContent("Installed version", value: verified.version)
                     LabeledContent("Active partition", value: verified.running)
+                    LabeledContent("Boot state", value: verified.bootState ?? "Not reported")
+                    LabeledContent("Management API", value: verified.apiVersion.map(String.init) ?? "Legacy")
                     LabeledContent("Update destination", value: verified.next)
                     LabeledContent("Previous version", value: verified.previousVersion ?? "Not reported")
                     LabeledContent("Rollback", value: verified.rollbackAvailable == true ? "Available" : "Unavailable")
