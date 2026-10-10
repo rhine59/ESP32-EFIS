@@ -12,20 +12,36 @@ struct EFISWiFiView: View {
     @State private var message = "Not connected"
     @State private var verified: RedOneStatus?
     @State private var checking = false
+    @AppStorage("redone.savedMacAddress") private var savedMacAddress = ""
     @State private var macAddress = ""
+    @State private var showingSavedNetworkChoice = false
     private var suffix: String {
         macAddress.uppercased().filter { "0123456789ABCDEF".contains($0) }
     }
     private var ssid: String { "RedOne_" + suffix }
+    @State private var chooseNewDevice = false
 
     var body: some View {
         List {
             Section("RedOne EFIS") {
                 Text("Enter the 12-digit Wi-Fi MAC address printed on your EFIS or its QR label.")
                     .font(.footnote).foregroundStyle(.secondary)
+                if !savedMacAddress.isEmpty {
+                    Button("Rejoin saved RedOne") {
+                        macAddress = savedMacAddress
+                        joinNetwork()
+                    }
+                    Button("Join a new RedOne") {
+                        macAddress = ""
+                        chooseNewDevice = true
+                    }
+                    LabeledContent("Saved network", value: "RedOne_" + savedMacAddress)
+                }
+                if savedMacAddress.isEmpty || chooseNewDevice {
                 TextField("Wi-Fi MAC address", text: $macAddress)
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
+                }
                 LabeledContent("Network", value: ssid)
                 Label(message, systemImage: verified == nil ? "wifi.exclamationmark" : "checkmark.circle.fill")
                     .foregroundStyle(verified == nil ? Color.secondary : Color.green)
@@ -36,6 +52,26 @@ struct EFISWiFiView: View {
                     LabeledContent("Next update partition", value: verified.next)
                 }
                 Button("Join RedOne network") {
+                    joinNetwork()
+                }
+                .disabled(suffix.count != 12 || checking)
+                Button("Verify RedOne connection") {
+                    Task { await verifyConnection() }
+                }
+                .disabled(checking)
+            }
+            Section("Firmware update") {
+                Text("Firmware upload remains disabled until update validation is tested.")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .navigationTitle("EFIS Wi-Fi")
+        .onAppear {
+            if !savedMacAddress.isEmpty { macAddress = savedMacAddress }
+        }
+    }
+
+    private func joinNetwork() {
                     verified = nil
                     message = "Requesting Wi-Fi connection…"
                     let config = NEHotspotConfiguration(ssid: ssid, passphrase: "BenchOnly-2026!", isWEP: false)
@@ -50,19 +86,6 @@ struct EFISWiFiView: View {
                             }
                         }
                     }
-                }
-                .disabled(suffix.count != 12 || checking)
-                Button("Verify RedOne connection") {
-                    Task { await verifyConnection() }
-                }
-                .disabled(checking)
-            }
-            Section("Firmware update") {
-                Text("Firmware upload remains disabled until update validation is tested.")
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .navigationTitle("EFIS Wi-Fi")
     }
 
     @MainActor
@@ -87,6 +110,7 @@ struct EFISWiFiView: View {
                     return
                 }
                 verified = status
+                if suffix.count == 12 { savedMacAddress = suffix }
                 message = "Connected to RedOne — device verified"
                 return
             } catch {
