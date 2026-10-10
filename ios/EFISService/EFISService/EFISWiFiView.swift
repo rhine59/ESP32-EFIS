@@ -3,14 +3,23 @@ import NetworkExtension
 
 struct EFISWiFiView: View {
     @State private var message = "Not connected"
-    private let ssid = "EFIS-BOOT-LAB"
+    @State private var macAddress = ""
+    private var suffix: String {
+        macAddress.uppercased().filter { "0123456789ABCDEF".contains($0) }
+    }
+    private var ssid: String { "RedOne_" + suffix }
 
     var body: some View {
         List {
-            Section("EFIS Wi-Fi") {
+            Section("RedOne EFIS") {
+                Text("Enter the 12-digit Wi-Fi MAC address printed on your EFIS or its QR label.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                TextField("Wi-Fi MAC address", text: $macAddress)
+                    .textInputAutocapitalization(.characters)
+                    .autocorrectionDisabled()
                 LabeledContent("Network", value: ssid)
                 Text(message).font(.footnote)
-                Button("Join EFIS network") {
+                Button("Join RedOne network") {
                     let config = NEHotspotConfiguration(ssid: ssid, passphrase: "BenchOnly-2026!", isWEP: false)
                     config.joinOnce = true
                     NEHotspotConfigurationManager.shared.apply(config) { error in
@@ -24,9 +33,10 @@ struct EFISWiFiView: View {
                         }
                     }
                 }
+                .disabled(suffix.count != 12)
             }
             Section("Firmware update") {
-                Text("Device verification and firmware upload are not enabled yet.")
+                Text("Firmware upload is disabled pending device identity and status verification.")
                     .foregroundStyle(.secondary)
             }
         }
