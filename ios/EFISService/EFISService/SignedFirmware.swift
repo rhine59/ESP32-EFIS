@@ -20,10 +20,9 @@ struct SignedFirmwarePayload: Codable {
     let release_notes: String
 }
 
-// Provision trusted publisher public keys in a separate, reviewed release change.
-// An empty keyring fails closed; no downloaded image becomes trusted.
+// Pinned public key for the RedOne release publisher. Keep the private key off devices.
 enum RedOneTrustedKeys {
-    static let rawHex: [String: String] = [:]
+    static let rawHex: [String: String] = ["redone-v1": "b772b85fefb06862e1597174c5bbef23d42995d97f1e3c5e1a0efe29c5127d0f"]
 }
 
 enum SignedFirmwareVerifier {
