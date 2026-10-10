@@ -163,3 +163,7 @@ Control semantics:
 The default highlighted item is **START EFIS**. A configurable boot-menu timeout may later auto-select Start EFIS, but no timeout value is frozen until physical usability testing. Firmware update and Full Test must never start merely because of a timeout.
 
 The UI must remain usable if networking is absent. A failed update/network attempt always provides a rotary-selectable **Start EFIS** escape path.
+
+## Offline recovery and A/B boot architecture
+
+See [EFIS boot and recovery architecture](EFIS_BOOT_AND_RECOVERY_ARCHITECTURE.md) for the approved A/B OTA direction, optional minimal factory recovery partition, physical recovery entry, ESP32-S3 ROM USB fallback, security caveats and mandatory bench acceptance tests. This design is not yet implemented.

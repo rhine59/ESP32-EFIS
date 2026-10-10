@@ -602,3 +602,7 @@ The automated regression harness now proves the intended disconnected-aircraft w
 
 ## 6 October 2026 checkpoint — Lollipop authentication
 QR account authentication and 90-day iOS Keychain persistence are validated on the physical iPhone, including successful silent sign-in after app restart. The server session is revocable and hard-expires at 90 days, after which a fresh five-minute single-use email challenge is required. Android Lollipop parity has been implemented with Android Keystore-backed storage and the same process catalogue/API contract; physical Android validation remains outstanding. See `CUSTOMER_ACCOUNT_AND_APPS.md` and `SYNOLOGY_CONFIGURATION.md`.
+
+## 10 October 2026 — Boot and recovery architecture checkpoint
+
+Approved direction: dual EFIS OTA application slots with ESP-IDF rollback, plus a minimal independent factory recovery application subject to the 16 MB flash budget, and ROM USB recovery as the final service fallback. Physical recovery selection, security/eFuse policy, partition sizing and fault-injection tests remain open. Details: `EFIS_BOOT_AND_RECOVERY_ARCHITECTURE.md`.

@@ -385,3 +385,8 @@ The detailed historical decision register—including adopted, superseded, parke
 - Added Android Lollipop implementation with matching process catalogue, QR/deep-link login, Android Keystore-backed encrypted session persistence, `/v1/me` validation, expiry reauthentication and sign-out.
 - Added Synology configuration runbook and Android build script.
 - Root Synology rebuild now validates/rebuilds the account service as part of the repository stack.
+
+## 2026-10-10 — EFIS A/B OTA and independent recovery design
+- Documented dual-slot firmware, rollback, optional minimal factory recovery firmware, physical recovery entry and ROM USB service fallback.
+- Recorded ESP32-S3 bootloader/flash and irreversible security-policy limitations, offline Lollipop recovery flow, and bench fault-injection acceptance criteria.
+- No bootloader or partition-table firmware changes made at this checkpoint.
