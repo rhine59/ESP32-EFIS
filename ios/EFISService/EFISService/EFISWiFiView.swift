@@ -36,6 +36,7 @@ struct EFISWiFiView: View {
     @State private var firmwareError: String?
     @State private var preparingFirmware = false
     @State private var publishedFirmware: PublishedFirmware?
+    @State private var signedReleaseStatus = "No signed release checked"
     @State private var firmwareSource = "publisher"
     @State private var firmwareAssessment = "No release verified"
     @State private var downloadedReleases: [CachedFirmwareRelease] = []
@@ -130,6 +131,7 @@ struct EFISWiFiView: View {
                 .pickerStyle(.segmented)
                 if firmwareSource == "publisher" {
                     Button("Check published firmware") { Task { await fetchPublishedFirmware() } }
+                    Text(signedReleaseStatus).font(.footnote).foregroundStyle(.secondary)
                         .disabled(preparingFirmware)
                     if let publishedFirmware {
                         LabeledContent("Published version", value: publishedFirmware.version)
@@ -203,6 +205,25 @@ struct EFISWiFiView: View {
     }
 
     @MainActor
+    private func checkSignedRelease() async {
+        signedReleaseStatus = "Checking signed release…"
+        do {
+            let url = publisherURL.deletingLastPathComponent().appendingPathComponent("manifest.signed.json")
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 15
+            request.cachePolicy = .reloadIgnoringLocalCacheData
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+                signedReleaseStatus = "Publisher has not supplied a signed release"
+                return
+            }
+            let envelope = try JSONDecoder().decode(SignedFirmwareEnvelope.self, from: data)
+            signedReleaseStatus = SignedFirmwareVerifier.verify(envelope)
+                ? "Signed release verified" : "Signed release is not trusted — update locked"
+        } catch { signedReleaseStatus = "Signed release unavailable — update locked" }
+    }
+
+    @MainActor
     private func fetchPublishedFirmware() async {
         preparingFirmware = true
         defer { preparingFirmware = false }
@@ -223,6 +244,7 @@ struct EFISWiFiView: View {
                   release.sha256.allSatisfy({ $0.isHexDigit }) else { throw URLError(.cannotParseResponse) }
             publishedFirmware = release
             firmwareAssessment = "Publisher metadata retrieved; not cryptographically certified"
+            await checkSignedRelease()
         } catch { firmwareAssessment = "Publisher unavailable"; firmwareError = error.localizedDescription }
     }
 
