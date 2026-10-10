@@ -6,8 +6,8 @@ services:
       - "127.0.0.1:8093:8080"
     environment:
       DEVICE_ID: ${DEVICE_ID:-EFIS-SIM-0001}
-      OTA_BASE_URL: ${OTA_BASE_URL:-http://esp32-efis-ota:8080}
-      LICENSE_BASE_URL: ${LICENSE_BASE_URL:-http://esp32-efis-license-service:8080}
+      OTA_BASE_URL: ${OTA_BASE_URL:-http://lollipop-efis-ota-1:8080}
+      LICENSE_BASE_URL: ${LICENSE_BASE_URL:-http://lollipop-efis-license-service-1:8080}
       DEVICE_SECRET: ${DEVICE_SECRET:-simulator-development-secret-change-me}
       SIM_ALLOW_MUTATIONS: ${SIM_ALLOW_MUTATIONS:-false}
       LICENSE_STORE: /data/licence.cbor.b64
