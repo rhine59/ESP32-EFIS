@@ -14,6 +14,9 @@ The upgrade and rollback buttons remain disabled in milestone 1. Do not enable u
 ## Milestone 2 — boot-state telemetry
 The bench `/status` response now advertises `apiVersion: 1` and `bootState`, derived from `esp_ota_get_state_partition()` for the running application. Values include `new`, `pending_verify`, `valid`, `invalid`, `aborted`, `undefined`, and `unknown` if the state cannot be read. The iPhone displays these fields when present and supports older firmware where they are absent. This is read-only telemetry, **not authentication** and not authorization to update. The legacy lab `/update` endpoint remains unsafe for production and is not used by the phone.
 
+## Milestone 3 — local file selection
+The iPhone app now provides a Files picker for a local firmware binary when RedOne is verified. It checks that the selected item is a regular file between 1 KB and 16 MB, reads its bytes, and displays its name, byte count and SHA-256 digest. This is an inspection aid, NOT image-signature verification, compatibility verification or device authentication. Files are not uploaded or installed. The transfer, activation and rollback controls remain disabled. Before production, move hashing to bounded streaming I/O, retain the security-scoped source safely, validate a signed release manifest and verify device compatibility before enabling transfer.
+
 ## Next milestones
 1. Implement a versioned authenticated local management API with firmware metadata, partition health and rollback eligibility derived from ESP-IDF OTA state.
 2. Add signed firmware package selection, compatibility checks, transfer progress, and staged activation with explicit confirmation.

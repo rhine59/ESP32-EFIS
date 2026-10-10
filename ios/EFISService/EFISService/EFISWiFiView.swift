@@ -1,5 +1,7 @@
 import SwiftUI
 import NetworkExtension
+import UniformTypeIdentifiers
+import CryptoKit
 
 private struct RedOneStatus: Decodable {
     let device: String
@@ -18,6 +20,12 @@ struct EFISWiFiView: View {
     @State private var message = "Not connected"
     @State private var verified: RedOneStatus?
     @State private var checking = false
+    @State private var showingFirmwarePicker = false
+    @State private var firmwareName: String?
+    @State private var firmwareSize: Int64?
+    @State private var firmwareDigest: String?
+    @State private var firmwareError: String?
+    @State private var preparingFirmware = false
     @AppStorage("redone.savedMacAddress") private var savedMacAddress = ""
     @State private var macAddress = ""
     @State private var showingSavedNetworkChoice = false
@@ -82,7 +90,16 @@ struct EFISWiFiView: View {
                     Text("Connect to and verify your RedOne to inspect firmware.")
                         .foregroundStyle(.secondary)
                 }
-                Button("Select firmware and upgrade") { }
+                Button("Select firmware file") { showingFirmwarePicker = true }
+                    .disabled(verified == nil || preparingFirmware)
+                if preparingFirmware { ProgressView("Inspecting firmware file…") }
+                if let firmwareName {
+                    LabeledContent("Selected file", value: firmwareName)
+                    if let firmwareSize { LabeledContent("Size", value: ByteCountFormatter.string(fromByteCount: firmwareSize, countStyle: .file)) }
+                    if let firmwareDigest { Text("SHA-256: \(firmwareDigest)").font(.caption2).textSelection(.enabled) }
+                }
+                if let firmwareError { Text(firmwareError).foregroundStyle(.red).font(.footnote) }
+                Button("Transfer and stage firmware") { }
                     .disabled(true)
                 Button("Roll back to previous firmware") { }
                     .disabled(true)
@@ -90,10 +107,42 @@ struct EFISWiFiView: View {
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }
+        .fileImporter(isPresented: $showingFirmwarePicker, allowedContentTypes: [.data], allowsMultipleSelection: false) { result in
+            Task { await inspectFirmware(result) }
+        }
         .navigationTitle("EFIS Wi-Fi")
         .onAppear {
             if !savedMacAddress.isEmpty { macAddress = savedMacAddress }
         }
+    }
+
+    @MainActor
+    private func inspectFirmware(_ result: Result<[URL], Error>) async {
+        firmwareName = nil
+        firmwareSize = nil
+        firmwareDigest = nil
+        firmwareError = nil
+        guard case .success(let urls) = result, let url = urls.first else {
+            if case .failure(let error) = result { firmwareError = error.localizedDescription }
+            return
+        }
+        preparingFirmware = true
+        defer { preparingFirmware = false }
+        let granted = url.startAccessingSecurityScopedResource()
+        defer { if granted { url.stopAccessingSecurityScopedResource() } }
+        do {
+            let values = try url.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
+            guard values.isRegularFile == true, let size = values.fileSize,
+                  size >= 1024, size <= 16 * 1024 * 1024 else {
+                firmwareError = "Select a regular firmware file between 1 KB and 16 MB."
+                return
+            }
+            let data = try Data(contentsOf: url)
+            let digest = SHA256.hash(data: data)
+            firmwareName = url.lastPathComponent
+            firmwareSize = Int64(data.count)
+            firmwareDigest = digest.map { String(format: "%02x", $0) }.joined()
+        } catch { firmwareError = "Cannot inspect firmware: \(error.localizedDescription)" }
     }
 
     private func joinNetwork() {
