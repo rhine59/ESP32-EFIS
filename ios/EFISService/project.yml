@@ -23,5 +23,6 @@ targets:
         INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking: YES
         INFOPLIST_KEY_CFBundleURLTypes_0_CFBundleURLSchemes_0: efisservice
         CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: EFISService/EFISService.entitlements
     scheme:
       testTargets: []
