@@ -38,6 +38,7 @@ struct EFISWiFiView: View {
     @State private var publishedFirmware: PublishedFirmware?
     @State private var firmwareSource = "publisher"
     @State private var firmwareAssessment = "No release verified"
+    @State private var downloadedReleases: [CachedFirmwareRelease] = []
     private let publisherURL = URL(string: "https://granvillehouse.synology.me:8448/efis/manifest.json")!
     @AppStorage("redone.savedMacAddress") private var savedMacAddress = ""
     @State private var macAddress = ""
@@ -86,6 +87,25 @@ struct EFISWiFiView: View {
                     Task { await verifyConnection() }
                 }
                 .disabled(checking)
+            }
+            Section("Offline firmware library") {
+                if downloadedReleases.isEmpty {
+                    Text("No published firmware downloaded. Prepare while online before visiting the aircraft.")
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(downloadedReleases) { release in
+                    Button {
+                        selectCachedRelease(release)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("RedOne \(release.version)").font(.headline)
+                            Text(release.hardwareProfile).font(.caption)
+                            Text(release.downloadedAt, style: .date).font(.caption)
+                            Text(FirmwareLibrary.verify(release) ? "Checksum verified; signature pending" : "Missing or damaged file")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
             }
             Section("Firmware management") {
                 if let verified {
@@ -144,7 +164,26 @@ struct EFISWiFiView: View {
         .navigationTitle("EFIS Wi-Fi")
         .onAppear {
             if !savedMacAddress.isEmpty { macAddress = savedMacAddress }
+            reloadLibrary()
         }
+    }
+
+    private func reloadLibrary() {
+        do { downloadedReleases = try FirmwareLibrary.load() }
+        catch { firmwareError = "Cannot read firmware library: \(error.localizedDescription)" }
+    }
+
+    private func selectCachedRelease(_ release: CachedFirmwareRelease) {
+        guard FirmwareLibrary.verify(release) else {
+            firmwareError = "Cached firmware is missing or corrupt."
+            return
+        }
+        firmwareError = nil
+        firmwareName = release.filename
+        firmwareDigest = release.sha256
+        firmwareSize = (try? FirmwareLibrary.folder.appendingPathComponent(release.filename)
+            .resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init)
+        firmwareAssessment = "Offline checksum verified; signature verification still required"
     }
 
     @MainActor
@@ -186,11 +225,10 @@ struct EFISWiFiView: View {
                   data.count >= 1024, data.count <= 16 * 1024 * 1024 else { throw URLError(.badServerResponse) }
             let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
             guard digest.caseInsensitiveCompare(release.sha256) == .orderedSame else { throw URLError(.cannotDecodeContentData) }
-            let folder = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                .appendingPathComponent("Firmware", isDirectory: true)
-            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            let destination = folder.appendingPathComponent(release.image_url.lastPathComponent)
-            try data.write(to: destination, options: .atomic)
+            let cached = try FirmwareLibrary.store(data, version: release.version,
+                hardware: release.hardware_profile, digest: digest, source: release.image_url)
+            let destination = FirmwareLibrary.folder.appendingPathComponent(cached.filename)
+            reloadLibrary()
             firmwareName = destination.lastPathComponent
             firmwareSize = Int64(data.count)
             firmwareDigest = digest
