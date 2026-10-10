@@ -37,6 +37,11 @@ struct LicenceView: View {
     var body: some View {
         TabView {
             NavigationStack {
+                EFISWiFiView()
+            }
+            .tabItem { Label("EFIS Wi-Fi", systemImage: "wifi") }
+
+            NavigationStack {
                 List {
                     Section { activityBanner }
                     Section("EFIS") {

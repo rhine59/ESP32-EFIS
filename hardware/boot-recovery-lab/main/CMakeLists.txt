@@ -1,4 +1,4 @@
-idf_component_register(SRCS "main.c" INCLUDE_DIRS ".")
+idf_component_register(SRCS "main.c" "ota_http.c" "ota_wifi.c" INCLUDE_DIRS "." REQUIRES esp_http_server esp_wifi esp_event esp_netif nvs_flash app_update)
 if(NOT DEFINED EFIS_LAB_IMAGE)
   set(EFIS_LAB_IMAGE "A")
 endif()

@@ -50,6 +50,8 @@ static void console_task(void *arg) {
     }
 }
 
+void lab_wifi_start(void);
+
 void app_main(void) {
     const esp_partition_t *running = esp_ota_get_running_partition();
     const esp_partition_t *next = esp_ota_get_next_update_partition(NULL);
@@ -63,6 +65,7 @@ void app_main(void) {
         ESP_ERROR_CHECK(esp_ota_mark_app_valid_cancel_rollback());
     }
     xTaskCreate(console_task, "lab_console", 4096, NULL, 5, NULL);
+    lab_wifi_start();
     int counter = 0;
     while (1) {
         ESP_LOGI("BOOT_LAB", "IMAGE %s v%s heartbeat %d", EFIS_IMAGE_LABEL, EFIS_IMAGE_VERSION, ++counter);
