@@ -330,11 +330,11 @@ struct ProcessHomeView: View {
                     }
                 }
 
-                Section("RedOne connection") {
+                Section("EFIS and SMUX devices") {
                     NavigationLink {
-                        EFISWiFiView()
+                        DeviceManagementView()
                     } label: {
-                        Label("Connect to RedOne EFIS", systemImage: "wifi")
+                        Label("Manage EFIS and SMUX", systemImage: "cpu")
                     }
                 }
 
