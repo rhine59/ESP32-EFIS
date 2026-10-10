@@ -58,11 +58,25 @@ static esp_err_t upload(httpd_req_t *req) {
     esp_restart();
     return ESP_OK;
 }
+static esp_err_t status(httpd_req_t *req) {
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    const esp_partition_t *next = esp_ota_get_next_update_partition(NULL);
+    const esp_app_desc_t *app = esp_app_get_description();
+    char response[256];
+    snprintf(response, sizeof(response),
+        "{\"device\":\"RedOne\",\"version\":\"%s\",\"running\":\"%s\",\"next\":\"%s\"}",
+        app->version, running ? running->label : "unknown", next ? next->label : "unknown");
+    httpd_resp_set_type(req, "application/json");
+    return httpd_resp_sendstr(req, response);
+}
+
 void lab_http_start(void) {
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     if (httpd_start(&server, &config) != ESP_OK) return;
     httpd_uri_t uri = {.uri="/update", .method=HTTP_POST, .handler=upload};
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri));
+    httpd_uri_t info = {.uri="/status", .method=HTTP_GET, .handler=status};
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &info));
     ESP_LOGI(TAG, "HTTP OTA endpoint ready");
 }
