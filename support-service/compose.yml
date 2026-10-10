@@ -1,4 +1,4 @@
-name: esp32-efis
+name: lollipop
 services:
   db:
     image: pgvector/pgvector:pg17
