@@ -64,3 +64,7 @@ Measure actual signed EFIS firmware sizes and recovery firmware size before defi
 - Definition of critical boot-health checks and maximum rollback attempts.
 
 This is a design decision and test plan, **not** a claim that a third partition alone guarantees independent recovery.
+
+## Bench implementation started — 10 October 2026
+
+`hardware/boot-recovery-lab/` contains two minimal ESP-IDF firmware identities, A v1.0.0 and B v1.1.0, with independent build directories, a provisional 16 MB A/B/factory partition table, OTA rollback enabled and serial heartbeat reporting. The lab initially targets a connected ESP32-S3-N16R8; it does not depend on PSRAM. Factory recovery firmware, physical entry and OTA transport remain future test stages. See the lab README before flashing any device.

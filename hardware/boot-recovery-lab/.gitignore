@@ -1,0 +1,5 @@
+build-A/
+build-B/
+images/
+sdkconfig
+sdkconfig.old
