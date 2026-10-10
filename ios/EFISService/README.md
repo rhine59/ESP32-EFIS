@@ -1,4 +1,4 @@
-# EFIS Service — iPhone prototype
+# Lollipop — iPhone companion app
 
 SwiftUI prototype for the customer/service phone workflow around ESP32-EFIS licensing.
 
@@ -21,7 +21,7 @@ Account login, payment and production ownership registration are intentionally i
 
 ## Xcode
 
-Create/open an iOS SwiftUI target named **EFISService**, then add the Swift files in `ios/EFISService/EFISService/`. Minimum target iOS 17 is suitable for the prototype.
+Generate the **Lollipop** Xcode project with `cd ios/EFISService && xcodegen generate`, then open `ios/EFISService/Lollipop.xcodeproj` and use the **Lollipop** scheme. The source directory remains `ios/EFISService/EFISService/` for compatibility. The bundle identifier remains `uk.co.thingies.EFISService` to preserve installed-app identity and data. Minimum supported iOS version is 17.
 
 The development service URL is configurable in the app. No device credential or licence-signing key is present in the phone application.
 
