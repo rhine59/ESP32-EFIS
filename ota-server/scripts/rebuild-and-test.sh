@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-COMPOSE_PROJECT_NAME="esp32-efis"
+COMPOSE_PROJECT_NAME="lollipop"
 export COMPOSE_PROJECT_NAME
 DOCKER="$(command -v docker 2>/dev/null || true)"
 [ -n "$DOCKER" ] || DOCKER=/usr/local/bin/docker
@@ -9,6 +9,10 @@ DOCKER="$(command -v docker 2>/dev/null || true)"
 if "$DOCKER" info >/dev/null 2>&1; then D="$DOCKER"; else D="sudo $DOCKER"; fi
 DC="$D compose"
 cd "$(dirname "$0")/.."
+if $DOCKER ps -aq --filter label=com.docker.compose.project=esp32-efis | grep -q .; then
+  echo "ERROR: Legacy esp32-efis Compose containers remain; migrate before rebuilding." >&2
+  exit 1
+fi
 
 echo "== Validate Compose =="
 $DC config --quiet

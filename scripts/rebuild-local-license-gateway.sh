@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-COMPOSE_PROJECT_NAME="esp32-efis"
+COMPOSE_PROJECT_NAME="lollipop"
 export COMPOSE_PROJECT_NAME
 DOCKER="$(command -v docker 2>/dev/null || true)"
 [ -n "$DOCKER" ] || DOCKER=/usr/local/bin/docker
