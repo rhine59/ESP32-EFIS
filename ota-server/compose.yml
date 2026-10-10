@@ -33,6 +33,8 @@ services:
       OTA_PUBLIC_ROOT: /data
       OTA_PUBLIC_BASE_URL: ${OTA_PUBLIC_BASE_URL:-https://CHANGE-ME.example}
       ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:?set ADMIN_SESSION_SECRET in .env}
+    group_add:
+      - "${OTA_DATA_GID:-65539}"
     volumes:
       - ./public:/data
     security_opt:
