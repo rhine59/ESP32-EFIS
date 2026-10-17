@@ -270,8 +270,11 @@ private enum RecoveryTCPHTTP {
     static func fetch(token: String) async throws -> (Data, Int) {
         try await withCheckedThrowingContinuation { continuation in
             let queue = DispatchQueue(label: "redone.recovery.http")
-            let connection = NWConnection(host: "192.168.4.1", port: 80, using: .tcp)
+            let parameters = NWParameters.tcp
+            parameters.requiredInterfaceType = .wifi
+            let connection = NWConnection(host: "192.168.4.1", port: 80, using: parameters)
             let state = RecoveryHTTPState()
+            state.setPhase("waiting for Wi-Fi TCP connection")
             @Sendable func finish(_ result: Result<(Data, Int), Error>) {
                 guard state.claim() else { return }
                 connection.cancel()
@@ -280,6 +283,7 @@ private enum RecoveryTCPHTTP {
             connection.stateUpdateHandler = { status in
                 switch status {
                 case .ready:
+                    state.setPhase("TCP connected; waiting for HTTP response")
                     let request = "GET /api/recovery/diagnostics HTTP/1.1\r\nHost: 192.168.4.1\r\nX-RedOne-Recovery-Token: \(token)\r\nConnection: close\r\n\r\n"
                     // Start receiving immediately: some ESP-IDF responses close quickly,
                     // and waiting for send completion can lose the reply on reset.
@@ -315,7 +319,10 @@ private enum RecoveryTCPHTTP {
                 }
             }
             connection.start(queue: queue)
-            queue.asyncAfter(deadline: .now() + 10) { finish(.failure(URLError(.timedOut))) }
+            queue.asyncAfter(deadline: .now() + 15) {
+                finish(.failure(NSError(domain: "RedOne TCP timeout", code: -1001,
+                    userInfo: [NSLocalizedDescriptionKey: state.phase])))
+            }
         }
     }
 }
@@ -324,6 +331,9 @@ private final class RecoveryHTTPState: @unchecked Sendable {
     private let lock = NSLock()
     private var finished = false
     private var buffer = Data()
+    private var currentPhase = "starting"
+    var phase: String { lock.lock(); defer { lock.unlock() }; return currentPhase }
+    func setPhase(_ value: String) { lock.lock(); currentPhase = value; lock.unlock() }
     var count: Int { lock.lock(); defer { lock.unlock() }; return buffer.count }
     func claim() -> Bool {
         lock.lock(); defer { lock.unlock() }
