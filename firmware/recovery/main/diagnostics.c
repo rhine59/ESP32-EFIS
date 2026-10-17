@@ -7,6 +7,7 @@
 #include "esp_partition.h"
 #include "nvs_flash.h"
 #include "esp_err.h"
+#include "esp_wifi.h"
 
 static const char *const ids[] = {"power","memory_flash","display_backlight","encoder_button","bmi088","bmp585","rm3100","can_smux","wifi","nvs"};
 static const char *const names[] = {"Power supply and voltage monitoring","ESP32 memory and flash","Display and backlight","Rotary encoder and push switch","BMI088 attitude sensor","BMP585 pressure sensor","RM3100 magnetometer","CAN bus and SMUX","Wi-Fi communications","Non-volatile configuration"};
@@ -18,6 +19,8 @@ void recovery_diagnostics_json(char *out, size_t capacity) {
     esp_err_t flash_result=esp_flash_get_size(NULL,&flash);
     size_t free_heap=heap_caps_get_free_size(MALLOC_CAP_8BIT);
     size_t largest=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+    wifi_mode_t wifi_mode=WIFI_MODE_NULL;
+    esp_err_t wifi_result=esp_wifi_get_mode(&wifi_mode);
     const esp_partition_t *nvs=esp_partition_find_first(ESP_PARTITION_TYPE_DATA,ESP_PARTITION_SUBTYPE_DATA_NVS,NULL);
     APPEND("{\"schema\":1,\"device\":\"RedOne\",\"mode\":\"recovery\",\"tests\":[");
     for (size_t i=0;i<10;i++) {
@@ -28,14 +31,15 @@ void recovery_diagnostics_json(char *out, size_t capacity) {
             snprintf(measured,sizeof(measured),"flash=%lu bytes; free_heap=%lu; largest_block=%lu",(unsigned long)flash,(unsigned long)free_heap,(unsigned long)largest);
             detail=measured;
         } else if(i==9) {
-            result=nvs?"WARN":"FAIL";
-            detail=nvs?"NVS partition exists; non-destructive read/write and integrity checks not performed":"NVS partition missing";
+            result=nvs?"PASS":"FAIL";
+            detail=nvs?"NVS partition found; stored credentials and integrity not modified or verified":"NVS partition missing";
         } else if(i==0) {
             result="SKIP";detail="No calibrated supply-voltage ADC channel configured";
         } else if(i==2 || i==3) {
             result="SKIP";detail="Requires physical UI driver and operator confirmation";
         } else if(i==8) {
-            result="SKIP";detail="Wi-Fi AP and authenticated diagnostics transport not yet implemented";
+            result=(wifi_result==ESP_OK && (wifi_mode==WIFI_MODE_AP || wifi_mode==WIFI_MODE_APSTA))?"PASS":"FAIL";
+            detail=result[0]=='P'?"Wi-Fi SoftAP active; authenticated diagnostics request received":"Wi-Fi SoftAP is not active";
         }
         APPEND("%s{\"id\":\"%s\",\"name\":\"%s\",\"result\":\"%s\",\"detail\":\"%s\"}",i?",":"",ids[i],names[i],result,detail);
     }
