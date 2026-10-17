@@ -6,12 +6,14 @@ struct DeviceQRScannerView: UIViewControllerRepresentable {
     let onDeviceID: (String) -> Void
     let onCancel: () -> Void
     var acceptsLogin = false
+    var acceptsRecovery = false
 
     func makeUIViewController(context: Context) -> QRScannerViewController {
         let controller = QRScannerViewController()
         controller.onDeviceID = onDeviceID
         controller.onCancel = onCancel
         controller.acceptsLogin = acceptsLogin
+        controller.acceptsRecovery = acceptsRecovery
         return controller
     }
 
@@ -23,6 +25,7 @@ final class QRScannerViewController: UIViewController, @preconcurrency AVCapture
     var onDeviceID: ((String) -> Void)?
     var onCancel: (() -> Void)?
     var acceptsLogin = false
+    var acceptsRecovery = false
     private let session = AVCaptureSession()
     private var preview: AVCaptureVideoPreviewLayer?
 
@@ -76,9 +79,14 @@ final class QRScannerViewController: UIViewController, @preconcurrency AVCapture
                         didOutput metadataObjects: [AVMetadataObject],
                         from connection: AVCaptureConnection) {
         guard let value = (metadataObjects.first as? AVMetadataMachineReadableCodeObject)?.stringValue,
-              let result = acceptsLogin ? Self.parseLogin(value) : Self.parseDeviceID(value) else { return }
+              let result = acceptsRecovery ? Self.parseRecovery(value) : (acceptsLogin ? Self.parseLogin(value) : Self.parseDeviceID(value)) else { return }
         session.stopRunning()
         onDeviceID?(result)
+    }
+
+    static func parseRecovery(_ value: String) -> String? {
+        guard let url = URL(string: value), url.scheme == "redone-recovery", url.host == "pair" else { return nil }
+        return value
     }
 
     static func parseLogin(_ value: String) -> String? {
