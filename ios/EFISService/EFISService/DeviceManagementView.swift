@@ -9,7 +9,7 @@ struct DeviceManagementView: View {
         List {
             Section("EFIS") {
                 NavigationLink("Connect to RedOne") { EFISWiFiView() }
-                NavigationLink("Recovery hardware diagnostics") { RecoveryDiagnosticsView() }
+                NavigationLink("RedOne hardware diagnostics") { RecoveryDiagnosticsView() }
             }
             Section("SMUX") {
                 Text("SMUX discovery and management are not yet implemented.")
@@ -139,7 +139,7 @@ struct RecoveryDiagnosticsView: View {
                 ForEach(categories, id: \.self) { name in
                     let result = report?.tests.first(where: { $0.name == name })
                     let resultColor: Color = result == nil ? .gray : result?.result == "PASS" ? .green : result?.result == "FAIL" ? .red : .yellow
-                    let detail = result == nil ? "Not Tested — awaiting diagnostics" : result?.result == "SKIP" ? "Not Tested — \(result?.detail ?? "device unavailable")" : (result?.detail ?? "")
+                    let detail = result == nil ? "Not Tested — awaiting diagnostics" : result?.result == "SKIP" ? (result?.detail ?? "Not Tested — device unavailable") : (result?.detail ?? "")
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             Text(name).font(.headline)

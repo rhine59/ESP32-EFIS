@@ -370,7 +370,7 @@ struct ProcessHomeView: View {
                                 NavigationLink {
                                     RecoveryDiagnosticsView()
                                 } label: {
-                                    Label("RedOne recovery hardware diagnostics", systemImage: "waveform.path.ecg.rectangle")
+                                    Label("RedOne hardware diagnostics", systemImage: "waveform.path.ecg.rectangle")
                                 }
                                 NavigationLink {
                                     LicenceView()
@@ -430,7 +430,7 @@ private struct LollipopUserGuideView: View {
             ("Reconnect or replace", "Tap Connect to the remembered RedOne to rejoin later. To pair a different device or rescan credentials, use Scan RedOne connection QR code again. Never share the QR, Wi-Fi password or recovery token.")
         ]),
         .init(id: "diagnostics", title: "Run and interpret diagnostics", sections: [
-            ("Run tests", "Expand Diagnostics on the home page and select RedOne recovery hardware diagnostics. Confirm the correct Wi-Fi, then tap Read diagnostics from RedOne. Wait for the status and detailed results."),
+            ("Run tests", "Expand Diagnostics on the home page and select RedOne hardware diagnostics. Confirm the correct Wi-Fi, then tap Read diagnostics from RedOne. Wait for the status and detailed results."),
             ("Status colours", "TODO (grey): no report has been received yet. PASS (green): the stated check met its defined criteria. SKIP (yellow): Not Tested; read the reason, often unavailable hardware or an unimplemented safe test. FAIL (red): a performed check did not meet its criteria."),
             ("Memory and flash", "Reads flash capacity, available heap and largest allocation. Reports observed byte counts and comparison thresholds. PSRAM visible to recovery may be zero because this recovery build does not initialise PSRAM. This is not a destructive memory stress test."),
             ("Wi-Fi", "Reads the ESP32 Wi-Fi mode and associated access-point client count. A successful authenticated report confirms the HTTP diagnostics handler replied; it does not test RF range or throughput."),
