@@ -284,10 +284,10 @@ struct ProcessHomeView: View {
 
     private let groups: [(title: String, icon: String, subtitle: String, processes: [String])] = [
         ("Lollipop Account", "person.crop.circle", "Sign in and manage your Lollipop account", []),
-        ("License Management", "key", "Licences, entitlements and ownership", ["buy", "renew", "install", "recover"]),
-        ("EFIS Management", "airplane", "RedOne setup, connectivity and firmware", ["setup", "firmware", "reassign", "receive", "replace", "commission"]),
+        ("License Management", "key", "Licences, entitlements and ownership", ["buy", "renew", "install", "recover", "reassign", "receive"]),
+        ("EFIS Management", "airplane", "RedOne setup, connectivity and firmware", ["setup", "firmware", "replace", "commission"]),
         ("SMUX Management", "cpu", "BlueOne setup and sensor management", []),
-        ("Diagnostics", "waveform.path.ecg", "System health and manual controls", ["diagnose"]),
+        ("Diagnostics", "waveform.path.ecg", "System health and manual controls", []),
         ("Help", "questionmark.circle", "Guidance and troubleshooting", [])
     ]
 
