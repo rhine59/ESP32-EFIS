@@ -1,5 +1,6 @@
 import SwiftUI
 import Security
+import NetworkExtension
 
 struct DeviceManagementView: View {
     var body: some View {
@@ -83,12 +84,15 @@ struct RecoveryDiagnosticsView: View {
     }
     @State private var loading = false
     @State private var scanning = false
+    @State private var currentSSID = "Checking…"
     @State private var pairing = RecoveryPairingStore.load()
     private let url = URL(string: "http://192.168.4.1/api/recovery/diagnostics")!
     private let diagnosticsSession: URLSession = {
         let config = URLSessionConfiguration.ephemeral
         config.allowsCellularAccess = false
-        config.waitsForConnectivity = false
+        config.allowsConstrainedNetworkAccess = true
+        config.allowsExpensiveNetworkAccess = true
+        config.waitsForConnectivity = true
         config.timeoutIntervalForRequest = 10
         config.timeoutIntervalForResource = 15
         return URLSession(configuration: config)
@@ -98,6 +102,8 @@ struct RecoveryDiagnosticsView: View {
     var body: some View {
         List {
             Section("Recovery connection") {
+                LabeledContent("Current Wi-Fi", value: currentSSID)
+                Button("Refresh Wi-Fi status") { Task { await refreshWiFiSSID() } }
                 HStack(spacing: 10) {
                     if loading { ProgressView().tint(.blue) }
                     else { Image(systemName: statusState == .success ? "checkmark.circle.fill" : statusState == .failure ? "xmark.octagon.fill" : "info.circle.fill") }
@@ -139,6 +145,7 @@ struct RecoveryDiagnosticsView: View {
             }
         }
         .navigationTitle("Recovery diagnostics")
+        .task { await refreshWiFiSSID() }
         .sheet(isPresented: $scanning) {
             DeviceQRScannerView(onDeviceID: { value in
                 scanning = false
@@ -165,10 +172,16 @@ struct RecoveryDiagnosticsView: View {
         }
     }
 
+    @MainActor private func refreshWiFiSSID() async {
+        let network = await NEHotspotNetwork.fetchCurrent()
+        currentSSID = network?.ssid ?? "Unavailable (iOS did not disclose SSID)"
+    }
+
     @MainActor private func connectAndRead() async {
         guard let pairing else { status = "Scan pairing QR first"; return }
         loading = true
         defer { loading = false }
+        await refreshWiFiSSID()
         statusState = .progress
         status = "Reading diagnostics over the current Wi-Fi connection…"
         _ = await readDiagnostics(pairing, attempts: 3)

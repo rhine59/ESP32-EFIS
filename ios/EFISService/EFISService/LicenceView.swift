@@ -280,7 +280,7 @@ private let processCatalogue: [ProcessDefinition] = [
 struct ProcessHomeView: View {
     @EnvironmentObject var model: LicenceViewModel
     @State private var scanningLogin = false
-    @State private var expandedGroup: String? = "EFIS Management"
+    @State private var expandedGroup: String? = nil
 
     private let groups: [(title: String, icon: String, subtitle: String, processes: [String])] = [
         ("Lollipop Account", "person.crop.circle", "Sign in and manage your Lollipop account", []),
