@@ -8,6 +8,7 @@
 #include "nvs_flash.h"
 #include "nvs.h"
 #include "esp_log.h"
+#include "esp_heap_caps.h"
 #include "diagnostics.h"
 static char token[65];
 static httpd_handle_t server;
@@ -19,10 +20,14 @@ static esp_err_t diagnostic_handler(httpd_req_t *req) {
     unsigned diff=(unsigned)(strlen(token)^strlen(supplied));
     for (size_t i=0;i<sizeof(token);++i) diff|=(unsigned)((unsigned char)token[i]^(unsigned char)supplied[i]);
     if(strlen(token)<32 || diff) { httpd_resp_send_err(req,HTTPD_401_UNAUTHORIZED,"Unauthorized"); return ESP_FAIL; }
-    char json[4096]; recovery_diagnostics_json(json,sizeof(json));
+    char *json=heap_caps_malloc(4096,MALLOC_CAP_8BIT);
+    if (!json) { httpd_resp_send_err(req,HTTPD_500_INTERNAL_SERVER_ERROR,"Out of memory"); return ESP_FAIL; }
+    recovery_diagnostics_json(json,4096);
     httpd_resp_set_type(req,"application/json");
     httpd_resp_set_hdr(req,"Cache-Control","no-store");
-    return httpd_resp_sendstr(req,json);
+    esp_err_t result=httpd_resp_sendstr(req,json);
+    heap_caps_free(json);
+    return result;
 }
 void recovery_wifi_start(void) {
     if(nvs_flash_init()!=ESP_OK) { ESP_LOGE("RECOVERY","NVS unavailable; Wi-Fi disabled"); return; }
@@ -50,6 +55,7 @@ void recovery_wifi_start(void) {
     memset(password,0,sizeof(password));
     ESP_ERROR_CHECK(esp_wifi_start());
     httpd_config_t cfg=HTTPD_DEFAULT_CONFIG();
+    cfg.stack_size=8192;
     if(httpd_start(&server,&cfg)!=ESP_OK) return;
     httpd_uri_t route={.uri="/api/recovery/diagnostics",.method=HTTP_GET,.handler=diagnostic_handler};
     ESP_ERROR_CHECK(httpd_register_uri_handler(server,&route));
