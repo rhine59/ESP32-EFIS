@@ -15,6 +15,9 @@
 #include "instrument_sim.h"
 #include "instrument_ui.h"
 #include "mcp23008.h"
+#ifdef CONFIG_EFIS_RM3100_DIAGNOSTICS
+#include "rm3100.h"
+#endif
 #include "pins.h"
 #include "st7701s.h"
 #ifdef CONFIG_EFIS_QEMU
@@ -51,6 +54,22 @@ ESP_ERROR_CHECK(init_safe_outputs());ESP_ERROR_CHECK(mcp23008_init());ESP_ERROR_
 #ifdef CONFIG_EFIS_BMI088_DIAGNOSTICS
 if(ie==ESP_OK)ESP_LOGW(TAG,"BMI088 DIAGNOSTICS ENABLED - BENCH AXIS COMMISSIONING ONLY; NOT FEEDING DISPLAY");
 #endif
+#ifdef CONFIG_EFIS_RM3100_DIAGNOSTICS
+rm3100_t mag = {0};
+esp_err_t me = rm3100_init(&mag, mcp23008_bus_handle(),
+                            CONFIG_EFIS_RM3100_I2C_ADDRESS, 100000);
+if (me == ESP_OK) me = rm3100_start_continuous(&mag);
+if (me == ESP_OK) {
+    uint8_t rev = 0;
+    if (rm3100_get_revision(&mag, &rev) == ESP_OK)
+        ESP_LOGW(TAG, "RM3100 DIAG enabled; revision=0x%02x (not a unique chip ID)", rev);
+    ESP_LOGW(TAG, "RM3100 DIAG: bench only, no heading display integration");
+} else {
+    ESP_LOGE(TAG, "RM3100 DIAG unavailable: %s", esp_err_to_name(me));
+    if (mag.dev) (void)rm3100_deinit(&mag);
+}
+unsigned mag_ticks = 0;
+#endif
 uint16_t*draw=fb1;unsigned ticks=0;
 #ifdef CONFIG_EFIS_BMI088_DIAGNOSTICS
 unsigned diag_ticks=0;
@@ -58,6 +77,25 @@ unsigned diag_ticks=0;
 while(1){bool redraw=false;esp_err_t e=instrument_ui_poll(&ui,&redraw);if(e!=ESP_OK)ESP_LOGW(TAG,"control: %s",esp_err_to_name(e));if(BENCH_SIMULATION&&++ticks>=5){ticks=0;instrument_sim_step(&sim,.05f,&data);redraw=true;}
 #ifdef CONFIG_EFIS_BMI088_DIAGNOSTICS
 if(ie==ESP_OK&&++diag_ticks>=20){diag_ticks=0;log_bmi088_diagnostic();}
+#endif
+#ifdef CONFIG_EFIS_RM3100_DIAGNOSTICS
+if (me == ESP_OK && ++mag_ticks >= 20) {
+    mag_ticks = 0;
+    bool ready = false;
+    esp_err_t e_mag = rm3100_data_ready(&mag, &ready);
+    if (e_mag == ESP_OK && ready) {
+        rm3100_sample_t m;
+        e_mag = rm3100_read_raw(&mag, &m);
+        if (e_mag == ESP_OK) {
+            float u[3];
+            if (rm3100_raw_to_ut(&mag, &m, u) == ESP_OK)
+                ESP_LOGW(TAG, "RM3100 DIAG t=%lldus uT X=%+.2f Y=%+.2f Z=%+.2f",
+                         (long long)m.timestamp_us, u[0], u[1], u[2]);
+        }
+    }
+    if (e_mag != ESP_OK)
+        ESP_LOGE(TAG, "RM3100 DIAG read error: %s", esp_err_to_name(e_mag));
+}
 #endif
 if(redraw){instrument_render(draw,AH_DISPLAY_WIDTH,AH_DISPLAY_HEIGHT,&ui,&data);ESP_ERROR_CHECK(esp_lcd_panel_draw_bitmap(panel,0,0,AH_DISPLAY_WIDTH,AH_DISPLAY_HEIGHT,draw));draw=draw==fb0?fb1:fb0;}vTaskDelay(pdMS_TO_TICKS(10));}
 #endif
