@@ -71,7 +71,17 @@ private enum RecoveryPairingStore {
 
 struct RecoveryDiagnosticsView: View {
     @State private var report: RecoveryDiagnosticReport?
-    @State private var status = "Scan the device pairing QR code once, then reconnect without typing credentials."
+    @State private var status = "Connect to RedOne Wi-Fi, then read diagnostics."
+    @State private var statusState: StatusState = .idle
+    private enum StatusState { case idle, progress, success, failure }
+    private var statusColor: Color {
+        switch statusState {
+        case .idle: return .secondary
+        case .progress: return .blue
+        case .success: return .green
+        case .failure: return .red
+        }
+    }
     @State private var loading = false
     @State private var scanning = false
     @State private var pairing = RecoveryPairingStore.load()
@@ -81,7 +91,14 @@ struct RecoveryDiagnosticsView: View {
     var body: some View {
         List {
             Section("Recovery connection") {
-                Text(status).foregroundStyle(.secondary)
+                HStack(spacing: 10) {
+                    if loading { ProgressView().tint(.blue) }
+                    else { Image(systemName: statusState == .success ? "checkmark.circle.fill" : statusState == .failure ? "xmark.octagon.fill" : "info.circle.fill") }
+                    Text(status).font(.headline).fixedSize(horizontal: false, vertical: true)
+                }
+                .foregroundStyle(statusColor)
+                .padding(.vertical, 10)
+                .accessibilityElement(children: .combine)
                 if let pairing {
                     LabeledContent("Remembered RedOne", value: pairing.ssid)
                     Text("In iPhone Settings → Wi-Fi, connect to \(pairing.ssid), then return to Lollipop.")
@@ -145,6 +162,7 @@ struct RecoveryDiagnosticsView: View {
         guard let pairing else { status = "Scan pairing QR first"; return }
         loading = true
         defer { loading = false }
+        statusState = .progress
         status = "Reading diagnostics over the current Wi-Fi connection…"
         _ = await readDiagnostics(pairing, attempts: 3)
     }
@@ -185,11 +203,13 @@ struct RecoveryDiagnosticsView: View {
                     throw URLError(.cannotParseResponse)
                 }
                 report = decoded
+                statusState = .success
                 status = "Connected to \(pairing.ssid) — diagnostics received"
                 return true
             } catch {
                 if attempt == attempts - 1 {
                     report = nil
+                    statusState = .failure
                     status = "Recovery diagnostics unavailable: \(error.localizedDescription)"
                 } else {
                     try? await Task.sleep(for: .seconds(1))
