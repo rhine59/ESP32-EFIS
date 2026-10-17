@@ -435,6 +435,7 @@ private struct LollipopUserGuideView: View {
             ("Memory and flash", "Reads flash capacity, available heap and largest allocation. Reports observed byte counts and comparison thresholds. PSRAM visible to recovery may be zero because this recovery build does not initialise PSRAM. This is not a destructive memory stress test."),
             ("Wi-Fi", "Reads the ESP32 Wi-Fi mode and associated access-point client count. A successful authenticated report confirms the HTTP diagnostics handler replied; it does not test RF range or throughput."),
             ("NVS and recovery partitions", "Checks that NVS and both OTA partition entries exist and that recovery is running in the factory slot. It does not expose credentials, verify their contents or prove OTA images are valid."),
+            ("Firmware inventory", "Select Inspect RedOne firmware slots to read the running partition, A/B image versions and partition sizes directly from RedOne. Transfer, activation and rollback remain locked until device-side signature validation and failure-recovery testing are approved."),
             ("External hardware", "Power monitoring, display/backlight, encoder, BMI088, BMP585, RM3100 and CAN/SMUX may be SKIP until the assembled hardware and safe test drivers are verified. SKIP must not be interpreted as PASS.")
         ]),
         .init(id: "firmware", title: "Firmware and commissioning", sections: [

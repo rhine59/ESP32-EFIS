@@ -9,6 +9,9 @@
 #include "nvs.h"
 #include "esp_log.h"
 #include "esp_heap_caps.h"
+#include "esp_ota_ops.h"
+#include "esp_partition.h"
+#include "esp_app_desc.h"
 #include "diagnostics.h"
 static char token[65];
 static httpd_handle_t server;
@@ -28,6 +31,30 @@ static esp_err_t diagnostic_handler(httpd_req_t *req) {
     esp_err_t result=httpd_resp_sendstr(req,json);
     heap_caps_free(json);
     return result;
+}
+/* Authenticated, read-only firmware inventory. No upload, erase or boot selection. */
+static esp_err_t firmware_inventory_handler(httpd_req_t *req) {
+    char supplied[65]={0};
+    if (httpd_req_get_hdr_value_str(req,"X-RedOne-Recovery-Token",supplied,sizeof(supplied))!=ESP_OK) {
+        httpd_resp_send_err(req,HTTPD_401_UNAUTHORIZED,"Authorization required"); return ESP_FAIL;
+    }
+    unsigned diff=(unsigned)(strlen(token)^strlen(supplied));
+    for (size_t i=0;i<sizeof(token);++i) diff|=(unsigned)((unsigned char)token[i]^(unsigned char)supplied[i]);
+    if(strlen(token)<32 || diff) { httpd_resp_send_err(req,HTTPD_401_UNAUTHORIZED,"Unauthorized"); return ESP_FAIL; }
+    const esp_partition_t *running=esp_ota_get_running_partition();
+    const esp_partition_t *a=esp_partition_find_first(ESP_PARTITION_TYPE_APP,ESP_PARTITION_SUBTYPE_APP_OTA_0,NULL);
+    const esp_partition_t *b=esp_partition_find_first(ESP_PARTITION_TYPE_APP,ESP_PARTITION_SUBTYPE_APP_OTA_1,NULL);
+    esp_app_desc_t desc;
+    char av[33]="not installed",bv[33]="not installed";
+    if(a && esp_ota_get_partition_description(a,&desc)==ESP_OK) snprintf(av,sizeof(av),"%s",desc.version);
+    if(b && esp_ota_get_partition_description(b,&desc)==ESP_OK) snprintf(bv,sizeof(bv),"%s",desc.version);
+    char response[512];
+    snprintf(response,sizeof(response),
+      "{\"schema\":1,\"device\":\"RedOne\",\"mode\":\"recovery\",\"running\":\"%s\",\"otaA\":\"%s\",\"otaB\":\"%s\",\"otaASize\":%lu,\"otaBSize\":%lu,\"transferEnabled\":false,\"activationEnabled\":false,\"rollbackEnabled\":false,\"reason\":\"Device-side signature verification and power-loss recovery tests are not yet approved\"}",
+      running?running->label:"unknown",av,bv,(unsigned long)(a?a->size:0),(unsigned long)(b?b->size:0));
+    httpd_resp_set_type(req,"application/json");
+    httpd_resp_set_hdr(req,"Cache-Control","no-store");
+    return httpd_resp_sendstr(req,response);
 }
 void recovery_wifi_start(void) {
     if(nvs_flash_init()!=ESP_OK) { ESP_LOGE("RECOVERY","NVS unavailable; Wi-Fi disabled"); return; }
@@ -59,5 +86,7 @@ void recovery_wifi_start(void) {
     if(httpd_start(&server,&cfg)!=ESP_OK) return;
     httpd_uri_t route={.uri="/api/recovery/diagnostics",.method=HTTP_GET,.handler=diagnostic_handler};
     ESP_ERROR_CHECK(httpd_register_uri_handler(server,&route));
+    httpd_uri_t inventory={.uri="/api/recovery/firmware",.method=HTTP_GET,.handler=firmware_inventory_handler};
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server,&inventory));
     ESP_LOGW("RECOVERY","Read-only diagnostic AP ready: %s",ap.ap.ssid);
 }

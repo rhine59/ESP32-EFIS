@@ -34,6 +34,19 @@ private struct RecoveryDiagnosticReport: Decodable {
     let mode: String
     let tests: [RecoveryDiagnostic]
 }
+private struct RecoveryFirmwareInventory: Decodable {
+    let schema: Int
+    let device: String
+    let running: String
+    let otaA: String
+    let otaB: String
+    let otaASize: Int
+    let otaBSize: Int
+    let transferEnabled: Bool
+    let activationEnabled: Bool
+    let rollbackEnabled: Bool
+    let reason: String
+}
 private struct RecoveryPairing: Codable {
     let ssid: String
     let password: String
@@ -94,6 +107,8 @@ private enum RecoveryPairingStore {
 
 struct RecoveryDiagnosticsView: View {
     @State private var report: RecoveryDiagnosticReport?
+    @State private var firmwareInventory: RecoveryFirmwareInventory?
+    @State private var firmwareStatus = "Firmware inventory not yet checked"
     @State private var status = "Connect to RedOne Wi-Fi, then read diagnostics."
     @State private var statusState: StatusState = .idle
     private enum StatusState { case idle, progress, success, failure }
@@ -132,8 +147,24 @@ struct RecoveryDiagnosticsView: View {
                     Button("Read diagnostics from RedOne") { Task { await connectAndRead() } }
                         .disabled(loading)
                 }
+                Button("Inspect RedOne firmware slots") { Task { await inspectFirmware() } }
+                    .disabled(loading || pairing == nil)
                 Button("Scan RedOne connection QR code") { scanning = true }
                     .disabled(loading)
+            }
+            Section("Firmware and recovery readiness") {
+                Text(firmwareStatus).font(.subheadline).foregroundStyle(.secondary)
+                if let inventory = firmwareInventory {
+                    LabeledContent("Running partition", value: inventory.running)
+                    LabeledContent("EFIS A", value: inventory.otaA)
+                    LabeledContent("EFIS B", value: inventory.otaB)
+                    LabeledContent("A capacity", value: ByteCountFormatter.string(fromByteCount: Int64(inventory.otaASize), countStyle: .file))
+                    LabeledContent("B capacity", value: ByteCountFormatter.string(fromByteCount: Int64(inventory.otaBSize), countStyle: .file))
+                    LabeledContent("Transfer", value: inventory.transferEnabled ? "Enabled" : "Locked")
+                    LabeledContent("Activation", value: inventory.activationEnabled ? "Enabled" : "Locked")
+                    LabeledContent("Rollback", value: inventory.rollbackEnabled ? "Enabled" : "Locked")
+                    Text(inventory.reason).font(.footnote).foregroundStyle(.orange)
+                }
             }
             Section("Hardware tests") {
                 ForEach(categories, id: \.self) { name in
@@ -228,6 +259,23 @@ struct RecoveryDiagnosticsView: View {
         loading = false
     }
 
+    @MainActor private func inspectFirmware() async {
+        guard let pairing else { firmwareStatus = "Scan RedOne QR first"; return }
+        loading = true
+        defer { loading = false }
+        do {
+            let (data, statusCode) = try await RecoveryTCPHTTP.fetch(token: pairing.token, path: "/api/recovery/firmware")
+            guard statusCode == 200 else { throw NSError(domain: "RedOne firmware inventory", code: statusCode, userInfo: [NSLocalizedDescriptionKey: "HTTP \(statusCode)"]) }
+            let inventory = try JSONDecoder().decode(RecoveryFirmwareInventory.self, from: data)
+            guard inventory.schema == 1, inventory.device == "RedOne" else { throw URLError(.cannotParseResponse) }
+            firmwareInventory = inventory
+            firmwareStatus = "Live RedOne partition inventory received"
+        } catch {
+            firmwareInventory = nil
+            firmwareStatus = "Firmware inspection failed: \(error.localizedDescription)"
+        }
+    }
+
     @MainActor private func connectAndRead() async {
         guard let pairing else { status = "Scan pairing QR first"; return }
         loading = true
@@ -269,7 +317,7 @@ struct RecoveryDiagnosticsView: View {
 }
 
 private enum RecoveryTCPHTTP {
-    static func fetch(token: String) async throws -> (Data, Int) {
+    static func fetch(token: String, path: String = "/api/recovery/diagnostics") async throws -> (Data, Int) {
         try await withCheckedThrowingContinuation { continuation in
             let queue = DispatchQueue(label: "redone.recovery.http")
             let parameters = NWParameters.tcp
@@ -286,7 +334,7 @@ private enum RecoveryTCPHTTP {
                 switch status {
                 case .ready:
                     state.setPhase("TCP connected; waiting for HTTP response")
-                    let request = "GET /api/recovery/diagnostics HTTP/1.1\r\nHost: 192.168.4.1\r\nX-RedOne-Recovery-Token: \(token)\r\nConnection: close\r\n\r\n"
+                    let request = "GET \(path) HTTP/1.1\r\nHost: 192.168.4.1\r\nX-RedOne-Recovery-Token: \(token)\r\nConnection: close\r\n\r\n"
                     // Start receiving immediately: some ESP-IDF responses close quickly,
                     // and waiting for send completion can lose the reply on reset.
                     @Sendable func receive() {
