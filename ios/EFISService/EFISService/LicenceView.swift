@@ -283,7 +283,8 @@ struct ProcessHomeView: View {
     @State private var expandedGroup: String? = "EFIS Management"
 
     private let groups: [(title: String, icon: String, subtitle: String, processes: [String])] = [
-        ("License Management", "key", "Accounts, entitlements and ownership", ["buy", "renew", "install", "recover"]),
+        ("Lollipop Account", "person.crop.circle", "Sign in and manage your Lollipop account", []),
+        ("License Management", "key", "Licences, entitlements and ownership", ["buy", "renew", "install", "recover"]),
         ("EFIS Management", "airplane", "RedOne setup, connectivity and firmware", ["setup", "firmware", "reassign", "receive", "replace", "commission"]),
         ("SMUX Management", "cpu", "BlueOne setup and sensor management", []),
         ("Diagnostics", "waveform.path.ecg", "System health and manual controls", ["diagnose"]),
@@ -312,27 +313,30 @@ struct ProcessHomeView: View {
                             .font(.subheadline).foregroundStyle(.secondary)
                     }.padding(.vertical, 6)
                 }
-                Section("Lollipop account") {
-                    if let account = model.lollipopAccount {
-                        Label("Signed in as \(account.email)", systemImage: "person.crop.circle.badge.checkmark")
-                            .foregroundStyle(.green)
-                        Button(role: .destructive) {
-                            Task { await model.signOut() }
-                        } label: {
-                            Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right")
-                        }
-                    } else {
-                        Button { scanningLogin = true } label: {
-                            Label("Scan sign-in QR code", systemImage: "qrcode.viewfinder")
-                        }
-                    }
-                }
                 Section("Management") {
                     ForEach(groups, id: \.title) { group in
                         DisclosureGroup(isExpanded: Binding(
                             get: { expandedGroup == group.title },
                             set: { expandedGroup = $0 ? group.title : nil }
                         )) {
+                            if group.title == "Lollipop Account" {
+                                if let account = model.lollipopAccount {
+                                    Label("Signed in as \(account.email)", systemImage: "person.crop.circle.badge.checkmark")
+                                        .foregroundStyle(.green)
+                                    Button(role: .destructive) {
+                                        Task { await model.signOut() }
+                                    } label: {
+                                        Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right")
+                                    }
+                                } else {
+                                    Button { scanningLogin = true } label: {
+                                        Label("Scan sign-in QR code", systemImage: "qrcode.viewfinder")
+                                    }
+                                    NavigationLink("Create Lollipop account") {
+                                        LollipopAccountFlowView()
+                                    }
+                                }
+                            }
                             if group.title == "SMUX Management" {
                                 Label("BlueOne management is not yet implemented. CAN and firmware authentication must be validated first.", systemImage: "info.circle")
                                     .font(.subheadline).foregroundStyle(.secondary)
