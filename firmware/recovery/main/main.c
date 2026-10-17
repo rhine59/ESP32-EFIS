@@ -46,6 +46,7 @@ static void boot_slot(int slot) {
     vTaskDelay(pdMS_TO_TICKS(300));
     esp_restart();
 }
+void recovery_wifi_start(void);
 void app_main(void) {
     const esp_partition_t *running = esp_ota_get_running_partition();
     if (!running || running->type!=ESP_PARTITION_TYPE_APP || running->subtype!=ESP_PARTITION_SUBTYPE_APP_FACTORY) {
@@ -53,6 +54,7 @@ void app_main(void) {
         while (1) vTaskDelay(pdMS_TO_TICKS(1000));
     }
     report();
+    recovery_wifi_start();
     char command[32];
     while (1) {
         if (!fgets(command, sizeof(command), stdin)) { clearerr(stdin); vTaskDelay(pdMS_TO_TICKS(100)); continue; }

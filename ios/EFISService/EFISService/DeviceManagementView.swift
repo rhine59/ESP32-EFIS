@@ -34,14 +34,20 @@ struct RecoveryDiagnosticsView: View {
     @State private var report: RecoveryDiagnosticReport?
     @State private var status = "Not connected. Recovery Wi-Fi diagnostics API is not yet enabled."
     @State private var loading = false
+    @State private var maintenanceToken = ""
     private let url = URL(string: "http://192.168.4.1/api/recovery/diagnostics")!
     private let categories = ["Power supply and voltage monitoring", "ESP32 memory and flash", "Display and backlight", "Rotary encoder and push switch", "BMI088 attitude sensor", "BMP585 pressure sensor", "RM3100 magnetometer", "CAN bus and SMUX", "Wi-Fi communications", "Non-volatile configuration"]
     var body: some View {
         List {
             Section("Recovery connection") {
                 Text(status).foregroundStyle(.secondary)
+                SecureField("Recovery maintenance token", text: $maintenanceToken)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
                 Button(loading ? "Checking…" : "Read recovery diagnostics") { Task { await load() } }
-                    .disabled(loading)
+                    .disabled(loading || maintenanceToken.count < 32)
+                Text("Requires a provisioned RedOne recovery AP. This initial bench protocol sends its token over HTTP; do not use it outside a physically controlled test environment.")
+                    .font(.footnote).foregroundStyle(.orange)
                 Text("Requires a future authenticated RedOne recovery API. This screen does not claim that hardware tests have run until the device returns a valid report.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
@@ -68,6 +74,7 @@ struct RecoveryDiagnosticsView: View {
         defer { loading = false }
         do {
             var request = URLRequest(url: url); request.timeoutInterval = 5
+            request.setValue(maintenanceToken, forHTTPHeaderField: "X-RedOne-Recovery-Token")
             let (data, response) = try await URLSession.shared.data(for: request)
             guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw URLError(.badServerResponse) }
             let decoded = try JSONDecoder().decode(RecoveryDiagnosticReport.self, from: data)
