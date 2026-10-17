@@ -1,5 +1,4 @@
 import SwiftUI
-import NetworkExtension
 import Security
 
 struct DeviceManagementView: View {
@@ -100,16 +99,15 @@ struct RecoveryDiagnosticsView: View {
                 .padding(.vertical, 10)
                 .accessibilityElement(children: .combine)
                 if let pairing {
-                    LabeledContent("Remembered RedOne", value: pairing.ssid)
                     Text("In iPhone Settings → Wi-Fi, connect to \(pairing.ssid), then return to Lollipop.")
                         .font(.footnote)
                     Button("Read diagnostics") { Task { await connectAndRead() } }
                         .disabled(loading)
                 }
-                Button(pairing == nil ? "Scan RedOne pairing QR code" : "Pair another RedOne") {
-                    scanning = true
+                if pairing == nil {
+                    Button("Scan RedOne pairing QR code") { scanning = true }
+                        .disabled(loading)
                 }
-                .disabled(loading)
                 Text("Scan the device QR code once. Connect manually in iPhone Wi-Fi settings. Internet access is not needed for diagnostics after app verification.")
                     .font(.footnote).foregroundStyle(.secondary)
                 Text("Bench-only: the QR contains a reusable Wi-Fi password and maintenance token. Keep it private. Firmware-changing operations are not enabled.")
@@ -149,7 +147,8 @@ struct RecoveryDiagnosticsView: View {
                     let saved = RecoveryPairing(ssid: ssid, password: password, token: token)
                     try RecoveryPairingStore.save(saved)
                     pairing = saved
-                    status = "Pairing saved. Join RedOne Wi-Fi, then tap Read diagnostics over current Wi-Fi."
+                    statusState = .idle
+                    status = "Pairing saved. Join RedOne Wi-Fi, then tap Read diagnostics."
                 } catch {
                     status = "Invalid pairing QR: \(error.localizedDescription)"
                 }
@@ -167,27 +166,6 @@ struct RecoveryDiagnosticsView: View {
         _ = await readDiagnostics(pairing, attempts: 3)
     }
 
-    @MainActor private func requestWiFiJoin() async {
-        guard let pairing else { status = "Scan pairing QR first"; return }
-        loading = true
-        defer { loading = false }
-        status = "Requesting Wi-Fi connection to \(pairing.ssid)…"
-        let config = NEHotspotConfiguration(ssid: pairing.ssid, passphrase: pairing.password, isWEP: false)
-        config.joinOnce = false
-        let joinError: Error? = await withCheckedContinuation { continuation in
-            NEHotspotConfigurationManager.shared.apply(config) { error in
-                continuation.resume(returning: error)
-            }
-        }
-        if let error = joinError as NSError?,
-           error.code != NEHotspotConfigurationError.alreadyAssociated.rawValue {
-            status = "iOS could not join \(pairing.ssid): \(error.localizedDescription). Join it in Settings → Wi-Fi, then tap Connect again."
-            return
-        }
-        status = "Wi-Fi join requested; waiting for RedOne diagnostics…"
-        _ = await readDiagnostics(pairing, attempts: 6)
-    }
-
     @MainActor private func readDiagnostics(_ pairing: RecoveryPairing, attempts: Int) async -> Bool {
         for attempt in 0..<attempts {
             do {
@@ -195,8 +173,9 @@ struct RecoveryDiagnosticsView: View {
                 request.timeoutInterval = 4
                 request.setValue(pairing.token, forHTTPHeaderField: "X-RedOne-Recovery-Token")
                 let (data, response) = try await URLSession.shared.data(for: request)
-                guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-                    throw URLError(.badServerResponse)
+                guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
+                guard http.statusCode == 200 else {
+                    throw NSError(domain: "RedOne recovery", code: http.statusCode, userInfo: [NSLocalizedDescriptionKey: "HTTP \(http.statusCode): \(http.statusCode == 401 ? "Pairing token rejected" : "Diagnostics endpoint rejected the request")"])
                 }
                 let decoded = try JSONDecoder().decode(RecoveryDiagnosticReport.self, from: data)
                 guard decoded.schema == 1, decoded.device == "RedOne", decoded.mode == "recovery" else {
