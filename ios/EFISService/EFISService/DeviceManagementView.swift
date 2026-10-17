@@ -87,6 +87,7 @@ struct RecoveryDiagnosticsView: View {
     @State private var scanning = false
     @State private var currentSSID = "Checking…"
     @State private var networkPath = "Checking…"
+    @State private var tcpResult = "Not tested"
     @State private var pairing = RecoveryPairingStore.load()
     private let url = URL(string: "http://192.168.4.1/api/recovery/diagnostics")!
     private let diagnosticsSession: URLSession = {
@@ -107,6 +108,8 @@ struct RecoveryDiagnosticsView: View {
                 LabeledContent("Current Wi-Fi", value: currentSSID)
                 LabeledContent("Network path", value: networkPath)
                 Button("Refresh Wi-Fi status") { Task { await refreshWiFiSSID() } }
+                LabeledContent("Direct TCP", value: tcpResult)
+                Button("Test direct TCP connection") { Task { await testDirectTCP() } }
                 HStack(spacing: 10) {
                     if loading { ProgressView().tint(.blue) }
                     else { Image(systemName: statusState == .success ? "checkmark.circle.fill" : statusState == .failure ? "xmark.octagon.fill" : "info.circle.fill") }
@@ -189,6 +192,32 @@ struct RecoveryDiagnosticsView: View {
         }
     }
 
+    @MainActor private func testDirectTCP() async {
+        tcpResult = "Connecting…"
+        let result = await withCheckedContinuation { (continuation: CheckedContinuation<String, Never>) in
+            let queue = DispatchQueue(label: "redone.recovery.tcp")
+            let connection = NWConnection(host: "192.168.4.1", port: 80, using: .tcp)
+            let completion = TCPCompletionState()
+            @Sendable func finish(_ value: String) {
+                let shouldResume = completion.claim()
+                guard shouldResume else { return }
+                connection.cancel()
+                continuation.resume(returning: value)
+            }
+            connection.stateUpdateHandler = { state in
+                switch state {
+                case .ready: finish("Connected to 192.168.4.1:80")
+                case .failed(let error): finish("Failed: \(error.localizedDescription)")
+                case .cancelled: finish("Cancelled")
+                default: break
+                }
+            }
+            connection.start(queue: queue)
+            queue.asyncAfter(deadline: .now() + 8) { finish("Timed out after 8 seconds") }
+        }
+        tcpResult = result
+    }
+
     @MainActor private func connectAndRead() async {
         guard let pairing else { status = "Scan pairing QR first"; return }
         loading = true
@@ -231,5 +260,17 @@ struct RecoveryDiagnosticsView: View {
             }
         }
         return false
+    }
+}
+
+private final class TCPCompletionState: @unchecked Sendable {
+    private let lock = NSLock()
+    private var completed = false
+    func claim() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        guard !completed else { return false }
+        completed = true
+        return true
     }
 }
