@@ -2,6 +2,7 @@ import SwiftUI
 import Security
 import NetworkExtension
 import Network
+import CoreLocation
 
 struct DeviceManagementView: View {
     var body: some View {
@@ -86,6 +87,7 @@ struct RecoveryDiagnosticsView: View {
     @State private var loading = false
     @State private var scanning = false
     @State private var currentSSID = "Checking…"
+    @State private var locationPermission = WiFiLocationPermission()
     @State private var networkPath = "Checking…"
     @State private var tcpResult = "Not tested"
     @State private var pairing = RecoveryPairingStore.load()
@@ -175,8 +177,9 @@ struct RecoveryDiagnosticsView: View {
     }
 
     @MainActor private func refreshWiFiSSID() async {
+        locationPermission.requestIfNeeded()
         let network = await NEHotspotNetwork.fetchCurrent()
-        currentSSID = network?.ssid ?? "Unavailable (iOS did not disclose SSID)"
+        currentSSID = network?.ssid ?? "SSID unavailable — allow Precise Location for Lollipop"
         networkPath = await withCheckedContinuation { continuation in
             let monitor = NWPathMonitor(requiredInterfaceType: .wifi)
             monitor.pathUpdateHandler = { path in
@@ -285,8 +288,12 @@ private enum RecoveryTCPHTTP {
                         if let error { finish(.failure(error)); return }
                         @Sendable func receive() {
                             connection.receive(minimumIncompleteLength: 1, maximumLength: 8192) { data, _, complete, error in
-                                if let error { finish(.failure(error)); return }
                                 if let data { state.append(data) }
+                                if let error {
+                                    if let response = try? state.parseIfComplete() { finish(.success(response)) }
+                                    else { finish(.failure(error)) }
+                                    return
+                                }
                                 if state.count > 16384 {
                                     finish(.failure(URLError(.dataLengthExceedsMaximum))); return
                                 }
@@ -321,6 +328,10 @@ private final class RecoveryHTTPState: @unchecked Sendable {
         return true
     }
     func append(_ data: Data) { lock.lock(); buffer.append(data); lock.unlock() }
+    func parseIfComplete() throws -> (Data, Int)? {
+        let response = try parse()
+        return response.0.isEmpty ? nil : response
+    }
     func parse() throws -> (Data, Int) {
         lock.lock(); defer { lock.unlock() }
         let delimiter = Data("\r\n\r\n".utf8)
@@ -352,5 +363,16 @@ private final class RecoveryHTTPState: @unchecked Sendable {
             output.append(remaining.prefix(size))
             remaining.removeSubrange(..<(size + 2))
         }
+    }
+}
+
+@MainActor private final class WiFiLocationPermission: NSObject, CLLocationManagerDelegate {
+    private let manager = CLLocationManager()
+    override init() {
+        super.init()
+        manager.delegate = self
+    }
+    func requestIfNeeded() {
+        if manager.authorizationStatus == .notDetermined { manager.requestWhenInUseAuthorization() }
     }
 }
