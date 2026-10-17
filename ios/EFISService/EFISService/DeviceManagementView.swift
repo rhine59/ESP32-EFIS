@@ -143,7 +143,11 @@ struct RecoveryDiagnosticsView: View {
         guard let pairing else { status = "Scan pairing QR first"; return }
         loading = true
         defer { loading = false }
-        status = "Joining \(pairing.ssid)…"
+        // A device already joined manually must work even if iOS refuses to reapply
+        // its hotspot configuration. Try the authenticated local endpoint first.
+        status = "Checking existing RedOne connection…"
+        if await readDiagnostics(pairing, attempts: 1) { return }
+        status = "Requesting Wi-Fi connection to \(pairing.ssid)…"
         let config = NEHotspotConfiguration(ssid: pairing.ssid, passphrase: pairing.password, isWEP: false)
         config.joinOnce = false
         let joinError: Error? = await withCheckedContinuation { continuation in
@@ -153,10 +157,15 @@ struct RecoveryDiagnosticsView: View {
         }
         if let error = joinError as NSError?,
            error.code != NEHotspotConfigurationError.alreadyAssociated.rawValue {
-            status = "Wi-Fi join failed: \(error.localizedDescription)"
+            status = "iOS could not join \(pairing.ssid): \(error.localizedDescription). Join it in Settings → Wi-Fi, then tap Connect again."
             return
         }
-        for attempt in 0..<6 {
+        status = "Wi-Fi join requested; waiting for RedOne diagnostics…"
+        _ = await readDiagnostics(pairing, attempts: 6)
+    }
+
+    @MainActor private func readDiagnostics(_ pairing: RecoveryPairing, attempts: Int) async -> Bool {
+        for attempt in 0..<attempts {
             do {
                 var request = URLRequest(url: url)
                 request.timeoutInterval = 4
@@ -171,9 +180,9 @@ struct RecoveryDiagnosticsView: View {
                 }
                 report = decoded
                 status = "Connected to \(pairing.ssid) — diagnostics received"
-                return
+                return true
             } catch {
-                if attempt == 5 {
+                if attempt == attempts - 1 {
                     report = nil
                     status = "Recovery diagnostics unavailable: \(error.localizedDescription)"
                 } else {
@@ -181,5 +190,6 @@ struct RecoveryDiagnosticsView: View {
                 }
             }
         }
+        return false
     }
 }
