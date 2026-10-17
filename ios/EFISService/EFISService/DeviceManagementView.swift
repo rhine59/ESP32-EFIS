@@ -84,7 +84,9 @@ struct RecoveryDiagnosticsView: View {
                 Text(status).foregroundStyle(.secondary)
                 if let pairing {
                     LabeledContent("Remembered RedOne", value: pairing.ssid)
-                    Button("Connect and read diagnostics") { Task { await connectAndRead() } }
+                    Button("Read diagnostics over current Wi-Fi") { Task { await connectAndRead() } }
+                        .disabled(loading)
+                    Button("Request automatic Wi-Fi join") { Task { await requestWiFiJoin() } }
                         .disabled(loading)
                 }
                 Button(pairing == nil ? "Scan RedOne pairing QR code" : "Pair another RedOne") {
@@ -130,7 +132,7 @@ struct RecoveryDiagnosticsView: View {
                     let saved = RecoveryPairing(ssid: ssid, password: password, token: token)
                     try RecoveryPairingStore.save(saved)
                     pairing = saved
-                    Task { await connectAndRead() }
+                    status = "Pairing saved. Join RedOne Wi-Fi, then tap Read diagnostics over current Wi-Fi."
                 } catch {
                     status = "Invalid pairing QR: \(error.localizedDescription)"
                 }
@@ -143,10 +145,14 @@ struct RecoveryDiagnosticsView: View {
         guard let pairing else { status = "Scan pairing QR first"; return }
         loading = true
         defer { loading = false }
-        // A device already joined manually must work even if iOS refuses to reapply
-        // its hotspot configuration. Try the authenticated local endpoint first.
-        status = "Checking existing RedOne connection…"
-        if await readDiagnostics(pairing, attempts: 1) { return }
+        status = "Reading diagnostics over the current Wi-Fi connection…"
+        _ = await readDiagnostics(pairing, attempts: 3)
+    }
+
+    @MainActor private func requestWiFiJoin() async {
+        guard let pairing else { status = "Scan pairing QR first"; return }
+        loading = true
+        defer { loading = false }
         status = "Requesting Wi-Fi connection to \(pairing.ssid)…"
         let config = NEHotspotConfiguration(ssid: pairing.ssid, passphrase: pairing.password, isWEP: false)
         config.joinOnce = false
