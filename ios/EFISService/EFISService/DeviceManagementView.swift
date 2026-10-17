@@ -106,15 +106,13 @@ struct RecoveryDiagnosticsView: View {
                 .padding(.vertical, 10)
                 .accessibilityElement(children: .combine)
                 if let pairing {
-                    Text("In iPhone Settings → Wi-Fi, connect to \(pairing.ssid), then return to Lollipop.")
-                        .font(.footnote)
+                    Button("Connect to \(pairing.ssid)") { Task { await joinRedOne(pairing) } }
+                        .disabled(loading)
                     Button("Read diagnostics") { Task { await connectAndRead() } }
                         .disabled(loading)
                 }
-                if pairing == nil {
-                    Button("Scan RedOne pairing QR code") { scanning = true }
-                        .disabled(loading)
-                }
+                Button("Scan RedOne QR code") { scanning = true }
+                    .disabled(loading)
             }
             Section("Hardware tests") {
                 ForEach(categories, id: \.self) { name in
@@ -152,7 +150,8 @@ struct RecoveryDiagnosticsView: View {
                     try RecoveryPairingStore.save(saved)
                     pairing = saved
                     statusState = .idle
-                    status = "Pairing saved. Join RedOne Wi-Fi, then tap Read diagnostics."
+                    status = "Pairing saved. Connecting to RedOne…"
+                    Task { await joinRedOne(saved) }
                 } catch {
                     status = "Invalid pairing QR: \(error.localizedDescription)"
                 }
@@ -174,6 +173,36 @@ struct RecoveryDiagnosticsView: View {
             }
             monitor.start(queue: DispatchQueue(label: "redone.recovery.path"))
         }
+    }
+
+    @MainActor private func joinRedOne(_ device: RecoveryPairing) async {
+        loading = true
+        statusState = .progress
+        status = "Requesting Wi-Fi connection…"
+        let configuration = NEHotspotConfiguration(ssid: device.ssid, passphrase: device.password, isWEP: false)
+        configuration.joinOnce = false
+        let error: Error? = await withCheckedContinuation { continuation in
+            NEHotspotConfigurationManager.shared.apply(configuration) { result in
+                continuation.resume(returning: result)
+            }
+        }
+        if let error = error as NSError?,
+           !(error.domain == NEHotspotConfigurationErrorDomain &&
+             error.code == NEHotspotConfigurationError.alreadyAssociated.rawValue) {
+            statusState = .failure
+            status = "Wi-Fi connection failed: \(error.localizedDescription)"
+        } else {
+            try? await Task.sleep(for: .seconds(2))
+            await refreshWiFiSSID()
+            if currentSSID == device.ssid {
+                statusState = .success
+                status = "Connected to \(device.ssid). Ready for diagnostics."
+            } else {
+                statusState = .idle
+                status = "Connection requested. Check iPhone Wi-Fi if needed."
+            }
+        }
+        loading = false
     }
 
     @MainActor private func connectAndRead() async {
