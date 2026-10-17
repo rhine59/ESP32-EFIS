@@ -147,6 +147,26 @@ struct RecoveryDiagnosticsView: View {
                     Button("Read diagnostics from RedOne") { Task { await connectAndRead() } }
                         .disabled(loading)
                 }
+            }
+            Section("Diagnostic tests") {
+                ForEach(categories, id: \.self) { name in
+                    let result = report?.tests.first(where: { $0.name == name })
+                    let resultColor: Color = result == nil ? .gray : result?.result == "PASS" ? .green : result?.result == "FAIL" ? .red : .yellow
+                    let detail = result == nil ? "Not Tested — awaiting diagnostics" : result?.result == "SKIP" ? (result?.detail ?? "Not Tested — device unavailable") : (result?.detail ?? "")
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(name).font(.headline)
+                            Spacer()
+                            Text(result?.result ?? "TODO")
+                                .font(.caption).bold()
+                                .foregroundStyle(resultColor)
+                        }
+                        Text(detail)
+                            .font(.caption).foregroundStyle(resultColor)
+                    }
+                }
+            }
+            Section {
                 Button("Inspect RedOne firmware slots") { Task { await inspectFirmware() } }
                     .disabled(loading || pairing == nil)
                 Button("Scan RedOne connection QR code") { scanning = true }
@@ -164,24 +184,6 @@ struct RecoveryDiagnosticsView: View {
                     LabeledContent("Activation", value: inventory.activationEnabled ? "Enabled" : "Locked")
                     LabeledContent("Rollback", value: inventory.rollbackEnabled ? "Enabled" : "Locked")
                     Text(inventory.reason).font(.footnote).foregroundStyle(.orange)
-                }
-            }
-            Section("Hardware tests") {
-                ForEach(categories, id: \.self) { name in
-                    let result = report?.tests.first(where: { $0.name == name })
-                    let resultColor: Color = result == nil ? .gray : result?.result == "PASS" ? .green : result?.result == "FAIL" ? .red : .yellow
-                    let detail = result == nil ? "Not Tested — awaiting diagnostics" : result?.result == "SKIP" ? (result?.detail ?? "Not Tested — device unavailable") : (result?.detail ?? "")
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text(name).font(.headline)
-                            Spacer()
-                            Text(result?.result ?? "TODO")
-                                .font(.caption).bold()
-                                .foregroundStyle(resultColor)
-                        }
-                        Text(detail)
-                            .font(.caption).foregroundStyle(resultColor)
-                    }
                 }
             }
         }
