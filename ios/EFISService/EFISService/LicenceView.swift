@@ -280,68 +280,106 @@ private let processCatalogue: [ProcessDefinition] = [
 struct ProcessHomeView: View {
     @EnvironmentObject var model: LicenceViewModel
     @State private var scanningLogin = false
+    @State private var expandedGroup: String? = "EFIS Management"
+
+    private let groups: [(title: String, icon: String, subtitle: String, processes: [String])] = [
+        ("License Management", "key", "Accounts, entitlements and ownership", ["buy", "renew", "install", "recover"]),
+        ("EFIS Management", "airplane", "RedOne setup, connectivity and firmware", ["setup", "firmware", "reassign", "receive", "replace", "commission"]),
+        ("SMUX Management", "cpu", "BlueOne setup and sensor management", []),
+        ("Diagnostics", "waveform.path.ecg", "System health and manual controls", ["diagnose"]),
+        ("Help", "questionmark.circle", "Guidance and troubleshooting", [])
+    ]
+
+    @ViewBuilder
+    private func destination(for process: ProcessDefinition) -> some View {
+        switch process.id {
+        case "buy": BuyLicenceFlowView()
+        case "setup": SetupNewEFISFlowView()
+        case "reassign": ReassignEFISFlowView()
+        case "firmware": UpdateEFISFlowView()
+        case "receive": ReceiveTransferredEFISFlowView()
+        default: GenericProcessFlowView(process: process)
+        }
+    }
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("What do you want to do?")
-                            .font(.title2.bold())
-                        Text("Choose a process. The app will show what is complete, what needs attention and the next action.")
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.vertical, 6)
+                        Text("What to do next").font(.headline)
+                        Text("Choose a management area, then select the process you need.")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                    }.padding(.vertical, 6)
                 }
-
                 Section("Lollipop account") {
-                    if let account=model.lollipopAccount {
-                        Label("Signed in as \(account.email)",systemImage:"person.crop.circle.badge.checkmark").foregroundStyle(.green)
-                        Button(role:.destructive) { Task { await model.signOut() } } label: { Label("Sign out",systemImage:"rectangle.portrait.and.arrow.right") }
-                    } else { Button { scanningLogin=true } label: { Label("Scan sign-in QR code",systemImage:"qrcode.viewfinder") } }
+                    if let account = model.lollipopAccount {
+                        Label("Signed in as \(account.email)", systemImage: "person.crop.circle.badge.checkmark")
+                            .foregroundStyle(.green)
+                        Button(role: .destructive) {
+                            Task { await model.signOut() }
+                        } label: {
+                            Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right")
+                        }
+                    } else {
+                        Button { scanningLogin = true } label: {
+                            Label("Scan sign-in QR code", systemImage: "qrcode.viewfinder")
+                        }
+                    }
                 }
-
-                Section("Processes") {
-                    ForEach(processCatalogue) { process in
-                        NavigationLink {
-                            if process.id == "buy" {
-                                BuyLicenceFlowView()
-                            } else if process.id == "setup" {
-                                SetupNewEFISFlowView()
-                            } else if process.id == "reassign" {
-                                ReassignEFISFlowView()
-                            } else if process.id == "firmware" {
-                                EFISWiFiView()
-                            } else if process.id == "receive" {
-                                ReceiveTransferredEFISFlowView()
-                            } else {
-                                GenericProcessFlowView(process: process)
+                Section("Management") {
+                    ForEach(groups, id: \.title) { group in
+                        DisclosureGroup(isExpanded: Binding(
+                            get: { expandedGroup == group.title },
+                            set: { expandedGroup = $0 ? group.title : nil }
+                        )) {
+                            if group.title == "SMUX Management" {
+                                Label("BlueOne management is not yet implemented. CAN and firmware authentication must be validated first.", systemImage: "info.circle")
+                                    .font(.subheadline).foregroundStyle(.secondary)
+                            } else if group.title == "Help" {
+                                Text("Select a process for its guided steps. For advanced troubleshooting, use Diagnostics.")
+                                    .font(.subheadline).foregroundStyle(.secondary)
+                            }
+                            ForEach(processCatalogue.filter { group.processes.contains($0.id) }) { process in
+                                NavigationLink {
+                                    destination(for: process)
+                                } label: {
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(process.title).font(.subheadline.weight(.semibold))
+                                        Text(process.subtitle).font(.caption).foregroundStyle(.secondary)
+                                    }.padding(.vertical, 4)
+                                }
+                            }
+                            if group.title == "Diagnostics" {
+                                NavigationLink {
+                                    LicenceView()
+                                } label: {
+                                    Label("Licence diagnostics & manual controls", systemImage: "wrench.and.screwdriver")
+                                }
                             }
                         } label: {
                             Label {
                                 VStack(alignment: .leading, spacing: 3) {
-                                    Text(process.title).font(.headline)
-                                    Text(process.subtitle).font(.caption).foregroundStyle(.secondary)
+                                    Text(group.title).font(.headline)
+                                    Text(group.subtitle).font(.caption).foregroundStyle(.secondary)
                                 }
                             } icon: {
-                                Image(systemName: process.systemImage)
-                                    .foregroundStyle(.blue)
-                            }
-                            .padding(.vertical, 5)
+                                Image(systemName: group.icon).foregroundStyle(.blue)
+                            }.padding(.vertical, 6)
                         }
-                    }
-                }
-
-                Section("Advanced") {
-                    NavigationLink {
-                        LicenceView()
-                    } label: {
-                        Label("Licence diagnostics & manual controls", systemImage: "wrench.and.screwdriver")
                     }
                 }
             }
             .navigationTitle("Lollipop")
-            .sheet(isPresented:$scanningLogin) { DeviceQRScannerView(onDeviceID:{ value in scanningLogin=false; if let url=URL(string:value) { Task { await model.handleAccountLogin(url:url) } } },onCancel:{ scanningLogin=false },acceptsLogin:true).ignoresSafeArea() }
+            .sheet(isPresented: $scanningLogin) {
+                DeviceQRScannerView(onDeviceID: { value in
+                    scanningLogin = false
+                    if let url = URL(string: value) {
+                        Task { await model.handleAccountLogin(url: url) }
+                    }
+                }, onCancel: { scanningLogin = false }, acceptsLogin: true)
+                .ignoresSafeArea()
+            }
         }
     }
 }
