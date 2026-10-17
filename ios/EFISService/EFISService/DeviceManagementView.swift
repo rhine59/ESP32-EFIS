@@ -109,6 +109,8 @@ struct RecoveryDiagnosticsView: View {
     @State private var report: RecoveryDiagnosticReport?
     @State private var firmwareInventory: RecoveryFirmwareInventory?
     @State private var firmwareStatus = "Firmware inventory not yet checked"
+    @State private var signatureTestStatus = "No signed-release verification test performed"
+    @State private var signatureTestPassed: Bool?
     @State private var status = "Connect to RedOne Wi-Fi, then read diagnostics."
     @State private var statusState: StatusState = .idle
     private enum StatusState { case idle, progress, success, failure }
@@ -180,17 +182,30 @@ struct RecoveryDiagnosticsView: View {
                 Button("Inspect RedOne firmware slots") { Task { await inspectFirmware() } }
                     .disabled(loading || pairing == nil)
                 Text(firmwareStatus).font(.subheadline).foregroundStyle(.secondary)
+                Group {
                 if let inventory = firmwareInventory {
                     LabeledContent("Running partition", value: inventory.running)
                     LabeledContent("Partition A", value: inventory.otaA)
                     LabeledContent("Partition B", value: inventory.otaB)
                     LabeledContent("A capacity", value: ByteCountFormatter.string(fromByteCount: Int64(inventory.otaASize), countStyle: .file))
                     LabeledContent("B capacity", value: ByteCountFormatter.string(fromByteCount: Int64(inventory.otaBSize), countStyle: .file))
+                    Group {
                     LabeledContent("Transfer", value: inventory.transferEnabled ? "Enabled" : "Locked")
                     LabeledContent("Activation", value: inventory.activationEnabled ? "Enabled" : "Locked")
                     LabeledContent("Rollback", value: inventory.rollbackEnabled ? "Enabled" : "Locked")
                     Text(inventory.reason).font(.footnote).foregroundStyle(.orange)
+                    }
                 }
+                }
+            }
+            Section {
+                Button("Test RedOne firmware signature verification") {
+                    Task { await testFirmwareSignature() }
+                }
+                .disabled(loading || pairing == nil)
+                Text(signatureTestStatus).font(.footnote)
+            } header: {
+                Text("Signed firmware verification")
             }
         }
         .navigationTitle("Diagnostics")
@@ -267,6 +282,60 @@ struct RecoveryDiagnosticsView: View {
         loading = false
     }
 
+    @MainActor private func testFirmwareSignature() async {
+        guard let pairing else { signatureTestStatus = "Pair RedOne first"; return }
+        loading = true
+        signatureTestPassed = nil
+        signatureTestStatus = "Looking for a cached publisher-signed release…"
+        defer { loading = false }
+        do {
+            guard let release = try FirmwareLibrary.load().first(where: {
+                $0.signedEnvelope != nil && FirmwareLibrary.verify($0)
+            }), let envelope = release.signedEnvelope else {
+                signatureTestStatus = "No verified publisher-signed release cached. Download a signed release in Firmware first."
+                return
+            }
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+            let valid = try encoder.encode(envelope)
+            signatureTestStatus = "Checking original signed envelope on RedOne…"
+            let (validData, validCode) = try await RecoveryTCPHTTP.post(token: pairing.token,
+                path: "/api/recovery/firmware/verify", body: valid)
+            guard validCode == 200,
+                  let original = try JSONSerialization.jsonObject(with: validData) as? [String: Any],
+                  original["signatureVerified"] as? Bool == true,
+                  original["transferEnabled"] as? Bool == false else {
+                throw NSError(domain: "RedOne signature verification", code: validCode,
+                    userInfo: [NSLocalizedDescriptionKey: "RedOne did not accept the original signed envelope. HTTP \(validCode)"])
+            }
+            // Tamper with the signed payload without changing its signature.
+            let altered = SignedFirmwarePayload(product: envelope.payload.product,
+                version: envelope.payload.version + "-tampered", build: envelope.payload.build,
+                hardware_profile: envelope.payload.hardware_profile, idf: envelope.payload.idf,
+                image_url: envelope.payload.image_url, sha256: envelope.payload.sha256,
+                minimum_allowed_version: envelope.payload.minimum_allowed_version,
+                release_notes: envelope.payload.release_notes)
+            let tampered = SignedFirmwareEnvelope(signature_format: envelope.signature_format,
+                key_id: envelope.key_id, payload: altered, signature: envelope.signature)
+            let invalid = try encoder.encode(tampered)
+            signatureTestStatus = "Original accepted. Checking tampered envelope is rejected…"
+            let (invalidData, invalidCode) = try await RecoveryTCPHTTP.post(token: pairing.token,
+                path: "/api/recovery/firmware/verify", body: invalid)
+            guard invalidCode == 200,
+                  let rejected = try JSONSerialization.jsonObject(with: invalidData) as? [String: Any],
+                  rejected["signatureVerified"] as? Bool == false,
+                  rejected["transferEnabled"] as? Bool == false else {
+                throw NSError(domain: "RedOne signature verification", code: invalidCode,
+                    userInfo: [NSLocalizedDescriptionKey: "Tampered envelope was not safely rejected"])
+            }
+            signatureTestPassed = true
+            signatureTestStatus = "PASS: RedOne accepted the original publisher signature and rejected the altered release. Transfer remains locked."
+        } catch {
+            signatureTestPassed = false
+            signatureTestStatus = "Verification test failed: \(error.localizedDescription)"
+        }
+    }
+
     @MainActor private func inspectFirmware() async {
         guard let pairing else { firmwareStatus = "Scan RedOne QR first"; return }
         loading = true
@@ -326,6 +395,13 @@ struct RecoveryDiagnosticsView: View {
 
 private enum RecoveryTCPHTTP {
     static func fetch(token: String, path: String = "/api/recovery/diagnostics") async throws -> (Data, Int) {
+        try await request(token: token, path: path, body: nil)
+    }
+    static func post(token: String, path: String, body: Data) async throws -> (Data, Int) {
+        guard body.count <= 8192 else { throw URLError(.dataLengthExceedsMaximum) }
+        return try await request(token: token, path: path, body: body)
+    }
+    private static func request(token: String, path: String, body: Data?) async throws -> (Data, Int) {
         try await withCheckedThrowingContinuation { continuation in
             let queue = DispatchQueue(label: "redone.recovery.http")
             let parameters = NWParameters.tcp
@@ -342,7 +418,10 @@ private enum RecoveryTCPHTTP {
                 switch status {
                 case .ready:
                     state.setPhase("TCP connected; waiting for HTTP response")
-                    let request = "GET \(path) HTTP/1.1\r\nHost: 192.168.4.1\r\nX-RedOne-Recovery-Token: \(token)\r\nConnection: close\r\n\r\n"
+                    let method = body == nil ? "GET" : "POST"
+                    let headers = "\(method) \(path) HTTP/1.1\r\nHost: 192.168.4.1\r\nX-RedOne-Recovery-Token: \(token)\r\nConnection: close\r\n" + (body == nil ? "" : "Content-Type: application/json\r\nContent-Length: \(body!.count)\r\n") + "\r\n"
+                    var request = Data(headers.utf8)
+                    if let body { request.append(body) }
                     // Start receiving immediately: some ESP-IDF responses close quickly,
                     // and waiting for send completion can lose the reply on reset.
                     @Sendable func receive() {
@@ -366,7 +445,7 @@ private enum RecoveryTCPHTTP {
                             }
                         }
                     receive()
-                    connection.send(content: Data(request.utf8), completion: .contentProcessed { error in
+                    connection.send(content: request, completion: .contentProcessed { error in
                         if let error {
                             if let response = try? state.parseIfComplete() { finish(.success(response)) }
                             else { finish(.failure(error)) }
