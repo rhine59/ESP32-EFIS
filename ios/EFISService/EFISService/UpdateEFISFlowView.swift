@@ -6,23 +6,24 @@ import SwiftUI
 struct UpdateEFISFlowView: View {
     var body: some View {
         List {
-            Section("Prepare online") {
-                Label("1. Download published firmware", systemImage: "arrow.down.circle")
+            Section("Download and verify") {
+                Label("1. Download signed firmware", systemImage: "arrow.down.circle")
                     .font(.headline)
                 Text("While connected to the internet, check the official publishing service and download its firmware image. The SHA-256 checksum is checked against the published manifest.")
                 Text("A release is trusted only when its Ed25519 signature and firmware checksum both verify. Signed releases remain available offline.")
                     .font(.footnote).foregroundStyle(.orange)
-                NavigationLink("Open firmware download and connection") {
+                Label("2. Verify signed firmware", systemImage: "checkmark.shield")
+                NavigationLink("Download / verify / connect") {
                     EFISWiFiView()
                 }
             }
-            Section("At the EFIS") {
-                Label("2. Connect to EFIS", systemImage: "wifi")
+            Section("Connect and transfer") {
+                Label("3. Connect to EFIS", systemImage: "wifi")
                 Text("Join the RedOne Wi-Fi network and verify the device identity and installed firmware.")
-                Label("3. Push firmware", systemImage: "arrow.up.circle")
-                Label("4. Verify staged firmware", systemImage: "checkmark.shield")
-                Label("5. Activate firmware", systemImage: "power")
-                Label("6. Roll back if necessary", systemImage: "arrow.uturn.backward")
+                Label("4. Push firmware", systemImage: "arrow.up.circle")
+                Label("5. Verify staged firmware", systemImage: "checkmark.shield")
+                Label("6. Activate firmware", systemImage: "power")
+                Label("7. Roll back if necessary", systemImage: "arrow.uturn.backward")
             }
             Section("Implementation status") {
                 Label("Signed download, offline verification and connection inspection available", systemImage: "checkmark.circle")
@@ -33,7 +34,7 @@ struct UpdateEFISFlowView: View {
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }
-        .navigationTitle("Update an EFIS")
+        .navigationTitle("Update EFIS")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
