@@ -67,7 +67,8 @@ struct EFISWiFiView: View {
                             Text("RedOne \(release.version)").font(.headline)
                             Text(release.hardwareProfile).font(.caption)
                             Text(release.downloadedAt, style: .date).font(.caption)
-                            Text(FirmwareLibrary.verify(release) ? "Trusted signed release verified" : "Missing or damaged file")
+                            Text(FirmwareLibrary.verify(release) ? "Trusted signed release verified" :
+                                 release.signedEnvelope == nil ? "Legacy unsigned cache — download a signed copy" : "Signed release verification failed — download again")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
