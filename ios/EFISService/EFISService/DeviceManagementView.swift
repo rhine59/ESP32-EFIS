@@ -85,6 +85,14 @@ struct RecoveryDiagnosticsView: View {
     @State private var scanning = false
     @State private var pairing = RecoveryPairingStore.load()
     private let url = URL(string: "http://192.168.4.1/api/recovery/diagnostics")!
+    private let diagnosticsSession: URLSession = {
+        let config = URLSessionConfiguration.ephemeral
+        config.allowsCellularAccess = false
+        config.waitsForConnectivity = false
+        config.timeoutIntervalForRequest = 10
+        config.timeoutIntervalForResource = 15
+        return URLSession(configuration: config)
+    }()
     private let categories = ["Power supply and voltage monitoring", "ESP32 memory and flash", "Display and backlight", "Rotary encoder and push switch", "BMI088 attitude sensor", "BMP585 pressure sensor", "RM3100 magnetometer", "CAN bus and SMUX", "Wi-Fi communications", "Non-volatile configuration"]
 
     var body: some View {
@@ -170,9 +178,10 @@ struct RecoveryDiagnosticsView: View {
         for attempt in 0..<attempts {
             do {
                 var request = URLRequest(url: url)
-                request.timeoutInterval = 4
+                request.timeoutInterval = 10
+                request.cachePolicy = .reloadIgnoringLocalCacheData
                 request.setValue(pairing.token, forHTTPHeaderField: "X-RedOne-Recovery-Token")
-                let (data, response) = try await URLSession.shared.data(for: request)
+                let (data, response) = try await diagnosticsSession.data(for: request)
                 guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
                 guard http.statusCode == 200 else {
                     throw NSError(domain: "RedOne recovery", code: http.statusCode, userInfo: [NSLocalizedDescriptionKey: "HTTP \(http.statusCode): \(http.statusCode == 401 ? "Pairing token rejected" : "Diagnostics endpoint rejected the request")"])
@@ -189,7 +198,8 @@ struct RecoveryDiagnosticsView: View {
                 if attempt == attempts - 1 {
                     report = nil
                     statusState = .failure
-                    status = "Recovery diagnostics unavailable: \(error.localizedDescription)"
+                    let nsError = error as NSError
+                    status = "Recovery diagnostics failed [\(nsError.domain):\(nsError.code)]: \(error.localizedDescription)"
                 } else {
                     try? await Task.sleep(for: .seconds(1))
                 }
