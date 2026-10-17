@@ -290,6 +290,9 @@ private enum RecoveryTCPHTTP {
                     @Sendable func receive() {
                             connection.receive(minimumIncompleteLength: 1, maximumLength: 8192) { data, _, complete, error in
                                 if let data { state.append(data) }
+                                if let response = try? state.parseIfComplete() {
+                                    finish(.success(response)); return
+                                }
                                 if let error {
                                     if let response = try? state.parseIfComplete() { finish(.success(response)) }
                                     else { finish(.failure(error)) }
@@ -343,8 +346,27 @@ private final class RecoveryHTTPState: @unchecked Sendable {
     }
     func append(_ data: Data) { lock.lock(); buffer.append(data); lock.unlock() }
     func parseIfComplete() throws -> (Data, Int)? {
-        let response = try parse()
-        return response.0.isEmpty ? nil : response
+        lock.lock()
+        let snapshot = buffer
+        lock.unlock()
+        let delimiter = Data("\r\n\r\n".utf8)
+        guard let range = snapshot.range(of: delimiter),
+              let headers = String(data: snapshot[..<range.lowerBound], encoding: .utf8) else {
+            return nil
+        }
+        let body = Data(snapshot[range.upperBound...])
+        if headers.lowercased().contains("transfer-encoding: chunked") {
+            return try? parse()
+        }
+        let lengthLine = headers.components(separatedBy: "\r\n").first {
+            $0.lowercased().hasPrefix("content-length:")
+        }
+        if let lengthLine,
+           let expected = Int(lengthLine.split(separator: ":", maxSplits: 1).last?.trimmingCharacters(in: .whitespaces) ?? ""),
+           expected >= 0, body.count >= expected {
+            return try parse()
+        }
+        return nil
     }
     func parse() throws -> (Data, Int) {
         lock.lock(); defer { lock.unlock() }
