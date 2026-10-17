@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 def canonical_bytes(payload):
-    return json.dumps(payload, sort_keys=True, separators=(',', ':'), ensure_ascii=True).encode('ascii')
+    return json.dumps(payload, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
 
 def sign_release(payload, private_key_pem_path, key_id):
     from cryptography.hazmat.primitives import serialization
