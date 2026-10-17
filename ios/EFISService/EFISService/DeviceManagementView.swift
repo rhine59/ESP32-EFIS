@@ -176,8 +176,8 @@ struct RecoveryDiagnosticsView: View {
                 Text(firmwareStatus).font(.subheadline).foregroundStyle(.secondary)
                 if let inventory = firmwareInventory {
                     LabeledContent("Running partition", value: inventory.running)
-                    LabeledContent("EFIS A", value: inventory.otaA)
-                    LabeledContent("EFIS B", value: inventory.otaB)
+                    LabeledContent("Partition A", value: inventory.otaA)
+                    LabeledContent("Partition B", value: inventory.otaB)
                     LabeledContent("A capacity", value: ByteCountFormatter.string(fromByteCount: Int64(inventory.otaASize), countStyle: .file))
                     LabeledContent("B capacity", value: ByteCountFormatter.string(fromByteCount: Int64(inventory.otaBSize), countStyle: .file))
                     LabeledContent("Transfer", value: inventory.transferEnabled ? "Enabled" : "Locked")
