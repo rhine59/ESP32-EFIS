@@ -130,7 +130,17 @@ struct RecoveryDiagnosticsView: View {
 
     var body: some View {
         List {
-            Section {
+            Section("Connection") {
+                Button("Scan RedOne connection QR code") { scanning = true }
+                    .disabled(loading)
+                if let pairing {
+                    LabeledContent("Paired RedOne", value: pairing.ssid)
+                    Button("Connect to \(pairing.ssid)") { Task { await joinRedOne(pairing) } }
+                        .disabled(loading)
+                } else {
+                    Text("Scan the RedOne connection QR code to pair this phone.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
                 LabeledContent("Current Wi-Fi", value: currentSSID)
                 Button("Refresh Wi-Fi status") { Task { await refreshWiFiSSID() } }
                 HStack(spacing: 10) {
@@ -141,14 +151,14 @@ struct RecoveryDiagnosticsView: View {
                 .foregroundStyle(statusColor)
                 .padding(.vertical, 10)
                 .accessibilityElement(children: .combine)
-                if let pairing {
-                    Button("Connect to \(pairing.ssid)") { Task { await joinRedOne(pairing) } }
-                        .disabled(loading)
-                    Button("Read diagnostics from RedOne") { Task { await connectAndRead() } }
-                        .disabled(loading)
-                }
             }
             Section("Diagnostic tests") {
+                Button("Read diagnostics from RedOne") { Task { await connectAndRead() } }
+                    .disabled(loading || pairing == nil)
+                if report == nil {
+                    Text("No diagnostic report received yet.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
                 ForEach(categories, id: \.self) { name in
                     let result = report?.tests.first(where: { $0.name == name })
                     let resultColor: Color = result == nil ? .gray : result?.result == "PASS" ? .green : result?.result == "FAIL" ? .red : .yellow
@@ -166,13 +176,9 @@ struct RecoveryDiagnosticsView: View {
                     }
                 }
             }
-            Section {
+            Section("Firmware and recovery readiness") {
                 Button("Inspect RedOne firmware slots") { Task { await inspectFirmware() } }
                     .disabled(loading || pairing == nil)
-                Button("Scan RedOne connection QR code") { scanning = true }
-                    .disabled(loading)
-            }
-            Section("Firmware and recovery readiness") {
                 Text(firmwareStatus).font(.subheadline).foregroundStyle(.secondary)
                 if let inventory = firmwareInventory {
                     LabeledContent("Running partition", value: inventory.running)
