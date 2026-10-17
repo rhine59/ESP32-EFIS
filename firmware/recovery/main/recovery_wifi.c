@@ -56,6 +56,17 @@ static esp_err_t firmware_inventory_handler(httpd_req_t *req) {
     httpd_resp_set_hdr(req,"Cache-Control","no-store");
     return httpd_resp_sendstr(req,response);
 }
+/* Explicitly fail closed for firmware writes until device-side signature
+ * verification, inactive-slot safety and interrupted-write tests exist.
+ * Never silently accept a body or return a misleading staging success. */
+static esp_err_t firmware_stage_locked_handler(httpd_req_t *req) {
+    httpd_resp_set_status(req,"403 Forbidden");
+    httpd_resp_set_type(req,"application/json");
+    httpd_resp_set_hdr(req,"Cache-Control","no-store");
+    return httpd_resp_sendstr(req,
+        "{\"schema\":1,\"result\":\"LOCKED\",\"staged\":false,"
+        "\"reason\":\"Device-side Ed25519 validation and safe OTA staging not implemented\"}");
+}
 void recovery_wifi_start(void) {
     if(nvs_flash_init()!=ESP_OK) { ESP_LOGE("RECOVERY","NVS unavailable; Wi-Fi disabled"); return; }
     nvs_handle_t nvs;
@@ -88,5 +99,7 @@ void recovery_wifi_start(void) {
     ESP_ERROR_CHECK(httpd_register_uri_handler(server,&route));
     httpd_uri_t inventory={.uri="/api/recovery/firmware",.method=HTTP_GET,.handler=firmware_inventory_handler};
     ESP_ERROR_CHECK(httpd_register_uri_handler(server,&inventory));
+    httpd_uri_t stage={.uri="/api/recovery/firmware/stage",.method=HTTP_POST,.handler=firmware_stage_locked_handler};
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server,&stage));
     ESP_LOGW("RECOVERY","Read-only diagnostic AP ready: %s",ap.ap.ssid);
 }
