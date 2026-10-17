@@ -23,3 +23,9 @@ Reject absent/wrong authentication; unsigned, malformed, expired, wrong-product 
 ## Bench-only status
 
 This checkpoint adds an explicit locked endpoint and the written protocol contract. It does **not** implement device-side Ed25519, OTA chunk transfer, staging, activation or rollback. No phone firmware Push action is enabled.
+
+## ESP-IDF 5.4.4 Ed25519 capability check (17 October 2026)
+
+Checked the installed ESP-IDF 5.4.4 Mbed TLS headers and library sources. The headers declare the Ed25519 OID and TLS signature identifier, and the PSA headers define the `PSA_ALG_PURE_EDDSA` algorithm identifier. **These declarations do not mean the cryptographic verifier is implemented**: no `PSA_ALG_PURE_EDDSA` implementation references were found in the bundled Mbed TLS library sources, and no project Ed25519 verification implementation or dependency was found. `CONFIG_MBEDTLS_ECP_DP_CURVE25519_ENABLED` concerns Curve25519 support and does not establish Ed25519 verification.
+
+**Decision:** do not substitute X25519/ECDSA or accept a checksum as a signature. Select a maintained, reviewed embedded Ed25519 verifier with a reproducible pinned source/version and license, then test it against RFC 8032 vectors and the exact publisher canonical JSON bytes. Include valid signatures for each trusted key ID and negative tests for tampered fields, altered signature, wrong key, invalid encodings and signature malleability. Run these tests both on host and the ESP32 before opening the staging API. The 1 MiB factory partition size must still fit the recovery build after the dependency is linked.
