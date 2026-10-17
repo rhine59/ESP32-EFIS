@@ -313,6 +313,13 @@ struct ProcessHomeView: View {
                             .font(.subheadline).foregroundStyle(.secondary)
                     }.padding(.vertical, 6)
                 }
+                Section("About") {
+                    NavigationLink {
+                        LollipopAboutView()
+                    } label: {
+                        Label("About Lollipop", systemImage: "info.circle")
+                    }
+                }
                 Section("Management") {
                     ForEach(groups, id: \.title) { group in
                         DisclosureGroup(isExpanded: Binding(
@@ -390,6 +397,40 @@ struct ProcessHomeView: View {
                 .ignoresSafeArea()
             }
         }
+    }
+}
+
+private struct LollipopAboutView: View {
+    private var version: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Not set"
+    }
+    private var build: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Not set"
+    }
+
+    var body: some View {
+        List {
+            Section {
+                HStack(spacing: 14) {
+                    Image(systemName: "airplane.circle.fill")
+                        .font(.largeTitle)
+                        .foregroundStyle(.red)
+                    VStack(alignment: .leading) {
+                        Text("Lollipop").font(.title2.bold())
+                        Text("RedOne and SMUX management")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+            Section("App information") {
+                LabeledContent("Version", value: version)
+                LabeledContent("Build", value: build)
+                LabeledContent("Bundle ID", value: Bundle.main.bundleIdentifier ?? "Unknown")
+            }
+        }
+        .navigationTitle("About Lollipop")
     }
 }
 
