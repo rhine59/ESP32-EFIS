@@ -29,4 +29,17 @@ config EFIS_BMI088_DIAGNOSTICS
         This option does not feed BMI088 data into the flight display and must
         remain disabled for normal aircraft-use builds.
 
+config EFIS_RM3100_DIAGNOSTICS
+    bool "Enable RM3100 remote magnetometer bench diagnostics"
+    default n
+    depends on !EFIS_QEMU
+    help
+        Bench-only I2C diagnostics; never feeds the heading display.
+
+config EFIS_RM3100_I2C_ADDRESS
+    hex "RM3100 I2C address"
+    depends on EFIS_RM3100_DIAGNOSTICS
+    range 0x20 0x23
+    default 0x20
+
 endmenu
