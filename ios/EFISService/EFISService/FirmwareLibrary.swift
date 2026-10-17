@@ -49,6 +49,24 @@ enum FirmwareLibrary {
         return release
     }
 
+    // Conservative pre-transfer checks for the current RedOne partition table.
+    // This is not device-side authentication and does not authorize flashing.
+    static let maximumOTAImageBytes = 0x300000
+
+    static func transferPreflight(_ release: CachedFirmwareRelease) -> String? {
+        guard verify(release) else { return "Signed release or downloaded image failed verification" }
+        let file = folder.appendingPathComponent(release.filename)
+        guard let data = try? Data(contentsOf: file),
+              data.count >= 1024, data.count <= maximumOTAImageBytes else {
+            return "Firmware exceeds the 3 MiB OTA partition or is too small"
+        }
+        guard data.first == 0xE9 else { return "File does not have an ESP application image header" }
+        guard release.hardwareProfile == "s3-n16r2-v1" else {
+            return "Firmware is not intended for this RedOne hardware profile"
+        }
+        return nil
+    }
+
     static func verify(_ release: CachedFirmwareRelease) -> Bool {
         guard let envelope = release.signedEnvelope,
               SignedFirmwareVerifier.verify(envelope),

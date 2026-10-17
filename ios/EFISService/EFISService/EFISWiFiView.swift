@@ -40,6 +40,7 @@ struct EFISWiFiView: View {
     @State private var trustedEnvelope: SignedFirmwareEnvelope?
     @State private var firmwareSource = "publisher"
     @State private var firmwareAssessment = "No release verified"
+    @State private var selectedRelease: CachedFirmwareRelease?
     @State private var downloadedReleases: [CachedFirmwareRelease] = []
     private let publisherURL = URL(string: "https://granvillehouse.synology.me:8448/efis/manifest.json")!
     @AppStorage("redone.savedMacAddress") private var savedMacAddress = ""
@@ -153,6 +154,17 @@ struct EFISWiFiView: View {
                     if let firmwareDigest { Text("SHA-256: \(firmwareDigest)").font(.caption2).textSelection(.enabled) }
                 }
                 if let firmwareError { Text(firmwareError).foregroundStyle(.red).font(.footnote) }
+                if let selectedRelease {
+                    if let problem = FirmwareLibrary.transferPreflight(selectedRelease) {
+                        Label("Transfer preflight: \(problem)", systemImage: "xmark.shield")
+                            .foregroundStyle(.orange)
+                    } else {
+                        Label("Transfer preflight: signed ESP image fits Partition A/B", systemImage: "checkmark.shield")
+                            .foregroundStyle(.green)
+                        Text("This checks the cached package only. RedOne must still verify the release independently before any flash write.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
                 Label("3. Push firmware to EFIS", systemImage: "arrow.up.circle")
                     .font(.headline)
                 Button("Push selected firmware") { }
@@ -194,10 +206,12 @@ struct EFISWiFiView: View {
 
     private func selectCachedRelease(_ release: CachedFirmwareRelease) {
         guard FirmwareLibrary.verify(release) else {
+            selectedRelease = nil
             firmwareError = "Cached firmware is missing or corrupt."
             return
         }
         firmwareError = nil
+        selectedRelease = release
         firmwareName = release.filename
         firmwareDigest = release.sha256
         firmwareSize = (try? FirmwareLibrary.folder.appendingPathComponent(release.filename)
@@ -284,6 +298,7 @@ struct EFISWiFiView: View {
             let cached = try FirmwareLibrary.store(data, envelope: envelope)
             let destination = FirmwareLibrary.folder.appendingPathComponent(cached.filename)
             reloadLibrary()
+            selectedRelease = cached
             firmwareName = destination.lastPathComponent
             firmwareSize = Int64(data.count)
             firmwareDigest = digest
@@ -297,6 +312,7 @@ struct EFISWiFiView: View {
 
     @MainActor
     private func inspectFirmware(_ result: Result<[URL], Error>) async {
+        selectedRelease = nil
         firmwareName = nil
         firmwareSize = nil
         firmwareDigest = nil

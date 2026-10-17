@@ -25,3 +25,7 @@ Validate deliberate physical recovery entry without depending on either normal a
 ## Validation of checkpoint 1
 
 ESP-IDF recovery build and iOS device build succeeded. Recovery application-only flash at `0x20000` completed and esptool verified the written hash; bootloader, partition table and NVS were not rewritten. An end-to-end response from Lollipop remains to be observed on the phone. Firmware-changing controls remain disabled.
+
+## Stage 2 preflight checkpoint (17 October 2026)
+
+Lollipop's selected **cached signed release** now receives an additional transfer preflight before any device transfer is offered. It rechecks the signed envelope and SHA-256, requires the intended `s3-n16r2-v1` hardware profile, enforces the current 3 MiB OTA partition capacity, and checks the ESP image magic byte `0xE9`. Results are visible alongside the selected firmware in the update screen. Imported arbitrary local files do not qualify. These are necessary but **not sufficient** checks: the image header alone does not establish image structure, chip target, secure version or signature validity on RedOne. Device-side Ed25519 verification remains the blocking implementation gate; transfer/activation/rollback remain disabled. A future protocol must also prevent stale release selection and validate the actual destination partition capacity reported by the device.
