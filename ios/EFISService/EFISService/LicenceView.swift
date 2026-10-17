@@ -368,6 +368,11 @@ struct ProcessHomeView: View {
                             }
                             if group.title == "Diagnostics" {
                                 NavigationLink {
+                                    EFISWiFiView()
+                                } label: {
+                                    Label("Download signed firmware", systemImage: "arrow.down.doc")
+                                }
+                                NavigationLink {
                                     RecoveryDiagnosticsView()
                                 } label: {
                                     Label("RedOne hardware diagnostics", systemImage: "waveform.path.ecg.rectangle")
