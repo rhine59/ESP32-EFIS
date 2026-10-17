@@ -9,6 +9,7 @@
 #include "esp_ota_ops.h"
 #include "esp_partition.h"
 #include "esp_app_desc.h"
+#include "diagnostics.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -28,7 +29,7 @@ static void report(void) {
         if (p && esp_ota_get_state_partition(p, &state)==ESP_OK) printf(" state=%d", (int)state);
         printf("\n");
     }
-    printf("Commands: status, bootA, bootB, help (USB serial only)\n");
+    printf("Commands: status, test, bootA, bootB, help (USB serial only)\n");
 }
 static void boot_slot(int slot) {
     const esp_partition_t *p = esp_partition_find_first(ESP_PARTITION_TYPE_APP,
@@ -57,6 +58,7 @@ void app_main(void) {
         if (!fgets(command, sizeof(command), stdin)) { clearerr(stdin); vTaskDelay(pdMS_TO_TICKS(100)); continue; }
         command[strcspn(command,"\r\n")] = 0;
         if (!strcmp(command,"status") || !strcmp(command,"help")) report();
+        else if (!strcmp(command,"test")) recovery_diagnostics_print();
         else if (!strcmp(command,"bootA")) boot_slot(0);
         else if (!strcmp(command,"bootB")) boot_slot(1);
         else puts("Unknown command. Use help.");
