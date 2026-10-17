@@ -84,16 +84,16 @@ struct RecoveryDiagnosticsView: View {
                 Text(status).foregroundStyle(.secondary)
                 if let pairing {
                     LabeledContent("Remembered RedOne", value: pairing.ssid)
-                    Button("Read diagnostics over current Wi-Fi") { Task { await connectAndRead() } }
-                        .disabled(loading)
-                    Button("Request automatic Wi-Fi join") { Task { await requestWiFiJoin() } }
+                    Text("In iPhone Settings → Wi-Fi, connect to \(pairing.ssid), then return to Lollipop.")
+                        .font(.footnote)
+                    Button("Read diagnostics") { Task { await connectAndRead() } }
                         .disabled(loading)
                 }
                 Button(pairing == nil ? "Scan RedOne pairing QR code" : "Pair another RedOne") {
                     scanning = true
                 }
                 .disabled(loading)
-                Text("Pairing requires physical access to the QR label. iOS may request permission to join Wi-Fi. No internet connection is needed after the app is verified.")
+                Text("Scan the device QR code once. Connect manually in iPhone Wi-Fi settings. Internet access is not needed for diagnostics after app verification.")
                     .font(.footnote).foregroundStyle(.secondary)
                 Text("Bench-only: the QR contains a reusable Wi-Fi password and maintenance token. Keep it private. Firmware-changing operations are not enabled.")
                     .font(.footnote).foregroundStyle(.orange)
