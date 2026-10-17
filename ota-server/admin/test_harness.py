@@ -5,6 +5,9 @@ Runs against a temporary OTA repository. It never reads or writes production
 public/ data and requires no network access.
 """
 import hashlib, importlib.util, io, json, os, pathlib, sys, tempfile
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives import serialization
+from release_signing import verify_release
 
 HERE=pathlib.Path(__file__).resolve().parent
 APP=HERE/"app.py"
@@ -19,6 +22,11 @@ with tempfile.TemporaryDirectory(prefix="efis-ota-test-") as td:
     original={"product":"ESP32-EFIS","version":"0.0.0","build":0,"image_url":"https://invalid.example/placeholder.bin","sha256":"PLACEHOLDER"}
     (efis/"manifest.json").write_text(json.dumps(original))
 
+    private_key=Ed25519PrivateKey.generate()
+    signing_file=root/"signing.pem"
+    signing_file.write_bytes(private_key.private_bytes(serialization.Encoding.PEM,serialization.PrivateFormat.PKCS8,serialization.NoEncryption()))
+    os.environ["OTA_ED25519_PRIVATE_KEY_PATH"]=str(signing_file)
+    os.environ["OTA_SIGNING_KEY_ID"]="harness-v1"
     os.environ["OTA_PUBLIC_ROOT"]=td
     os.environ["OTA_PUBLIC_BASE_URL"]="https://ota.test:8448"
     os.environ["ADMIN_SESSION_SECRET"]="functional-test-only"
@@ -45,6 +53,11 @@ with tempfile.TemporaryDirectory(prefix="efis-ota-test-") as td:
     manifest=json.loads((efis/"manifest.json").read_text())
     check(manifest["version"]=="9.9.9-test" and manifest["build"]==999,"manifest version/build")
     check(manifest["sha256"]==digest,"published SHA-256")
+    signed=json.loads((efis/"manifest.signed.json").read_text())
+    check(signed["payload"]==manifest,"signed payload matches published manifest")
+    check(verify_release(signed,{"harness-v1":private_key.public_key()}),"Ed25519 signature verifies")
+    tampered=json.loads(json.dumps(signed));tampered["payload"]["version"]="malicious"
+    check(not verify_release(tampered,{"harness-v1":private_key.public_key()}),"tampered manifest rejected")
     check(manifest["image_url"]=="https://ota.test:8448/efis/releases/9.9.9-test/esp32-efis-9.9.9-test.bin","published image URL")
     r=client.post("/delete/9.9.9-test"); check(r.status_code==409,"published release cannot be deleted")
 
