@@ -67,7 +67,28 @@ private enum RecoveryPairingStore {
         var result: CFTypeRef?
         guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
               let data = result as? Data else { return nil }
-        return try? JSONDecoder().decode(RecoveryPairing.self, from: data)
+        guard let stored = try? JSONDecoder().decode(RecoveryPairing.self, from: data) else { return nil }
+        // Early bench pairing used the station MAC suffix (FDC) rather than
+        // the actual SoftAP MAC suffix (FDD). Migrate only this known device.
+        if stored.ssid == "RedOne_3C0F02D61FDC" {
+            let corrected = RecoveryPairing(
+                ssid: "RedOne_3C0F02D61FDD",
+                password: stored.password,
+                token: stored.token
+            )
+            do {
+                try save(corrected)
+                SecItemDelete([
+                    kSecClass as String: kSecClassGenericPassword,
+                    kSecAttrService as String: service,
+                    kSecAttrAccount as String: stored.ssid
+                ] as CFDictionary)
+                return corrected
+            } catch {
+                return stored
+            }
+        }
+        return stored
     }
 }
 
