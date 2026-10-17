@@ -227,14 +227,9 @@ struct RecoveryDiagnosticsView: View {
     @MainActor private func readDiagnostics(_ pairing: RecoveryPairing, attempts: Int) async -> Bool {
         for attempt in 0..<attempts {
             do {
-                var request = URLRequest(url: url)
-                request.timeoutInterval = 10
-                request.cachePolicy = .reloadIgnoringLocalCacheData
-                request.setValue(pairing.token, forHTTPHeaderField: "X-RedOne-Recovery-Token")
-                let (data, response) = try await diagnosticsSession.data(for: request)
-                guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
-                guard http.statusCode == 200 else {
-                    throw NSError(domain: "RedOne recovery", code: http.statusCode, userInfo: [NSLocalizedDescriptionKey: "HTTP \(http.statusCode): \(http.statusCode == 401 ? "Pairing token rejected" : "Diagnostics endpoint rejected the request")"])
+                let (data, httpStatus) = try await RecoveryTCPHTTP.fetch(token: pairing.token)
+                guard httpStatus == 200 else {
+                    throw NSError(domain: "RedOne recovery", code: httpStatus, userInfo: [NSLocalizedDescriptionKey: "HTTP \(httpStatus): \(httpStatus == 401 ? "Pairing token rejected" : "Diagnostics endpoint rejected the request")"])
                 }
                 let decoded = try JSONDecoder().decode(RecoveryDiagnosticReport.self, from: data)
                 guard decoded.schema == 1, decoded.device == "RedOne", decoded.mode == "recovery" else {
@@ -268,5 +263,94 @@ private final class TCPCompletionState: @unchecked Sendable {
         guard !completed else { return false }
         completed = true
         return true
+    }
+}
+
+private enum RecoveryTCPHTTP {
+    static func fetch(token: String) async throws -> (Data, Int) {
+        try await withCheckedThrowingContinuation { continuation in
+            let queue = DispatchQueue(label: "redone.recovery.http")
+            let connection = NWConnection(host: "192.168.4.1", port: 80, using: .tcp)
+            let state = RecoveryHTTPState()
+            @Sendable func finish(_ result: Result<(Data, Int), Error>) {
+                guard state.claim() else { return }
+                connection.cancel()
+                continuation.resume(with: result)
+            }
+            connection.stateUpdateHandler = { status in
+                switch status {
+                case .ready:
+                    let request = "GET /api/recovery/diagnostics HTTP/1.1\r\nHost: 192.168.4.1\r\nX-RedOne-Recovery-Token: \(token)\r\nConnection: close\r\n\r\n"
+                    connection.send(content: Data(request.utf8), completion: .contentProcessed { error in
+                        if let error { finish(.failure(error)); return }
+                        @Sendable func receive() {
+                            connection.receive(minimumIncompleteLength: 1, maximumLength: 8192) { data, _, complete, error in
+                                if let error { finish(.failure(error)); return }
+                                if let data { state.append(data) }
+                                if state.count > 16384 {
+                                    finish(.failure(URLError(.dataLengthExceedsMaximum))); return
+                                }
+                                if complete {
+                                    do { finish(.success(try state.parse())) }
+                                    catch { finish(.failure(error)) }
+                                } else { receive() }
+                            }
+                        }
+                        receive()
+                    })
+                case .failed(let error): finish(.failure(error))
+                case .cancelled: break
+                default: break
+                }
+            }
+            connection.start(queue: queue)
+            queue.asyncAfter(deadline: .now() + 10) { finish(.failure(URLError(.timedOut))) }
+        }
+    }
+}
+
+private final class RecoveryHTTPState: @unchecked Sendable {
+    private let lock = NSLock()
+    private var finished = false
+    private var buffer = Data()
+    var count: Int { lock.lock(); defer { lock.unlock() }; return buffer.count }
+    func claim() -> Bool {
+        lock.lock(); defer { lock.unlock() }
+        guard !finished else { return false }
+        finished = true
+        return true
+    }
+    func append(_ data: Data) { lock.lock(); buffer.append(data); lock.unlock() }
+    func parse() throws -> (Data, Int) {
+        lock.lock(); defer { lock.unlock() }
+        let delimiter = Data("\r\n\r\n".utf8)
+        guard let range = buffer.range(of: delimiter),
+              let headers = String(data: buffer[..<range.lowerBound], encoding: .utf8),
+              let first = headers.components(separatedBy: "\r\n").first,
+              let code = Int(first.split(separator: " ").dropFirst().first ?? "") else {
+            throw URLError(.cannotParseResponse)
+        }
+        let body = Data(buffer[range.upperBound...])
+        // ESP-IDF httpd may use chunked transfer encoding for streaming responses.
+        if headers.lowercased().contains("transfer-encoding: chunked") {
+            return (try Self.decodeChunks(body), code)
+        }
+        return (body, code)
+    }
+    private static func decodeChunks(_ data: Data) throws -> Data {
+        var remaining = data
+        var output = Data()
+        while true {
+            guard let line = remaining.range(of: Data("\r\n".utf8)),
+                  let sizeText = String(data: remaining[..<line.lowerBound], encoding: .ascii),
+                  let size = Int(sizeText.split(separator: ";").first ?? "", radix: 16) else {
+                throw URLError(.cannotParseResponse)
+            }
+            remaining.removeSubrange(..<line.upperBound)
+            if size == 0 { return output }
+            guard remaining.count >= size + 2 else { throw URLError(.cannotParseResponse) }
+            output.append(remaining.prefix(size))
+            remaining.removeSubrange(..<(size + 2))
+        }
     }
 }
