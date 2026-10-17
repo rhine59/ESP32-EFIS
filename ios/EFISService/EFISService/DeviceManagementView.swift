@@ -284,9 +284,9 @@ private enum RecoveryTCPHTTP {
                 switch status {
                 case .ready:
                     let request = "GET /api/recovery/diagnostics HTTP/1.1\r\nHost: 192.168.4.1\r\nX-RedOne-Recovery-Token: \(token)\r\nConnection: close\r\n\r\n"
-                    connection.send(content: Data(request.utf8), completion: .contentProcessed { error in
-                        if let error { finish(.failure(error)); return }
-                        @Sendable func receive() {
+                    // Start receiving immediately: some ESP-IDF responses close quickly,
+                    // and waiting for send completion can lose the reply on reset.
+                    @Sendable func receive() {
                             connection.receive(minimumIncompleteLength: 1, maximumLength: 8192) { data, _, complete, error in
                                 if let data { state.append(data) }
                                 if let error {
@@ -303,9 +303,16 @@ private enum RecoveryTCPHTTP {
                                 } else { receive() }
                             }
                         }
-                        receive()
+                    receive()
+                    connection.send(content: Data(request.utf8), completion: .contentProcessed { error in
+                        if let error {
+                            if let response = try? state.parseIfComplete() { finish(.success(response)) }
+                            else { finish(.failure(error)) }
+                        }
                     })
-                case .failed(let error): finish(.failure(error))
+                case .failed(let error):
+                    if let response = try? state.parseIfComplete() { finish(.success(response)) }
+                    else { finish(.failure(error)) }
                 case .cancelled: break
                 default: break
                 }
