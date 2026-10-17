@@ -1,6 +1,7 @@
 import SwiftUI
 import Security
 import NetworkExtension
+import Network
 
 struct DeviceManagementView: View {
     var body: some View {
@@ -85,6 +86,7 @@ struct RecoveryDiagnosticsView: View {
     @State private var loading = false
     @State private var scanning = false
     @State private var currentSSID = "Checking…"
+    @State private var networkPath = "Checking…"
     @State private var pairing = RecoveryPairingStore.load()
     private let url = URL(string: "http://192.168.4.1/api/recovery/diagnostics")!
     private let diagnosticsSession: URLSession = {
@@ -103,6 +105,7 @@ struct RecoveryDiagnosticsView: View {
         List {
             Section("Recovery connection") {
                 LabeledContent("Current Wi-Fi", value: currentSSID)
+                LabeledContent("Network path", value: networkPath)
                 Button("Refresh Wi-Fi status") { Task { await refreshWiFiSSID() } }
                 HStack(spacing: 10) {
                     if loading { ProgressView().tint(.blue) }
@@ -175,6 +178,15 @@ struct RecoveryDiagnosticsView: View {
     @MainActor private func refreshWiFiSSID() async {
         let network = await NEHotspotNetwork.fetchCurrent()
         currentSSID = network?.ssid ?? "Unavailable (iOS did not disclose SSID)"
+        networkPath = await withCheckedContinuation { continuation in
+            let monitor = NWPathMonitor(requiredInterfaceType: .wifi)
+            monitor.pathUpdateHandler = { path in
+                let description = "Wi-Fi: \(path.status == .satisfied ? "available" : "unavailable"), IPv4: \(path.supportsIPv4 ? "yes" : "no")"
+                monitor.cancel()
+                continuation.resume(returning: description)
+            }
+            monitor.start(queue: DispatchQueue(label: "redone.recovery.path"))
+        }
     }
 
     @MainActor private func connectAndRead() async {
