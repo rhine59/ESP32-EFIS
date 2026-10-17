@@ -104,7 +104,7 @@ struct RecoveryDiagnosticsView: View {
 
     var body: some View {
         List {
-            Section("Recovery connection") {
+            Section {
                 LabeledContent("Current Wi-Fi", value: currentSSID)
                 LabeledContent("Network path", value: networkPath)
                 Button("Refresh Wi-Fi status") { Task { await refreshWiFiSSID() } }
@@ -128,10 +128,6 @@ struct RecoveryDiagnosticsView: View {
                     Button("Scan RedOne pairing QR code") { scanning = true }
                         .disabled(loading)
                 }
-                Text("Scan the device QR code once. Connect manually in iPhone Wi-Fi settings. Internet access is not needed for diagnostics after app verification.")
-                    .font(.footnote).foregroundStyle(.secondary)
-                Text("Bench-only: the QR contains a reusable Wi-Fi password and maintenance token. Keep it private. Firmware-changing operations are not enabled.")
-                    .font(.footnote).foregroundStyle(.orange)
             }
             Section("Hardware tests") {
                 ForEach(categories, id: \.self) { name in
