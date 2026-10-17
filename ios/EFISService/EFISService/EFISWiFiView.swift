@@ -54,7 +54,17 @@ struct EFISWiFiView: View {
 
     var body: some View {
         List {
-            Section("1. Download published firmware") {
+            Section("1. Download signed firmware") {
+                Button("Check publisher for signed release") { Task { await fetchPublishedFirmware() } }
+                    .disabled(preparingFirmware)
+                Text(signedReleaseStatus).font(.footnote).foregroundStyle(.secondary)
+                if let publishedFirmware {
+                    LabeledContent("Published version", value: publishedFirmware.version)
+                    LabeledContent("Hardware profile", value: publishedFirmware.hardware_profile)
+                    if let notes = publishedFirmware.release_notes { Text(notes).font(.footnote) }
+                    Button("Download signed release") { Task { await downloadPublishedFirmware() } }
+                        .disabled(preparingFirmware || trustedEnvelope == nil)
+                }
                 if downloadedReleases.isEmpty {
                     Text("No published firmware downloaded. Prepare while online before visiting the aircraft.")
                         .foregroundStyle(.secondary)
@@ -74,7 +84,23 @@ struct EFISWiFiView: View {
                     }
                 }
             }
-            Section("2. Connect to RedOne EFIS") {
+            Section("2. Verify downloaded firmware") {
+                if let selectedRelease {
+                    LabeledContent("Selected release", value: selectedRelease.version)
+                    Label(FirmwareLibrary.verify(selectedRelease) ? "Signature and SHA-256 verified" : "Verification failed — transfer blocked", systemImage: FirmwareLibrary.verify(selectedRelease) ? "checkmark.shield" : "xmark.shield")
+                        .foregroundStyle(FirmwareLibrary.verify(selectedRelease) ? .green : .red)
+                    if let firmwareDigest { Text("SHA-256: \(firmwareDigest)").font(.caption2).textSelection(.enabled) }
+                    if let problem = FirmwareLibrary.transferPreflight(selectedRelease) {
+                        Text("Transfer preflight: \(problem)").foregroundStyle(.orange)
+                    }
+                } else {
+                    Text("Select a downloaded release above to verify its signature and checksum before connecting.")
+                        .foregroundStyle(.secondary)
+                }
+                Text(firmwareAssessment).font(.footnote).foregroundStyle(.secondary)
+                if let firmwareError { Text(firmwareError).foregroundStyle(.red).font(.footnote) }
+            }
+            Section("3. Connect to RedOne EFIS") {
                 Text("Enter the 12-digit Wi-Fi MAC address printed on your EFIS or its QR label.")
                     .font(.footnote).foregroundStyle(.secondary)
                 if !savedMacAddress.isEmpty {
@@ -111,7 +137,7 @@ struct EFISWiFiView: View {
                 }
                 .disabled(checking)
             }
-            Section("3–6. Firmware transfer and recovery") {
+            Section("4–7. Firmware transfer and recovery") {
                 if let verified {
                     LabeledContent("Installed version", value: verified.version)
                     LabeledContent("Active partition", value: verified.running)
@@ -127,62 +153,25 @@ struct EFISWiFiView: View {
                     Text("Connect to and verify your RedOne to inspect firmware.")
                         .foregroundStyle(.secondary)
                 }
-                Picker("Firmware source", selection: $firmwareSource) {
-                    Text("Publishing service").tag("publisher")
-                    Text("Downloaded copy").tag("local")
-                }
-                .pickerStyle(.segmented)
-                if firmwareSource == "publisher" {
-                    Button("Check published firmware") { Task { await fetchPublishedFirmware() } }
-                    Text(signedReleaseStatus).font(.footnote).foregroundStyle(.secondary)
-                        .disabled(preparingFirmware)
-                    if let publishedFirmware {
-                        LabeledContent("Published version", value: publishedFirmware.version)
-                        LabeledContent("Hardware", value: publishedFirmware.hardware_profile)
-                        if let notes = publishedFirmware.release_notes { Text(notes).font(.footnote) }
-                        Button("Download published copy") { Task { await downloadPublishedFirmware() } }
-                            .disabled(preparingFirmware || trustedEnvelope == nil)
-                    }
-                } else {
-                    Button("Choose downloaded firmware") { showingFirmwarePicker = true }
-                        .disabled(preparingFirmware)
-                }
-                Text(firmwareAssessment).font(.footnote).foregroundStyle(.secondary)
-                if preparingFirmware { ProgressView("Inspecting firmware file…") }
-                if let firmwareName {
-                    LabeledContent("Selected file", value: firmwareName)
-                    if let firmwareSize { LabeledContent("Size", value: ByteCountFormatter.string(fromByteCount: firmwareSize, countStyle: .file)) }
-                    if let firmwareDigest { Text("SHA-256: \(firmwareDigest)").font(.caption2).textSelection(.enabled) }
-                }
-                if let firmwareError { Text(firmwareError).foregroundStyle(.red).font(.footnote) }
-                if let selectedRelease {
-                    if let problem = FirmwareLibrary.transferPreflight(selectedRelease) {
-                        Label("Transfer preflight: \(problem)", systemImage: "xmark.shield")
-                            .foregroundStyle(.orange)
-                    } else {
-                        Label("Transfer preflight: signed ESP image fits Partition A/B", systemImage: "checkmark.shield")
-                            .foregroundStyle(.green)
-                        Text("This checks the cached package only. RedOne must still verify the release independently before any flash write.")
-                            .font(.footnote).foregroundStyle(.secondary)
-                    }
-                }
-                Label("3. Push firmware to EFIS", systemImage: "arrow.up.circle")
+                Text("Firmware transfer requires a previously downloaded and verified signed release. The device must independently authenticate the release before writing flash.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                Label("4. Push firmware to EFIS", systemImage: "arrow.up.circle")
                     .font(.headline)
                 Button("Push selected firmware") { }
                     .disabled(true)
                 Text("Requires an authenticated RedOne connection and a verified, signed release.")
                     .font(.footnote).foregroundStyle(.secondary)
-                Label("4. Verify staged firmware", systemImage: "checkmark.shield")
+                Label("5. Verify staged firmware", systemImage: "checkmark.shield")
                     .font(.headline)
                 Button("Verify staged image") { }
                     .disabled(true)
-                Label("5. Activate firmware", systemImage: "power")
+                Label("6. Activate firmware", systemImage: "power")
                     .font(.headline)
                 Button("Activate verified firmware") { }
                     .disabled(true)
                 Text("Activation requires explicit confirmation on the ground, followed by reboot and health verification.")
                     .font(.footnote).foregroundStyle(.secondary)
-                Label("Recovery", systemImage: "arrow.uturn.backward")
+                Label("7. Rollback", systemImage: "arrow.uturn.backward")
                     .font(.headline)
                 Button("Roll back to previous firmware") { }
                     .disabled(true)
@@ -193,7 +182,7 @@ struct EFISWiFiView: View {
         .fileImporter(isPresented: $showingFirmwarePicker, allowedContentTypes: [.data], allowsMultipleSelection: false) { result in
             Task { await inspectFirmware(result) }
         }
-        .navigationTitle("Update an EFIS")
+        .navigationTitle("Update EFIS")
         .onAppear {
             if !savedMacAddress.isEmpty { macAddress = savedMacAddress }
             reloadLibrary()
