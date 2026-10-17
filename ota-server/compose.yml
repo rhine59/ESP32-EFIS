@@ -31,11 +31,14 @@ services:
       - "127.0.0.1:8090:8090"
     environment:
       OTA_PUBLIC_ROOT: /data
+      OTA_ED25519_PRIVATE_KEY_PATH: /run/secrets/redone-release-signing.pem
+      OTA_SIGNING_KEY_ID: ${OTA_SIGNING_KEY_ID:-redone-v2}
       OTA_PUBLIC_BASE_URL: ${OTA_PUBLIC_BASE_URL:-https://CHANGE-ME.example}
       ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:?set ADMIN_SESSION_SECRET in .env}
     group_add:
       - "${OTA_DATA_GID:-65539}"
     volumes:
       - ./public:/data
+      - ${OTA_SIGNING_KEY_FILE:?set OTA_SIGNING_KEY_FILE in .env}:/run/secrets/redone-release-signing.pem:ro
     security_opt:
       - no-new-privileges:true
