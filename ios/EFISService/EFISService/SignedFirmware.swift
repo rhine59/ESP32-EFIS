@@ -22,7 +22,8 @@ struct SignedFirmwarePayload: Codable {
 
 // Pinned public key for the RedOne release publisher. Keep the private key off devices.
 enum RedOneTrustedKeys {
-    static let rawHex: [String: String] = ["redone-v1": "b772b85fefb06862e1597174c5bbef23d42995d97f1e3c5e1a0efe29c5127d0f"]
+    static let rawHex: [String: String] = ["redone-v1": "b772b85fefb06862e1597174c5bbef23d42995d97f1e3c5e1a0efe29c5127d0f",
+                                          "redone-v2": "0a910c39794719e83c793886da897782641a8ea3669520a09a7456ccdf6b2583"]
 }
 
 enum SignedFirmwareVerifier {
