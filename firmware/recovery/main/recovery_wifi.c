@@ -13,6 +13,7 @@
 #include "esp_partition.h"
 #include "esp_app_desc.h"
 #include "diagnostics.h"
+#include "redone_signature.h"
 static char token[65];
 static httpd_handle_t server;
 static esp_err_t diagnostic_handler(httpd_req_t *req) {
@@ -68,6 +69,7 @@ static esp_err_t firmware_stage_locked_handler(httpd_req_t *req) {
         "\"reason\":\"Device-side Ed25519 validation and safe OTA staging not implemented\"}");
 }
 void recovery_wifi_start(void) {
+    if (redone_signature_self_test()!=0) { ESP_LOGE("RECOVERY","Ed25519 self-test failed; recovery Wi-Fi disabled"); return; }
     if(nvs_flash_init()!=ESP_OK) { ESP_LOGE("RECOVERY","NVS unavailable; Wi-Fi disabled"); return; }
     nvs_handle_t nvs;
     if(nvs_open("recovery",NVS_READONLY,&nvs)!=ESP_OK) { ESP_LOGW("RECOVERY","Credentials not provisioned; Wi-Fi disabled"); return; }
