@@ -199,13 +199,6 @@ struct RecoveryDiagnosticsView: View {
                 }
             }
             Section {
-                NavigationLink {
-                    EFISWiFiView()
-                } label: {
-                    Label("Download signed firmware", systemImage: "arrow.down.doc")
-                }
-                Text("Download from the publisher while connected to the internet, then return here to test the signature over RedOne Wi-Fi.")
-                    .font(.footnote).foregroundStyle(.secondary)
                 Button("Test RedOne firmware signature verification") {
                     Task { await testFirmwareSignature() }
                 }

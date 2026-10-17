@@ -366,12 +366,14 @@ struct ProcessHomeView: View {
                                     }.padding(.vertical, 4)
                                 }
                             }
-                            if group.title == "Diagnostics" {
+                            if group.title == "EFIS Management" {
                                 NavigationLink {
                                     EFISWiFiView()
                                 } label: {
                                     Label("Download signed firmware", systemImage: "arrow.down.doc")
                                 }
+                            }
+                            if group.title == "Diagnostics" {
                                 NavigationLink {
                                     RecoveryDiagnosticsView()
                                 } label: {
