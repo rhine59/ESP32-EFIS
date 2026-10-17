@@ -356,6 +356,11 @@ struct ProcessHomeView: View {
                             }
                             if group.title == "Diagnostics" {
                                 NavigationLink {
+                                    RecoveryDiagnosticsView()
+                                } label: {
+                                    Label("RedOne recovery hardware diagnostics", systemImage: "waveform.path.ecg.rectangle")
+                                }
+                                NavigationLink {
                                     LicenceView()
                                 } label: {
                                     Label("Licence diagnostics & manual controls", systemImage: "wrench.and.screwdriver")

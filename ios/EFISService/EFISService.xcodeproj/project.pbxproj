@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		ABCDEF1234567890ABCDEF01 /* DeviceManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF1234567890ABCDEF02 /* DeviceManagementView.swift */; };
 		0BBCFCF61E3098AD95D5ADF7 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11727826BB1A6FC8FAFD9E99 /* KeychainStore.swift */; };
 		1DE7DAA07DDA53588A5E8BB9 /* EFISServiceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DBCA76A8F7EF7E5B3600145 /* EFISServiceApp.swift */; };
 		21B47B2690AF6152A45C010D /* DeviceQRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC23EBC9A3546EFC29E8A0A /* DeviceQRScannerView.swift */; };
@@ -24,6 +25,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		ABCDEF1234567890ABCDEF02 /* DeviceManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceManagementView.swift; sourceTree = "<group>"; };
 		103AFF2384DB188ADD9C35FE /* EFISTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EFISTransfer.swift; sourceTree = "<group>"; };
 		11727826BB1A6FC8FAFD9E99 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		16E95EBADA5570F4BDA41180 /* EFISWiFiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EFISWiFiView.swift; sourceTree = "<group>"; };
@@ -63,6 +65,7 @@
 				4DBCA76A8F7EF7E5B3600145 /* EFISServiceApp.swift */,
 				103AFF2384DB188ADD9C35FE /* EFISTransfer.swift */,
 				16E95EBADA5570F4BDA41180 /* EFISWiFiView.swift */,
+				ABCDEF1234567890ABCDEF02 /* DeviceManagementView.swift */,
 				11727826BB1A6FC8FAFD9E99 /* KeychainStore.swift */,
 				3E1D9AA9256C514148F35AF3 /* LicenceModels.swift */,
 				9F9BDC1EFE67112BFF337D54 /* LicenceService.swift */,
@@ -157,6 +160,7 @@
 				1DE7DAA07DDA53588A5E8BB9 /* EFISServiceApp.swift in Sources */,
 				5FB76FF5480904C0593AA9D0 /* EFISTransfer.swift in Sources */,
 				D4D6BDA064EE58FD2E1D262C /* EFISWiFiView.swift in Sources */,
+				ABCDEF1234567890ABCDEF01 /* DeviceManagementView.swift in Sources */,
 				0BBCFCF61E3098AD95D5ADF7 /* KeychainStore.swift in Sources */,
 				C1DFC7A926D38FB5A3EF2A9E /* LicenceModels.swift in Sources */,
 				BC8DF2E713D554C48840AD64 /* LicenceService.swift in Sources */,
