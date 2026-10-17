@@ -39,7 +39,14 @@ static bool exact_keys(const cJSON *object, const char *const *keys, size_t n) {
 int redone_verify_release_envelope(const char *json, size_t length) {
     if (!json || length==0 || length>8192) return -1;
     const char *const envelope_keys[]={"signature_format","key_id","payload","signature"};
-    cJSON *root=cJSON_ParseWithLengthOpts(json,length,NULL,0);
+    /* Reject embedded NUL and trailing garbage: signature covers the entire envelope. */
+    if (memchr(json,0,length)!=NULL) return -1;
+    char *terminated=malloc(length+1);
+    if (!terminated) return -1;
+    memcpy(terminated,json,length);
+    terminated[length]=0;
+    cJSON *root=cJSON_ParseWithLengthOpts(terminated,length+1,NULL,1);
+    free(terminated);
     cJSON *canonical=NULL;
     char *bytes=NULL;
     int result=-1;
