@@ -37,6 +37,7 @@ struct EFISWiFiView: View {
     @State private var preparingFirmware = false
     @State private var publishedFirmware: PublishedFirmware?
     @State private var signedReleaseStatus = "No signed release checked"
+    @State private var trustedEnvelope: SignedFirmwareEnvelope?
     @State private var firmwareSource = "publisher"
     @State private var firmwareAssessment = "No release verified"
     @State private var downloadedReleases: [CachedFirmwareRelease] = []
@@ -65,7 +66,7 @@ struct EFISWiFiView: View {
                             Text("RedOne \(release.version)").font(.headline)
                             Text(release.hardwareProfile).font(.caption)
                             Text(release.downloadedAt, style: .date).font(.caption)
-                            Text(FirmwareLibrary.verify(release) ? "Checksum verified; signature pending" : "Missing or damaged file")
+                            Text(FirmwareLibrary.verify(release) ? "Trusted signed release verified" : "Missing or damaged file")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
@@ -138,7 +139,7 @@ struct EFISWiFiView: View {
                         LabeledContent("Hardware", value: publishedFirmware.hardware_profile)
                         if let notes = publishedFirmware.release_notes { Text(notes).font(.footnote) }
                         Button("Download published copy") { Task { await downloadPublishedFirmware() } }
-                            .disabled(preparingFirmware)
+                            .disabled(preparingFirmware || trustedEnvelope == nil)
                     }
                 } else {
                     Button("Choose downloaded firmware") { showingFirmwarePicker = true }
@@ -201,12 +202,13 @@ struct EFISWiFiView: View {
         firmwareDigest = release.sha256
         firmwareSize = (try? FirmwareLibrary.folder.appendingPathComponent(release.filename)
             .resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init)
-        firmwareAssessment = "Offline checksum verified; signature verification still required"
+        firmwareAssessment = "Offline signed release and checksum verified"
     }
 
     @MainActor
     private func checkSignedRelease() async {
         signedReleaseStatus = "Checking signed release…"
+        trustedEnvelope = nil
         do {
             let url = publisherURL.deletingLastPathComponent().appendingPathComponent("manifest.signed.json")
             var request = URLRequest(url: url)
@@ -218,8 +220,17 @@ struct EFISWiFiView: View {
                 return
             }
             let envelope = try JSONDecoder().decode(SignedFirmwareEnvelope.self, from: data)
-            signedReleaseStatus = SignedFirmwareVerifier.verify(envelope)
-                ? "Signed release verified" : "Signed release is not trusted — update locked"
+            guard SignedFirmwareVerifier.verify(envelope),
+                  let release = publishedFirmware,
+                  envelope.payload.version == release.version,
+                  envelope.payload.hardware_profile == release.hardware_profile,
+                  envelope.payload.sha256.caseInsensitiveCompare(release.sha256) == .orderedSame,
+                  envelope.payload.image_url == release.image_url.absoluteString else {
+                signedReleaseStatus = "Signed release does not match published firmware — update locked"
+                return
+            }
+            trustedEnvelope = envelope
+            signedReleaseStatus = "Signed release verified"
         } catch { signedReleaseStatus = "Signed release unavailable — update locked" }
     }
 
@@ -228,6 +239,7 @@ struct EFISWiFiView: View {
         preparingFirmware = true
         defer { preparingFirmware = false }
         publishedFirmware = nil
+        trustedEnvelope = nil
         firmwareError = nil
         firmwareAssessment = "Checking publisher…"
         do {
@@ -250,7 +262,13 @@ struct EFISWiFiView: View {
 
     @MainActor
     private func downloadPublishedFirmware() async {
-        guard let release = publishedFirmware else { return }
+        guard let release = publishedFirmware, let envelope = trustedEnvelope,
+              SignedFirmwareVerifier.verify(envelope),
+              envelope.payload.sha256.caseInsensitiveCompare(release.sha256) == .orderedSame,
+              envelope.payload.image_url == release.image_url.absoluteString else {
+            firmwareError = "A matching trusted signed manifest is required before download."
+            return
+        }
         preparingFirmware = true
         defer { preparingFirmware = false }
         firmwareError = nil
@@ -263,14 +281,13 @@ struct EFISWiFiView: View {
                   data.count >= 1024, data.count <= 16 * 1024 * 1024 else { throw URLError(.badServerResponse) }
             let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
             guard digest.caseInsensitiveCompare(release.sha256) == .orderedSame else { throw URLError(.cannotDecodeContentData) }
-            let cached = try FirmwareLibrary.store(data, version: release.version,
-                hardware: release.hardware_profile, digest: digest, source: release.image_url)
+            let cached = try FirmwareLibrary.store(data, envelope: envelope)
             let destination = FirmwareLibrary.folder.appendingPathComponent(cached.filename)
             reloadLibrary()
             firmwareName = destination.lastPathComponent
             firmwareSize = Int64(data.count)
             firmwareDigest = digest
-            firmwareAssessment = "Checksum matches published manifest; signature verification still required"
+            firmwareAssessment = "Trusted signed release downloaded and verified for offline use"
         } catch {
             firmwareName = nil; firmwareSize = nil; firmwareDigest = nil
             firmwareAssessment = "Download verification failed"
@@ -306,7 +323,7 @@ struct EFISWiFiView: View {
             firmwareDigest = digest.map { String(format: "%02x", $0) }.joined()
             if let publishedFirmware,
                firmwareDigest?.caseInsensitiveCompare(publishedFirmware.sha256) == .orderedSame {
-                firmwareAssessment = "Matches publisher checksum; signature verification still required"
+                firmwareAssessment = "Matches publisher checksum; imported files are not trusted releases"
             } else {
                 firmwareAssessment = "Local copy inspected, NOT certified; signed release proof required"
             }

@@ -1,7 +1,7 @@
 import Foundation
 import CryptoKit
 
-struct SignedFirmwareEnvelope: Decodable {
+struct SignedFirmwareEnvelope: Codable {
     let signature_format: String
     let key_id: String
     let payload: SignedFirmwarePayload

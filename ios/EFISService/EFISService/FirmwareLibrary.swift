@@ -9,6 +9,7 @@ struct CachedFirmwareRelease: Codable, Identifiable {
     let filename: String
     let downloadedAt: Date
     let sourceURL: URL
+    let signedEnvelope: SignedFirmwareEnvelope?
 }
 
 enum FirmwareLibrary {
@@ -23,8 +24,13 @@ enum FirmwareLibrary {
         return try JSONDecoder().decode([CachedFirmwareRelease].self, from: Data(contentsOf: index))
     }
 
-    static func store(_ bytes: Data, version: String, hardware: String,
-                      digest: String, source: URL) throws -> CachedFirmwareRelease {
+    static func store(_ bytes: Data, envelope: SignedFirmwareEnvelope) throws -> CachedFirmwareRelease {
+        guard SignedFirmwareVerifier.verify(envelope),
+              let source = URL(string: envelope.payload.image_url),
+              source.scheme == "https" else { throw CocoaError(.fileReadNoPermission) }
+        let version = envelope.payload.version
+        let hardware = envelope.payload.hardware_profile
+        let digest = envelope.payload.sha256
         let actual = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
         guard actual.caseInsensitiveCompare(digest) == .orderedSame,
               digest.count == 64, digest.allSatisfy({ $0.isHexDigit }) else {
@@ -35,7 +41,7 @@ enum FirmwareLibrary {
         try bytes.write(to: folder.appendingPathComponent(name), options: .atomic)
         let release = CachedFirmwareRelease(version: version, hardwareProfile: hardware,
                                              sha256: actual, filename: name,
-                                             downloadedAt: Date(), sourceURL: source)
+                                             downloadedAt: Date(), sourceURL: source, signedEnvelope: envelope)
         var items = try load()
         items.removeAll { $0.sha256 == actual }
         items.insert(release, at: 0)
@@ -44,7 +50,13 @@ enum FirmwareLibrary {
     }
 
     static func verify(_ release: CachedFirmwareRelease) -> Bool {
-        guard release.filename == release.sha256.lowercased() + ".bin",
+        guard let envelope = release.signedEnvelope,
+              SignedFirmwareVerifier.verify(envelope),
+              envelope.payload.sha256.caseInsensitiveCompare(release.sha256) == .orderedSame,
+              envelope.payload.version == release.version,
+              envelope.payload.hardware_profile == release.hardwareProfile,
+              envelope.payload.image_url == release.sourceURL.absoluteString,
+              release.filename == release.sha256.lowercased() + ".bin",
               let data = try? Data(contentsOf: folder.appendingPathComponent(release.filename)),
               data.count >= 1024, data.count <= 16 * 1024 * 1024 else { return false }
         let actual = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()

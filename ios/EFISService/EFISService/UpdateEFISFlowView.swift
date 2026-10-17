@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Guided RedOne firmware workflow. Only the published-firmware download
-/// and connection inspection are currently operational. No unsafe flash
+/// signed offline release preparation and connection inspection are operational. No unsafe flash
 /// operation is exposed by this view.
 struct UpdateEFISFlowView: View {
     var body: some View {
@@ -10,7 +10,7 @@ struct UpdateEFISFlowView: View {
                 Label("1. Download published firmware", systemImage: "arrow.down.circle")
                     .font(.headline)
                 Text("While connected to the internet, check the official publishing service and download its firmware image. The SHA-256 checksum is checked against the published manifest.")
-                Text("Release signatures and an offline trusted-release library are not yet implemented. A matching checksum alone does not authenticate a release.")
+                Text("A release is trusted only when its Ed25519 signature and firmware checksum both verify. Signed releases remain available offline.")
                     .font(.footnote).foregroundStyle(.orange)
                 NavigationLink("Open firmware download and connection") {
                     EFISWiFiView()
@@ -25,7 +25,7 @@ struct UpdateEFISFlowView: View {
                 Label("6. Roll back if necessary", systemImage: "arrow.uturn.backward")
             }
             Section("Implementation status") {
-                Label("Download and connection inspection available", systemImage: "checkmark.circle")
+                Label("Signed download, offline verification and connection inspection available", systemImage: "checkmark.circle")
                     .foregroundStyle(.green)
                 Label("Push, verification, activation and rollback locked", systemImage: "lock.shield")
                     .foregroundStyle(.orange)
