@@ -67,6 +67,11 @@ def publish_manifest(version,image):
         abort(503, 'Publisher signing key not configured; unsigned publishing disabled')
     from release_signing import sign_release
     signed = sign_release(manifest, signing_key, os.environ.get('OTA_SIGNING_KEY_ID', 'redone-v1'))
+    from release_signing import verify_release
+    from cryptography.hazmat.primitives import serialization
+    public_key = serialization.load_pem_private_key(Path(signing_key).read_bytes(), password=None).public_key()
+    if not verify_release(signed, {signed['key_id']: public_key}):
+        abort(503, 'Publisher signature self-verification failed')
     atomic_json(EFIS / 'manifest.signed.json', signed)
     atomic_json(MANIFEST, manifest)
 
