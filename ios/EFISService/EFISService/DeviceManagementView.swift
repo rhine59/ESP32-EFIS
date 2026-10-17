@@ -138,16 +138,17 @@ struct RecoveryDiagnosticsView: View {
             Section("Hardware tests") {
                 ForEach(categories, id: \.self) { name in
                     let result = report?.tests.first(where: { $0.name == name })
+                    let resultColor: Color = result?.result == "PASS" ? .green : result?.result == "FAIL" ? .red : .yellow
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             Text(name).font(.headline)
                             Spacer()
                             Text(result?.result ?? "SKIP")
                                 .font(.caption).bold()
-                                .foregroundStyle(result?.result == "PASS" ? .green : result?.result == "FAIL" ? .red : .secondary)
+                                .foregroundStyle(resultColor)
                         }
                         Text(result?.detail ?? "Not tested; waiting for recovery device")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).foregroundStyle(resultColor)
                     }
                 }
             }
