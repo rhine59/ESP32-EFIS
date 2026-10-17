@@ -81,3 +81,8 @@ uint8_t mcp23008_output_shadow(void)
 {
     return s_olat;
 }
+
+i2c_master_bus_handle_t mcp23008_bus_handle(void)
+{
+    return s_bus;
+}
