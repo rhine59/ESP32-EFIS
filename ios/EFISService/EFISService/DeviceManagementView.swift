@@ -129,10 +129,10 @@ struct RecoveryDiagnosticsView: View {
                 if let pairing {
                     Button("Connect to \(pairing.ssid)") { Task { await joinRedOne(pairing) } }
                         .disabled(loading)
-                    Button("Read diagnostics") { Task { await connectAndRead() } }
+                    Button("Read diagnostics from RedOne") { Task { await connectAndRead() } }
                         .disabled(loading)
                 }
-                Button("Scan RedOne QR code") { scanning = true }
+                Button("Scan RedOne connection QR code") { scanning = true }
                     .disabled(loading)
             }
             Section("Hardware tests") {
@@ -152,7 +152,7 @@ struct RecoveryDiagnosticsView: View {
                 }
             }
         }
-        .navigationTitle("Recovery diagnostics")
+        .navigationTitle("Diagnostics")
         .task { await refreshWiFiSSID() }
         .sheet(isPresented: $scanning) {
             DeviceQRScannerView(onDeviceID: { value in
