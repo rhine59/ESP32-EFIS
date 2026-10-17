@@ -14,6 +14,7 @@
 #include "esp_app_desc.h"
 #include "diagnostics.h"
 #include "redone_signature.h"
+#include "redone_envelope.h"
 static char token[65];
 static httpd_handle_t server;
 static esp_err_t diagnostic_handler(httpd_req_t *req) {
@@ -56,6 +57,36 @@ static esp_err_t firmware_inventory_handler(httpd_req_t *req) {
     httpd_resp_set_type(req,"application/json");
     httpd_resp_set_hdr(req,"Cache-Control","no-store");
     return httpd_resp_sendstr(req,response);
+}
+/* Authenticated read-only verification: parses a signed publisher envelope,
+ * never writes to flash, and returns only a verification verdict. */
+static esp_err_t firmware_verify_handler(httpd_req_t *req) {
+    char supplied[65]={0};
+    if (httpd_req_get_hdr_value_str(req,"X-RedOne-Recovery-Token",supplied,sizeof(supplied))!=ESP_OK) {
+        httpd_resp_send_err(req,HTTPD_401_UNAUTHORIZED,"Authorization required"); return ESP_FAIL;
+    }
+    unsigned diff=(unsigned)(strlen(token)^strlen(supplied));
+    for (size_t i=0;i<sizeof(token);++i) diff|=(unsigned)((unsigned char)token[i]^(unsigned char)supplied[i]);
+    if (strlen(token)<32 || diff) { httpd_resp_send_err(req,HTTPD_401_UNAUTHORIZED,"Unauthorized"); return ESP_FAIL; }
+    if (req->content_len<=0 || req->content_len>8192) {
+        httpd_resp_send_err(req,HTTPD_400_BAD_REQUEST,"Invalid envelope size"); return ESP_FAIL;
+    }
+    char *body=heap_caps_malloc((size_t)req->content_len+1,MALLOC_CAP_8BIT);
+    if (!body) { httpd_resp_send_err(req,HTTPD_500_INTERNAL_SERVER_ERROR,"Out of memory"); return ESP_FAIL; }
+    size_t offset=0, total=(size_t)req->content_len;
+    while (offset<total) {
+        int n=httpd_req_recv(req,body+offset,total-offset);
+        if (n<=0) { heap_caps_free(body); httpd_resp_send_err(req,HTTPD_400_BAD_REQUEST,"Incomplete envelope"); return ESP_FAIL; }
+        offset+=(size_t)n;
+    }
+    body[total]=0;
+    int verified=redone_verify_release_envelope(body,total)==0;
+    heap_caps_free(body);
+    httpd_resp_set_type(req,"application/json");
+    httpd_resp_set_hdr(req,"Cache-Control","no-store");
+    return httpd_resp_sendstr(req,verified ?
+        "{\"schema\":1,\"signatureVerified\":true,\"transferEnabled\":false}" :
+        "{\"schema\":1,\"signatureVerified\":false,\"transferEnabled\":false}");
 }
 /* Explicitly fail closed for firmware writes until device-side signature
  * verification, inactive-slot safety and interrupted-write tests exist.
@@ -101,6 +132,8 @@ void recovery_wifi_start(void) {
     ESP_ERROR_CHECK(httpd_register_uri_handler(server,&route));
     httpd_uri_t inventory={.uri="/api/recovery/firmware",.method=HTTP_GET,.handler=firmware_inventory_handler};
     ESP_ERROR_CHECK(httpd_register_uri_handler(server,&inventory));
+    httpd_uri_t verify={.uri="/api/recovery/firmware/verify",.method=HTTP_POST,.handler=firmware_verify_handler};
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server,&verify));
     httpd_uri_t stage={.uri="/api/recovery/firmware/stage",.method=HTTP_POST,.handler=firmware_stage_locked_handler};
     ESP_ERROR_CHECK(httpd_register_uri_handler(server,&stage));
     ESP_LOGW("RECOVERY","Read-only diagnostic AP ready: %s",ap.ap.ssid);
