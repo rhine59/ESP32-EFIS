@@ -348,7 +348,12 @@ struct ProcessHomeView: View {
                                 Label("BlueOne management is not yet implemented. CAN and firmware authentication must be validated first.", systemImage: "info.circle")
                                     .font(.subheadline).foregroundStyle(.secondary)
                             } else if group.title == "Help" {
-                                Text("Select a process for its guided steps. For advanced troubleshooting, use Diagnostics.")
+                                NavigationLink {
+                                    LollipopUserGuideView()
+                                } label: {
+                                    Label("Lollipop User Guide", systemImage: "book.closed")
+                                }
+                                Text("Complete instructions, status meanings, recovery and troubleshooting.")
                                     .font(.subheadline).foregroundStyle(.secondary)
                             }
                             ForEach(processCatalogue.filter { group.processes.contains($0.id) }) { process in
@@ -397,6 +402,92 @@ struct ProcessHomeView: View {
                 .ignoresSafeArea()
             }
         }
+    }
+}
+
+private struct LollipopUserGuideView: View {
+    private struct Chapter: Identifiable {
+        let id: String
+        let title: String
+        let sections: [(String, String)]
+    }
+    private let chapters: [Chapter] = [
+        .init(id: "start", title: "Getting started", sections: [
+            ("Purpose", "Lollipop manages RedOne EFIS devices, recovery diagnostics, firmware and licence workflows. RedOne is a secondary, non-certified aviation instrument. Never use Lollipop or its diagnostics as a substitute for approved flight instruments or pre-flight checks."),
+            ("Navigation", "On the Lollipop home page, expand an area: Lollipop Account, License Management, EFIS Management, SMUX Management, Diagnostics or Help. Tap a process to see its steps. About Lollipop shows the installed app version and build."),
+            ("First use", "Install Lollipop on your iPhone, allow Camera access when scanning a QR code, and allow Local Network and location access when prompted for Wi-Fi discovery. Keep RedOne powered and nearby.")
+        ]),
+        .init(id: "account", title: "Accounts and licences", sections: [
+            ("Sign in", "Open Lollipop Account. If signed out, choose Scan sign-in QR code or Create Lollipop account. Follow the displayed account verification and QR sign-in instructions. A signed-in account is shown in green."),
+            ("Licences", "Open License Management to buy, renew, install, recover, reassign or receive a licence. Follow each process in order. Check the displayed entitlement and ownership before transferring a device."),
+            ("Purchases and availability", "Some purchasing and management screens are development simulations; a screen explicitly marked simulation does not take payment. Do not assume a licence has been purchased until the service confirms it."),
+            ("Sign out", "Open Lollipop Account and choose Sign out. Sign-in credentials and device Wi-Fi credentials are separate.")
+        ]),
+        .init(id: "pair", title: "Connect to RedOne", sections: [
+            ("Scan pairing QR", "Open Diagnostics, then Scan RedOne connection QR code. Scan the QR supplied for your specific RedOne. This stores the Wi-Fi password and recovery authentication token securely on the iPhone."),
+            ("Join the device", "After scanning, Lollipop requests to join the RedOne Wi-Fi access point. Approve the iOS prompt. You can also tap Connect to RedOne_<device identifier> for a saved pairing."),
+            ("Confirm connection", "Use Refresh Wi-Fi status to check Current Wi-Fi. RedOne recovery uses the local address 192.168.4.1. iOS may indicate No Internet Connection; that is expected for the device's local access point."),
+            ("Reconnect or replace", "Tap Connect to the remembered RedOne to rejoin later. To pair a different device or rescan credentials, use Scan RedOne connection QR code again. Never share the QR, Wi-Fi password or recovery token.")
+        ]),
+        .init(id: "diagnostics", title: "Run and interpret diagnostics", sections: [
+            ("Run tests", "Expand Diagnostics on the home page and select RedOne recovery hardware diagnostics. Confirm the correct Wi-Fi, then tap Read diagnostics from RedOne. Wait for the status and detailed results."),
+            ("Status colours", "TODO (grey): no report has been received yet. PASS (green): the stated check met its defined criteria. SKIP (yellow): Not Tested; read the reason, often unavailable hardware or an unimplemented safe test. FAIL (red): a performed check did not meet its criteria."),
+            ("Memory and flash", "Reads flash capacity, available heap and largest allocation. Reports observed byte counts and comparison thresholds. PSRAM visible to recovery may be zero because this recovery build does not initialise PSRAM. This is not a destructive memory stress test."),
+            ("Wi-Fi", "Reads the ESP32 Wi-Fi mode and associated access-point client count. A successful authenticated report confirms the HTTP diagnostics handler replied; it does not test RF range or throughput."),
+            ("NVS and recovery partitions", "Checks that NVS and both OTA partition entries exist and that recovery is running in the factory slot. It does not expose credentials, verify their contents or prove OTA images are valid."),
+            ("External hardware", "Power monitoring, display/backlight, encoder, BMI088, BMP585, RM3100 and CAN/SMUX may be SKIP until the assembled hardware and safe test drivers are verified. SKIP must not be interpreted as PASS.")
+        ]),
+        .init(id: "firmware", title: "Firmware and commissioning", sections: [
+            ("Firmware workflow", "Open EFIS Management > Update an EFIS. Follow Download published firmware, Connect to EFIS, Push firmware, Verify staged firmware, Activate firmware, then Roll back if necessary. Do not interrupt power during a transfer or activation."),
+            ("Offline preparation", "Download the approved firmware to the phone before visiting an aircraft location without internet. Verify the target device and version before transferring."),
+            ("Commissioning", "Open EFIS Management > Commission an EFIS. Work through connection, hardware identity, firmware, licence, SMUX/CAN discovery, sensor configuration, units and thresholds, display validation and completion. Only mark steps complete after real verification."),
+            ("Recovery safety", "Recovery is a maintenance mode, not the normal flight display. Do not change boot partitions or flash images without verified hardware, image and recovery instructions.")
+        ]),
+        .init(id: "trouble", title: "Troubleshooting and safety", sections: [
+            ("Cannot join Wi-Fi", "Check RedOne power, proximity, that the saved SSID exactly matches the device's advertised SSID, and iOS Wi-Fi permission prompts. Rescan the current device QR if the pairing is stale."),
+            ("Diagnostics timeout -1001", "A timeout means no complete HTTP response arrived. Refresh Wi-Fi status, confirm RedOne is connected, retry once and check device power. If the error says TCP connected, waiting for HTTP response, the connection succeeded but the response did not finish."),
+            ("No report or TODO", "TODO means diagnostics have not yet returned a report; it is not a failed hardware test. Reconnect, then run Read diagnostics from RedOne."),
+            ("SKIP and FAIL", "SKIP means no valid test was performed; check the explanatory text before installing or connecting hardware. FAIL means the reported criterion was not met. Record the full measurements and repeat only after checking the cause."),
+            ("Support information", "Record the app version and build from About Lollipop, RedOne identifier, the exact status text, and the test details. Do not include passwords, QR codes or recovery tokens."),
+            ("Flight safety", "This development system is supplemental and not certified for primary flight use. Do not rely on a green diagnostics report to establish airworthiness.")
+        ])
+    ]
+    @State private var searchText = ""
+    private var filtered: [Chapter] {
+        guard !searchText.isEmpty else { return chapters }
+        return chapters.compactMap { chapter in
+            let sections = chapter.sections.filter {
+                chapter.title.localizedCaseInsensitiveContains(searchText) ||
+                $0.0.localizedCaseInsensitiveContains(searchText) ||
+                $0.1.localizedCaseInsensitiveContains(searchText)
+            }
+            return sections.isEmpty ? nil : Chapter(id: chapter.id, title: chapter.title, sections: sections)
+        }
+    }
+    var body: some View {
+        List {
+            Section {
+                Text("Lollipop User Guide").font(.title2.bold())
+                Text("RedOne and SMUX management · Offline reference").foregroundStyle(.secondary)
+            }
+            ForEach(filtered) { chapter in
+                Section(chapter.title) {
+                    ForEach(chapter.sections, id: \.0) { section in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(section.0).font(.headline)
+                            Text(section.1).font(.subheadline).foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.vertical, 5)
+                    }
+                }
+            }
+            if filtered.isEmpty {
+                ContentUnavailableView.search(text: searchText)
+            }
+        }
+        .searchable(text: $searchText, prompt: "Search user guide")
+        .navigationTitle("User Guide")
     }
 }
 
