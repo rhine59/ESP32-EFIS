@@ -1,0 +1,9 @@
+# Lollipop Docker container naming
+
+All Compose services in this repository must use explicit `container_name: lollipop-...`. The audit is `python3 tools/check-lollipop-container-names.py`. Names are globally unique on a Docker host, so multiple deployments of the same Compose definition cannot coexist without changing their names. The separate `lollipop-redone-simulator` project is retained.
+
+**Deployment is not performed by changing Git.** Before updating Synology, inventory existing containers (`docker ps -a --format '{{.Names}}'`), record their Compose project labels, volumes and networks, and confirm no new name collides with another stack. Changing `container_name` will normally recreate a container and can interrupt service. **Do not use `docker compose down -v`** or delete existing named volumes. The account database and simulator/licence volumes retain their existing external names. Other Compose-managed volumes and networks require a migration review, especially because several directories use `name: lollipop` and contain overlapping service names (`db`) and project networks. This existing shared project-name layout can cause collisions or unintended recreation; fix project isolation and external network wiring as a separate reviewed deployment step before starting these stacks together.
+
+The web simulator's default OTA/licence URLs now use `lollipop-efis-ota` and `lollipop-efis-license-service`. Verify DNS reachability on the actual shared Docker networks during rollout. Environment-specific required secrets are not stored in Git; Compose validation on a Mac without those secrets will report interpolation errors. Do not add placeholder credentials to production or print real secrets into logs.
+
+**Status:** source naming aligned, live Synology rollout **pending**. No containers were stopped, recreated or renamed by this change.

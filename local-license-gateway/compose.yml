@@ -1,6 +1,7 @@
 name: lollipop
 services:
   redone-local-license-gateway:
+    container_name: lollipop-redone-local-license-gateway
     build:
       context: .
       args:

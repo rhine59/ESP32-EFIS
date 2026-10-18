@@ -1,6 +1,7 @@
 name: lollipop
 services:
   signer:
+    container_name: lollipop-license-signer
     build: .
     restart: unless-stopped
     environment:

@@ -1,6 +1,7 @@
 name: lollipop
 services:
   efis-ota:
+    container_name: lollipop-efis-ota
     build: .
     restart: unless-stopped
     ports:
@@ -23,6 +24,7 @@ services:
       - ./public:/usr/share/nginx/html:ro
 
   efis-ota-admin:
+    container_name: lollipop-efis-ota-admin
     build: ./admin
     restart: unless-stopped
     # Administration is LAN/NAS-only by default. Do not put this endpoint on

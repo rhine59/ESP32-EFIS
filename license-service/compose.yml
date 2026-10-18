@@ -1,6 +1,7 @@
 name: lollipop
 services:
   efis-license-service:
+    container_name: lollipop-efis-license-service
     build: .
     ports:
       - "127.0.0.1:8094:8080"

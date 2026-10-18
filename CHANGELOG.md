@@ -1,3 +1,7 @@
+## 2026-10-18 — Standardise Lollipop container names
+
+All Compose services explicitly use globally unique `lollipop-` container names; simulator dependency URLs updated. Added repository naming audit and safe Synology rollout notes. No running containers changed.
+
 ## 2026-10-18 — Stage 25 secure-element selection and trust-chain design
 
 Provisional Microchip ATECC608 evaluation path with NXP SE050 fallback; documented exact-SKU validation, authenticated host protocol, monotonic floor confirmation timing and recovery/security prerequisites. No hardware selection approval or device changes.
