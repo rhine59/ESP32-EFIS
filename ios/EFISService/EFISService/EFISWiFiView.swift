@@ -53,7 +53,7 @@ struct EFISWiFiView: View {
     private var ssid: String { "RedOne_" + suffix }
     @State private var chooseNewDevice = false
     @State private var scanningConnectionQR = false
-    @State private var currentWiFi = "Checking Wi-Fi…"
+    @State private var currentWiFi = "Not connected to WiFi"
     @State private var connectionPassword: String?
     @State private var qrError: String?
 
@@ -104,7 +104,7 @@ struct EFISWiFiView: View {
                 if let firmwareError { Text(firmwareError).foregroundStyle(.red).font(.footnote) }
             }
             Section("2. Connect to EFIS") {
-                LabeledContent("Current iPhone Wi-Fi", value: currentWiFi)
+                Text(currentWiFi)
                 Button("Refresh Wi-Fi status") { Task { await refreshCurrentWiFi() } }
                 Button("Scan QR code to connect to RedOne") { scanningConnectionQR = true }
                 if !savedMacAddress.isEmpty {
@@ -333,7 +333,7 @@ struct EFISWiFiView: View {
 
     @MainActor private func refreshCurrentWiFi() async {
         let network = await NEHotspotNetwork.fetchCurrent()
-        currentWiFi = network?.ssid ?? "Unavailable — allow location access to display Wi-Fi"
+        currentWiFi = network.map { "Connected to Wi-Fi \($0.ssid)" } ?? "Not connected to WiFi"
     }
 
     private func acceptConnectionQR(_ value: String) {
