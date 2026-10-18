@@ -1,3 +1,7 @@
+## 2026-10-18 — Physical RedOne read-only inventory
+
+Verified live ESP32-S3 identity and flash size, full-backup checksum, matching partition-table and recovery-header samples, and disabled secure boot/flash encryption. No flash/eFuse writes; physical Partition B remains NO-GO.
+
 ## 2026-10-18 — Stage 19 dedicated security-board preparation
 
 Added a gated separate-board test plan, read-only preflight and regression tests. No physical board or provisioning approval established; existing RedOne remains untouched.

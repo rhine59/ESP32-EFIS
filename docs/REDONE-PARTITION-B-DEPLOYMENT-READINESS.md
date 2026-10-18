@@ -68,3 +68,7 @@ See `docs/REDONE-SECURITY-AND-RECOVERY-ARCHITECTURE.md` for the design decision 
 ## Stage 19: separate security test-board preparation
 
 The test plan in `docs/REDONE-STAGE19-SECURITY-TEST-PLAN.md` defines gates for inventory, unprovisioned rehearsal, factory recovery/security-epoch compatibility, separately approved eFuse experiment, fault injection and independent review. `hardware/boot-recovery-lab/tools/stage19_preflight.py` is read-only and fails closed until physical test-board evidence is supplied; it never authorises writes. No separate board has been identified or provisioned. Partition B remains **NO-GO**.
+
+## Physical RedOne read-only checkpoint — 18 October 2026
+
+Live ESP32-S3 rev0.2/16 MB/8 MB identity, backup SHA-256, partition-table 4 KiB and recovery-header 4 KiB matching the existing backup, and disabled secure boot/encryption were verified without flash writes. See `docs/REDONE-LIVE-BOARD-READONLY-20261018.md` for exact evidence and limitations. Recovery **bootability** and whole-image integrity have not been demonstrated. Partition B remains **NO-GO**.
