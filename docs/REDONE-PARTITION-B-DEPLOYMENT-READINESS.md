@@ -64,3 +64,7 @@ Added `ota_floor.c/.h`: a fail-closed storage policy that requires a backend to 
 ## Stage 18: approved security architecture, no physical provisioning
 
 See `docs/REDONE-SECURITY-AND-RECOVERY-ARCHITECTURE.md` for the design decision to separate signed release build numbers, trusted installed build floor and irreversible ESP-IDF hardware `secure_version` security epochs. Recovery bootability under a raised security epoch **must be demonstrated**, not assumed. Preserve the existing RedOne board and conduct secure boot, encryption and eFuse tests only on a separately approved sacrificial board. Run `python3 hardware/boot-recovery-lab/tools/security_architecture_audit.py` for a **read-only source/config inventory**; it is not a physical safety test. Partition B remains **NO-GO**.
+
+## Stage 19: separate security test-board preparation
+
+The test plan in `docs/REDONE-STAGE19-SECURITY-TEST-PLAN.md` defines gates for inventory, unprovisioned rehearsal, factory recovery/security-epoch compatibility, separately approved eFuse experiment, fault injection and independent review. `hardware/boot-recovery-lab/tools/stage19_preflight.py` is read-only and fails closed until physical test-board evidence is supplied; it never authorises writes. No separate board has been identified or provisioned. Partition B remains **NO-GO**.

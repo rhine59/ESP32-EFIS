@@ -1,3 +1,7 @@
+## 2026-10-18 — Stage 19 dedicated security-board preparation
+
+Added a gated separate-board test plan, read-only preflight and regression tests. No physical board or provisioning approval established; existing RedOne remains untouched.
+
 ## 2026-10-18 — Stage 18 security and recovery architecture
 
 Documented the hardware security epoch, signed release build, trusted build-floor and recovery compatibility strategy. Added a read-only configuration audit and regression test. Existing RedOne hardware unchanged; Partition B NO-GO.
