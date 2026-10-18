@@ -1,3 +1,7 @@
+## 2026-10-18 — Stage 25 secure-element selection and trust-chain design
+
+Provisional Microchip ATECC608 evaluation path with NXP SE050 fallback; documented exact-SKU validation, authenticated host protocol, monotonic floor confirmation timing and recovery/security prerequisites. No hardware selection approval or device changes.
+
 ## 2026-10-18 — Stage 24 secure-element candidate evaluation and offline simulator
 
 Documented three candidate families pending exact datasheet verification; added HMAC-based offline threat-model simulator with replay, identity, forgery, power-cut and downgrade tests. No production hardware attestation or physical changes.
