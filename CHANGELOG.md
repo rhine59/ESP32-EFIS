@@ -1,3 +1,7 @@
+## 2026-10-18 — Independent physical recovery execution gate
+
+Added read-only ten-check evidence preflight for RedOne backup, OTA metadata and factory recovery, explicitly rejecting physical writes/boot authorization despite passing offline checks. 46 tests pass.
+
 ## 2026-10-18 — Fail-closed authenticated chunk resumability
 
 Strengthened RedOne read-only flash backup tool with per-chunk hash manifest, device identity and layout binding, atomic persistence and fail-closed legacy/tamper handling. 44 tests pass; no device writes.

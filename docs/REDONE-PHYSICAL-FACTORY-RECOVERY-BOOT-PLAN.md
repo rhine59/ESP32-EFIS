@@ -66,3 +66,7 @@ All 16 source chunks match the assembled full backup byte-for-byte, and independ
 ## Resumable backup integrity hardened — 18 October 2026
 
 The chunked read-only backup tool now verifies per-chunk SHA-256 and device identity from a private manifest before resuming; legacy chunks without manifests are rejected. See `docs/REDONE-BACKUP-RESUME-INTEGRITY-20261018.md`. Existing verified backup is unaffected. Physical recovery remains NO-GO.
+
+## Independent execution evidence gate — 18 October 2026
+
+All ten offline checks of device identity argument, backup, OTA selection and recovery partition pass. The read-only execution gate still explicitly refuses physical recovery boot, host writes and Partition B. See `docs/REDONE-PHYSICAL-RECOVERY-EXECUTION-GATE-20261018.md`. A physical rescue rehearsal on a separate board remains the outstanding dependency.
