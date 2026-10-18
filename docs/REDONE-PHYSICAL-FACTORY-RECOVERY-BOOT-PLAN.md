@@ -42,3 +42,7 @@ Stop if serial access fails, image identity differs, unexpected boot partition a
 ## Offline source/binary return-path evidence — 18 October 2026
 
 The deployed factory image matches the local 814,160-byte recovery build prefix byte-for-byte, and its source implements USB `bootA` via `esp_ota_set_boot_partition(ota_0)`. See `docs/REDONE-RECOVERY-RETURN-OFFLINE-AUDIT.md` and `hardware/boot-recovery-lab/tools/recovery_return_preflight.py`. All offline checks pass, but this does not prove that recovery boots or that `bootA` succeeds physically. **Execution still requires a fresh backup, validated rescue path and separate approval.**
+
+## Fresh OTA snapshot and rescue preflight — 18 October 2026
+
+A fresh 8 KiB live OTA metadata snapshot was saved locally (not in Git) and validated to select `ota_0`. The original full-flash backup's OTA metadata is stale; a new full 16 MiB backup was attempted but not completed because the read was too slow. Offline rescue planner and tests are in `hardware/boot-recovery-lab/tools/recovery_rescue_dry_run.py`; see `docs/REDONE-RECOVERY-RESCUE-PREFLIGHT-20261018.md`. **Do not execute factory boot until the full backup and independently tested rescue path are complete.**

@@ -1,3 +1,7 @@
+## 2026-10-18 — Fresh OTA snapshot and offline rescue preflight
+
+Captured fresh read-only 8 KiB OTA metadata; discovered the older full backup has stale OTA selection. Added fail-closed offline rescue planner/tests. Fresh 16 MiB backup remains incomplete; physical factory recovery boot NO-GO.
+
 ## 2026-10-18 — Offline factory recovery return-path audit
 
 Confirmed the deployed recovery image matches the local build and contains USB `bootA` selection of ota_0. Added fail-closed offline audit and tests; no physical factory boot or flash writes.
