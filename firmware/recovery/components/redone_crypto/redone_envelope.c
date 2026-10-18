@@ -3,6 +3,7 @@
 #include "cJSON.h"
 #include "mbedtls/base64.h"
 #include <stdbool.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,6 +37,22 @@ static bool exact_keys(const cJSON *object, const char *const *keys, size_t n) {
     }
     return count==n;
 }
+/* Strict monotonic build-floor syntax; never accept legacy semver here. */
+static bool signed_build_floor(const char *claim, int32_t *floor) {
+    if (!claim || !floor || strncmp(claim, "build:", 6)) return false;
+    const char *digits=claim+6;
+    if (!*digits || (digits[0]=='0' && digits[1])) return false;
+    int32_t value=0;
+    for (const char *p=digits; *p; ++p) {
+        if (*p<'0' || *p>'9') return false;
+        int digit=*p-'0';
+        if (value>(INT32_MAX-digit)/10) return false;
+        value=value*10+digit;
+    }
+    *floor=value;
+    return true;
+}
+
 int redone_verify_release_metadata(const char *json, size_t length,
                                    redone_verified_release_t *verified) {
     if (verified) memset(verified, 0, sizeof(*verified));
@@ -96,7 +113,14 @@ int redone_verify_release_metadata(const char *json, size_t length,
             result=-1;
             goto done;
         }
+        int32_t signed_floor=-1;
+        if (!signed_build_floor(minimum->valuestring, &signed_floor) ||
+            signed_floor>build->valueint) {
+            result=-1;
+            goto done;
+        }
         verified->build=build->valueint;
+        verified->signed_minimum_build=signed_floor;
         memcpy(verified->minimum_allowed_version,minimum->valuestring,
                strlen(minimum->valuestring)+1);
         for (size_t i=0;i<32;i++) {

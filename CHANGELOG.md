@@ -1,3 +1,7 @@
+## 2026-10-18 — Recovery signed minimum-build claim enforcement (offline)
+
+After Ed25519 verification, require canonical `build:<int32>` minimum release policy, reject malformed/overflow claims and minimums greater than candidate build, and expose parsed signed minimum to callers. Recovery firmware builds; physical board unchanged. Trusted monotonic floor and Partition B remain NO-GO.
+
 ## 2026-10-18 — Partition B evidence gate hardened (offline only)
 
 Readiness now checks security build configuration and cannot be turned green by user-supplied JSON booleans masquerading as independent physical attestation. Added adversarial all-true regression test. No board writes, eFuses or Partition B activation.

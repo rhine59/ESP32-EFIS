@@ -11,6 +11,7 @@ int redone_verify_release_envelope(const char *json, size_t length);
 #include <stdint.h>
 typedef struct {
     int32_t build;
+    int32_t signed_minimum_build;
     uint8_t sha256[32];
     char minimum_allowed_version[64];
 } redone_verified_release_t;
