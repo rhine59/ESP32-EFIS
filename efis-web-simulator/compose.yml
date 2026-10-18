@@ -23,12 +23,12 @@ services:
     restart: unless-stopped
     networks:
       - default
-      - lollipop-ota-network
+      - ota-server_default
       - efis-license
 
 
 networks:
-  lollipop-ota-network:
+  ota-server_default:
     external: true
   efis-license:
     external: true

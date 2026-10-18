@@ -1,3 +1,7 @@
+## 2026-10-18 — Live Synology inventory and migration adjustments
+
+Read-only inspection of running Lollipop services confirmed legacy shared Compose project and existing account DB, simulator and licence volumes. Reused existing OTA network and moved proposed support host port to 8095. No live services changed.
+
 ## 2026-10-18 — Isolate Lollipop Compose projects (source only)
 
 Separated Compose project names and aligned OTA simulator networking; documented support database volume migration and existing 8093 port collision. Live Synology rollout blocked pending inventory and data-preserving plan.

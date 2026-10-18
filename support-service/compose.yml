@@ -27,7 +27,7 @@ services:
       LLM_MODEL: ${LLM_MODEL:-}
       PRODUCT_NAME: ${PRODUCT_NAME:-MicroSky Horizon}
     ports:
-      - "127.0.0.1:8093:8093"
+      - "127.0.0.1:8095:8093"
     depends_on:
       db:
         condition: service_healthy
