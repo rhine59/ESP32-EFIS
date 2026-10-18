@@ -1,0 +1,7 @@
+# RedOne signed release and trusted installed-version policy
+
+**Stage 22 — offline implementation only, 18 October 2026. Partition B NO-GO.**
+
+The recovery crypto component now includes `redone_release_policy.c/.h`, a pure, fail-closed decision function for **already signature-verified** release metadata. It requires an independently attested hardware-protected backend with both a trusted installed monotonic floor and an authenticated running build. It rejects missing callbacks, missing hardware protection, failed reads, negative values, running build below the installed floor, candidate build below the floor or running build, and a signed minimum build that exceeds the candidate or running build. The latter prevents silently applying a release that declares the current running firmware too old for the update path. It never advances the floor, stages bytes or changes OTA metadata.
+
+A compiled host C regression test exercises the acceptance case and rejection paths; the ESP-IDF recovery firmware also builds. **No real trusted provider is registered**, and the function is not connected to the HTTP stage/activate routes (which remain locked). Host fixture callbacks are tests only and cannot establish device trust. The physical RedOne still contains the previously deployed and tested factory recovery firmware and is booting OTA A. No flash writes, security provisioning or eFuse operations were performed. A real provider requires a separately reviewed security and factory recovery compatibility plan, independent physical tests and explicit authorisation.

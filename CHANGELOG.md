@@ -1,3 +1,7 @@
+## 2026-10-18 — Recovery trusted release policy abstraction (offline)
+
+Added fail-closed C policy for signed candidate build, signed minimum, trusted installed floor and authenticated running build, requiring hardware protection attestation. Added compiled host regression test; ESP-IDF recovery build passes. No physical backend or write route; Partition B remains NO-GO.
+
 ## 2026-10-18 — Recovery signed minimum-build claim enforcement (offline)
 
 After Ed25519 verification, require canonical `build:<int32>` minimum release policy, reject malformed/overflow claims and minimums greater than candidate build, and expose parsed signed minimum to callers. Recovery firmware builds; physical board unchanged. Trusted monotonic floor and Partition B remain NO-GO.
