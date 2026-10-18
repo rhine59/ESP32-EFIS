@@ -47,4 +47,5 @@ services:
 
 networks:
   default:
+    external: true
     name: ota-server_default
