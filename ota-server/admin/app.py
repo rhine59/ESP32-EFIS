@@ -1,6 +1,7 @@
 import hashlib, json, os, re, shutil, tempfile
 from pathlib import Path
 from flask import Flask, abort, flash, redirect, render_template_string, request, url_for
+from release_build_policy import validate_release_build
 
 ROOT=Path(os.environ.get('OTA_PUBLIC_ROOT','/data')); EFIS=ROOT/'efis'; RELEASES=EFIS/'releases'; MANIFEST=EFIS/'manifest.json'; META=EFIS/'release-metadata'
 BASE_URL=os.environ.get('OTA_PUBLIC_BASE_URL','https://CHANGE-ME.example').rstrip('/'); PRODUCT='ESP32-EFIS'; HARDWARE='s3-n16r2-v1'; IDF='5.4.4'
@@ -32,7 +33,7 @@ button{border:0;border-radius:9px;padding:9px 12px;font:inherit;font-weight:750;
 {% for r in releases %}<tr><td><b>{{r.version}}</b></td><td>{{r.build}}</td><td>{{"%.1f"|format(r.size/1024)}} KB</td><td><code title="{{r.sha}}">{{r.sha[:12]}}…</code></td><td>{% if r.version==current %}<span class="badge published">PUBLISHED</span>{% else %}<span class="badge staged">STAGED</span>{% endif %}</td><td class="actions">{% if r.version!=current %}<form method="post" action="{{url_for('publish',version=r.version)}}" onsubmit="return confirm('Publish {{r.version}} to EFIS units?')"><button>Publish</button></form> <form method="post" action="{{url_for('delete',version=r.version)}}" onsubmit="return confirm('Permanently delete hosted release {{r.version}}?')"><button class="danger">Delete</button></form>{% else %}<button class="secondary" disabled>Current</button>{% endif %}</td></tr>{% else %}<tr><td colspan="6" class="empty">No firmware releases have been staged yet.</td></tr>{% endfor %}
 </table></div><div class="flow"><b>1 · Upload</b> → <b>2 · Staged</b> → <b>3 · Review</b> → <b>4 · Publish</b> → EFIS</div></section>
 <section class="card"><h2>Stage new firmware</h2><p class="hint">Choose an approved ESP32 application binary. It remains private until Publish is selected.</p>
-<form method="post" action="{{url_for('upload')}}" enctype="multipart/form-data"><div class="row"><div><label>Version</label><input name="version" required placeholder="0.4.2"></div><div><label>Build number</label><input name="build" type="number" min="0" required placeholder="52"></div></div><label>Minimum allowed version</label><input name="minimum" value="0.0.0" required><label>Release notes</label><textarea name="notes" rows="4" placeholder="What changed in this release?"></textarea><label>Firmware binary (.bin)</label><input type="file" name="firmware" accept=".bin,application/octet-stream" required><p class="hint warning">Uploading stages the file only. Instruments cannot see it until you explicitly publish.</p><button>Upload to staging</button></form></section>
+<form method="post" action="{{url_for('upload')}}" enctype="multipart/form-data"><div class="row"><div><label>Version</label><input name="version" required placeholder="0.4.2"></div><div><label>Build number</label><input name="build" type="number" min="0" max="2147483647" required placeholder="52"></div></div><label>Minimum allowed version</label><input name="minimum" value="build:0" required><label>Release notes</label><textarea name="notes" rows="4" placeholder="What changed in this release?"></textarea><label>Firmware binary (.bin)</label><input type="file" name="firmware" accept=".bin,application/octet-stream" required><p class="hint warning">Uploading stages the file only. Instruments cannot see it until you explicitly publish.</p><button>Upload to staging</button></form></section>
 </div>
 <section class="card manifest"><h2>Currently published manifest</h2>{% if manifest %}<dl class="manifest-grid"><dt>Product</dt><dd>{{manifest.get('product','—')}}</dd><dt>Version</dt><dd><b>{{manifest.get('version','—')}}</b> · build {{manifest.get('build','—')}}</dd><dt>Hardware</dt><dd>{{manifest.get('hardware_profile','—')}}</dd><dt>ESP-IDF</dt><dd>{{manifest.get('idf','—')}}</dd><dt>Image</dt><dd><code>{{manifest.get('image_url','—')}}</code></dd><dt>SHA-256</dt><dd><code>{{manifest.get('sha256','—')}}</code></dd><dt>Minimum version</dt><dd>{{manifest.get('minimum_allowed_version','—')}}</dd><dt>Release notes</dt><dd>{{manifest.get('release_notes','—')}}</dd></dl>{% else %}<p class="hint">No published manifest is available.</p>{% endif %}</section>
 <div class="footer">Private administration interface · Publishing changes the public OTA manifest; activation on an EFIS remains a separate local action.</div>
@@ -61,6 +62,10 @@ def inventory():
 def publish_manifest(version,image):
     m=metadata(version)
     if not m:abort(409,'Release metadata missing')
+    try:
+        validate_release_build(m['build'], m['minimum_allowed_version'])
+    except ValueError as exc:
+        abort(409, f'Release build policy rejected: {exc}')
     manifest = {'product':PRODUCT,'version':version,'build':int(m['build']),'hardware_profile':HARDWARE,'idf':IDF,'image_url':f'{BASE_URL}/efis/releases/{version}/{image.name}','sha256':sha256(image),'minimum_allowed_version':m['minimum_allowed_version'],'release_notes':m['release_notes']}
     signing_key = os.environ.get('OTA_ED25519_PRIVATE_KEY_PATH')
     if not signing_key:
@@ -80,8 +85,12 @@ def index():
     releases,current=inventory();return render_template_string(PAGE,releases=releases,current=current,manifest=load_json(MANIFEST))
 @app.post('/upload')
 def upload():
-    version=request.form.get('version','').strip();build=request.form.get('build','').strip();minimum=request.form.get('minimum','0.0.0').strip();notes=request.form.get('notes','').strip();f=request.files.get('firmware')
-    if not VERSION_RE.fullmatch(version) or not build.isdigit() or not VERSION_RE.fullmatch(minimum):abort(400)
+    version=request.form.get('version','').strip();build=request.form.get('build','').strip();minimum=request.form.get('minimum','build:0').strip();notes=request.form.get('notes','').strip();f=request.files.get('firmware')
+    if not VERSION_RE.fullmatch(version):abort(400)
+    try:
+        build_number, _ = validate_release_build(build, minimum)
+    except ValueError as exc:
+        abort(400, str(exc))
     if not f or not f.filename.lower().endswith('.bin'):abort(400)
     target=RELEASES/version
     if target.exists():abort(409,'Version already exists')
@@ -89,7 +98,7 @@ def upload():
     try:
         f.save(image)
         if image.stat().st_size<1024:raise ValueError('Firmware image is implausibly small')
-        atomic_json(META/f'{version}.json',{'version':version,'build':int(build),'minimum_allowed_version':minimum,'release_notes':notes or f'ESP32 EFIS release {version}','sha256':sha256(image)})
+        atomic_json(META/f'{version}.json',{'version':version,'build':build_number,'minimum_allowed_version':minimum,'release_notes':notes or f'ESP32 EFIS release {version}','sha256':sha256(image)})
     except Exception:
         shutil.rmtree(target,ignore_errors=True);raise
     flash(f'Uploaded {version} to staging. It is NOT visible to EFIS units until Publish is selected.')

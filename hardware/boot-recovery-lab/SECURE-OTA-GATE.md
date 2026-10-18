@@ -79,3 +79,7 @@ A strict host-tested parser accepts only build:<nonnegative int32> notation. It 
 ## Stage 14: fail-closed version gate before staging
 
 The experimental, unregistered staging handler now verifies signed release metadata, strictly parses `minimum_allowed_version` as `build:<int32>`, and evaluates the anti-downgrade policy **before** selecting the inactive OTA slot or beginning any write. Trusted persistent floor and running-build provenance are not yet implemented; explicit unavailable sentinels force rejection. This is intentional: existing published manifests use legacy semver minimums (e.g. `0.0.0`) and are not compatible with the new parser. Publisher schema migration and secure floor provisioning require separate design and verification. No write route was enabled.
+
+## Stage 15: publisher metadata policy
+
+The OTA Admin now checks `build:<int32>` minimums and candidate build bounds on upload and again before publication. This is input validation, not device-side monotonic storage. Legacy published manifests are unchanged, and the shell publisher helper is not yet migrated. OTA device staging/activation remains disabled.

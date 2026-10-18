@@ -1,3 +1,7 @@
+## 2026-10-18 — Publisher build-policy validation
+
+Added strict signed build/minimum validation to OTA Admin staging and publishing with unit tests. Existing published manifests remain unchanged; physical OTA remains locked.
+
 ## 2026-10-18 — Fail-closed signed build gate in experimental staging
 
 - Wired verified signed minimum-build parsing and anti-downgrade policy ahead of all inactive-slot staging operations.

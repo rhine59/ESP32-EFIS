@@ -48,3 +48,7 @@ Strict signed build-floor parsing is now implemented and tested, but not yet int
 ## Stage 14: anti-downgrade gate integrated, deployment still blocked
 
 The unregistered staging path now checks the signed build-floor claim and anti-downgrade policy before flash selection/writes. Because the installed trusted monotonic floor and running build are not yet available, it **always rejects staging**. Current publisher metadata uses a semantic-version minimum, not `build:<int32>`, so signer/device schema migration is necessary. Do not substitute plain NVS as tamper-proof monotonic storage or infer build identity from a human-readable firmware version. Readiness remains **NO-GO**.
+
+## Stage 15: publisher-side build policy validation
+
+The OTA Admin now validates release metadata against the device's `build:<int32>` signed-minimum format before staging and before publishing. It rejects legacy `0.0.0`, malformed values, overflow and a minimum greater than the candidate build. The upload form defaults to `build:0`. **Existing published manifests and hosted metadata have not been migrated**, and the shell-based staging helper remains a separate legacy interface requiring a future update. The device's trusted monotonic floor and physical rollback testing remain missing. No production publication or device deployment was performed; **Partition B remains NO-GO**.
