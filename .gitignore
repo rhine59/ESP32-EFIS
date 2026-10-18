@@ -10,3 +10,6 @@
 
 __pycache__/
 *.pyc
+
+# Local physical ESP32 flash backups (never commit)
+hardware/board-backups/
