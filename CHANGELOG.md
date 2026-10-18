@@ -1,3 +1,7 @@
+## 2026-10-18 — Intermittent USB full backup handshake investigated
+
+Verified read-only 64 KiB and 1 MiB transfers at 921600 baud, while repeated full 16 MiB attempts stalled at Connecting. No fresh full backup completed; recovery boot NO-GO.
+
 ## 2026-10-18 — Full flash backup diagnostics
 
 Read-only 64 KiB test succeeded at 921600 baud, but 16 MiB attempts stalled at serial connection handshake. Fresh complete full backup still outstanding; factory recovery boot NO-GO.
