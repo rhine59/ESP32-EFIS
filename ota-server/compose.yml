@@ -1,4 +1,4 @@
-name: lollipop
+name: lollipop-ota
 services:
   efis-ota:
     container_name: lollipop-efis-ota
@@ -44,3 +44,7 @@ services:
       - ${OTA_SIGNING_KEY_FILE:?set OTA_SIGNING_KEY_FILE in .env}:/run/secrets/redone-release-signing.pem:ro
     security_opt:
       - no-new-privileges:true
+
+networks:
+  default:
+    name: lollipop-ota-network

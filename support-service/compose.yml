@@ -1,4 +1,4 @@
-name: lollipop
+name: lollipop-support
 services:
   db:
     container_name: lollipop-support-db

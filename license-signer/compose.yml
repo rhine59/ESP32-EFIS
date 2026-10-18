@@ -1,4 +1,4 @@
-name: lollipop
+name: lollipop-signer
 services:
   signer:
     container_name: lollipop-license-signer

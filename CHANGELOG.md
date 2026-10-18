@@ -1,3 +1,7 @@
+## 2026-10-18 — Isolate Lollipop Compose projects (source only)
+
+Separated Compose project names and aligned OTA simulator networking; documented support database volume migration and existing 8093 port collision. Live Synology rollout blocked pending inventory and data-preserving plan.
+
 ## 2026-10-18 — Standardise Lollipop container names
 
 All Compose services explicitly use globally unique `lollipop-` container names; simulator dependency URLs updated. Added repository naming audit and safe Synology rollout notes. No running containers changed.

@@ -1,4 +1,4 @@
-name: lollipop
+name: lollipop-local-gateway
 services:
   redone-local-license-gateway:
     container_name: lollipop-redone-local-license-gateway

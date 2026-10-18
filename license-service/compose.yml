@@ -1,4 +1,4 @@
-name: lollipop
+name: lollipop-license
 services:
   efis-license-service:
     container_name: lollipop-efis-license-service

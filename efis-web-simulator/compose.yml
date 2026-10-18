@@ -1,4 +1,4 @@
-name: lollipop
+name: lollipop-web-simulator
 services:
   efis-web-simulator:
     container_name: lollipop-efis-web-simulator
@@ -23,12 +23,12 @@ services:
     restart: unless-stopped
     networks:
       - default
-      - ota-server_default
+      - lollipop-ota-network
       - efis-license
 
 
 networks:
-  ota-server_default:
+  lollipop-ota-network:
     external: true
   efis-license:
     external: true
