@@ -1,3 +1,7 @@
+## 2026-10-18 — Full flash backup diagnostics
+
+Read-only 64 KiB test succeeded at 921600 baud, but 16 MiB attempts stalled at serial connection handshake. Fresh complete full backup still outstanding; factory recovery boot NO-GO.
+
 ## 2026-10-18 — Offline factory recovery transition simulation
 
 Modeled fresh OTA selection through factory metadata erase and recovery bootA rewrite, covering NEW/UNDEFINED state variants. No physical boot or flash writes.
