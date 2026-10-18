@@ -164,3 +164,18 @@ namespace and must NOT be flashed or used for provisioning; regenerate
 private credentials before the local test. The board's NVS has not been
 modified. All existing boot-lab source references to `lab_auth` in older
 sections above are superseded by this requirement.
+
+## Provisioning failure investigation
+
+The first operator-run provisioning attempt returned `UNCONFIRMED`. A
+subsequent read-only USB `status` command confirmed the board still runs
+`ota_1` and the earlier firmware reports `Credentials not provisioned`.
+This boot log alone cannot prove whether the attempted NVS write occurred
+(it only reports startup state). The helper previously sent the credentials
+after fixed delays without checking that firmware had entered provisioning
+mode; a race could drop the input. The helper now **waits for the firmware
+provisioning prompt and sends no credentials if it is absent**.
+
+Do not retry with the previous generated private credentials until the
+shared-namespace firmware is deployed and the provisioning state has been
+checked. The revised shared-Wi-Fi firmware is built, not yet flashed.

@@ -30,6 +30,7 @@ def main():
     if not args.credentials.is_file():
         parser.error('Private credentials missing: generate them offline first')
     password, token = load_credentials(args.credentials)
+    print('NOTE: this helper requires the matching installed firmware; source builds alone are insufficient.')
     try:
         import serial
     except ImportError:
@@ -44,7 +45,18 @@ def main():
         time.sleep(1)
         port.reset_input_buffer()
         port.write(b'provision\n')
-        time.sleep(0.4)
+        # Wait for firmware readiness before sending secrets: fixed sleeps can
+        # race USB console initialization and silently drop the first line.
+        ready = False
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            line = port.readline().decode('utf-8', errors='replace')
+            if 'USB BENCH PROVISIONING:' in line:
+                ready = True
+                break
+        if not ready:
+            print('STOP: Device did not acknowledge provisioning mode; no secrets sent.')
+            sys.exit(1)
         port.write(password.encode('ascii') + b'\n')
         time.sleep(0.4)
         port.write(token.encode('ascii') + b'\n')
