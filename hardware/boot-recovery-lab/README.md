@@ -179,3 +179,23 @@ provisioning prompt and sends no credentials if it is absent**.
 Do not retry with the previous generated private credentials until the
 shared-namespace firmware is deployed and the provisioning state has been
 checked. The revised shared-Wi-Fi firmware is built, not yet flashed.
+
+## Shared Wi-Fi physical validation — 18 October 2026
+
+Read-only serial `status` confirmed OTA B running before the write. The
+shared-namespace application binary was flashed **only** to OTA A at
+`0x120000` (780224 bytes, esptool hash verified). The installed recovery,
+OTA B, partition table and NVS were not included in the flash operation.
+Using the running OTA B console `boot0` switched to OTA A; serial logs
+confirmed the bootloader loaded `0x120000`, `running=ota_0`, and regular
+heartbeats. Crucially, the OTA A firmware started its AP and reported
+`RedOne_3C0F02D61FDD` using the pre-existing `recovery` NVS credentials.
+**PASS: existing shared Wi-Fi credentials are readable by the revised OTA
+application.** No provisioning was attempted, and no NVS credentials were
+changed. The board was left running OTA A.
+
+**NOT YET VERIFIED:** Wi-Fi association from iOS/Android, HTTP authentication,
+OTA B using the shared namespace (it still runs the older build), and
+continuous reconnection across A/B/recovery. Do not run the local
+provisioning helper against this board merely to enable Wi-Fi: the shared
+credentials are already present.
