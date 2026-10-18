@@ -104,9 +104,13 @@ struct EFISWiFiView: View {
                 if let firmwareError { Text(firmwareError).foregroundStyle(.red).font(.footnote) }
             }
             Section("2. Connect to EFIS") {
-                Text(currentWiFi)
+                if currentWiFi.hasPrefix("Connected to Wi-Fi ") {
+                    (Text("Connected to Wi-Fi ") +
+                     Text(String(currentWiFi.dropFirst("Connected to Wi-Fi ".count))).foregroundColor(.green))
+                } else {
+                    Text(currentWiFi)
+                }
                 Button("Refresh Wi-Fi status") { Task { await refreshCurrentWiFi() } }
-                Button("Scan QR code to connect to RedOne") { scanningConnectionQR = true }
                 if !savedMacAddress.isEmpty {
                     Button("Rejoin RedOne_" + savedMacAddress) {
                         macAddress = savedMacAddress
@@ -116,6 +120,7 @@ struct EFISWiFiView: View {
                         joinNetwork()
                     }
                 }
+                Button("Scan QR code to connect to RedOne") { scanningConnectionQR = true }
                 if let qrError { Text(qrError).foregroundStyle(.red).font(.footnote) }
                 if let verified {
                     LabeledContent("Device", value: verified.device)
