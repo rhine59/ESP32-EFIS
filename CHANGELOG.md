@@ -1,3 +1,8 @@
+## 2026-10-18 — Green EFIS status and Partition B deployment gate
+
+- Authenticated EFIS status information now renders green in the Lollipop iOS connection panel instead of grey; the update controls remain disabled.
+- Added a non-destructive, fail-closed Partition B readiness audit and unit tests. No physical deployment is authorised or attempted; outstanding hardware and rollback gates are documented in `docs/REDONE-PARTITION-B-DEPLOYMENT-READINESS.md`.
+
 ## 2026-10-18 — Comprehensive RedOne guides
 
 - Added `docs/REDONE-USER-GUIDE.md` for customer/owner and bench use, including connection, licence, instrument operation, firmware safety, diagnostics and troubleshooting.

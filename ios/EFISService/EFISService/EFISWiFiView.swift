@@ -64,6 +64,19 @@ struct EFISWiFiView: View {
             .fixedSize(horizontal: false, vertical: true)
     }
 
+    // Device status is a positively authenticated readout, not disabled metadata.
+    // A green value denotes a successful status read, NOT OTA deployment approval.
+    private func efisStatusRow(_ title: String, _ value: String) -> some View {
+        LabeledContent(title) {
+            Text(value)
+                .foregroundStyle(.green)
+                .fontWeight(.semibold)
+                .multilineTextAlignment(.trailing)
+        }
+        .foregroundStyle(.green)
+        .accessibilityElement(children: .combine)
+    }
+
     private var connectionMessageColor: Color {
         if verified != nil { return .green }
         let lower = message.lowercased()
@@ -201,15 +214,15 @@ struct EFISWiFiView: View {
                     VStack(alignment: .leading, spacing: 7) {
                         Label("EFIS status", systemImage: "checkmark.circle.fill")
                             .font(.headline).foregroundStyle(.green)
-                        LabeledContent("Device", value: verified.device)
-                        LabeledContent("Wi-Fi network", value: ssid)
-                        LabeledContent("Connection", value: "Connected · authenticated")
-                        LabeledContent("Firmware", value: verified.version)
-                        LabeledContent("Active partition", value: verified.running)
-                        LabeledContent("Next OTA partition", value: verified.next)
-                        LabeledContent("Boot state", value: verified.bootState ?? "Not reported")
-                        LabeledContent("Management API", value: verified.apiVersion.map(String.init) ?? "Not reported")
-                        LabeledContent("Rollback", value: verified.rollbackAvailable.map { $0 ? "Available" : "Unavailable" } ?? "Not reported")
+                        efisStatusRow("Device", verified.device)
+                        efisStatusRow("Wi-Fi network", ssid)
+                        efisStatusRow("Connection", "Connected · authenticated")
+                        efisStatusRow("Firmware", verified.version)
+                        efisStatusRow("Active partition", verified.running)
+                        efisStatusRow("Next OTA partition", verified.next)
+                        efisStatusRow("Boot state", verified.bootState ?? "Not reported")
+                        efisStatusRow("Management API", verified.apiVersion.map(String.init) ?? "Not reported")
+                        efisStatusRow("Rollback", verified.rollbackAvailable.map { $0 ? "Available" : "Unavailable" } ?? "Not reported")
                     }
                     HStack(spacing: 12) {
                         Image(systemName: "cpu.fill").font(.title2).foregroundStyle(.green)
