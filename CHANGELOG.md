@@ -1,3 +1,7 @@
+## 2026-10-18 — Signed build-floor parser
+
+Added strict minimum build parser and host tests. Not yet wired to OTA staging; physical deployment remains blocked.
+
 ## 2026-10-18 — Read-only device boot-health snapshot
 
 - Added authenticated `GET /boot-health` to bench firmware for live ESP-IDF partition and boot-state evidence.

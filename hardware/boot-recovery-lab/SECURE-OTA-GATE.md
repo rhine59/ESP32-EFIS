@@ -71,3 +71,7 @@ Added `ota_boot_health.c/.h` with seven independent health predicates and a pend
 ## Stage 12: authenticated, read-only live boot-health snapshot
 
 Added `GET /boot-health` to the bench HTTP server. It requires the provisioned NVS token and reads the actual running partition, next OTA partition, ESP-IDF boot state and compiled application descriptor. It exposes distinct evidence flags and `mayConfirmBoot`, but does not call any OTA mutation, boot confirmation or reboot API. Physical sensor, display, supply, rollback, self-test and on-ground evidence remain explicitly `false` until validated measurement sources are implemented. The endpoint is **compiled but not deployed to the physical board**. The existing `/update`, `/verify`, `/activate` routes remain locked. This is observability, not proof of rollback.
+
+## Stage 13: signed build-floor format
+
+A strict host-tested parser accepts only build:<nonnegative int32> notation. It rejects ambiguous versions and overflow. It is not yet connected to the publisher or the OTA staging flow, because persistent trusted build-floor storage and signed manifest migration are pending. No physical flash occurred.

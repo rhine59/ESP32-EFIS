@@ -40,3 +40,7 @@ The `redone_ota_guard/ota_boot_health` component now requires seven independentl
 ## Read-only live evidence endpoint (Stage 12)
 
 The bench firmware now compiles an authenticated `GET /boot-health` endpoint returning `pendingVerify`, `imageIdentityOk`, `inactiveSlotPresent`, `firmwareSelfTestOk`, `requiredSensorsOk`, `displayOk`, `powerOk`, `rollbackPathOk`, `operatorGroundConfirmation`, `mayConfirmBoot` and `updateReady`. Only actual ESP-IDF boot/partition and app descriptor readings can become true; untested physical evidence remains false. No flash writes or boot metadata changes occur. This endpoint is not yet installed on the physical RedOne, so a successful build is not a live diagnostic result. Deployment decision remains **NO-GO**.
+
+## Stage 13: version-claim parsing
+
+Strict signed build-floor parsing is now implemented and tested, but not yet integrated with the publisher manifest or persistent trusted version state. Partition B remains NO-GO.
