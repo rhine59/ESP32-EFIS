@@ -41,3 +41,9 @@ Remaining: integrate with OTA writes only after a reviewed persistent transactio
 ## Stage 6: injectable staging transport and fault tests
 
 Added `ota_staging.c/.h`, a transport-neutral coordinator around the Stage 5 policy guard. A storage adapter must implement begin, write, readback digest and abort. It refuses unverified, unauthenticated, wrong-slot or oversized transfers; checks exact byte counts; rejects simulated write and readback failures; and requires the streamed SHA-256 and stored-image readback SHA-256 to match the signed digest. Host fault-injection tests cover interrupted transfer, write failure, premature finish, readback failure and success. This component is compiled into the ESP-IDF project but is **not wired to the HTTP upload endpoint**. No actual flash writes or physical power interruption have been tested. Existing mutation endpoints remain locked; boot/recovery partitions are untouched.
+
+## Stage 7: isolated ESP-IDF inactive-slot backend
+
+`main/ota_esp_storage.c` implements the Stage 6 storage callbacks using ESP-IDF OTA begin/write/end/abort. Before begin and each write it checks that the selected target is the next-update OTA application partition, is not the running partition, and is never the factory recovery slot. On completion it calls `esp_ota_end` for ESP image validation, then reads back exactly the received image length using `esp_partition_read` and computes SHA-256. It does not set boot selection, reboot, erase factory/recovery, or change NVS.
+
+**This adapter is compiled but intentionally not called by HTTP routes.** There is no physical flash staging or power-cut validation yet. Source guards verify mutation endpoints stay locked. Before enabling the adapter, review ESP-IDF error semantics (including `esp_ota_end` failures), interrupted-write recovery, firmware version policy, and a controlled bench test with recovery verified. Never use generic `idf.py flash` on the provisioned board.
