@@ -1,3 +1,7 @@
+## 2026-10-18 — Complete live recovery partition verification
+
+Read live OTA metadata and the entire factory recovery partition without writes; factory bytes matched backup and ESP32 image checksum/hash were valid. Bootability and active OTA slot remain to be independently confirmed. Partition B NO-GO.
+
 ## 2026-10-18 — Physical RedOne read-only inventory
 
 Verified live ESP32-S3 identity and flash size, full-backup checksum, matching partition-table and recovery-header samples, and disabled secure boot/flash encryption. No flash/eFuse writes; physical Partition B remains NO-GO.

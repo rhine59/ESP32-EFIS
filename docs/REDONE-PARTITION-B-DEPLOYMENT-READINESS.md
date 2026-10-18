@@ -72,3 +72,7 @@ The test plan in `docs/REDONE-STAGE19-SECURITY-TEST-PLAN.md` defines gates for i
 ## Physical RedOne read-only checkpoint — 18 October 2026
 
 Live ESP32-S3 rev0.2/16 MB/8 MB identity, backup SHA-256, partition-table 4 KiB and recovery-header 4 KiB matching the existing backup, and disabled secure boot/encryption were verified without flash writes. See `docs/REDONE-LIVE-BOARD-READONLY-20261018.md` for exact evidence and limitations. Recovery **bootability** and whole-image integrity have not been demonstrated. Partition B remains **NO-GO**.
+
+## Live OTA metadata and complete recovery image — 18 October 2026
+
+See `docs/REDONE-LIVE-OTA-RECOVERY-20261018.md`. The full 1 MiB factory recovery region matches the backup, with a valid ESP32 image checksum and validation hash. Live OTA selection metadata differs from backup; raw sequence numbers alone do not prove the executing partition. Recovery bootability remains untested. Physical Partition B **NO-GO**.
