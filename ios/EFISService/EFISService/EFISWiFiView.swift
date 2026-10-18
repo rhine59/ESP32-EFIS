@@ -501,7 +501,7 @@ struct RedOneDeploymentSimulator: View {
             step("Activate B", icon: "power.circle", done: activeSlot == "B", enabled: verifiedStage && staged == "B", action: { showActivation = true })
             step("Rollback to A", icon: "arrow.uturn.backward.circle", done: false, enabled: previousSlot != nil, action: rollback)
             Label(status, systemImage: "info.circle")
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(.green)
         } header: {
             Text("Deployment simulator")
         } footer: {
