@@ -1,3 +1,7 @@
+## 2026-10-18 — Stage 24 secure-element candidate evaluation and offline simulator
+
+Documented three candidate families pending exact datasheet verification; added HMAC-based offline threat-model simulator with replay, identity, forgery, power-cut and downgrade tests. No production hardware attestation or physical changes.
+
 ## 2026-10-18 — Stage 23 trusted monotonic floor design and read-only audit
 
 Documented authenticated secure-element option and recovery/security-epoch constraints for the single-board RedOne, plus fail-closed source audit and regression tests. No provider, hardware provisioning or Partition B write authorised.
