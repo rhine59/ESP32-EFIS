@@ -5,6 +5,7 @@
 #include "mbedtls/sha256.h"
 #include "esp_partition.h"
 #include "cJSON.h"
+#include "ota_esp_storage.h"
 #include "esp_http_server.h"
 #include "esp_ota_ops.h"
 #include "esp_app_desc.h"
@@ -205,6 +206,124 @@ static esp_err_t signed_preflight(httpd_req_t *req) {
     mbedtls_sha256_free(&ctx);
     if (!complete || remaining) {
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Incomplete firmware stream");
+        return ESP_FAIL;
+    }
+    static const char hex[] = "0123456789abcdef";
+    char actual[65];
+    for (size_t i = 0; i < 32; ++i) {
+        actual[2 * i] = hex[digest[i] >> 4];
+        actual[2 * i + 1] = hex[digest[i] & 15];
+    }
+    actual[64] = 0;
+    /* Manifest parser accepts uppercase hex; digest comparison is case-insensitive. */
+    unsigned mismatch = 0;
+    for (size_t i = 0; i < 64; ++i) {
+        char c = expected[i];
+        if (c >= 'A' && c <= 'F') c += 'a' - 'A';
+        mismatch |= (unsigned)(c ^ actual[i]);
+    }
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-store");
+    if (mismatch) {
+        httpd_resp_set_status(req, "422 Unprocessable Entity");
+        return httpd_resp_sendstr(req,
+            "{\"signatureVerified\":true,\"imageHashMatches\":false,\"transferEnabled\":false}");
+    }
+    return httpd_resp_sendstr(req,
+        "{\"signatureVerified\":true,\"imageHashMatches\":true,\"transferEnabled\":false}");
+}
+
+/* STAGING EXPERIMENT: compiled but never registered as an HTTP handler.
+ * No on-device mutation is reachable until rollback and power-loss tests pass. */
+static esp_err_t signed_staging_dry_run(httpd_req_t *req) {
+    if (!require_auth(req)) return ESP_FAIL;
+    const esp_partition_t *destination = esp_ota_get_next_update_partition(NULL);
+    if (!destination || req->content_len < 4 + 1 + 1024 ||
+        (size_t)req->content_len > (size_t)destination->size + 8192 + 4) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid preflight size");
+        return ESP_FAIL;
+    }
+    uint8_t prefix[4];
+    if (!receive_exact(req, prefix, sizeof(prefix))) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing manifest length");
+        return ESP_FAIL;
+    }
+    size_t manifest_length = ((size_t)prefix[0] << 24) | ((size_t)prefix[1] << 16) |
+                             ((size_t)prefix[2] << 8) | prefix[3];
+    size_t total = (size_t)req->content_len;
+    if (!manifest_length || manifest_length > 8192 || manifest_length > total - 4 ||
+        total - 4 - manifest_length < 1024 || total - 4 - manifest_length > destination->size) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid manifest or image length");
+        return ESP_FAIL;
+    }
+    char *manifest = heap_caps_malloc(manifest_length + 1, MALLOC_CAP_8BIT);
+    if (!manifest) {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Out of memory");
+        return ESP_FAIL;
+    }
+    if (!receive_exact(req, (uint8_t *)manifest, manifest_length)) {
+        heap_caps_free(manifest);
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Incomplete signed manifest");
+        return ESP_FAIL;
+    }
+    manifest[manifest_length] = 0;
+    bool valid = redone_verify_release_envelope(manifest, manifest_length) == 0;
+    char expected[65] = {0};
+    if (valid) {
+        cJSON *root = cJSON_ParseWithLengthOpts(manifest, manifest_length + 1, NULL, 1);
+        const cJSON *payload = root ? cJSON_GetObjectItemCaseSensitive(root, "payload") : NULL;
+        const cJSON *sha = payload ? cJSON_GetObjectItemCaseSensitive(payload, "sha256") : NULL;
+        if (cJSON_IsString(sha) && strlen(sha->valuestring) == 64)
+            memcpy(expected, sha->valuestring, 64);
+        else valid = false;
+        cJSON_Delete(root);
+    }
+    heap_caps_free(manifest);
+    if (!valid) {
+        httpd_resp_send_err(req, HTTPD_403_FORBIDDEN, "Invalid signed manifest");
+        return ESP_FAIL;
+    }
+    redone_esp_ota_storage_t esp_storage = {0};
+    redone_ota_staging_t staging = {0};
+    size_t remaining_image_size = total - 4 - manifest_length;
+    uint8_t expected_digest[32];
+    for (size_t i = 0; i < 32; ++i) {
+        char a = expected[i * 2], b = expected[i * 2 + 1];
+        if (a >= 'A' && a <= 'F') a += 'a' - 'A';
+        if (b >= 'A' && b <= 'F') b += 'a' - 'A';
+        int high = a >= '0' && a <= '9' ? a - '0' : a - 'a' + 10;
+        int low = b >= '0' && b <= '9' ? b - '0' : b - 'a' + 10;
+        expected_digest[i] = (uint8_t)((high << 4) | low);
+    }
+    if (!redone_esp_ota_storage_select(&esp_storage) ||
+        !redone_ota_staging_begin(&staging, redone_esp_ota_storage_backend(&esp_storage),
+                                   true, valid, true, remaining_image_size,
+                                   esp_storage.target->size, expected_digest)) {
+        httpd_resp_send_err(req, HTTPD_403_FORBIDDEN, "Inactive-slot staging unavailable");
+        return ESP_FAIL;
+    }
+    mbedtls_sha256_context ctx;
+    mbedtls_sha256_init(&ctx);
+    bool complete = mbedtls_sha256_starts(&ctx, 0) == 0;
+    size_t remaining = total - 4 - manifest_length;
+    uint8_t buffer[1024], digest[32];
+    while (complete && remaining) {
+        size_t amount = remaining < sizeof(buffer) ? remaining : sizeof(buffer);
+        if (!receive_exact(req, buffer, amount) ||
+            !redone_ota_staging_write(&staging, buffer, amount) ||
+            mbedtls_sha256_update(&ctx, buffer, amount) != 0) { complete = false; break; }
+        remaining -= amount;
+    }
+    if (complete) complete = mbedtls_sha256_finish(&ctx, digest) == 0;
+    mbedtls_sha256_free(&ctx);
+    if (!complete || remaining) {
+        redone_ota_staging_abort(&staging);
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Incomplete firmware stream");
+        return ESP_FAIL;
+    }
+    if (!redone_ota_staging_finish(&staging, digest)) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST,
+                            "Signed firmware digest or flash readback mismatch");
         return ESP_FAIL;
     }
     static const char hex[] = "0123456789abcdef";

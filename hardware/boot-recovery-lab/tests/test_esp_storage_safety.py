@@ -26,7 +26,8 @@ class StorageSafety(unittest.TestCase):
         for handler in ('upload', 'verify_image', 'activate_image'):
             start = HTTP.index('static esp_err_t ' + handler + '(')
             self.assertIn('return reject_untrusted_firmware(req);', HTTP[start:HTTP.index('#if 0', start)])
-        self.assertNotIn('redone_esp_ota_storage_backend(', HTTP)
+        self.assertEqual(HTTP.count('signed_staging_dry_run('), 1)
+        self.assertNotIn('.handler=signed_staging_dry_run', HTTP)
 
 if __name__ == '__main__':
     unittest.main()
