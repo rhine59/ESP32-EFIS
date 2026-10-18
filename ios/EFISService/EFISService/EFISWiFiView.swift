@@ -116,8 +116,6 @@ struct EFISWiFiView: View {
                     }
                 }
                 if let qrError { Text(qrError).foregroundStyle(.red).font(.footnote) }
-                Label(message, systemImage: verified == nil ? "wifi.exclamationmark" : "checkmark.circle.fill")
-                    .foregroundStyle(verified == nil ? Color.secondary : Color.green)
                 if let verified {
                     LabeledContent("Device", value: verified.device)
                     LabeledContent("Firmware", value: verified.version)
