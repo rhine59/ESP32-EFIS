@@ -84,3 +84,7 @@ Both live OTA selection entries have valid ESP-IDF CRCs and are marked VALID; la
 ## Live running-partition confirmation — 18 October 2026
 
 Read-only USB console observation confirmed the bootloader loaded `0x120000` and the running application independently reported `running=ota_0 selected=ota_0`. See `docs/REDONE-LIVE-RUNNING-PARTITION-20261018.md`. The compiled `IMAGE B` label does not represent the physical slot. Recovery boot, trusted version floor and interruption tests remain unproven. **Partition B NO-GO**.
+
+## Factory recovery boot preparation — 18 October 2026
+
+Installed ESP-IDF 5.4.4 `esp_ota_set_boot_partition(factory)` erases the entire `otadata` partition. On the only RedOne board, this is a persistent, potentially disruptive operation. See `docs/REDONE-PHYSICAL-FACTORY-RECOVERY-BOOT-PLAN.md` for required rescue-path verification and separate approval. No recovery boot has been performed. **NO-GO**.

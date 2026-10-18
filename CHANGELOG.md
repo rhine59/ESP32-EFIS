@@ -1,3 +1,7 @@
+## 2026-10-18 — Physical factory recovery test planning
+
+Documented that ESP-IDF factory boot selection erases OTA metadata and requires a validated return-to-A rescue path. Created a non-executable supervised recovery test plan; no device modifications authorised.
+
 ## 2026-10-18 — Physical RedOne running partition confirmed
 
 Observed live bootloader and USB status telemetry independently confirming running/selected `ota_0`, despite a compiled `IMAGE B` label. No flash writes, boot selection or recovery test performed; Partition B NO-GO.
