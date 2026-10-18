@@ -497,6 +497,11 @@ struct RedOneDeploymentSimulator: View {
     @State private var showActivation = false
 
     @State private var verifiedStage = false
+    @State private var transferFraction = 0.0
+    @State private var interrupted = false
+    @State private var corruptNextTransfer = false
+    @State private var transferring = false
+    @State private var errorStatus = false
 
     private func step(_ title: String, icon: String, done: Bool, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
@@ -530,6 +535,22 @@ struct RedOneDeploymentSimulator: View {
                 partition("B")
             }
             .padding(.vertical, 8)
+            HStack(spacing: 12) {
+                Image(systemName: "iphone.gen3").font(.title2)
+                Spacer()
+                Image(systemName: transferring ? "arrow.right.circle.fill" : "arrow.right.circle")
+                    .font(.title2).foregroundStyle(transferring ? .blue : .secondary)
+                    .symbolEffect(.pulse, options: .repeating, isActive: transferring)
+                Spacer()
+                Image(systemName: "cpu.fill").font(.title2)
+            }
+            .foregroundStyle(.blue)
+            ProgressView(value: transferFraction) {
+                Text("Phone → EFIS simulator").font(.caption)
+            } currentValueLabel: {
+                Text("\(Int(transferFraction * 100))%")
+                    .font(.caption.monospacedDigit()).foregroundStyle(.green)
+            }
             HStack(spacing: 4) {
                 ForEach(0..<4) { index in
                     Capsule().fill(progress > index ? Color.green : Color.gray.opacity(0.2))
@@ -541,12 +562,36 @@ struct RedOneDeploymentSimulator: View {
             }
             .font(.system(size: 9, weight: .semibold)).foregroundStyle(.secondary)
             step("Download B", icon: "arrow.down.circle", done: downloaded == "B", enabled: true, action: downloadB)
-            step("Stage B", icon: "arrow.up.circle", done: staged == "B" || activeSlot == "B", enabled: downloaded == "B" && staged == nil && activeSlot != "B", action: stageB)
+            step((transferFraction > 0 && transferFraction < 1 && !interrupted) ? "Resume transfer" : "Transfer B", icon: "arrow.up.circle", done: staged == "B" || activeSlot == "B", enabled: downloaded == "B" && staged == nil && activeSlot != "B" && !transferring, action: { Task { await stageB() } })
             step("Verify", icon: "checkmark.shield", done: verifiedStage || activeSlot == "B", enabled: staged != nil, action: verifyStaged)
             step("Activate B", icon: "power.circle", done: activeSlot == "B", enabled: verifiedStage && staged == "B", action: { showActivation = true })
             step("Rollback to A", icon: "arrow.uturn.backward.circle", done: false, enabled: previousSlot != nil, action: rollback)
-            Label(status, systemImage: "info.circle")
-                .font(.caption).foregroundStyle(.green)
+            DisclosureGroup("Test failures") {
+                Button("Interrupt transfer at 50%") {
+                    interrupted = true
+                    transferFraction = 0
+                    staged = nil
+                    verifiedStage = false
+                    status = "Interruption armed — start transfer"
+                    errorStatus = false
+                }
+                Button("Corrupt next transfer") {
+                    corruptNextTransfer = true
+                    staged = nil
+                    verifiedStage = false
+                    status = "Corruption armed — start transfer"
+                    errorStatus = false
+                }
+                Button("Reset simulator") {
+                    activeSlot = "A"; downloaded = nil; staged = nil
+                    previousSlot = nil; verifiedStage = false
+                    transferFraction = 0; interrupted = false
+                    corruptNextTransfer = false; transferring = false
+                    errorStatus = false; status = "Simulator reset — running A"
+                }
+            }
+            Label(status, systemImage: errorStatus ? "exclamationmark.triangle.fill" : "info.circle")
+                .font(.caption).foregroundStyle(errorStatus ? Color.red : Color.green)
         } header: {
             Text("Deployment simulator")
         } footer: {
@@ -602,19 +647,48 @@ struct RedOneDeploymentSimulator: View {
     private func downloadB() {
         guard valid("B") else { status = "Simulator image verification failed"; return }
         downloaded = "B"
+        errorStatus = false
         status = "Simulator B downloaded and SHA-256 verified"
     }
 
-    private func stageB() {
-        guard downloaded == "B", valid("B") else { status = "Download and verify B first"; return }
+    @MainActor
+    private func stageB() async {
+        guard downloaded == "B", valid("B"), !transferring else {
+            errorStatus = true; status = "Download and verify B first"; return
+        }
+        transferring = true
+        errorStatus = false
+        let resume = transferFraction > 0 && transferFraction < 1 && !interrupted
+        if !resume { transferFraction = 0 }
+        status = resume ? "Resuming simulated transfer" : "Transferring simulated firmware"
+        while transferFraction < 1 {
+            try? await Task.sleep(for: .milliseconds(75))
+            transferFraction = min(1, transferFraction + 0.05)
+            if interrupted && transferFraction >= 0.5 {
+                interrupted = false
+                transferring = false
+                errorStatus = true
+                status = "Transfer interrupted — tap Resume transfer"
+                return
+            }
+        }
+        transferring = false
+        if corruptNextTransfer {
+            corruptNextTransfer = false
+            transferFraction = 0
+            errorStatus = true
+            status = "SHA-256 mismatch — image rejected; A remains active"
+            return
+        }
         staged = "B"
         verifiedStage = false
-        status = "Simulator B staged; A remains active"
+        status = "Transfer complete — A remains active"
     }
 
     private func verifyStaged() {
         guard let staged, valid(staged) else { status = "Staged image verification failed"; return }
         verifiedStage = true
+        errorStatus = false
         status = "Staged simulator image verified"
     }
 
