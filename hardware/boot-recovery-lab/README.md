@@ -53,3 +53,19 @@ The server does not independently verify a signed release, the staged state
 is volatile, and the HTTP upload is not resumable. Do not flash this build
 or enable an aircraft OTA workflow until those gaps are resolved. The existing
 recovery image and running application remain unchanged.
+
+## 18 October 2026 — partition safety and fail-closed Wi-Fi
+
+The bench partition CSV is now aligned with the physically read 16 MB RedOne
+layout (`firmware/partitions.csv`): recovery at `0x20000`, OTA A at
+`0x120000`, OTA B at `0x420000`. This prevents the build from silently
+using the obsolete 5 MB OTA slot layout. **Never run `idf.py flash` for this
+bench project on a provisioned board:** that would write a normal lab app
+into the factory recovery slot. Only a reviewed app-only update to an inactive
+OTA slot may be considered after verification of the boot state and image.
+
+Bench SoftAP and HTTP are disabled unless NVS `lab_auth` contains a unique
+`ap_password` (16–63 chars) and `token` (32–64 chars). No default Wi-Fi
+password or API token exists, and NVS is never automatically erased.
+Credential provisioning and authenticated transport remain TODO; these
+changes alone do not make this a production OTA service.

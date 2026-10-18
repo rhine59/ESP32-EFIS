@@ -1,7 +1,11 @@
-# Name,   Type, SubType, Offset,  Size,    Flags
-nvs,       data, nvs,     ,       0x6000,
-otadata,   data, ota,     ,       0x2000,
-phy_init,  data, phy,     ,       0x1000,
-factory,   app,  factory, ,       0x100000,
-ota_0,     app,  ota_0,   ,       0x500000,
-ota_1,     app,  ota_1,   ,       0x500000,
+# RedOne N16R2 16MB flash: immutable recovery + two OTA application slots.
+# The factory slot is reserved for a SEPARATELY BUILT minimal recovery app.
+# Do NOT flash normal EFIS application to factory/recovery.
+# Name, Type, SubType, Offset, Size, Flags
+nvs,      data, nvs,      0x9000,   0x6000,
+otadata,  data, ota,      0xf000,   0x2000,
+phy_init, data, phy,      0x11000,  0x1000,
+recovery, app,  factory,   0x20000,  0x100000,
+ota_0,    app,  ota_0,    0x120000, 0x300000,
+ota_1,    app,  ota_1,    0x420000, 0x300000,
+coredump, data, coredump, 0x720000, 0x10000,
