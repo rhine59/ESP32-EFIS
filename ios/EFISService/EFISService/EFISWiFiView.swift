@@ -471,8 +471,22 @@ struct EFISWiFiView: View {
                 var request = URLRequest(url: url)
                 request.timeoutInterval = 3
                 request.cachePolicy = .reloadIgnoringLocalCacheData
+                // Normal OTA firmware requires an authenticated status request.
+                // Reuse the device pairing already stored in the iOS Keychain;
+                // never include tokens in UI text or logs.
+                if let pairing = RecoveryPairingStore.load(),
+                   pairing.ssid == ssid {
+                    request.setValue(pairing.token, forHTTPHeaderField: "X-Lab-Token")
+                }
                 let (data, response) = try await URLSession.shared.data(for: request)
-                guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+                guard let http = response as? HTTPURLResponse else {
+                    throw URLError(.badServerResponse)
+                }
+                if http.statusCode == 401 {
+                    message = "RedOne is connected but authentication is required. Scan the device pairing QR again."
+                    return
+                }
+                guard http.statusCode == 200 else {
                     throw URLError(.badServerResponse)
                 }
                 let status = try JSONDecoder().decode(RedOneStatus.self, from: data)

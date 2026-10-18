@@ -199,3 +199,14 @@ OTA B using the shared namespace (it still runs the older build), and
 continuous reconnection across A/B/recovery. Do not run the local
 provisioning helper against this board merely to enable Wi-Fi: the shared
 credentials are already present.
+
+## iOS connectivity compatibility checkpoint
+
+The iOS `EFISWiFiView` `/status` probe now sends the saved Keychain pairing
+credential in `X-Lab-Token`, matching the authenticated bench OTA HTTP
+endpoint. An HTTP 401 is reported as a pairing/authentication problem,
+not an unexplained Wi-Fi failure. The iOS Simulator Debug build passed.
+The Mac was not joined to the RedOne AP and no live phone/device HTTP
+request was made, so Wi-Fi association and authenticated HTTP remain
+**unverified on hardware**. Recovery mode uses a different authenticated
+API and must not be confused with the normal bench OTA status endpoint.
