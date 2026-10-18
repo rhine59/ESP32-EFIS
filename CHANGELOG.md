@@ -1,3 +1,7 @@
+## 2026-10-18 — Stage 18 security and recovery architecture
+
+Documented the hardware security epoch, signed release build, trusted build-floor and recovery compatibility strategy. Added a read-only configuration audit and regression test. Existing RedOne hardware unchanged; Partition B NO-GO.
+
 ## 2026-10-18 — Trusted build-floor storage policy
 
 Added a fail-closed hardware-backed monotonic floor interface and host tests; no hardware provider or eFuse provisioning performed. Physical Partition B deployment remains blocked.

@@ -91,3 +91,7 @@ The legacy shell staging helper now uses the OTA Admin's strict signed-build pol
 ## Stage 17: monotonic storage policy
 
 A pure C `ota_floor` component defines a hardware-protected storage interface with monotonic increase and readback verification. No device implementation is wired. The bench sdkconfig has secure boot, flash encryption and anti-rollback disabled. No eFuse was touched and no physical firmware was flashed. Hardware provisioning and rollback/recovery compatibility must be reviewed before implementation.
+
+## Stage 18: security epoch and recovery design
+
+The architecture decision in `docs/REDONE-SECURITY-AND-RECOVERY-ARCHITECTURE.md` distinguishes signed release builds from irreversible ESP-IDF hardware security epochs. A factory recovery partition is not automatically immune to anti-rollback. Secure provisioning and recovery compatibility must be demonstrated on a separate test board. No eFuse operations, physical flash, or activation paths have been enabled.

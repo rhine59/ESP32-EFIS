@@ -60,3 +60,7 @@ The OTA Admin now validates release metadata against the device's `build:<int32>
 ## Stage 17: trusted monotonic floor interface (not yet provisioned)
 
 Added `ota_floor.c/.h`: a fail-closed storage policy that requires a backend to attest hardware protection, read a nonnegative floor, refuse any decrement, and read back increases. Host tests cover missing protection, failed reads/writes, attempted downgrade and incorrect readback. **No hardware-backed provider exists yet.** Current bench configuration has `CONFIG_SECURE_BOOT`, `CONFIG_FLASH_ENCRYPTION_ENABLED`, `CONFIG_APP_ANTI_ROLLBACK` and `CONFIG_BOOTLOADER_APP_ANTI_ROLLBACK` disabled. Turning these on may involve irreversible eFuse provisioning and must not be done without a separate physical security and recovery design. Do not use ordinary NVS as trusted monotonic storage. Partition B remains NO-GO.
+
+## Stage 18: approved security architecture, no physical provisioning
+
+See `docs/REDONE-SECURITY-AND-RECOVERY-ARCHITECTURE.md` for the design decision to separate signed release build numbers, trusted installed build floor and irreversible ESP-IDF hardware `secure_version` security epochs. Recovery bootability under a raised security epoch **must be demonstrated**, not assumed. Preserve the existing RedOne board and conduct secure boot, encryption and eFuse tests only on a separately approved sacrificial board. Run `python3 hardware/boot-recovery-lab/tools/security_architecture_audit.py` for a **read-only source/config inventory**; it is not a physical safety test. Partition B remains **NO-GO**.
