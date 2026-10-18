@@ -31,9 +31,9 @@ def main():
         with csv_path.open('w', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(['key', 'type', 'encoding', 'value'])
-            writer.writerow(['lab_auth', 'namespace', '', ''])
+            writer.writerow(['recovery', 'namespace', '', ''])
             writer.writerow(['ap_password', 'data', 'string', password])
-            writer.writerow(['token', 'data', 'string', token])
+            writer.writerow(['api_token', 'data', 'string', token])
         generator = args.idf_path/'components/nvs_flash/nvs_partition_generator/nvs_partition_gen.py'
         if not generator.is_file():
             parser.error('ESP-IDF NVS generator missing')

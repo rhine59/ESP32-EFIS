@@ -17,8 +17,8 @@ static bool authorised(httpd_req_t *req) {
     size_t size = sizeof(expected);
     nvs_handle_t handle;
     if (httpd_req_get_hdr_value_str(req, "X-Lab-Token", supplied, sizeof(supplied)) != ESP_OK ||
-        nvs_open("lab_auth", NVS_READONLY, &handle) != ESP_OK) return false;
-    esp_err_t err = nvs_get_str(handle, "token", expected, &size);
+        nvs_open("recovery", NVS_READONLY, &handle) != ESP_OK) return false;
+    esp_err_t err = nvs_get_str(handle, "api_token", expected, &size);
     nvs_close(handle);
     if (err != ESP_OK || size < 33 || size > sizeof(expected)) return false;
     unsigned char difference = 0;

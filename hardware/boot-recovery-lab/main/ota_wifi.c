@@ -17,12 +17,12 @@ void lab_wifi_start(void) {
     char password[64] = {0};
     char token[80] = {0};
     size_t password_size = sizeof(password), token_size = sizeof(token);
-    if (nvs_open("lab_auth", NVS_READONLY, &auth) != ESP_OK) {
+    if (nvs_open("recovery", NVS_READONLY, &auth) != ESP_OK) {
         ESP_LOGW("LAB_WIFI", "Credentials not provisioned; bench Wi-Fi disabled");
         return;
     }
     esp_err_t pw_err = nvs_get_str(auth, "ap_password", password, &password_size);
-    esp_err_t token_err = nvs_get_str(auth, "token", token, &token_size);
+    esp_err_t token_err = nvs_get_str(auth, "api_token", token, &token_size);
     nvs_close(auth);
     if (pw_err != ESP_OK || token_err != ESP_OK ||
         strlen(password) < 16 || strlen(password) > 63 ||

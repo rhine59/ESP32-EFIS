@@ -143,3 +143,24 @@ console configuration: ensure no serial logger/monitor is running. Do not
 use this on a production device. After provisioning, reboot to enable Wi-Fi.
 
 Tests: `python3 -m unittest discover -s tools -p 'test_provision_usb_local.py'`.
+
+## Mandatory Wi-Fi across every firmware version
+
+**Architecture requirement:** recovery, OTA A and OTA B must all support
+Wi-Fi using the same device identity (`RedOne_<MAC>`) and persistent
+NVS credentials. Never embed per-version SSIDs/passwords or erase NVS
+during a firmware update. The common credential namespace is `recovery`,
+with keys `ap_password` and `api_token` (matching the existing recovery
+firmware). The lab application now reads and provisions these same keys.
+
+Wi-Fi capability is mandatory; an unprovisioned or corrupted device must
+fail closed rather than advertise an unsecured AP. Recovery remains a
+restricted maintenance/diagnostics service, while normal application
+firmware may expose authenticated OTA operations. This is a common
+network identity, **not** an assertion that their HTTP APIs are identical.
+The existing installed recovery binary has not been changed. The
+previously generated private NVS image uses the obsolete `lab_auth`
+namespace and must NOT be flashed or used for provisioning; regenerate
+private credentials before the local test. The board's NVS has not been
+modified. All existing boot-lab source references to `lab_auth` in older
+sections above are superseded by this requirement.

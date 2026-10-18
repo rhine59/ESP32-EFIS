@@ -38,10 +38,10 @@ static void provision_usb(void) {
         goto cleanup;
     }
     nvs_handle_t handle;
-    esp_err_t err = nvs_open("lab_auth", NVS_READWRITE, &handle);
+    esp_err_t err = nvs_open("recovery", NVS_READWRITE, &handle);
     if (err != ESP_OK) { puts("Provisioning failed: NVS unavailable"); goto cleanup; }
     err = nvs_set_str(handle, "ap_password", password);
-    if (err == ESP_OK) err = nvs_set_str(handle, "token", token);
+    if (err == ESP_OK) err = nvs_set_str(handle, "api_token", token);
     if (err == ESP_OK) err = nvs_commit(handle);
     nvs_close(handle);
     puts(err == ESP_OK ? "Bench credentials saved without NVS erase; reboot required" :
