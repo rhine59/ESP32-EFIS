@@ -178,7 +178,7 @@ struct EFISWiFiView: View {
                         .font(.headline)
                 }
                 Button { Task { await verifyConnection() } } label: {
-                    Label(checking ? "Verifying RedOne…" : "Verify RedOne connection", systemImage: "checkmark.shield")
+                    Label(checking ? "Reading EFIS status…" : "Read EFIS status", systemImage: "info.circle")
                 }
                 .disabled(checking)
                 Text(message)
@@ -186,6 +186,19 @@ struct EFISWiFiView: View {
                     .foregroundStyle(verified != nil ? Color.green : Color.secondary)
                 if let qrError { Label(qrError, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red).font(.footnote) }
                 if let verified {
+                    VStack(alignment: .leading, spacing: 7) {
+                        Label("EFIS status", systemImage: "checkmark.circle.fill")
+                            .font(.headline).foregroundStyle(.green)
+                        LabeledContent("Device", value: verified.device)
+                        LabeledContent("Wi-Fi network", value: ssid)
+                        LabeledContent("Connection", value: "Connected · authenticated")
+                        LabeledContent("Firmware", value: verified.version)
+                        LabeledContent("Active partition", value: verified.running)
+                        LabeledContent("Next OTA partition", value: verified.next)
+                        LabeledContent("Boot state", value: verified.bootState ?? "Not reported")
+                        LabeledContent("Management API", value: verified.apiVersion.map(String.init) ?? "Not reported")
+                        LabeledContent("Rollback", value: verified.rollbackAvailable.map { $0 ? "Available" : "Unavailable" } ?? "Not reported")
+                    }
                     HStack(spacing: 12) {
                         Image(systemName: "cpu.fill").font(.title2).foregroundStyle(.green)
                         VStack(alignment: .leading, spacing: 3) {
@@ -509,7 +522,7 @@ struct EFISWiFiView: View {
                 return
             } catch {
                 if attempt == 5 {
-                    message = "Unable to verify RedOne. Check Wi-Fi and tap Verify again."
+                    message = "Unable to verify RedOne. Check Wi-Fi and tap Read EFIS status again."
                     return
                 }
                 try? await Task.sleep(for: .seconds(1))
