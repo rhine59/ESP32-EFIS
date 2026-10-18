@@ -16,3 +16,5 @@ hardware/board-backups/
 
 # Disposable ESP-IDF secure OTA build directory
 hardware/boot-recovery-lab/build-secure-ota/
+# Private bench provisioning material (never commit)
+hardware/boot-recovery-lab/private-credentials/

@@ -69,3 +69,18 @@ Bench SoftAP and HTTP are disabled unless NVS `lab_auth` contains a unique
 password or API token exists, and NVS is never automatically erased.
 Credential provisioning and authenticated transport remain TODO; these
 changes alone do not make this a production OTA service.
+
+## Offline bench credential generation (no flashing)
+
+`python3 tools/prepare_bench_credentials.py --output private-credentials`
+creates a mode-0600 private credential file and a 24 KB NVS image with
+random per-device Wi-Fi and API credentials. It refuses to overwrite a
+nonempty output directory and does **not** connect to or write to the ESP32.
+The private directory is ignored by Git.
+
+**CRITICAL:** This is a *whole-partition* NVS image, not an in-place NVS
+update. Flashing it would erase existing NVS values, including settings
+needed by other firmware. It must **not** be flashed to the current RedOne.
+A non-destructive on-device provisioning mechanism, secure credential
+exchange to the phone, and authenticated encrypted transport are required
+before proceeding with live OTA. The tool is a generation/format test only.
