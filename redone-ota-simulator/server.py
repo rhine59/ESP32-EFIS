@@ -1,5 +1,6 @@
 """Simulation-only RedOne OTA endpoint. Never accepts real ESP images."""
 import hashlib
+import hmac
 import json
 import os
 import threading
@@ -23,6 +24,16 @@ def snapshot():
 
 
 class Handler(BaseHTTPRequestHandler):
+    def authorized(self):
+        token = os.environ.get('REDONE_SIMULATOR_TOKEN', '')
+        if not token:
+            self.send_json(503, {'error': 'simulator authentication unavailable'})
+            return False
+        if not hmac.compare_digest(self.headers.get('Authorization', ''), 'Bearer ' + token):
+            self.send_json(401, {'error': 'authentication required'})
+            return False
+        return True
+
     def send_json(self, code, value):
         body = json.dumps(value).encode()
         self.send_response(code)
@@ -35,6 +46,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/health':
             return self.send_json(200, {'ok': True, 'simulator': True})
+        if not self.authorized(): return
         if self.path == '/api/status':
             with lock:
                 return self.send_json(200, snapshot())
@@ -50,6 +62,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_json(404, {'error': 'not found'})
 
     def do_POST(self):
+        if not self.authorized(): return
         try:
             size = int(self.headers.get('Content-Length', '0'))
             if size > 4096 or size < 0:

@@ -4,6 +4,8 @@ services:
     container_name: lollipop-redone-simulator
     build: .
     restart: unless-stopped
+    environment:
+      REDONE_SIMULATOR_TOKEN: ${REDONE_SIMULATOR_TOKEN:?set simulator token in .env}
     ports:
       - "127.0.0.1:8193:8193"
     read_only: true

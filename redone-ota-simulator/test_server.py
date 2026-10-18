@@ -1,6 +1,7 @@
 import hashlib
 import http.client
 import json
+import os
 import threading
 import unittest
 from http.server import ThreadingHTTPServer
@@ -10,6 +11,7 @@ from pathlib import Path
 class SimulatorTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        os.environ['REDONE_SIMULATOR_TOKEN'] = 'unit-test-token'
         cls.server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
@@ -18,7 +20,7 @@ class SimulatorTests(unittest.TestCase):
         cls.server.shutdown()
     def call(self, method, path, body=b'', headers=None):
         conn = http.client.HTTPConnection('127.0.0.1', self.server.server_port)
-        conn.request(method, path, body=body, headers=headers or {})
+        conn.request(method, path, body=body, headers={'Authorization': 'Bearer unit-test-token', **(headers or {})})
         resp = conn.getresponse()
         payload = resp.read()
         conn.close()

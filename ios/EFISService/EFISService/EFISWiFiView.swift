@@ -517,6 +517,12 @@ struct RedOneDeploymentSimulator: View {
     @State private var corruptNextTransfer = false
     @State private var transferring = false
     @State private var errorStatus = false
+    @AppStorage("redone.simulatorEndpoint") private var simulatorEndpoint = ""
+    @State private var simulatorToken = ""
+    @State private var remoteMode = false
+    @State private var remoteConnected = false
+    @State private var remoteBusy = false
+    @State private var remoteDetails = "Not connected"
 
     private func step(_ title: String, icon: String, done: Bool, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
@@ -542,6 +548,25 @@ struct RedOneDeploymentSimulator: View {
                 Spacer()
                 Label("OFFLINE", systemImage: "wifi.slash")
                     .font(.caption2.weight(.bold)).foregroundStyle(.orange)
+            }
+            DisclosureGroup("Network simulator") {
+                TextField("HTTPS endpoint", text: $simulatorEndpoint)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .keyboardType(.URL)
+                SecureField("Simulator access token", text: $simulatorToken)
+                Button { Task { await connectRemote() } } label: {
+                    Label("Connect to Synology simulator", systemImage: "network")
+                }
+                .disabled(remoteBusy)
+                if remoteConnected {
+                    Toggle("Use network simulator", isOn: $remoteMode)
+                    Label(remoteDetails, systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green).font(.caption)
+                } else {
+                    Label(remoteDetails, systemImage: "info.circle")
+                        .foregroundStyle(.green).font(.caption)
+                }
             }
             HStack(spacing: 10) {
                 partition("A")
@@ -576,11 +601,11 @@ struct RedOneDeploymentSimulator: View {
                 Text("DOWNLOAD"); Spacer(); Text("STAGE"); Spacer(); Text("VERIFY"); Spacer(); Text("ACTIVATE")
             }
             .font(.system(size: 9, weight: .semibold)).foregroundStyle(.secondary)
-            step("Download B", icon: "arrow.down.circle", done: downloaded == "B", enabled: true, action: downloadB)
-            step((transferFraction > 0 && transferFraction < 1 && !interrupted) ? "Resume transfer" : "Transfer B", icon: "arrow.up.circle", done: staged == "B" || activeSlot == "B", enabled: downloaded == "B" && staged == nil && activeSlot != "B" && !transferring, action: { Task { await stageB() } })
-            step("Verify", icon: "checkmark.shield", done: verifiedStage || activeSlot == "B", enabled: staged != nil, action: verifyStaged)
+            step("Download B", icon: "arrow.down.circle", done: downloaded == "B", enabled: true, action: { if remoteMode { Task { await remoteDownload() } } else { downloadB() } })
+            step((transferFraction > 0 && transferFraction < 1 && !interrupted) ? "Resume transfer" : "Transfer B", icon: "arrow.up.circle", done: staged == "B" || activeSlot == "B", enabled: downloaded == "B" && staged == nil && activeSlot != "B" && !transferring, action: { Task { if remoteMode { await remoteTransfer() } else { await stageB() } } })
+            step("Verify", icon: "checkmark.shield", done: verifiedStage || activeSlot == "B", enabled: staged != nil || (remoteMode && transferFraction >= 1), action: { if remoteMode { Task { await remoteVerify() } } else { verifyStaged() } })
             step("Activate B", icon: "power.circle", done: activeSlot == "B", enabled: verifiedStage && staged == "B", action: { showActivation = true })
-            step("Rollback to A", icon: "arrow.uturn.backward.circle", done: false, enabled: previousSlot != nil, action: rollback)
+            step("Rollback to A", icon: "arrow.uturn.backward.circle", done: false, enabled: previousSlot != nil, action: { if remoteMode { Task { await remoteAction("rollback") } } else { rollback() } })
             DisclosureGroup("Test failures") {
                 Button("Interrupt transfer at 50%") {
                     interrupted = true
@@ -613,10 +638,110 @@ struct RedOneDeploymentSimulator: View {
             Label("Simulation only · no ESP32 flash", systemImage: "shield.lefthalf.filled")
         }
         .confirmationDialog("Activate simulated firmware?", isPresented: $showActivation) {
-            Button("Activate B") { activate() }
+            Button("Activate B") { if remoteMode { Task { await remoteAction("activate") } } else { activate() } }
         } message: {
             Text("Simulation only. No firmware is sent to an ESP32.")
         }
+    }
+
+    private struct RemoteState: Decodable {
+        let simulator: Bool
+        let hardware: Bool
+        let active_partition: String
+        let staged_partition: String?
+        let received_bytes: Int
+        let verified: Bool
+        let rollback_available: Bool
+    }
+
+    private func remoteRequest(_ path: String, method: String = "GET", bytes: Data? = nil, offset: Int? = nil) async throws -> (Data, RemoteState?) {
+        guard let root = URL(string: simulatorEndpoint), root.scheme == "https", root.host != nil,
+              root.user == nil, root.password == nil, !simulatorToken.isEmpty,
+              let url = URL(string: path, relativeTo: root)?.absoluteURL,
+              url.host == root.host, url.scheme == "https" else { throw URLError(.unsupportedURL) }
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.timeoutInterval = 15
+        request.setValue("Bearer " + simulatorToken, forHTTPHeaderField: "Authorization")
+        if let offset { request.setValue(String(offset), forHTTPHeaderField: "X-Offset") }
+        if method == "POST" { request.httpBody = bytes ?? Data() }
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+        let state = try? JSONDecoder().decode(RemoteState.self, from: data)
+        if let state, (!state.simulator || state.hardware) { throw URLError(.cannotParseResponse) }
+        return (data, state)
+    }
+
+    @MainActor private func syncRemote(_ state: RemoteState) {
+        activeSlot = state.active_partition
+        staged = state.staged_partition
+        verifiedStage = state.verified
+        previousSlot = state.rollback_available ? "A" : nil
+        transferFraction = Double(state.received_bytes) / 4096.0
+        remoteDetails = "Synology · Partition " + state.active_partition
+    }
+
+    @MainActor private func connectRemote() async {
+        remoteBusy = true; defer { remoteBusy = false }
+        do {
+            let (_, state) = try await remoteRequest("/api/status")
+            guard let state else { throw URLError(.cannotParseResponse) }
+            syncRemote(state); remoteConnected = true; errorStatus = false
+            status = "Authenticated network simulator connected"
+        } catch {
+            remoteConnected = false; remoteMode = false
+            remoteDetails = "Connection failed: " + error.localizedDescription
+        }
+    }
+
+    @MainActor private func remoteDownload() async {
+        do {
+            let (bytes, _) = try await remoteRequest("/api/fixtures/B/download")
+            let digest = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
+            guard bytes.count == 4096, bytes.first != 0xe9, digest == expectedHashes["B"] else {
+                throw URLError(.cannotDecodeContentData)
+            }
+            downloaded = "B"; status = "Network test image downloaded and verified"; errorStatus = false
+        } catch { status = error.localizedDescription; errorStatus = true }
+    }
+
+    @MainActor private func remoteTransfer() async {
+        guard downloaded == "B" else { return }
+        transferring = true; defer { transferring = false }
+        do {
+            let bytes = payload("B")
+            if transferFraction >= 1 { _ = try await remoteRequest("/api/transfer/reset", method: "POST"); transferFraction = 0 }
+            var offset = Int(transferFraction * 4096)
+            while offset < bytes.count {
+                let end = min(offset + 512, bytes.count)
+                let (_, state) = try await remoteRequest("/api/transfer/chunk", method: "POST", bytes: bytes.subdata(in: offset..<end), offset: offset)
+                guard let state else { throw URLError(.cannotParseResponse) }
+                syncRemote(state)
+                offset = end
+                if interrupted && offset >= 2048 {
+                    interrupted = false
+                    status = "Network transfer interrupted — resume available"
+                    errorStatus = true
+                    return
+                }
+            }
+            status = "Network transfer complete — verify next"; errorStatus = false
+        } catch { status = error.localizedDescription; errorStatus = true }
+    }
+
+    @MainActor private func remoteVerify() async { await remoteAction("verify") }
+
+    @MainActor private func remoteAction(_ name: String) async {
+        do {
+            let (_, state) = try await remoteRequest("/api/" + name, method: "POST")
+            guard let state else { throw URLError(.cannotParseResponse) }
+            syncRemote(state)
+            if name == "rollback" { downloaded = nil; transferFraction = 0 }
+            status = "Network simulator: " + name + " complete"
+            errorStatus = false
+        } catch { status = "Network " + name + " failed: " + error.localizedDescription; errorStatus = true }
     }
 
     private var progress: Int {
