@@ -1,0 +1,13 @@
+name: lollipop-redone-simulator
+services:
+  redone-simulator:
+    container_name: lollipop-redone-simulator
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8193:8193"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
