@@ -451,30 +451,92 @@ struct RedOneDeploymentSimulator: View {
     @State private var status = "Simulator ready — running A"
     @State private var showActivation = false
 
+    @State private var verifiedStage = false
+
+    private func step(_ title: String, icon: String, done: Bool, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: done ? "checkmark.circle.fill" : icon)
+                    .font(.title2)
+                    .foregroundStyle(done ? .green : (enabled ? .blue : .gray))
+                    .frame(width: 30)
+                Text(title).font(.subheadline.weight(.semibold))
+                Spacer()
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+            }
+            .padding(.vertical, 6)
+        }
+        .disabled(!enabled)
+    }
+
     var body: some View {
-        Section("Simulator deployment — no hardware") {
-            Text("Test firmware download, verification, activation and rollback without connecting to an EFIS. Simulator images cannot be flashed to hardware.")
-                .font(.footnote).foregroundStyle(.secondary)
-            LabeledContent("Running version", value: versions[activeSlot] ?? "Unknown")
-            LabeledContent("Active partition", value: activeSlot)
-            if let downloaded { LabeledContent("Downloaded", value: versions[downloaded] ?? downloaded) }
-            if let staged { LabeledContent("Staged for activation", value: versions[staged] ?? staged) }
-            Button("Download simulator firmware B") { downloadB() }
-            Button("Push simulator firmware") { stageB() }
-                .disabled(downloaded != "B" || staged != nil || activeSlot == "B")
-            Button("Verify simulator firmware") { verifyStaged() }
-                .disabled(staged == nil)
-            Button("Activate simulator firmware") { showActivation = true }
-                .disabled(staged == nil)
-            Button("Roll back simulator firmware") { rollback() }
-                .disabled(previousSlot == nil)
-            Text(status).font(.footnote).foregroundStyle(.green)
+        Section {
+            HStack {
+                Image(systemName: "cpu.fill").font(.title2).foregroundStyle(.blue)
+                Text("REDONE SIMULATOR").font(.caption.weight(.bold))
+                Spacer()
+                Label("OFFLINE", systemImage: "wifi.slash")
+                    .font(.caption2.weight(.bold)).foregroundStyle(.orange)
+            }
+            HStack(spacing: 10) {
+                partition("A")
+                Image(systemName: "arrow.left.arrow.right")
+                    .font(.title3).foregroundStyle(.secondary)
+                partition("B")
+            }
+            .padding(.vertical, 8)
+            HStack(spacing: 4) {
+                ForEach(0..<4) { index in
+                    Capsule().fill(progress > index ? Color.green : Color.gray.opacity(0.2))
+                        .frame(height: 6)
+                }
+            }
+            HStack {
+                Text("DOWNLOAD"); Spacer(); Text("STAGE"); Spacer(); Text("VERIFY"); Spacer(); Text("ACTIVATE")
+            }
+            .font(.system(size: 9, weight: .semibold)).foregroundStyle(.secondary)
+            step("Download B", icon: "arrow.down.circle", done: downloaded == "B", enabled: true, action: downloadB)
+            step("Stage B", icon: "arrow.up.circle", done: staged == "B" || activeSlot == "B", enabled: downloaded == "B" && staged == nil && activeSlot != "B", action: stageB)
+            step("Verify", icon: "checkmark.shield", done: verifiedStage || activeSlot == "B", enabled: staged != nil, action: verifyStaged)
+            step("Activate B", icon: "power.circle", done: activeSlot == "B", enabled: verifiedStage && staged == "B", action: { showActivation = true })
+            step("Rollback to A", icon: "arrow.uturn.backward.circle", done: false, enabled: previousSlot != nil, action: rollback)
+            Label(status, systemImage: "info.circle")
+                .font(.caption).foregroundStyle(.secondary)
+        } header: {
+            Text("Deployment simulator")
+        } footer: {
+            Label("Simulation only · no ESP32 flash", systemImage: "shield.lefthalf.filled")
         }
         .confirmationDialog("Activate simulated firmware?", isPresented: $showActivation) {
             Button("Activate B") { activate() }
         } message: {
-            Text("This only changes simulated state. No firmware is sent to an ESP32.")
+            Text("Simulation only. No firmware is sent to an ESP32.")
         }
+    }
+
+    private var progress: Int {
+        if activeSlot == "B" { return 4 }
+        if verifiedStage { return 3 }
+        if staged != nil { return 2 }
+        if downloaded != nil { return 1 }
+        return 0
+    }
+
+    private func partition(_ slot: String) -> some View {
+        let running = activeSlot == slot
+        return VStack(spacing: 5) {
+            Image(systemName: running ? "cpu.fill" : "cpu")
+                .font(.title2).foregroundStyle(running ? .green : .secondary)
+            Text("PARTITION \(slot)").font(.caption2.weight(.bold))
+            Text(versions[slot] ?? "").font(.system(size: 10, design: .monospaced))
+            Text(running ? "RUNNING" : (staged == slot ? "STAGED" : "STANDBY"))
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(running ? .green : .secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(running ? Color.green.opacity(0.12) : Color.gray.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     private func payload(_ label: String) -> Data {
@@ -501,19 +563,22 @@ struct RedOneDeploymentSimulator: View {
     private func stageB() {
         guard downloaded == "B", valid("B") else { status = "Download and verify B first"; return }
         staged = "B"
+        verifiedStage = false
         status = "Simulator B staged; A remains active"
     }
 
     private func verifyStaged() {
         guard let staged, valid(staged) else { status = "Staged image verification failed"; return }
+        verifiedStage = true
         status = "Staged simulator image verified"
     }
 
     private func activate() {
-        guard staged == "B", valid("B") else { return }
+        guard staged == "B", verifiedStage, valid("B") else { return }
         previousSlot = activeSlot
         activeSlot = "B"
         staged = nil
+        verifiedStage = false
         status = "Simulator B activated; rollback available"
     }
 
