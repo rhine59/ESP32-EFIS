@@ -36,7 +36,10 @@ static bool exact_keys(const cJSON *object, const char *const *keys, size_t n) {
     }
     return count==n;
 }
-int redone_verify_release_envelope(const char *json, size_t length) {
+int redone_verify_release_metadata(const char *json, size_t length,
+                                   redone_verified_release_t *verified) {
+    if (verified) memset(verified, 0, sizeof(*verified));
+    if (!verified) return -1;
     if (!json || length==0 || length>8192) return -1;
     const char *const envelope_keys[]={"signature_format","key_id","payload","signature"};
     /* Reject embedded NUL and trailing garbage: signature covers the entire envelope. */
@@ -86,9 +89,32 @@ int redone_verify_release_envelope(const char *json, size_t length) {
     bytes=cJSON_PrintUnformatted(canonical);
     if (!bytes) goto done;
     result=redone_verify_release_signature(key->valuestring,sig,(const uint8_t *)bytes,strlen(bytes));
+    if (result == 0) {
+        const cJSON *minimum=cJSON_GetObjectItemCaseSensitive(payload,"minimum_allowed_version");
+        if (!cJSON_IsString(minimum) || !ascii_text(minimum->valuestring) ||
+            strlen(minimum->valuestring)>=sizeof(verified->minimum_allowed_version)) {
+            result=-1;
+            goto done;
+        }
+        verified->build=build->valueint;
+        memcpy(verified->minimum_allowed_version,minimum->valuestring,
+               strlen(minimum->valuestring)+1);
+        for (size_t i=0;i<32;i++) {
+            char a=sha->valuestring[i*2],b=sha->valuestring[i*2+1];
+            unsigned hi=(unsigned)(a>='0'&&a<='9'?a-'0':(a>='a'&&a<='f'?a-'a'+10:a-'A'+10));
+            unsigned lo=(unsigned)(b>='0'&&b<='9'?b-'0':(b>='a'&&b<='f'?b-'a'+10:b-'A'+10));
+            verified->sha256[i]=(uint8_t)((hi<<4)|lo);
+        }
+    }
 done:
     cJSON_free(bytes);
     cJSON_Delete(canonical);
     cJSON_Delete(root);
+    if (result != 0) memset(verified, 0, sizeof(*verified));
     return result;
+}
+
+int redone_verify_release_envelope(const char *json, size_t length) {
+    redone_verified_release_t verified;
+    return redone_verify_release_metadata(json, length, &verified);
 }

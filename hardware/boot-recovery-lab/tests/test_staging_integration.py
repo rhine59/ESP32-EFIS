@@ -16,7 +16,7 @@ class StagingIntegration(unittest.TestCase):
         start = SOURCE.index('static esp_err_t signed_staging_dry_run(')
         end = SOURCE.index('static esp_err_t upload(', start)
         body = SOURCE[start:end]
-        for marker in ('require_auth(req)', 'redone_verify_release_envelope(',
+        for marker in ('require_auth(req)', 'redone_verify_release_metadata(',
                        'redone_esp_ota_storage_select(', 'redone_ota_staging_begin(',
                        'redone_ota_staging_write(', 'redone_ota_staging_finish(',
                        'redone_ota_staging_abort('):

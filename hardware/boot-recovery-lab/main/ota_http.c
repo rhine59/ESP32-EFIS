@@ -267,38 +267,24 @@ static esp_err_t signed_staging_dry_run(httpd_req_t *req) {
         return ESP_FAIL;
     }
     manifest[manifest_length] = 0;
-    bool valid = redone_verify_release_envelope(manifest, manifest_length) == 0;
-    char expected[65] = {0};
-    if (valid) {
-        cJSON *root = cJSON_ParseWithLengthOpts(manifest, manifest_length + 1, NULL, 1);
-        const cJSON *payload = root ? cJSON_GetObjectItemCaseSensitive(root, "payload") : NULL;
-        const cJSON *sha = payload ? cJSON_GetObjectItemCaseSensitive(payload, "sha256") : NULL;
-        if (cJSON_IsString(sha) && strlen(sha->valuestring) == 64)
-            memcpy(expected, sha->valuestring, 64);
-        else valid = false;
-        cJSON_Delete(root);
-    }
+    redone_verified_release_t verified_release;
+    bool valid = redone_verify_release_metadata(manifest, manifest_length,
+                                                  &verified_release) == 0;
     heap_caps_free(manifest);
     if (!valid) {
         httpd_resp_send_err(req, HTTPD_403_FORBIDDEN, "Invalid signed manifest");
         return ESP_FAIL;
     }
+    /* The signed minimum version is a string, not a monotonic build floor.
+     * Activation stays locked until its version semantics and persistent
+     * installed floor have been established. */
     redone_esp_ota_storage_t esp_storage = {0};
     redone_ota_staging_t staging = {0};
     size_t remaining_image_size = total - 4 - manifest_length;
-    uint8_t expected_digest[32];
-    for (size_t i = 0; i < 32; ++i) {
-        char a = expected[i * 2], b = expected[i * 2 + 1];
-        if (a >= 'A' && a <= 'F') a += 'a' - 'A';
-        if (b >= 'A' && b <= 'F') b += 'a' - 'A';
-        int high = a >= '0' && a <= '9' ? a - '0' : a - 'a' + 10;
-        int low = b >= '0' && b <= '9' ? b - '0' : b - 'a' + 10;
-        expected_digest[i] = (uint8_t)((high << 4) | low);
-    }
     if (!redone_esp_ota_storage_select(&esp_storage) ||
         !redone_ota_staging_begin(&staging, redone_esp_ota_storage_backend(&esp_storage),
                                    true, valid, true, remaining_image_size,
-                                   esp_storage.target->size, expected_digest)) {
+                                   esp_storage.target->size, verified_release.sha256)) {
         httpd_resp_send_err(req, HTTPD_403_FORBIDDEN, "Inactive-slot staging unavailable");
         return ESP_FAIL;
     }
@@ -326,27 +312,8 @@ static esp_err_t signed_staging_dry_run(httpd_req_t *req) {
                             "Signed firmware digest or flash readback mismatch");
         return ESP_FAIL;
     }
-    static const char hex[] = "0123456789abcdef";
-    char actual[65];
-    for (size_t i = 0; i < 32; ++i) {
-        actual[2 * i] = hex[digest[i] >> 4];
-        actual[2 * i + 1] = hex[digest[i] & 15];
-    }
-    actual[64] = 0;
-    /* Manifest parser accepts uppercase hex; digest comparison is case-insensitive. */
-    unsigned mismatch = 0;
-    for (size_t i = 0; i < 64; ++i) {
-        char c = expected[i];
-        if (c >= 'A' && c <= 'F') c += 'a' - 'A';
-        mismatch |= (unsigned)(c ^ actual[i]);
-    }
     httpd_resp_set_type(req, "application/json");
     httpd_resp_set_hdr(req, "Cache-Control", "no-store");
-    if (mismatch) {
-        httpd_resp_set_status(req, "422 Unprocessable Entity");
-        return httpd_resp_sendstr(req,
-            "{\"signatureVerified\":true,\"imageHashMatches\":false,\"transferEnabled\":false}");
-    }
     return httpd_resp_sendstr(req,
         "{\"signatureVerified\":true,\"imageHashMatches\":true,\"transferEnabled\":false}");
 }
