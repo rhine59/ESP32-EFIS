@@ -1,3 +1,7 @@
+## 2026-10-18 — User guides and architecture aligned with isolated containers
+
+Updated RedOne user guide, system/licensing/network architecture, Synology configuration, account, OTA, server and process guides. Added canonical Lollipop container operations guide with current service inventory, port/network/volume topology, maintenance and rollback policy. Superseded obsolete shared Compose naming and damaged-checkout instructions.
+
 ## 2026-10-18 — Post-cutover production acceptance
 
 Verified eight container Compose labels, health and HTTP endpoints, firmware manifests, shared networks and preserved mounts. Ran 60 boot/recovery tests and container naming validator successfully. Explicitly documented untested email, real login, external TLS, gateway discovery and physical EFIS checks.

@@ -55,9 +55,9 @@ The gateway runs in Docker with host networking for mDNS and the LAN listener, a
 - scripts/test-local-license-gateway.sh: strict TLS, allow-list and account smoke test.
 - scripts/rebuild-synology.sh: rebuild entry point for the Synology licence services and gateway.
 
-## Fresh Synology rebuild
+## Historical Synology rebuild procedure (superseded by current operations guide)
 
-1. Restore or clone this repository to /volume1/docker/ESP32-EFIS.
+1. Historical reference only: the live deployment now uses `/volume1/docker/ESP32-EFIS-staging`.
 2. Restore the persistent data/secrets required by the licence/simulator stack.
 3. If available, restore the old local gateway TLS directory to /volume1/docker/redone-local-license-gateway/tls and keep tls.key mode 0600.
 4. Run scripts/rebuild-synology.sh /volume1/docker/ESP32-EFIS.
@@ -70,8 +70,9 @@ The gateway runs in Docker with host networking for mDNS and the LAN listener, a
 
 On Synology:
 
-    cd /volume1/docker/ESP32-EFIS
-    ./scripts/rebuild-synology.sh
+    # Historical example only; do not execute against the damaged live checkout
+    cd /volume1/docker/ESP32-EFIS-staging
+    # Consult LOLLIPOP-CONTAINER-OPERATIONS-GUIDE.md before any rebuild
     REDONE_GATEWAY_HOST=<NAS-LAN-IP> ./scripts/test-local-license-gateway.sh
     ./scripts/test-license-harness.sh
 
@@ -115,6 +116,6 @@ The current pin is a leaf-certificate pin. It is secure but couples certificate 
 
 The iOS Xcode project bundle is generated output, not source of truth. After a fresh clone or disaster recovery, install XcodeGen and run `./scripts/generate-xcode-projects.sh`. This regenerates both `ios/EFISService/EFISService.xcodeproj` and `simulator/ESP32EFISSimulator.xcodeproj` from their tracked `project.yml` files. Do not preserve or manually back up `.xcodeproj`, `xcuserdata` or `.xcuserstate` files; any setting required to reproduce the product must be represented in `project.yml` or another tracked source file.
 
-### Docker container naming rule
+### Current Docker container naming and deployment rule (18 October 2026)
 
-All Docker Compose projects in this repository MUST use the Git repository name `esp32-efis` (the Docker-safe lowercase form of the Git repository name `ESP32-EFIS`) as the Compose project name. Do not set individual `container_name` values. Compose therefore generates container names beginning `esp32-efis-`, followed by the service name and replica number. This is a permanent repository convention and applies to all existing and future Compose stacks and rebuild/deployment scripts.
+The former single-project `esp32-efis` rule has been superseded. Every Compose service has an explicit `lollipop-*` container name, and each functional stack has a separate Compose project (`lollipop-account`, `lollipop-ota`, `lollipop-license`, `lollipop-web-simulator`, `lollipop-local-gateway`; RedOne simulator uses `lollipop-redone-simulator`). See `LOLLIPOP-CONTAINER-OPERATIONS-GUIDE.md` for exact names, network dependencies and safe operations. The older rebuild directions above describe the historic architecture; use the clean `/volume1/docker/ESP32-EFIS-staging` checkout for current operations, not the older damaged Git checkout.

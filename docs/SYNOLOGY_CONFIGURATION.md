@@ -1,16 +1,16 @@
 # Synology NAS configuration
 
-Status: development configuration validated 6 October 2026. Repository: `ESP32-EFIS`; Docker Compose project prefix is permanently `esp32-efis`.
+**Current deployment status (18 October 2026):** The live Synology container migration is complete. The authoritative clean deployment checkout is `/volume1/docker/ESP32-EFIS-staging`; the older `/volume1/docker/ESP32-EFIS` checkout has a damaged Git HEAD and must not be reset or used for `git pull`. Some persistent resources intentionally remain under the older path. All currently deployed Compose projects use explicit `lollipop-*` container names, not the obsolete `esp32-efis-*` naming convention. See `LOLLIPOP-POST-CUTOVER-ACCEPTANCE-20261018.md` and `LOLLIPOP-COMPOSE-PROJECT-ISOLATION.md`.
 
-## Host layout
+## Current host layout
 
-Clone/copy the authoritative Git tree to `/volume1/docker/ESP32-EFIS`. Docker is normally `/usr/local/bin/docker` on DSM. Rebuild scripts detect normal PATH first and then this DSM path. Do not rename individual containers: Compose generates names under the `esp32-efis` project prefix.
+Docker is `/usr/local/bin/docker` and Git is `/usr/local/git/bin/git` on this NAS. The account stack is `lollipop-account` and `lollipop-account-db` (project `lollipop-account`); the original PostgreSQL volume remains `esp32-efis_efis-account-db`. Account HTTP is bound to `127.0.0.1:8091`. OTA firmware files remain under `/volume1/docker/ESP32-EFIS/ota-server/public` by an explicit private `OTA_PUBLIC_DIR` override. The OTA admin signing key remains outside Git. Preserve both paths and all external volumes during maintenance.
 
-The account stack consists of `esp32-efis-account-1` and `esp32-efis-db-1`. PostgreSQL data is persisted in the explicitly named volume `esp32-efis_efis-account-db`; do not delete this volume during rebuilds. The account HTTP listener is deliberately loopback-only at `127.0.0.1:8091`.
+The active service inventory and rebuild/rollback instructions are in `LOLLIPOP-CONTAINER-OPERATIONS-GUIDE.md`. Do not run `docker compose down -v`, use the damaged checkout for Git operations, or start two PostgreSQL instances against the same volume.
 
 ## Account runtime configuration
 
-Create `/volume1/docker/ESP32-EFIS/account-service/.env` from `.env.example`, mode 600. Required values are `POSTGRES_DB`, `POSTGRES_USER`, a long random `POSTGRES_PASSWORD`, a long random `SESSION_SECRET`, `PUBLIC_BASE_URL`, and SMTP settings (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_SSL`). `EMAIL_VERIFY_MINUTES=30` is the current verification lifetime. `ENABLE_DEV_RESET=1` is permitted only on the controlled development system and MUST be 0 in production. Real passwords/secrets never belong in Git.
+Maintain `/volume1/docker/ESP32-EFIS-staging/account-service/.env` from `.env.example`, mode 600. Required values are `POSTGRES_DB`, `POSTGRES_USER`, a long random `POSTGRES_PASSWORD`, a long random `SESSION_SECRET`, `PUBLIC_BASE_URL`, and SMTP settings (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_SSL`). `EMAIL_VERIFY_MINUTES=30` is the current verification lifetime. `ENABLE_DEV_RESET=1` is permitted only on the controlled development system and MUST be 0 in production. Real passwords/secrets never belong in Git.
 
 Current development public origin is `https://granvillehouse.synology.me:8450`. DSM Reverse Proxy terminates TLS on HTTPS port 8450 and forwards HTTP to `127.0.0.1:8091`. The router forwards external TCP 8450 to the NAS for this development deployment. Do not expose 8091. Production should use a canonical HTTPS hostname on port 443 rather than requiring a customer router rule.
 
@@ -22,12 +22,12 @@ Development deep links currently use `efisservice://login?code=...`. Production 
 
 ## Rebuild and verification
 
-From the repository root on the NAS run `scripts/rebuild-synology.sh /volume1/docker/ESP32-EFIS`. It validates and rebuilds account, licence, web simulator and local gateway stacks without `--remove-orphans`. For account-only changes use `scripts/build-account-service.sh`. After deployment require account `/healthz` to return HTTP 200 locally and through the public TLS route. Back up the PostgreSQL volume before destructive DSM/storage maintenance.
+For deployed stacks, use the clean staging checkout and the per-stack commands in `LOLLIPOP-CONTAINER-OPERATIONS-GUIDE.md`. Historical rebuild scripts may encode obsolete paths or project names and must be reviewed before execution. After deployment require account `/healthz` to return HTTP 200 locally and through the public TLS route. Back up the PostgreSQL volume before destructive DSM/storage maintenance.
 
 ## DSM/network checklist
 
 - Docker/Container Manager installed and able to pull required base images.
-- Repository at `/volume1/docker/ESP32-EFIS`.
+- Clean deployment checkout at `/volume1/docker/ESP32-EFIS-staging`; original firmware directory retained.
 - Account `.env` present, secret and not committed.
 - Persistent database volume `esp32-efis_efis-account-db` retained.
 - DSM reverse proxy: HTTPS 8450 -> HTTP `127.0.0.1:8091` for development.

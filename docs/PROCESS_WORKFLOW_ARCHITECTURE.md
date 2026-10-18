@@ -89,3 +89,7 @@ The current email match is deliberately marked simulation-only and MUST NOT be p
 
 ## Cross-platform Lollipop rule — 6 October 2026
 The iOS and Android Lollipop clients share one canonical process catalogue and one server-side account/licensing state model. Authentication, session lifetime and process ordering must remain behaviourally equivalent. Platform-specific secure storage differs only at the OS boundary (iOS Keychain versus Android Keystore). New customer processes must be reflected in both apps and this document rather than implemented as platform-specific business logic.
+
+## Current deployment note — 18 October 2026
+
+The Synology live Docker migration has completed for all previously running Lollipop services. Each service group uses an isolated Compose project with explicit `lollipop-*` container names, while persistent volumes and the original firmware publication path remain intact. Use [`LOLLIPOP-CONTAINER-OPERATIONS-GUIDE.md`](LOLLIPOP-CONTAINER-OPERATIONS-GUIDE.md) and [`LOLLIPOP-POST-CUTOVER-ACCEPTANCE-20261018.md`](LOLLIPOP-POST-CUTOVER-ACCEPTANCE-20261018.md) for current deployment facts and validation limits. Historical commands or port references elsewhere in this document are not authority to modify the live installation. In particular, the private signer and support stacks remain unprovisioned; account email flows, public TLS and physical-device acceptance have not been certified by the container migration.

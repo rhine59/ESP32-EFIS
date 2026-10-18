@@ -1,5 +1,10 @@
 # Lollipop Design RedOne — User Guide
 
+## Current hosted-service status (18 October 2026)
+
+The Lollipop account, licensing, firmware-download, firmware-administration and web-simulator services have been migrated on the Synology NAS. This is an infrastructure change: **there is no new phone-app workflow or firmware operation required from the owner**. Account registration, verification, sign-in and forgotten-password pages remain part of the normal account journey; a running server does not guarantee email delivery or a completed account recovery. If those actions fail, contact support rather than attempting to reflash RedOne. The local licensing gateway remains running for the configured LAN fallback. The support and private signer stacks are not yet provisioned. This migration does not establish flightworthiness or physical OTA readiness.
+
+
 **Edition:** 18 October 2026 · **Audience:** owners, pilots, installers and support staff · **Status:** development reference, not a released product manual.
 
 > **Flight safety:** RedOne is an experimental, supplementary, non-certified electronic flight instrument. Never use it as the sole source of attitude, altitude, heading or navigation information. A successful software test, green status or diagnostic PASS does not establish airworthiness. Follow aircraft operating limitations and maintain independent approved/appropriate instruments.

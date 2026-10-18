@@ -89,3 +89,7 @@ The Synology local fallback was validated on the physical iPhone 13 Pro Max with
 No FRITZ!Box DNS/NAT change, split DNS, `/etc/hosts` entry, external tunnel product, fixed NAS address in the app, certificate-validation bypass, or user service-URL change was required.
 
 The Synology gateway runs unprivileged, keeps its TLS private key on the NAS with restrictive permissions, exposes only the phone API and `/healthz`, and dynamically advertises the NAS LAN interface address. The app still tries the canonical public HTTPS service first and invokes the authenticated local route only after a connectivity failure.
+
+## Current deployment note — 18 October 2026
+
+The Synology live Docker migration has completed for all previously running Lollipop services. Each service group uses an isolated Compose project with explicit `lollipop-*` container names, while persistent volumes and the original firmware publication path remain intact. Use [`LOLLIPOP-CONTAINER-OPERATIONS-GUIDE.md`](LOLLIPOP-CONTAINER-OPERATIONS-GUIDE.md) and [`LOLLIPOP-POST-CUTOVER-ACCEPTANCE-20261018.md`](LOLLIPOP-POST-CUTOVER-ACCEPTANCE-20261018.md) for current deployment facts and validation limits. Historical commands or port references elsewhere in this document are not authority to modify the live installation. In particular, the private signer and support stacks remain unprovisioned; account email flows, public TLS and physical-device acceptance have not been certified by the container migration.

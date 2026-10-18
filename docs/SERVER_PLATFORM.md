@@ -339,3 +339,7 @@ dns02  -> Synology or another independent device
 Clients can then be given both resolver addresses through DHCP. DNS availability should not depend solely on the new Proxmox host.
 
 Public authoritative DNS for MicroSky/Horizon customer-facing services should remain with a hosted DNS provider; the internal LXC DNS service is not intended to become a public authoritative DNS server.
+
+## Current deployment note — 18 October 2026
+
+The Synology live Docker migration has completed for all previously running Lollipop services. Each service group uses an isolated Compose project with explicit `lollipop-*` container names, while persistent volumes and the original firmware publication path remain intact. Use [`LOLLIPOP-CONTAINER-OPERATIONS-GUIDE.md`](LOLLIPOP-CONTAINER-OPERATIONS-GUIDE.md) and [`LOLLIPOP-POST-CUTOVER-ACCEPTANCE-20261018.md`](LOLLIPOP-POST-CUTOVER-ACCEPTANCE-20261018.md) for current deployment facts and validation limits. Historical commands or port references elsewhere in this document are not authority to modify the live installation. In particular, the private signer and support stacks remain unprovisioned; account email flows, public TLS and physical-device acceptance have not been certified by the container migration.

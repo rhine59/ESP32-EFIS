@@ -1,5 +1,10 @@
 # Lollipop Design RedOne — System Architecture and Engineering Guide
 
+## Live Synology deployment topology (18 October 2026)
+
+All eight previously running containers are isolated under `lollipop-*` names and independent Compose projects. Account API/PostgreSQL use `lollipop-account`; OTA nginx/admin use `lollipop-ota`; licensing uses `lollipop-license`; web simulator uses `lollipop-web-simulator`; local gateway uses `lollipop-local-gateway`; RedOne simulator remains `lollipop-redone-simulator`. Persistent account DB, licence keys, simulator state, firmware and signing-key mounts were retained. The clean deployment checkout is `/volume1/docker/ESP32-EFIS-staging`; the original checkout has a damaged Git HEAD. Shared `ota-server_default` and `efis-license` networks provide simulator connectivity. The private signer and support stacks are unprovisioned and must not be started with placeholders. Refer to `LOLLIPOP-CONTAINER-OPERATIONS-GUIDE.md` and the post-cutover acceptance report. HTTP health and manifest checks passed; external TLS, real authentication/email and physical-device checks remain separate acceptance gates.
+
+
 **Edition:** 18 October 2026 · **Audience:** firmware, iOS/Android, backend, hardware, QA and support engineers · **Authority:** GitHub `main` plus referenced source; design intentions are not evidence of implementation.
 
 > **Scope:** RedOne EFIS and its companion Lollipop workflows, signed licensing, OTA/recovery, diagnostics and supporting services. BlueOne/SMUX is a separate proposed sensor-multiplexer product. This is a non-certified, supplementary aviation system. No development build is approved as a primary flight instrument.

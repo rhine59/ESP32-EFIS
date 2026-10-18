@@ -394,3 +394,7 @@ A Release build is not production-ready until a real `EFISLicenceServiceURL` is 
 
 ## Mobile account session boundary — 6 October 2026
 Lollipop authentication is independent of an EFIS licence. A verified account obtains a five-minute one-use login challenge and exchanges it for a hard 90-day revocable bearer session. iOS protects the credential in Keychain; Android protects it with Android Keystore-backed AES-GCM storage. Mobile calls requiring account authority must use the authenticated session; Device ID knowledge alone never grants ownership or licence authority. Session expiry triggers a new email challenge and does not alter an already installed signed EFIS entitlement.
+
+## Current deployment note — 18 October 2026
+
+The Synology live Docker migration has completed for all previously running Lollipop services. Each service group uses an isolated Compose project with explicit `lollipop-*` container names, while persistent volumes and the original firmware publication path remain intact. Use [`LOLLIPOP-CONTAINER-OPERATIONS-GUIDE.md`](LOLLIPOP-CONTAINER-OPERATIONS-GUIDE.md) and [`LOLLIPOP-POST-CUTOVER-ACCEPTANCE-20261018.md`](LOLLIPOP-POST-CUTOVER-ACCEPTANCE-20261018.md) for current deployment facts and validation limits. Historical commands or port references elsewhere in this document are not authority to modify the live installation. In particular, the private signer and support stacks remain unprovisioned; account email flows, public TLS and physical-device acceptance have not been certified by the container migration.
