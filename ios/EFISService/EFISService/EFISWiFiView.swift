@@ -57,9 +57,24 @@ struct EFISWiFiView: View {
     @State private var connectionPassword: String?
     @State private var qrError: String?
 
+    private func guidance(_ text: String, severity: Color = .orange) -> some View {
+        Label(text, systemImage: severity == .red ? "xmark.octagon.fill" : severity == .green ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+            .font(.footnote)
+            .foregroundStyle(severity)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var connectionMessageColor: Color {
+        if verified != nil { return .green }
+        let lower = message.lowercased()
+        if lower.contains("failed") || lower.contains("unable") || lower.contains("required") || lower.contains("unexpected") { return .red }
+        return .orange
+    }
+
     var body: some View {
         List {
             Section {
+                guidance("Connect to the internet using normal Wi-Fi or mobile data, not the RedOne EFIS network. Download and authenticate the signed release before connecting to the EFIS.")
                 HStack(spacing: 12) {
                     Image(systemName: "square.and.arrow.down.on.square.fill")
                         .font(.largeTitle).foregroundStyle(.blue)
@@ -108,7 +123,7 @@ struct EFISWiFiView: View {
                 }
                 Label(readyReleases.isEmpty ? "No firmware downloaded" : "\(readyReleases.count) verified release(s) ready",
                       systemImage: readyReleases.isEmpty ? "tray" : "checkmark.circle.fill")
-                    .foregroundStyle(.green)
+                    .foregroundStyle(readyReleases.isEmpty ? Color.orange : Color.green)
                     .font(.subheadline)
                 ForEach(readyReleases) { release in
                     Button { selectCachedRelease(release) } label: {
@@ -143,10 +158,9 @@ struct EFISWiFiView: View {
                 if let firmwareError { Label(firmwareError, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red).font(.footnote) }
             } header: {
                 Label("1. Download firmware", systemImage: "arrow.down.circle")
-            } footer: {
-                Text("Internet connection required. Before finding or downloading firmware, disconnect from the RedOne EFIS Wi-Fi network and connect to your normal Wi-Fi or mobile data. Download the signed release to your phone before connecting to the EFIS.")
             }
             Section {
+                guidance("Scan the RedOne QR code or rejoin your saved network, then read EFIS status.")
                 HStack(spacing: 12) {
                     Image(systemName: "wifi.router.fill")
                         .font(.largeTitle).foregroundStyle(verified == nil ? Color.secondary : Color.green)
@@ -181,9 +195,7 @@ struct EFISWiFiView: View {
                     Label(checking ? "Reading EFIS status…" : "Read EFIS status", systemImage: "info.circle")
                 }
                 .disabled(checking)
-                Text(message)
-                    .font(.footnote)
-                    .foregroundStyle(verified != nil ? Color.green : Color.secondary)
+                guidance(message, severity: connectionMessageColor)
                 if let qrError { Label(qrError, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red).font(.footnote) }
                 if let verified {
                     VStack(alignment: .leading, spacing: 7) {
@@ -212,11 +224,10 @@ struct EFISWiFiView: View {
                 }
             } header: {
                 Label("2. Connect to EFIS", systemImage: "wifi")
-            } footer: {
-                Text("Scan the QR on your RedOne or rejoin a saved connection.")
             }
             RedOneDeploymentSimulator()
             Section("Firmware update") {
+                guidance("Firmware transfer and activation are locked until signed-image authentication and A/B recovery testing are complete.", severity: .red)
                 if let verified {
                     LabeledContent("Installed version", value: verified.version)
                     LabeledContent("Active partition", value: verified.running)
@@ -229,17 +240,12 @@ struct EFISWiFiView: View {
                         Text(reason).font(.footnote).foregroundStyle(.secondary)
                     }
                 } else {
-                    Text("Connect to and verify your RedOne to inspect firmware.")
-                        .foregroundStyle(.secondary)
+                    guidance("Connect to RedOne and read EFIS status before managing firmware.")
                 }
-                Text("Firmware transfer requires a previously downloaded and verified signed release. The device must independently authenticate the release before writing flash.")
-                    .font(.footnote).foregroundStyle(.secondary)
                 Label("3. Push firmware to EFIS", systemImage: "arrow.up.circle")
                     .font(.headline)
                 Button("Push selected firmware") { }
                     .disabled(true)
-                Text("Requires an authenticated RedOne connection and a verified, signed release.")
-                    .font(.footnote).foregroundStyle(.secondary)
                 Label("4. Verify transferred firmware", systemImage: "checkmark.shield")
                     .font(.headline)
                 Button("Verify transferred image") { }
@@ -248,14 +254,10 @@ struct EFISWiFiView: View {
                     .font(.headline)
                 Button("Activate verified firmware") { }
                     .disabled(true)
-                Text("Activation requires explicit confirmation on the ground, followed by reboot and health verification.")
-                    .font(.footnote).foregroundStyle(.secondary)
                 Label("6. Rollback", systemImage: "arrow.uturn.backward")
                     .font(.headline)
                 Button("Roll back to previous firmware") { }
                     .disabled(true)
-                Text("Firmware changes are locked until signed-image validation, device authentication and A/B recovery testing pass. No firmware will be changed by this screen.")
-                    .font(.footnote).foregroundStyle(.secondary)
             }
         }
         .fileImporter(isPresented: $showingFirmwarePicker, allowedContentTypes: [.data], allowsMultipleSelection: false) { result in
