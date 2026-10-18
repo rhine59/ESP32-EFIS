@@ -137,6 +137,7 @@ struct EFISWiFiView: View {
                     LabeledContent("Next update partition", value: verified.next)
                 }
             }
+            RedOneDeploymentSimulator()
             Section("Firmware update") {
                 if let verified {
                     LabeledContent("Installed version", value: verified.version)
@@ -431,5 +432,95 @@ struct EFISWiFiView: View {
                 try? await Task.sleep(for: .seconds(1))
             }
         }
+    }
+}
+import SwiftUI
+import CryptoKit
+
+/// Completely local OTA workflow simulator. Never writes firmware or contacts a device.
+struct RedOneDeploymentSimulator: View {
+    private let versions = ["A": "0.1.0-sim-A", "B": "0.1.1-sim-B"]
+    private let expectedHashes = [
+        "A": "aa0621fe57d4b5d6831c963c0e5c52b693493e9d7e6585797826bc80c6a4c06d",
+        "B": "f9acbce913f72c1c235a1fb11e7eb766737bb4a12765132153df2646aaee97df"
+    ]
+    @State private var activeSlot = "A"
+    @State private var downloaded: String?
+    @State private var staged: String?
+    @State private var previousSlot: String?
+    @State private var status = "Simulator ready — running A"
+    @State private var showActivation = false
+
+    var body: some View {
+        Section("Simulator deployment — no hardware") {
+            Text("Test firmware download, verification, activation and rollback without connecting to an EFIS. Simulator images cannot be flashed to hardware.")
+                .font(.footnote).foregroundStyle(.secondary)
+            LabeledContent("Running version", value: versions[activeSlot] ?? "Unknown")
+            LabeledContent("Active partition", value: activeSlot)
+            if let downloaded { LabeledContent("Downloaded", value: versions[downloaded] ?? downloaded) }
+            if let staged { LabeledContent("Staged for activation", value: versions[staged] ?? staged) }
+            Button("Download simulator firmware B") { downloadB() }
+            Button("Push simulator firmware") { stageB() }
+                .disabled(downloaded != "B" || staged != nil || activeSlot == "B")
+            Button("Verify simulator firmware") { verifyStaged() }
+                .disabled(staged == nil)
+            Button("Activate simulator firmware") { showActivation = true }
+                .disabled(staged == nil)
+            Button("Roll back simulator firmware") { rollback() }
+                .disabled(previousSlot == nil)
+            Text(status).font(.footnote).foregroundStyle(.green)
+        }
+        .confirmationDialog("Activate simulated firmware?", isPresented: $showActivation) {
+            Button("Activate B") { activate() }
+        } message: {
+            Text("This only changes simulated state. No firmware is sent to an ESP32.")
+        }
+    }
+
+    private func payload(_ label: String) -> Data {
+        let version = versions[label]!
+        let header = Data("MICROSKY-HORIZON-SIMULATOR-OTA\nNON-FLASHABLE TEST PAYLOAD\nVERSION=\(version)\n".utf8)
+        let seed = Array(SHA256.hash(data: header))
+        var bytes = Array(header)
+        while bytes.count < 4096 { bytes.append(contentsOf: seed.prefix(4096 - bytes.count)) }
+        return Data(bytes)
+    }
+
+    private func valid(_ label: String) -> Bool {
+        let data = payload(label)
+        let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        return data.count == 4096 && data.first != 0xe9 && digest == expectedHashes[label]
+    }
+
+    private func downloadB() {
+        guard valid("B") else { status = "Simulator image verification failed"; return }
+        downloaded = "B"
+        status = "Simulator B downloaded and SHA-256 verified"
+    }
+
+    private func stageB() {
+        guard downloaded == "B", valid("B") else { status = "Download and verify B first"; return }
+        staged = "B"
+        status = "Simulator B staged; A remains active"
+    }
+
+    private func verifyStaged() {
+        guard let staged, valid(staged) else { status = "Staged image verification failed"; return }
+        status = "Staged simulator image verified"
+    }
+
+    private func activate() {
+        guard staged == "B", valid("B") else { return }
+        previousSlot = activeSlot
+        activeSlot = "B"
+        staged = nil
+        status = "Simulator B activated; rollback available"
+    }
+
+    private func rollback() {
+        guard let previousSlot else { return }
+        activeSlot = previousSlot
+        self.previousSlot = nil
+        status = "Rolled back to simulator A"
     }
 }
