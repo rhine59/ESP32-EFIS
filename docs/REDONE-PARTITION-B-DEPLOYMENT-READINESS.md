@@ -76,3 +76,7 @@ Live ESP32-S3 rev0.2/16 MB/8 MB identity, backup SHA-256, partition-table 4 KiB 
 ## Live OTA metadata and complete recovery image — 18 October 2026
 
 See `docs/REDONE-LIVE-OTA-RECOVERY-20261018.md`. The full 1 MiB factory recovery region matches the backup, with a valid ESP32 image checksum and validation hash. Live OTA selection metadata differs from backup; raw sequence numbers alone do not prove the executing partition. Recovery bootability remains untested. Physical Partition B **NO-GO**.
+
+## Physical OTA selection decoded — 18 October 2026
+
+Both live OTA selection entries have valid ESP-IDF CRCs and are marked VALID; latest sequence 5 selects `ota_0` (Partition A). See `docs/REDONE-LIVE-OTA-DECODE-20261018.md`. This remains a boot-selection inference, not independent running-firmware telemetry. No firmware write or boot selection was performed. **NO-GO**.

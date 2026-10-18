@@ -1,3 +1,7 @@
+## 2026-10-18 — Live OTA record validation
+
+Added an offline ESP-IDF OTA metadata decoder and regression tests. Physical RedOne metadata contains two CRC-valid, VALID records; latest selects Partition A. Running firmware not independently confirmed. No writes; Partition B NO-GO.
+
 ## 2026-10-18 — Complete live recovery partition verification
 
 Read live OTA metadata and the entire factory recovery partition without writes; factory bytes matched backup and ESP32 image checksum/hash were valid. Bootability and active OTA slot remain to be independently confirmed. Partition B NO-GO.
