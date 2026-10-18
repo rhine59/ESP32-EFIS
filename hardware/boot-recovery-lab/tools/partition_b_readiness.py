@@ -11,7 +11,17 @@ def assess(root: Path, evidence: dict) -> dict:
     http = (root / 'hardware/boot-recovery-lab/main/ota_http.c').read_text()
     boot = (root / 'hardware/boot-recovery-lab/main/main.c').read_text()
     storage = (root / 'hardware/boot-recovery-lab/main/ota_esp_storage.c').read_text()
+    config_lines = set((root / 'hardware/boot-recovery-lab/sdkconfig').read_text().splitlines())
+    # Evidence JSON is user-editable; it must not override measured source
+    # blockers or be interpreted as a signed physical test record.
     checks = {
+        'secure_boot_enabled_in_build': 'CONFIG_SECURE_BOOT=y' in config_lines,
+        'flash_encryption_enabled_in_build': 'CONFIG_FLASH_ENCRYPTION_ENABLED=y' in config_lines,
+        'hardware_anti_rollback_enabled_in_build': (
+            'CONFIG_APP_ANTI_ROLLBACK=y' in config_lines and
+            'CONFIG_BOOTLOADER_APP_ANTI_ROLLBACK=y' in config_lines),
+        'physical_security_provisioning_independently_verified': False,
+        'physical_rollback_fault_matrix_independently_verified': False,
         'inactive_slot_guard_in_source': all(x in storage for x in (
             'esp_ota_get_running_partition', 'esp_ota_get_next_update_partition',
             'ESP_PARTITION_SUBTYPE_APP_OTA_1', 'esp_partition_read')),
@@ -29,7 +39,10 @@ def assess(root: Path, evidence: dict) -> dict:
     }
     return {'ready_for_real_partition_b_deployment': all(checks.values()),
             'checks': checks,
-            'missing': [key for key, passed in checks.items() if not passed]}
+            'missing': [key for key, passed in checks.items() if not passed],
+            'evidence_scope': 'Local booleans are unverified assertions; independent hardware security and fault-test attestations cannot be supplied by this CLI.',
+            'physical_write_authorized': False,
+            'partition_b_activation_authorized': False}
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)

@@ -88,3 +88,7 @@ Read-only USB console observation confirmed the bootloader loaded `0x120000` and
 ## Factory recovery boot preparation — 18 October 2026
 
 Installed ESP-IDF 5.4.4 `esp_ota_set_boot_partition(factory)` erases the entire `otadata` partition. On the only RedOne board, this is a persistent, potentially disruptive operation. See `docs/REDONE-PHYSICAL-FACTORY-RECOVERY-BOOT-PLAN.md` for required rescue-path verification and separate approval. No recovery boot has been performed. **NO-GO**.
+
+## Stage 20: prevent manually asserted evidence from bypassing physical safety gates
+
+The read-only `partition_b_readiness.py` checker now measures security-related ESP-IDF build settings directly and introduces non-overridable gates for independent physical security provisioning and rollback fault-test attestation. Even an input JSON file with every declared key set to `true` **cannot** produce a physical deployment GO decision. A source-level configuration flag also cannot prove that the corresponding security eFuses are provisioned or that the installed board is secure. This deliberately requires a future independent, authenticated physical evidence verification workflow before the gate can ever be lifted. The checker always reports `physical_write_authorized=false` and `partition_b_activation_authorized=false` because a diagnostic CLI is not an operator authorisation mechanism. The installed board remains on OTA A; no physical changes were made during Stage 20. **Partition B remains NO-GO.**

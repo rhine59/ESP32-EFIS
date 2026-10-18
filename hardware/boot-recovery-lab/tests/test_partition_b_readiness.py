@@ -14,6 +14,14 @@ class Readiness(unittest.TestCase):
     def test_partial_evidence_still_blocks(self):
         result = module.assess(ROOT, {'operator_authorised_physical_flash': True})
         self.assertFalse(result['ready_for_real_partition_b_deployment'])
+    def test_all_claims_true_cannot_override_hardware_blockers(self):
+        claimed = {k: True for k in module.assess(ROOT, {})['checks']}
+        result = module.assess(ROOT, claimed)
+        self.assertFalse(result['ready_for_real_partition_b_deployment'])
+        self.assertFalse(result['physical_write_authorized'])
+        self.assertFalse(result['partition_b_activation_authorized'])
+        self.assertIn('physical_security_provisioning_independently_verified', result['missing'])
+        self.assertIn('physical_rollback_fault_matrix_independently_verified', result['missing'])
     def test_all_evidence_must_be_boolean_true(self):
         result = module.assess(ROOT, {'physical_interruption_matrix_passed': 'true'})
         self.assertFalse(result['checks']['physical_interruption_matrix_passed'])

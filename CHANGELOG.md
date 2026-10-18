@@ -1,3 +1,7 @@
+## 2026-10-18 — Partition B evidence gate hardened (offline only)
+
+Readiness now checks security build configuration and cannot be turned green by user-supplied JSON booleans masquerading as independent physical attestation. Added adversarial all-true regression test. No board writes, eFuses or Partition B activation.
+
 ## 2026-10-18 — Recovery diagnostics stack fix physically retested: PASS
 
 With explicit approval, repeated factory recovery entry on the sole RedOne. Corrected USB `test` returned 3 PASS, 7 SKIP, 0 FAIL without stack overflow; subsequent recovery status worked. `bootA` returned to OTA A with heartbeats and CRC-valid metadata. Partition B remains NO-GO.
