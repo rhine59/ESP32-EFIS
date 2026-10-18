@@ -15,3 +15,9 @@ The bench HTTP endpoints `/update`, `/verify`, and `/activate` are **locked** in
 The ESP-IDF build and source-level regression test exercise the **new source only**. They do not establish that the currently installed OTA A firmware is locked: no ESP32 flash operation was performed. The iOS transfer and activation buttons remain disabled.
 
 Never use `idf.py flash` for this bench board; it can overwrite bootloader, partition table, OTA metadata and factory recovery. Use only reviewed slot-specific flashing when the hardware test plan permits it.
+
+## Read-only signature verification implemented
+
+The bench OTA application now reuses the recovery firmware's trusted-key Ed25519 verifier and canonical signed JSON envelope parser through the `redone_crypto` component. `POST /firmware/verify-manifest` requires `X-Lab-Token`, accepts at most 8192 bytes, rejects incomplete payloads, and reports `signatureVerified` while always reporting `transferEnabled:false`. It never writes flash or changes boot selection. The existing `/update`, `/verify`, and `/activate` safety locks remain in place.
+
+This checks the **manifest signature and declared hardware/product metadata only**; it does not verify the firmware binary against the signed SHA-256 digest, enforce downgrade prevention, or establish safe staging. Do not enable transfer yet. Built successfully with ESP-IDF; not flashed or hardware-tested.

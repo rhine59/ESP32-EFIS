@@ -1,5 +1,7 @@
 #include <string.h>
 #include "esp_log.h"
+#include "redone_envelope.h"
+#include "esp_heap_caps.h"
 #include "esp_http_server.h"
 #include "esp_ota_ops.h"
 #include "esp_app_desc.h"
@@ -38,6 +40,39 @@ static bool require_auth(httpd_req_t *req) {
     httpd_resp_send_err(req, HTTPD_401_UNAUTHORIZED, "Provisioned bench token required");
     return false;
 }
+/* Authenticated, read-only Ed25519 publisher manifest verification.
+ * Verification alone never grants staging/activation permission. */
+static esp_err_t verify_manifest(httpd_req_t *req) {
+    if (!require_auth(req)) return ESP_FAIL;
+    if (req->content_len <= 0 || req->content_len > 8192) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid signed manifest size");
+        return ESP_FAIL;
+    }
+    size_t total = (size_t)req->content_len, received = 0;
+    char *body = heap_caps_malloc(total + 1, MALLOC_CAP_8BIT);
+    if (!body) {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Out of memory");
+        return ESP_FAIL;
+    }
+    while (received < total) {
+        int n = httpd_req_recv(req, body + received, total - received);
+        if (n <= 0) {
+            heap_caps_free(body);
+            httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Incomplete signed manifest");
+            return ESP_FAIL;
+        }
+        received += (size_t)n;
+    }
+    body[total] = 0;
+    bool valid = redone_verify_release_envelope(body, total) == 0;
+    heap_caps_free(body);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-store");
+    return httpd_resp_sendstr(req, valid ?
+        "{\"signatureVerified\":true,\"transferEnabled\":false}" :
+        "{\"signatureVerified\":false,\"transferEnabled\":false}");
+}
+
 static esp_err_t upload(httpd_req_t *req) {
     if (!require_auth(req)) return ESP_FAIL;
     return reject_untrusted_firmware(req);
@@ -151,6 +186,8 @@ void lab_http_start(void) {
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri));
     httpd_uri_t info = {.uri="/status", .method=HTTP_GET, .handler=status};
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &info));
+    httpd_uri_t manifest = {.uri="/firmware/verify-manifest", .method=HTTP_POST, .handler=verify_manifest};
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &manifest));
     httpd_uri_t check = {.uri="/verify", .method=HTTP_POST, .handler=verify_image};
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &check));
     httpd_uri_t activate = {.uri="/activate", .method=HTTP_POST, .handler=activate_image};
