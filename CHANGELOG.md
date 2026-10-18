@@ -1,3 +1,7 @@
+## 2026-10-18 — Offline OTA metadata rescue rehearsal
+
+Added fail-closed in-memory erase/restore rehearsal using verified physical flash backup and current OTA snapshot; full-image hash restored byte-for-byte. No device writes or boot changes.
+
 ## 2026-10-18 — Fresh complete RedOne flash backup verified
 
 Captured 16 MiB read-only backup in sixteen verified 1 MiB chunks; verified full SHA-256 and independent OTA metadata/factory/first-MiB consistency. Added resumable read-only chunk tool. No boot or flash changes; recovery test NO-GO pending rescue validation.

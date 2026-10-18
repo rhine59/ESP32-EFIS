@@ -54,3 +54,7 @@ A fresh 8 KiB live OTA metadata snapshot was saved locally (not in Git) and vali
 ## Full backup completed — 18 October 2026
 
 The previously outstanding fresh 16 MiB backup was completed via sixteen verified 1 MiB reads. Full SHA-256 `cca94c604a405a8aa137f3978de4ec4531c7d9cec6ff5542f295f7da1f80a7b3`; its OTA selection, factory recovery partition and first 1 MiB match independently read snapshots. See `docs/REDONE-FULL-BACKUP-SUCCESS-20261018.md`. **The backup gate is satisfied; independent rescue rehearsal and explicit physical boot approval remain outstanding.**
+
+## Rescue snapshot byte-for-byte offline rehearsal — 18 October 2026
+
+The full verified backup and fresh OTA snapshot pass an in-memory erase/restore simulation with exact whole-image SHA-256 restoration and no other changed bytes. See `docs/REDONE-RESCUE-RESTORE-REHEARSAL-20261018.md`. This satisfies an **offline** rehearsal only; the physical rescue procedure and factory recovery boot have not been validated. Separate explicit approval is still required for any physical boot-selection write.
