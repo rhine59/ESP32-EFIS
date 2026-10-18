@@ -110,6 +110,8 @@ struct EFISWiFiView: View {
                 if let firmwareError { Text(firmwareError).foregroundStyle(.red).font(.footnote) }
             }
             Section("2. Connect to EFIS") {
+                Text("Connect to your RedOne EFIS with WiFi. Join for a first time using the supplied QR Code, or rejoin the EFIS WiFi using your saved connection below.")
+                    .font(.footnote).foregroundStyle(.secondary)
                 if currentWiFi.hasPrefix("Connected to Wi-Fi ") {
                     (Text("Connected to Wi-Fi ") +
                      Text(String(currentWiFi.dropFirst("Connected to Wi-Fi ".count))).foregroundColor(.green))
