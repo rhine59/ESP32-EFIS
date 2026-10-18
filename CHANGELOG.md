@@ -1,3 +1,7 @@
+## 2026-10-18 — Synology migration preflight and account database backup
+
+Read-only live inventory found invalid Git HEAD on NAS deployment checkout. Created private PostgreSQL custom-format logical backup and verified its archive listing; held container recreation until safe staging and restore plan.
+
 ## 2026-10-18 — Live Synology inventory and migration adjustments
 
 Read-only inspection of running Lollipop services confirmed legacy shared Compose project and existing account DB, simulator and licence volumes. Reused existing OTA network and moved proposed support host port to 8095. No live services changed.
