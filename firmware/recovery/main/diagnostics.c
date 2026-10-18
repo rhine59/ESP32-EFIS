@@ -3,6 +3,7 @@
 #include <string.h>
 #include "esp_system.h"
 #include "esp_heap_caps.h"
+#include "esp_log.h"
 #include "esp_flash.h"
 #include "esp_partition.h"
 #include "nvs_flash.h"
@@ -61,7 +62,15 @@ void recovery_diagnostics_json(char *out, size_t capacity) {
 #undef APPEND
 }
 void recovery_diagnostics_print(void) {
-    char report[4096];
-    recovery_diagnostics_json(report,sizeof(report));
+    /* Main task has a 3584-byte stack in the deployed recovery image.
+     * A 4096-byte local report overflowed that task during USB `test`.
+     * Use heap allocation, as the HTTP diagnostics handler already does. */
+    char *report = heap_caps_malloc(4096, MALLOC_CAP_8BIT);
+    if (!report) {
+        ESP_LOGE("REDONE_RECOVERY", "Diagnostics unavailable: allocation failed");
+        return;
+    }
+    recovery_diagnostics_json(report, 4096);
     puts(report);
+    heap_caps_free(report);
 }

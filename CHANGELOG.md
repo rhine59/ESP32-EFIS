@@ -1,3 +1,7 @@
+## 2026-10-18 — Fix recovery diagnostic main-task stack overflow (not deployed)
+
+Moved the 4096-byte USB diagnostics JSON buffer from the 3584-byte main task stack to checked heap allocation; added two regression tests. ESP-IDF 5.4.4 recovery build and 48 Python tests pass. Physical factory image unchanged pending separate flash authorization.
+
 ## 2026-10-18 — Physical factory recovery/return-to-A validated; diagnostic crash discovered
 
 Explicitly authorised single-board OTA metadata erase entered factory recovery. USB `status` and `bootA` worked; bootloader returned to OTA A and normal heartbeats resumed. Recovery `test` triggered a main-task stack overflow and reboot; blocking defect documented. Post-return OTA selection valid for A. Partition B remains NO-GO.
