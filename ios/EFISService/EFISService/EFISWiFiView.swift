@@ -60,6 +60,8 @@ struct EFISWiFiView: View {
     var body: some View {
         List {
             Section("1. Download firmware") {
+                Text("Browse and Download firmware for deployment to your RedOne EFIS")
+                    .font(.footnote).foregroundStyle(.secondary)
                 Button("Check available firmware releases") { Task { await fetchPublishedFirmware() } }
                     .disabled(preparingFirmware)
                 if preparingFirmware || publishedFirmware != nil || signedReleaseStatus != "No release checked" {
