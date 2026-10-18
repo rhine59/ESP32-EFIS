@@ -1,3 +1,7 @@
+## 2026-10-18 — Physical RedOne running partition confirmed
+
+Observed live bootloader and USB status telemetry independently confirming running/selected `ota_0`, despite a compiled `IMAGE B` label. No flash writes, boot selection or recovery test performed; Partition B NO-GO.
+
 ## 2026-10-18 — Live OTA record validation
 
 Added an offline ESP-IDF OTA metadata decoder and regression tests. Physical RedOne metadata contains two CRC-valid, VALID records; latest selects Partition A. Running firmware not independently confirmed. No writes; Partition B NO-GO.

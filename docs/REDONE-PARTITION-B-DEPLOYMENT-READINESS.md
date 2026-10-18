@@ -80,3 +80,7 @@ See `docs/REDONE-LIVE-OTA-RECOVERY-20261018.md`. The full 1 MiB factory recovery
 ## Physical OTA selection decoded — 18 October 2026
 
 Both live OTA selection entries have valid ESP-IDF CRCs and are marked VALID; latest sequence 5 selects `ota_0` (Partition A). See `docs/REDONE-LIVE-OTA-DECODE-20261018.md`. This remains a boot-selection inference, not independent running-firmware telemetry. No firmware write or boot selection was performed. **NO-GO**.
+
+## Live running-partition confirmation — 18 October 2026
+
+Read-only USB console observation confirmed the bootloader loaded `0x120000` and the running application independently reported `running=ota_0 selected=ota_0`. See `docs/REDONE-LIVE-RUNNING-PARTITION-20261018.md`. The compiled `IMAGE B` label does not represent the physical slot. Recovery boot, trusted version floor and interruption tests remain unproven. **Partition B NO-GO**.
