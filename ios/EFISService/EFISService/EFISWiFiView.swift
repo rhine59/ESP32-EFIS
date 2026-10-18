@@ -175,6 +175,13 @@ struct EFISWiFiView: View {
                     Label("Scan RedOne QR", systemImage: "qrcode.viewfinder")
                         .font(.headline)
                 }
+                Button { Task { await verifyConnection() } } label: {
+                    Label(checking ? "Verifying RedOne…" : "Verify RedOne connection", systemImage: "checkmark.shield")
+                }
+                .disabled(checking)
+                Text(message)
+                    .font(.footnote)
+                    .foregroundStyle(verified != nil ? Color.green : Color.secondary)
                 if let qrError { Label(qrError, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red).font(.footnote) }
                 if let verified {
                     HStack(spacing: 12) {
