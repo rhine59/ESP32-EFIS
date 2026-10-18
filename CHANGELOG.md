@@ -1,3 +1,7 @@
+## 2026-10-18 — Offline factory recovery return-path audit
+
+Confirmed the deployed recovery image matches the local build and contains USB `bootA` selection of ota_0. Added fail-closed offline audit and tests; no physical factory boot or flash writes.
+
 ## 2026-10-18 — Physical factory recovery test planning
 
 Documented that ESP-IDF factory boot selection erases OTA metadata and requires a validated return-to-A rescue path. Created a non-executable supervised recovery test plan; no device modifications authorised.

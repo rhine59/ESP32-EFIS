@@ -38,3 +38,7 @@ In installed ESP-IDF v5.4.4 `components/app_update/esp_ota_ops.c`, `esp_ota_set_
 Stop if serial access fails, image identity differs, unexpected boot partition appears, recovery cannot communicate, or return-to-A is unverified. Do not attempt speculative partition erases, eFuse operations, secure boot activation, flash encryption, firmware flashing or NVS resets. Preserve evidence and use the reviewed rescue procedure only with explicit operator approval.
 
 **Current decision: NO-GO for recovery boot and NO-GO for Partition B.** The next safe work is offline inspection of factory recovery firmware's actual return capability and development of a read-only preflight tool.
+
+## Offline source/binary return-path evidence — 18 October 2026
+
+The deployed factory image matches the local 814,160-byte recovery build prefix byte-for-byte, and its source implements USB `bootA` via `esp_ota_set_boot_partition(ota_0)`. See `docs/REDONE-RECOVERY-RETURN-OFFLINE-AUDIT.md` and `hardware/boot-recovery-lab/tools/recovery_return_preflight.py`. All offline checks pass, but this does not prove that recovery boots or that `bootA` succeeds physically. **Execution still requires a fresh backup, validated rescue path and separate approval.**
