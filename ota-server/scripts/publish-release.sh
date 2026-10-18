@@ -7,10 +7,23 @@ if [ "$#" -lt 3 ] || [ "$#" -gt 5 ]; then
   echo "Usage: $0 VERSION BUILD FIRMWARE_BIN [MINIMUM_VERSION] [RELEASE_NOTES]" >&2
   exit 2
 fi
-VERSION="$1"; BUILD="$2"; FIRMWARE="$3"; MINIMUM="${4:-0.0.0}"; NOTES="${5:-ESP32 EFIS release $VERSION}"
+VERSION="$1"; BUILD="$2"; FIRMWARE="$3"; MINIMUM="${4:-build:0}"; NOTES="${5:-ESP32 EFIS release $VERSION}"
 case "$VERSION" in *[!0-9A-Za-z._-]*|'') echo "Invalid VERSION" >&2; exit 2;; esac
-case "$MINIMUM" in *[!0-9A-Za-z._-]*|'') echo "Invalid MINIMUM_VERSION" >&2; exit 2;; esac
-case "$BUILD" in *[!0-9]*|'') echo "BUILD must be numeric" >&2; exit 2;; esac
+# Validate using the same policy as OTA Admin BEFORE creating any files.
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+POLICY_DIR="$SCRIPT_DIR/../admin"
+if ! PYTHONPATH="$POLICY_DIR" python3 - "$BUILD" "$MINIMUM" <<'VALIDATE'
+import sys
+from release_build_policy import validate_release_build
+try:
+    validate_release_build(sys.argv[1], sys.argv[2])
+except ValueError as exc:
+    print(f"Invalid signed release build policy: {exc}", file=sys.stderr)
+    sys.exit(2)
+VALIDATE
+then
+  exit 2
+fi
 [ -f "$FIRMWARE" ] || { echo "Firmware not found: $FIRMWARE" >&2; exit 2; }
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd); ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 RELEASE_DIR="$ROOT/public/efis/releases/$VERSION"; META_DIR="$ROOT/public/efis/release-metadata"; IMAGE_NAME="esp32-efis-$VERSION.bin"

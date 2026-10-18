@@ -83,3 +83,7 @@ The experimental, unregistered staging handler now verifies signed release metad
 ## Stage 15: publisher metadata policy
 
 The OTA Admin now checks `build:<int32>` minimums and candidate build bounds on upload and again before publication. This is input validation, not device-side monotonic storage. Legacy published manifests are unchanged, and the shell publisher helper is not yet migrated. OTA device staging/activation remains disabled.
+
+## Stage 16: consistent publisher validation
+
+The legacy shell staging helper now uses the OTA Admin's strict signed-build policy before file operations. Both publisher interfaces reject incompatible version claims. Device-side trusted monotonic floor, activation and physical rollback remain blocked.

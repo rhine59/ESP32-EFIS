@@ -52,3 +52,7 @@ The unregistered staging path now checks the signed build-floor claim and anti-d
 ## Stage 15: publisher-side build policy validation
 
 The OTA Admin now validates release metadata against the device's `build:<int32>` signed-minimum format before staging and before publishing. It rejects legacy `0.0.0`, malformed values, overflow and a minimum greater than the candidate build. The upload form defaults to `build:0`. **Existing published manifests and hosted metadata have not been migrated**, and the shell-based staging helper remains a separate legacy interface requiring a future update. The device's trusted monotonic floor and physical rollback testing remain missing. No production publication or device deployment was performed; **Partition B remains NO-GO**.
+
+## Stage 16: legacy shell staging policy aligned
+
+`ota-server/scripts/publish-release.sh` now calls the same Python build-policy validator as the OTA Admin UI before touching release files. It defaults to `build:0`, rejects semantic-version minimums and malformed or out-of-range build claims, and continues to **stage only**, never publish. This eliminates a publisher-side validation bypass; it does not establish trusted on-device monotonic storage. Existing published manifests remain unchanged and physical deployment remains **NO-GO**.
