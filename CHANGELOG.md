@@ -1,3 +1,7 @@
+## 2026-10-18 — Post-cutover production acceptance
+
+Verified eight container Compose labels, health and HTTP endpoints, firmware manifests, shared networks and preserved mounts. Ran 60 boot/recovery tests and container naming validator successfully. Explicitly documented untested email, real login, external TLS, gateway discovery and physical EFIS checks.
+
 ## 2026-10-18 — All previously running Synology service groups isolated
 
 Migrated licence service, web simulator and local licence gateway after OTA and account cutovers. Preserved external volumes, TLS and network connections; HTTP and Docker health checks pass where provided. Pre-existing RedOne simulator remains running. Support and signer are unprovisioned and intentionally not launched without private credentials. See `docs/LOLLIPOP-FULL-LIVE-CUTOVER-20261018.md`.
