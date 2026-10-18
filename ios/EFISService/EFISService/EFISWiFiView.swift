@@ -105,7 +105,7 @@ struct EFISWiFiView: View {
             Section("2. Connect to EFIS") {
                 LabeledContent("Current iPhone Wi-Fi", value: currentWiFi)
                 Button("Refresh Wi-Fi status") { Task { await refreshCurrentWiFi() } }
-                Button("Scan RedOne QR Code") { scanningConnectionQR = true }
+                Button("Scan QR code to connect to RedOne") { scanningConnectionQR = true }
                 if !savedMacAddress.isEmpty {
                     Button("Rejoin RedOne_" + savedMacAddress) {
                         macAddress = savedMacAddress
@@ -135,10 +135,6 @@ struct EFISWiFiView: View {
                     LabeledContent("Running partition", value: verified.running)
                     LabeledContent("Next update partition", value: verified.next)
                 }
-                Button("Verify RedOne connection") {
-                    Task { await verifyConnection() }
-                }
-                .disabled(checking)
             }
             Section("Firmware update") {
                 if let verified {
