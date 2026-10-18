@@ -74,3 +74,7 @@ All ten offline checks of device identity argument, backup, OTA selection and re
 ## Single-board path selected — 18 October 2026
 
 The user has chosen to proceed without a second board. Fresh read-only OTA selection again confirms A and matches the full verified backup. See `docs/REDONE-SINGLE-BOARD-RECOVERY-PLAN-20261018.md`. Single-board recovery has greater risk: a failed factory boot/return may strand the only device. The single-board choice is **not** approval to erase OTA metadata; a separate explicit informed decision remains required.
+
+## Physical test completed — 18 October 2026
+
+Following explicit user authorisation, an 8 KiB OTA metadata erase successfully entered factory recovery on the sole RedOne board. USB status and factory boot offset confirmed. The recovery `test` command caused a **main-task stack overflow and reboot**, a blocking firmware defect. After reboot, recovery `bootA` successfully returned to OTA A at `0x120000`, with heartbeats; post-return metadata selects A with valid sequence 1. See `docs/REDONE-PHYSICAL-FACTORY-RECOVERY-RESULT-20261018.md`. **No further destructive testing until the diagnostics defect is addressed; Partition B remains NO-GO.**

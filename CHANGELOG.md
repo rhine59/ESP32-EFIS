@@ -1,3 +1,7 @@
+## 2026-10-18 — Physical factory recovery/return-to-A validated; diagnostic crash discovered
+
+Explicitly authorised single-board OTA metadata erase entered factory recovery. USB `status` and `bootA` worked; bootloader returned to OTA A and normal heartbeats resumed. Recovery `test` triggered a main-task stack overflow and reboot; blocking defect documented. Post-return OTA selection valid for A. Partition B remains NO-GO.
+
 ## 2026-10-18 — Physical factory entry mechanism reviewed
 
 Confirmed running Partition A USB console has no factory-selection command. A host-side OTA metadata erase would be required; documented the difference and held execution pending specific approval. No writes.
