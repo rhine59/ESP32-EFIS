@@ -65,6 +65,7 @@ static void console_task(void *arg) {
             const esp_partition_t *running = esp_ota_get_running_partition();
             const esp_partition_t *selected = esp_ota_get_boot_partition();
             ESP_LOGI("BOOT_LAB", "running=%s selected=%s", running->label, selected->label);
+#if defined(REDONE_UNSAFE_MANUAL_BOOT_SELECTION) && REDONE_UNSAFE_MANUAL_BOOT_SELECTION
         } else if (!strcmp(command, "boot0") || !strcmp(command, "boot1")) {
             int slot = command[4] - '0';
             const esp_partition_t *partition = esp_partition_find_first(ESP_PARTITION_TYPE_APP,
@@ -83,6 +84,7 @@ static void console_task(void *arg) {
             ESP_LOGW("BOOT_LAB", "Selected %s; restarting", partition->label);
             vTaskDelay(pdMS_TO_TICKS(300));
             esp_restart();
+#endif
         }
     }
 }
@@ -98,8 +100,10 @@ void app_main(void) {
     printf("=====================================\n");
     esp_ota_img_states_t state;
     if (running && esp_ota_get_state_partition(running, &state) == ESP_OK && state == ESP_OTA_IMG_PENDING_VERIFY) {
-        ESP_LOGW("BOOT_LAB", "New image pending validation; confirming healthy after startup checks");
-        ESP_ERROR_CHECK(esp_ota_mark_app_valid_cancel_rollback());
+        ESP_LOGW("BOOT_LAB", "Pending image remains UNCONFIRMED: no automatic validation without health checks");
+        /* Do not call esp_ota_mark_app_valid_cancel_rollback here.
+         * ESP-IDF rollback remains armed until a separate verified health
+         * protocol is implemented and tested on the bench. */
     }
     xTaskCreate(console_task, "lab_console", 4096, NULL, 5, NULL);
     lab_wifi_start();
