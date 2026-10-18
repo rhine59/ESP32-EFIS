@@ -21,7 +21,7 @@ services:
       - SETGID
       - SETUID
     volumes:
-      - ./public:/usr/share/nginx/html:ro
+      - ${OTA_PUBLIC_DIR:-./public}:/usr/share/nginx/html:ro
 
   efis-ota-admin:
     container_name: lollipop-efis-ota-admin
@@ -40,7 +40,7 @@ services:
     group_add:
       - "${OTA_DATA_GID:-65539}"
     volumes:
-      - ./public:/data
+      - ${OTA_PUBLIC_DIR:-./public}:/data
       - ${OTA_SIGNING_KEY_FILE:?set OTA_SIGNING_KEY_FILE in .env}:/run/secrets/redone-release-signing.pem:ro
     security_opt:
       - no-new-privileges:true

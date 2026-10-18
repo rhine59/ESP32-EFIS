@@ -1,3 +1,7 @@
+## 2026-10-18 — Parameterise OTA public directory for staged Synology deployment
+
+OTA Compose can reuse the live public firmware directory through `OTA_PUBLIC_DIR`, avoiding an empty staging bind mount. Private signing key and environment remain external; no production restart.
+
 ## 2026-10-18 — Isolated account database restore verified
 
 Restored private PostgreSQL backup into a temporary network-isolated container on Synology, verified eight tables and one user record, and removed the temporary container. Documented persistent mount requirements for staged deployment; production containers unchanged.
