@@ -1,3 +1,7 @@
+## 2026-10-18 — Trusted build-floor storage policy
+
+Added a fail-closed hardware-backed monotonic floor interface and host tests; no hardware provider or eFuse provisioning performed. Physical Partition B deployment remains blocked.
+
 ## 2026-10-18 — Shell release staging policy alignment
 
 Legacy shell staging now shares OTA Admin build-floor validation, with negative regression tests. Staging remains separate from publishing and physical device OTA remains locked.

@@ -87,3 +87,7 @@ The OTA Admin now checks `build:<int32>` minimums and candidate build bounds on 
 ## Stage 16: consistent publisher validation
 
 The legacy shell staging helper now uses the OTA Admin's strict signed-build policy before file operations. Both publisher interfaces reject incompatible version claims. Device-side trusted monotonic floor, activation and physical rollback remain blocked.
+
+## Stage 17: monotonic storage policy
+
+A pure C `ota_floor` component defines a hardware-protected storage interface with monotonic increase and readback verification. No device implementation is wired. The bench sdkconfig has secure boot, flash encryption and anti-rollback disabled. No eFuse was touched and no physical firmware was flashed. Hardware provisioning and rollback/recovery compatibility must be reviewed before implementation.

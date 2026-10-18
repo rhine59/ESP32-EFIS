@@ -56,3 +56,7 @@ The OTA Admin now validates release metadata against the device's `build:<int32>
 ## Stage 16: legacy shell staging policy aligned
 
 `ota-server/scripts/publish-release.sh` now calls the same Python build-policy validator as the OTA Admin UI before touching release files. It defaults to `build:0`, rejects semantic-version minimums and malformed or out-of-range build claims, and continues to **stage only**, never publish. This eliminates a publisher-side validation bypass; it does not establish trusted on-device monotonic storage. Existing published manifests remain unchanged and physical deployment remains **NO-GO**.
+
+## Stage 17: trusted monotonic floor interface (not yet provisioned)
+
+Added `ota_floor.c/.h`: a fail-closed storage policy that requires a backend to attest hardware protection, read a nonnegative floor, refuse any decrement, and read back increases. Host tests cover missing protection, failed reads/writes, attempted downgrade and incorrect readback. **No hardware-backed provider exists yet.** Current bench configuration has `CONFIG_SECURE_BOOT`, `CONFIG_FLASH_ENCRYPTION_ENABLED`, `CONFIG_APP_ANTI_ROLLBACK` and `CONFIG_BOOTLOADER_APP_ANTI_ROLLBACK` disabled. Turning these on may involve irreversible eFuse provisioning and must not be done without a separate physical security and recovery design. Do not use ordinary NVS as trusted monotonic storage. Partition B remains NO-GO.
