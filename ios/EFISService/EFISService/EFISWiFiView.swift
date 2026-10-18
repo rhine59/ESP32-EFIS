@@ -36,7 +36,7 @@ struct EFISWiFiView: View {
     @State private var firmwareError: String?
     @State private var preparingFirmware = false
     @State private var publishedFirmware: PublishedFirmware?
-    @State private var signedReleaseStatus = "No signed release checked"
+    @State private var signedReleaseStatus = "No release checked"
     @State private var trustedEnvelope: SignedFirmwareEnvelope?
     @State private var firmwareSource = "publisher"
     @State private var firmwareAssessment = "No release verified"
@@ -54,17 +54,17 @@ struct EFISWiFiView: View {
 
     var body: some View {
         List {
-            Section("1. Download signed firmware") {
-                Text("While online, check for a signed release and download it. Signature and SHA-256 checks are performed automatically. Select a previously downloaded release to continue offline.")
+            Section("1. Download firmware") {
+                Text("Choose a published release to download. The app automatically checks that it is authentic and suitable for your EFIS. Downloaded releases remain available offline.")
                     .font(.footnote).foregroundStyle(.secondary)
-                Button("Check publisher for signed release") { Task { await fetchPublishedFirmware() } }
+                Button("Check available releases") { Task { await fetchPublishedFirmware() } }
                     .disabled(preparingFirmware)
                 Text(signedReleaseStatus).font(.footnote).foregroundStyle(.secondary)
                 if let publishedFirmware {
                     LabeledContent("Published version", value: publishedFirmware.version)
                     LabeledContent("Hardware profile", value: publishedFirmware.hardware_profile)
                     if let notes = publishedFirmware.release_notes { Text(notes).font(.footnote) }
-                    Button("Download signed release") { Task { await downloadPublishedFirmware() } }
+                    Button("Download firmware") { Task { await downloadPublishedFirmware() } }
                         .disabled(preparingFirmware || trustedEnvelope == nil)
                 }
                 if downloadedReleases.isEmpty {
@@ -79,28 +79,22 @@ struct EFISWiFiView: View {
                             Text("RedOne \(release.version)").font(.headline)
                             Text(release.hardwareProfile).font(.caption)
                             Text(release.downloadedAt, style: .date).font(.caption)
-                            Text(FirmwareLibrary.verify(release) ? "Trusted signed release verified" :
-                                 release.signedEnvelope == nil ? "Legacy unsigned cache — download a signed copy" : "Signed release verification failed — download again")
+                            Text(FirmwareLibrary.verify(release) ? "Firmware verified and ready for use" :
+                                 "Firmware could not be verified — download again")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
                 }
 
-                Divider()
-                Text("Automatic release verification").font(.headline)
                 if let selectedRelease {
-                    LabeledContent("Selected release", value: selectedRelease.version)
-                    Label(FirmwareLibrary.verify(selectedRelease) ? "Signature and SHA-256 verified" : "Verification failed — transfer blocked", systemImage: FirmwareLibrary.verify(selectedRelease) ? "checkmark.shield" : "xmark.shield")
-                        .foregroundStyle(FirmwareLibrary.verify(selectedRelease) ? .green : .red)
-                    if let firmwareDigest { Text("SHA-256: \(firmwareDigest)").font(.caption2).textSelection(.enabled) }
-                    if let problem = FirmwareLibrary.transferPreflight(selectedRelease) {
-                        Text("Transfer preflight: \(problem)").foregroundStyle(.orange)
+                    if FirmwareLibrary.verify(selectedRelease), FirmwareLibrary.transferPreflight(selectedRelease) == nil {
+                        Label("Firmware verified and ready for use", systemImage: "checkmark.shield.fill")
+                            .foregroundStyle(.green)
+                    } else {
+                        Label("Firmware could not be verified for this EFIS. Download it again.", systemImage: "xmark.shield")
+                            .foregroundStyle(.red)
                     }
-                } else {
-                    Text("Select a downloaded release above to verify its signature and checksum before connecting.")
-                        .foregroundStyle(.secondary)
                 }
-                Text(firmwareAssessment).font(.footnote).foregroundStyle(.secondary)
                 if let firmwareError { Text(firmwareError).foregroundStyle(.red).font(.footnote) }
             }
             Section("2. Connect to EFIS") {
@@ -209,7 +203,7 @@ struct EFISWiFiView: View {
         firmwareDigest = release.sha256
         firmwareSize = (try? FirmwareLibrary.folder.appendingPathComponent(release.filename)
             .resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init)
-        firmwareAssessment = "Offline signed release and checksum verified"
+        firmwareAssessment = "Firmware verified and ready for use"
     }
 
     @MainActor
@@ -223,7 +217,7 @@ struct EFISWiFiView: View {
             request.cachePolicy = .reloadIgnoringLocalCacheData
             let (data, response) = try await URLSession.shared.data(for: request)
             guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-                signedReleaseStatus = "Publisher has not supplied a signed release"
+                signedReleaseStatus = "Publisher release cannot be verified"
                 return
             }
             let envelope = try JSONDecoder().decode(SignedFirmwareEnvelope.self, from: data)
@@ -233,12 +227,12 @@ struct EFISWiFiView: View {
                   envelope.payload.hardware_profile == release.hardware_profile,
                   envelope.payload.sha256.caseInsensitiveCompare(release.sha256) == .orderedSame,
                   envelope.payload.image_url == release.image_url.absoluteString else {
-                signedReleaseStatus = "Signed release does not match published firmware — update locked"
+                signedReleaseStatus = "Published release verification failed — update blocked"
                 return
             }
             trustedEnvelope = envelope
-            signedReleaseStatus = "Signed release verified"
-        } catch { signedReleaseStatus = "Signed release unavailable — update locked" }
+            signedReleaseStatus = "Published release authenticated"
+        } catch { signedReleaseStatus = "Release verification unavailable — update blocked" }
     }
 
     @MainActor
@@ -295,7 +289,7 @@ struct EFISWiFiView: View {
             firmwareName = destination.lastPathComponent
             firmwareSize = Int64(data.count)
             firmwareDigest = digest
-            firmwareAssessment = "Trusted signed release downloaded and verified for offline use"
+            firmwareAssessment = "Firmware verified and ready for use"
         } catch {
             firmwareName = nil; firmwareSize = nil; firmwareDigest = nil
             firmwareAssessment = "Download verification failed"
