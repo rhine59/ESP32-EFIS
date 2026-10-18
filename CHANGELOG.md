@@ -1,3 +1,7 @@
+## 2026-10-18 — Recovery diagnostics stack fix physically retested: PASS
+
+With explicit approval, repeated factory recovery entry on the sole RedOne. Corrected USB `test` returned 3 PASS, 7 SKIP, 0 FAIL without stack overflow; subsequent recovery status worked. `bootA` returned to OTA A with heartbeats and CRC-valid metadata. Partition B remains NO-GO.
+
 ## 2026-10-18 — Recovery stack fix flashed and read back on RedOne
 
 With explicit approval, preserved a fresh factory backup, flashed only the corrected factory recovery image at 0x20000 and independently verified all 814560 image bytes by readback. Normal OTA A status remains running/selected. Physical recovery diagnostic retest not yet done.
