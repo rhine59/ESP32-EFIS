@@ -60,11 +60,11 @@ struct EFISWiFiView: View {
     var body: some View {
         List {
             Section("1. Download firmware") {
-                Text("Choose a published release to download. The app automatically checks that it is authentic and suitable for your EFIS. Downloaded releases remain available offline.")
-                    .font(.footnote).foregroundStyle(.secondary)
-                Button("Check available releases") { Task { await fetchPublishedFirmware() } }
+                Button("Check available firmware releases") { Task { await fetchPublishedFirmware() } }
                     .disabled(preparingFirmware)
-                Text(signedReleaseStatus).font(.footnote).foregroundStyle(.secondary)
+                if preparingFirmware || publishedFirmware != nil || signedReleaseStatus != "No release checked" {
+                    Text(signedReleaseStatus).font(.footnote).foregroundStyle(.secondary)
+                }
                 if let publishedFirmware {
                     LabeledContent("Published version", value: publishedFirmware.version)
                     LabeledContent("Hardware profile", value: publishedFirmware.hardware_profile)
@@ -72,11 +72,13 @@ struct EFISWiFiView: View {
                     Button("Download firmware") { Task { await downloadPublishedFirmware() } }
                         .disabled(preparingFirmware || trustedEnvelope == nil)
                 }
-                if downloadedReleases.isEmpty {
-                    Text("No published firmware downloaded. Prepare while online before visiting the aircraft.")
+                if downloadedReleases.filter({ FirmwareLibrary.verify($0) && FirmwareLibrary.transferPreflight($0) == nil }).isEmpty {
+                    Text("No firmware ready for use")
                         .foregroundStyle(.secondary)
+                } else {
+                    Text("Firmware ready for use").font(.headline)
                 }
-                ForEach(downloadedReleases) { release in
+                ForEach(downloadedReleases.filter({ FirmwareLibrary.verify($0) && FirmwareLibrary.transferPreflight($0) == nil })) { release in
                     Button {
                         selectCachedRelease(release)
                     } label: {
@@ -84,9 +86,8 @@ struct EFISWiFiView: View {
                             Text("RedOne \(release.version)").font(.headline)
                             Text(release.hardwareProfile).font(.caption)
                             Text(release.downloadedAt, style: .date).font(.caption)
-                            Text(FirmwareLibrary.verify(release) ? "Firmware verified and ready for use" :
-                                 "Firmware could not be verified — download again")
-                                .font(.caption).foregroundStyle(.secondary)
+                            Label("Verified and ready for use", systemImage: "checkmark.shield.fill")
+                                .font(.caption).foregroundStyle(.green)
                         }
                     }
                 }
