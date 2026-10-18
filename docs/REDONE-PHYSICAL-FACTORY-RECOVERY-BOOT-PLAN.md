@@ -62,3 +62,7 @@ The full verified backup and fresh OTA snapshot pass an in-memory erase/restore 
 ## Independent chunk integrity audit — 18 October 2026
 
 All 16 source chunks match the assembled full backup byte-for-byte, and independently read OTA and factory partitions match. See `docs/REDONE-BACKUP-INDEPENDENT-CHUNK-AUDIT-20261018.md`. Offline integrity PASS; physical recovery boot remains NO-GO.
+
+## Resumable backup integrity hardened — 18 October 2026
+
+The chunked read-only backup tool now verifies per-chunk SHA-256 and device identity from a private manifest before resuming; legacy chunks without manifests are rejected. See `docs/REDONE-BACKUP-RESUME-INTEGRITY-20261018.md`. Existing verified backup is unaffected. Physical recovery remains NO-GO.

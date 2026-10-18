@@ -1,3 +1,7 @@
+## 2026-10-18 — Fail-closed authenticated chunk resumability
+
+Strengthened RedOne read-only flash backup tool with per-chunk hash manifest, device identity and layout binding, atomic persistence and fail-closed legacy/tamper handling. 44 tests pass; no device writes.
+
 ## 2026-10-18 — Independent chunk backup integrity audit
 
 Added offline tool and tests comparing all 16 source flash chunks, assembled backup, current OTA metadata and independently captured factory recovery partition. Forty tests pass; no device writes.
