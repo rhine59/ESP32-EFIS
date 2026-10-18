@@ -1,3 +1,9 @@
+## 2026-10-18 — Fail-closed signed build gate in experimental staging
+
+- Wired verified signed minimum-build parsing and anti-downgrade policy ahead of all inactive-slot staging operations.
+- Explicitly block staging until trustworthy persistent floor and running-build provenance exist; legacy publisher semver minima are rejected.
+- Host source tests and ESP-IDF build passed; no physical firmware changes or HTTP write route enabled.
+
 ## 2026-10-18 — Signed build-floor parser
 
 Added strict minimum build parser and host tests. Not yet wired to OTA staging; physical deployment remains blocked.

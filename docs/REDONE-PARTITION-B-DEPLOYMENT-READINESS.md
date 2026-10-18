@@ -44,3 +44,7 @@ The bench firmware now compiles an authenticated `GET /boot-health` endpoint ret
 ## Stage 13: version-claim parsing
 
 Strict signed build-floor parsing is now implemented and tested, but not yet integrated with the publisher manifest or persistent trusted version state. Partition B remains NO-GO.
+
+## Stage 14: anti-downgrade gate integrated, deployment still blocked
+
+The unregistered staging path now checks the signed build-floor claim and anti-downgrade policy before flash selection/writes. Because the installed trusted monotonic floor and running build are not yet available, it **always rejects staging**. Current publisher metadata uses a semantic-version minimum, not `build:<int32>`, so signer/device schema migration is necessary. Do not substitute plain NVS as tamper-proof monotonic storage or infer build identity from a human-readable firmware version. Readiness remains **NO-GO**.

@@ -75,3 +75,7 @@ Added `GET /boot-health` to the bench HTTP server. It requires the provisioned N
 ## Stage 13: signed build-floor format
 
 A strict host-tested parser accepts only build:<nonnegative int32> notation. It rejects ambiguous versions and overflow. It is not yet connected to the publisher or the OTA staging flow, because persistent trusted build-floor storage and signed manifest migration are pending. No physical flash occurred.
+
+## Stage 14: fail-closed version gate before staging
+
+The experimental, unregistered staging handler now verifies signed release metadata, strictly parses `minimum_allowed_version` as `build:<int32>`, and evaluates the anti-downgrade policy **before** selecting the inactive OTA slot or beginning any write. Trusted persistent floor and running-build provenance are not yet implemented; explicit unavailable sentinels force rejection. This is intentional: existing published manifests use legacy semver minimums (e.g. `0.0.0`) and are not compatible with the new parser. Publisher schema migration and secure floor provisioning require separate design and verification. No write route was enabled.

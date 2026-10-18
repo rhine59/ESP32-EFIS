@@ -10,6 +10,8 @@
 #include "esp_ota_ops.h"
 #include "esp_app_desc.h"
 #include "ota_boot_health.h"
+#include "ota_version_claims.h"
+#include "ota_version.h"
 #include "esp_system.h"
 #include "nvs.h"
 #include "esp_ota_ops.h"
@@ -276,9 +278,28 @@ static esp_err_t signed_staging_dry_run(httpd_req_t *req) {
         httpd_resp_send_err(req, HTTPD_403_FORBIDDEN, "Invalid signed manifest");
         return ESP_FAIL;
     }
-    /* The signed minimum version is a string, not a monotonic build floor.
-     * Activation stays locked until its version semantics and persistent
-     * installed floor have been established. */
+    /* Fail closed before ANY flash erase/write. A signed build floor is not
+     * equivalent to a semantic version. Legacy publisher manifests are
+     * rejected until the signer is migrated and independently verified. */
+    int32_t signed_minimum_build = 0;
+    if (!redone_parse_signed_build_floor(verified_release.minimum_allowed_version,
+                                          &signed_minimum_build)) {
+        httpd_resp_send_err(req, HTTPD_403_FORBIDDEN, "Unsupported signed minimum build format");
+        return ESP_FAIL;
+    }
+    /* Operational NVS can be erased or rolled back; it is NOT trusted
+     * monotonic storage. Do not invent a floor or infer running build from
+     * a display version string. Until a secure, rollback-safe floor and
+     * running build provenance are implemented, refuse staging. */
+    const bool trusted_floor_available = false;
+    const int64_t installed_floor = -1;
+    const int64_t running_build = -1;
+    if (!trusted_floor_available ||
+        !redone_ota_version_allowed(valid, verified_release.build,
+                                    signed_minimum_build, installed_floor, running_build)) {
+        httpd_resp_send_err(req, HTTPD_403_FORBIDDEN, "Trusted version floor unavailable");
+        return ESP_FAIL;
+    }
     redone_esp_ota_storage_t esp_storage = {0};
     redone_ota_staging_t staging = {0};
     size_t remaining_image_size = total - 4 - manifest_length;
