@@ -25,3 +25,9 @@ This checks the **manifest signature and declared hardware/product metadata only
 ## Read-only streamed firmware digest
 
 `POST /firmware/hash` authenticates using `X-Lab-Token`, bounds the incoming image to the inactive OTA partition size (minimum 1024 bytes), and computes SHA-256 incrementally in 1024-byte chunks. It returns the digest, received byte count, and `transferEnabled:false`. Incomplete transfers are rejected; no flash writes or boot changes occur. This does **not** bind the image to a signed manifest yet and is not permission to stage it. The signed digest must be compared inside the ESP32 in the same authenticated update transaction before any OTA writes are unlocked. Built and source-tested; not flashed to the physical board.
+
+## Combined signed-image preflight (read-only)
+
+`POST /firmware/preflight` accepts a single authenticated request body: four bytes of **big-endian** unsigned manifest length, followed by the signed JSON envelope, followed by raw firmware bytes. The device validates the signature and hardware metadata before trusting the envelope's SHA-256 claim, then streams the firmware into SHA-256 in 1024-byte blocks and compares the digest to the authenticated claim. The manifest is capped at 8192 bytes and the firmware at the inactive slot capacity; incomplete streams fail. The response distinguishes a verified signature and matching/mismatching firmware digest and **always** says `transferEnabled:false`. No flash writes, boot selection, or persistent authorisation are performed.
+
+This preflight still does **not** guarantee safe OTA deployment: release anti-downgrade policy, interrupted-write recovery, staged-image re-read, activation confirmation, and automatic rollback remain to be implemented and bench-tested. The live device has not been flashed.
