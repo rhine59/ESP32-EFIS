@@ -123,3 +123,23 @@ injection and automatic rollback remain untested. The generated private NVS
 image must not be flashed to the device. A previous attempt to send private
 credentials through remote execution was blocked; no provisioning write
 occurred.
+
+## Operator-initiated USB credential test
+
+The local helper `tools/provision_usb_local.py` is intentionally **not run by
+remote automation**. At the physically connected Mac, with the bench board
+running the revised boot-lab firmware, execute:
+
+```sh
+cd hardware/boot-recovery-lab
+~/.espressif/tools/python/v5.4.4/venv/bin/python tools/provision_usb_local.py
+```
+
+The helper reads the ignored private credential file, requires a typed
+`PROVISION` confirmation, and reports only whether the board acknowledged the
+NVS commit. It does not print credentials or accept them as CLI arguments.
+USB is not encrypted and the firmware may echo serial input depending on
+console configuration: ensure no serial logger/monitor is running. Do not
+use this on a production device. After provisioning, reboot to enable Wi-Fi.
+
+Tests: `python3 -m unittest discover -s tools -p 'test_provision_usb_local.py'`.
