@@ -55,6 +55,8 @@ struct EFISWiFiView: View {
     var body: some View {
         List {
             Section("1. Download signed firmware") {
+                Text("While online, check for a signed release and download it. Signature and SHA-256 checks are performed automatically. Select a previously downloaded release to continue offline.")
+                    .font(.footnote).foregroundStyle(.secondary)
                 Button("Check publisher for signed release") { Task { await fetchPublishedFirmware() } }
                     .disabled(preparingFirmware)
                 Text(signedReleaseStatus).font(.footnote).foregroundStyle(.secondary)
@@ -83,8 +85,9 @@ struct EFISWiFiView: View {
                         }
                     }
                 }
-            }
-            Section("2. Verify downloaded firmware") {
+
+                Divider()
+                Text("Automatic release verification").font(.headline)
                 if let selectedRelease {
                     LabeledContent("Selected release", value: selectedRelease.version)
                     Label(FirmwareLibrary.verify(selectedRelease) ? "Signature and SHA-256 verified" : "Verification failed — transfer blocked", systemImage: FirmwareLibrary.verify(selectedRelease) ? "checkmark.shield" : "xmark.shield")
@@ -100,7 +103,7 @@ struct EFISWiFiView: View {
                 Text(firmwareAssessment).font(.footnote).foregroundStyle(.secondary)
                 if let firmwareError { Text(firmwareError).foregroundStyle(.red).font(.footnote) }
             }
-            Section("3. Connect to RedOne EFIS") {
+            Section("2. Connect to EFIS") {
                 Text("Enter the 12-digit Wi-Fi MAC address printed on your EFIS or its QR label.")
                     .font(.footnote).foregroundStyle(.secondary)
                 if !savedMacAddress.isEmpty {
@@ -137,7 +140,7 @@ struct EFISWiFiView: View {
                 }
                 .disabled(checking)
             }
-            Section("4–7. Firmware transfer and recovery") {
+            Section("Firmware update") {
                 if let verified {
                     LabeledContent("Installed version", value: verified.version)
                     LabeledContent("Active partition", value: verified.running)
@@ -155,23 +158,23 @@ struct EFISWiFiView: View {
                 }
                 Text("Firmware transfer requires a previously downloaded and verified signed release. The device must independently authenticate the release before writing flash.")
                     .font(.footnote).foregroundStyle(.secondary)
-                Label("4. Push firmware to EFIS", systemImage: "arrow.up.circle")
+                Label("3. Push firmware to EFIS", systemImage: "arrow.up.circle")
                     .font(.headline)
                 Button("Push selected firmware") { }
                     .disabled(true)
                 Text("Requires an authenticated RedOne connection and a verified, signed release.")
                     .font(.footnote).foregroundStyle(.secondary)
-                Label("5. Verify staged firmware", systemImage: "checkmark.shield")
+                Label("4. Verify transferred firmware", systemImage: "checkmark.shield")
                     .font(.headline)
-                Button("Verify staged image") { }
+                Button("Verify transferred image") { }
                     .disabled(true)
-                Label("6. Activate firmware", systemImage: "power")
+                Label("5. Activate firmware", systemImage: "power")
                     .font(.headline)
                 Button("Activate verified firmware") { }
                     .disabled(true)
                 Text("Activation requires explicit confirmation on the ground, followed by reboot and health verification.")
                     .font(.footnote).foregroundStyle(.secondary)
-                Label("7. Rollback", systemImage: "arrow.uturn.backward")
+                Label("6. Rollback", systemImage: "arrow.uturn.backward")
                     .font(.headline)
                 Button("Roll back to previous firmware") { }
                     .disabled(true)
