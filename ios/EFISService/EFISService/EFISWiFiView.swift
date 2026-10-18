@@ -1,5 +1,6 @@
 import SwiftUI
 import NetworkExtension
+import CoreLocation
 import UniformTypeIdentifiers
 import CryptoKit
 
@@ -51,6 +52,10 @@ struct EFISWiFiView: View {
     }
     private var ssid: String { "RedOne_" + suffix }
     @State private var chooseNewDevice = false
+    @State private var scanningConnectionQR = false
+    @State private var currentWiFi = "Checking Wi-Fi…"
+    @State private var connectionPassword: String?
+    @State private var qrError: String?
 
     var body: some View {
         List {
@@ -98,25 +103,30 @@ struct EFISWiFiView: View {
                 if let firmwareError { Text(firmwareError).foregroundStyle(.red).font(.footnote) }
             }
             Section("2. Connect to EFIS") {
-                Text("Enter the 12-digit Wi-Fi MAC address printed on your EFIS or its QR label.")
-                    .font(.footnote).foregroundStyle(.secondary)
+                LabeledContent("Current iPhone Wi-Fi", value: currentWiFi)
+                Button("Refresh Wi-Fi status") { Task { await refreshCurrentWiFi() } }
+                Button("Scan RedOne QR Code") { scanningConnectionQR = true }
                 if !savedMacAddress.isEmpty {
-                    Button("Rejoin saved RedOne") {
+                    Button("Rejoin RedOne_" + savedMacAddress) {
                         macAddress = savedMacAddress
+                        connectionPassword = RecoveryPairingStore.load().flatMap {
+                            $0.ssid == ssid ? $0.password : nil
+                        }
                         joinNetwork()
                     }
-                    Button("Join a new RedOne") {
-                        macAddress = ""
-                        chooseNewDevice = true
+                }
+                DisclosureGroup("Connect manually") {
+                    TextField("12-digit RedOne Wi-Fi MAC", text: $macAddress)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                    LabeledContent("Network", value: ssid)
+                    Button("Join RedOne network") {
+                        connectionPassword = nil
+                        joinNetwork()
                     }
-                    LabeledContent("Saved network", value: "RedOne_" + savedMacAddress)
+                    .disabled(suffix.count != 12 || checking)
                 }
-                if savedMacAddress.isEmpty || chooseNewDevice {
-                TextField("Wi-Fi MAC address", text: $macAddress)
-                    .textInputAutocapitalization(.characters)
-                    .autocorrectionDisabled()
-                }
-                LabeledContent("Network", value: ssid)
+                if let qrError { Text(qrError).foregroundStyle(.red).font(.footnote) }
                 Label(message, systemImage: verified == nil ? "wifi.exclamationmark" : "checkmark.circle.fill")
                     .foregroundStyle(verified == nil ? Color.secondary : Color.green)
                 if let verified {
@@ -125,10 +135,6 @@ struct EFISWiFiView: View {
                     LabeledContent("Running partition", value: verified.running)
                     LabeledContent("Next update partition", value: verified.next)
                 }
-                Button("Join RedOne network") {
-                    joinNetwork()
-                }
-                .disabled(suffix.count != 12 || checking)
                 Button("Verify RedOne connection") {
                     Task { await verifyConnection() }
                 }
@@ -179,6 +185,14 @@ struct EFISWiFiView: View {
         .fileImporter(isPresented: $showingFirmwarePicker, allowedContentTypes: [.data], allowsMultipleSelection: false) { result in
             Task { await inspectFirmware(result) }
         }
+        .sheet(isPresented: $scanningConnectionQR) {
+            DeviceQRScannerView(onDeviceID: { value in
+                scanningConnectionQR = false
+                acceptConnectionQR(value)
+            }, onCancel: { scanningConnectionQR = false }, acceptsRecovery: true)
+                .ignoresSafeArea()
+        }
+        .task { await refreshCurrentWiFi() }
         .navigationTitle("Update EFIS")
         .onAppear {
             if !savedMacAddress.isEmpty { macAddress = savedMacAddress }
@@ -333,17 +347,54 @@ struct EFISWiFiView: View {
         } catch { firmwareError = "Cannot inspect firmware: \(error.localizedDescription)" }
     }
 
+    @MainActor private func refreshCurrentWiFi() async {
+        let network = await NEHotspotNetwork.fetchCurrent()
+        currentWiFi = network?.ssid ?? "Unavailable — allow location access to display Wi-Fi"
+    }
+
+    private func acceptConnectionQR(_ value: String) {
+        guard let components = URLComponents(string: value),
+              components.scheme == "redone-recovery", components.host == "pair",
+              let fields = components.queryItems else {
+            qrError = "This is not a RedOne connection QR code."
+            return
+        }
+        func field(_ name: String) -> String? {
+            fields.first(where: { $0.name == name })?.value
+        }
+        guard let network = field("ssid"), network.hasPrefix("RedOne_"),
+              network.count == 19,
+              network.dropFirst(7).allSatisfy({ $0.isHexDigit }),
+              let password = field("password"), (16...63).contains(password.count),
+              let token = field("token"), (32...64).contains(token.count) else {
+            qrError = "QR code is missing valid RedOne connection information."
+            return
+        }
+        do {
+            try RecoveryPairingStore.save(
+                RecoveryPairing(ssid: network, password: password, token: token)
+            )
+            macAddress = String(network.dropFirst(7))
+            connectionPassword = password
+            qrError = nil
+            joinNetwork()
+        } catch {
+            qrError = "Unable to securely save RedOne connection details."
+        }
+    }
+
     private func joinNetwork() {
                     verified = nil
                     message = "Requesting Wi-Fi connection…"
-                    let config = NEHotspotConfiguration(ssid: ssid, passphrase: "BenchOnly-2026!", isWEP: false)
-                    config.joinOnce = true
+                    let config = NEHotspotConfiguration(ssid: ssid, passphrase: connectionPassword ?? "BenchOnly-2026!", isWEP: false)
+                    config.joinOnce = false
                     NEHotspotConfigurationManager.shared.apply(config) { error in
                         Task { @MainActor in
                             if let error = error as NSError?,
                                error.code != NEHotspotConfigurationError.alreadyAssociated.rawValue {
                                 message = "Wi-Fi join failed: \(error.localizedDescription)"
                             } else {
+                                await refreshCurrentWiFi()
                                 await verifyConnection()
                             }
                         }

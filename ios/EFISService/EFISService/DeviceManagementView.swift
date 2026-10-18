@@ -47,13 +47,13 @@ private struct RecoveryFirmwareInventory: Decodable {
     let rollbackEnabled: Bool
     let reason: String
 }
-private struct RecoveryPairing: Codable {
+struct RecoveryPairing: Codable {
     let ssid: String
     let password: String
     let token: String
 }
 
-private enum RecoveryPairingStore {
+enum RecoveryPairingStore {
     private static let service = "uk.co.thingies.redone.recovery"
     static func save(_ pairing: RecoveryPairing) throws {
         let data = try JSONEncoder().encode(pairing)
