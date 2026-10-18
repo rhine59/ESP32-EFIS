@@ -1,3 +1,9 @@
+## 2026-10-18 — Fail-closed OTA boot-health policy
+
+- Added pure C boot-health evidence policy with host tests for each missing prerequisite.
+- Bench firmware refuses to confirm pending images while required physical health evidence is unavailable; OTA activation remains locked.
+- ESP-IDF build and host regression tests passed; no physical board flashing or power-loss tests were performed.
+
 ## 2026-10-18 — Green EFIS status and Partition B deployment gate
 
 - Authenticated EFIS status information now renders green in the Lollipop iOS connection panel instead of grey; the update controls remain disabled.

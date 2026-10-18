@@ -63,3 +63,7 @@ Removed the automatic `esp_ota_mark_app_valid_cancel_rollback()` call from bench
 ## Stage 10: trusted signed-release metadata extraction
 
 The shared recovery cryptography component now provides `redone_verify_release_metadata()`. It returns the signed build number, 32-byte binary SHA-256 and minimum allowed version string only after Ed25519 verification; failed verification clears the output. The existing signature-only API delegates to the same verifier. The unregistered experimental staging handler consumes this trusted digest rather than independently reparsing the signed envelope. The minimum version remains a string and cannot safely be treated as a monotonic build number; trusted installed-floor persistence and boot-health rollback validation are still required. No HTTP mutation endpoints were unlocked, and no physical firmware was flashed.
+
+## Stage 11: fail-closed boot-health evidence policy
+
+Added `ota_boot_health.c/.h` with seven independent health predicates and a pending-image-only confirmation gate. Host unit tests test the successful case and each missing predicate; bench startup currently supplies false for unavailable physical sensor/display/power/rollback/ground evidence and leaves the image pending. No call to `esp_ota_mark_app_valid_cancel_rollback()` has been added. This is a **policy** implementation, not physical rollback or boot-health acceptance testing. The signed staging endpoint and boot activation remain locked.

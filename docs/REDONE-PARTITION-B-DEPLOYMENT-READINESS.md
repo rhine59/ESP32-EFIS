@@ -32,3 +32,7 @@ The current experimental signed staging function is **not routable**. Live updat
 - **Only after all gates pass:** permit a controlled Partition B staging and separate explicit activation trial. Keep the aircraft grounded and use a verified recovery plan.
 
 Cross-references: `docs/REDONE-ARCHITECTURE-GUIDE.md`, `docs/REDONE-USER-GUIDE.md`, `hardware/boot-recovery-lab/SECURE-OTA-GATE.md`.
+
+## Boot-health policy checkpoint
+
+The `redone_ota_guard/ota_boot_health` component now requires seven independently asserted health conditions before a pending OTA image can be confirmed: identity, firmware self-test, required sensors, display, power, rollback path and operator ground confirmation. Host tests verify each missing condition blocks confirmation. Bench startup explicitly reports the unavailable hardware evidence and **does not mark the image valid**. This policy is deliberately not an automatic confirmation mechanism: real sensors, watchdog, rollback readiness and trusted operator confirmation have not yet been connected or physically tested. It does not change the NO-GO decision.

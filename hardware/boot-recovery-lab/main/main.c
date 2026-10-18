@@ -7,6 +7,7 @@
 #include "esp_partition.h"
 #include "nvs.h"
 #include "nvs_flash.h"
+#include "ota_boot_health.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -100,7 +101,21 @@ void app_main(void) {
     printf("=====================================\n");
     esp_ota_img_states_t state;
     if (running && esp_ota_get_state_partition(running, &state) == ESP_OK && state == ESP_OTA_IMG_PENDING_VERIFY) {
-        ESP_LOGW("BOOT_LAB", "Pending image remains UNCONFIRMED: no automatic validation without health checks");
+        /* Only the bench firmware's identity is known. Sensor, display,
+         * power and recovery readiness are NOT established on this board.
+         * In particular, a heartbeat or Wi-Fi connection is not sufficient. */
+        const redone_boot_evidence_t evidence = {
+            .image_identity_ok = true,
+            .firmware_self_test_ok = false,
+            .required_sensors_ok = false,
+            .display_ok = false,
+            .power_ok = false,
+            .rollback_path_ok = false,
+            .operator_ground_confirmation = false,
+        };
+        if (!redone_boot_may_confirm(REDONE_BOOT_PENDING, &evidence)) {
+            ESP_LOGW("BOOT_LAB", "Pending image remains UNCONFIRMED: critical health evidence missing");
+        }
         /* Do not call esp_ota_mark_app_valid_cancel_rollback here.
          * ESP-IDF rollback remains armed until a separate verified health
          * protocol is implemented and tested on the bench. */
