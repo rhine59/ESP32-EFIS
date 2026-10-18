@@ -517,7 +517,7 @@ struct RedOneDeploymentSimulator: View {
     @State private var corruptNextTransfer = false
     @State private var transferring = false
     @State private var errorStatus = false
-    @AppStorage("redone.simulatorEndpoint") private var simulatorEndpoint = ""
+    @AppStorage("redone.simulatorEndpoint") private var simulatorEndpoint = "https://lollipop.granvillehouse.synology.me:8449"
     @State private var simulatorToken = ""
     @State private var remoteMode = false
     @State private var remoteConnected = false
@@ -546,8 +546,8 @@ struct RedOneDeploymentSimulator: View {
                 Image(systemName: "cpu.fill").font(.title2).foregroundStyle(.blue)
                 Text("REDONE SIMULATOR").font(.caption.weight(.bold))
                 Spacer()
-                Label("OFFLINE", systemImage: "wifi.slash")
-                    .font(.caption2.weight(.bold)).foregroundStyle(.orange)
+                Label(remoteMode && remoteConnected ? "SYNOLOGY" : "LOCAL", systemImage: remoteMode && remoteConnected ? "network" : "iphone")
+                    .font(.caption2.weight(.bold)).foregroundStyle(remoteMode && remoteConnected ? .green : .orange)
             }
             DisclosureGroup("Network simulator") {
                 TextField("HTTPS endpoint", text: $simulatorEndpoint)
@@ -688,7 +688,7 @@ struct RedOneDeploymentSimulator: View {
         do {
             let (_, state) = try await remoteRequest("/api/status")
             guard let state else { throw URLError(.cannotParseResponse) }
-            syncRemote(state); remoteConnected = true; errorStatus = false
+            syncRemote(state); remoteConnected = true; remoteMode = true; errorStatus = false
             status = "Authenticated network simulator connected"
         } catch {
             remoteConnected = false; remoteMode = false
@@ -711,8 +711,12 @@ struct RedOneDeploymentSimulator: View {
         guard downloaded == "B" else { return }
         transferring = true; defer { transferring = false }
         do {
-            let bytes = payload("B")
-            if transferFraction >= 1 { _ = try await remoteRequest("/api/transfer/reset", method: "POST"); transferFraction = 0 }
+            let (bytes, _) = try await remoteRequest("/api/fixtures/B/download")
+            guard bytes.count == 4096 else { throw URLError(.cannotDecodeContentData) }
+            if transferFraction == 0 || transferFraction >= 1 {
+                let (_, resetState) = try await remoteRequest("/api/transfer/reset", method: "POST")
+                if let resetState { syncRemote(resetState) }
+            }
             var offset = Int(transferFraction * 4096)
             while offset < bytes.count {
                 let end = min(offset + 512, bytes.count)
