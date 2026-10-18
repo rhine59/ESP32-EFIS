@@ -115,17 +115,6 @@ struct EFISWiFiView: View {
                         joinNetwork()
                     }
                 }
-                DisclosureGroup("Connect manually") {
-                    TextField("12-digit RedOne Wi-Fi MAC", text: $macAddress)
-                        .textInputAutocapitalization(.characters)
-                        .autocorrectionDisabled()
-                    LabeledContent("Network", value: ssid)
-                    Button("Join RedOne network") {
-                        connectionPassword = nil
-                        joinNetwork()
-                    }
-                    .disabled(suffix.count != 12 || checking)
-                }
                 if let qrError { Text(qrError).foregroundStyle(.red).font(.footnote) }
                 Label(message, systemImage: verified == nil ? "wifi.exclamationmark" : "checkmark.circle.fill")
                     .foregroundStyle(verified == nil ? Color.secondary : Color.green)
