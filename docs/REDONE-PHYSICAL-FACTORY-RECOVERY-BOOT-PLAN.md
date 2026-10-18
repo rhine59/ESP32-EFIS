@@ -46,3 +46,7 @@ The deployed factory image matches the local 814,160-byte recovery build prefix 
 ## Fresh OTA snapshot and rescue preflight — 18 October 2026
 
 A fresh 8 KiB live OTA metadata snapshot was saved locally (not in Git) and validated to select `ota_0`. The original full-flash backup's OTA metadata is stale; a new full 16 MiB backup was attempted but not completed because the read was too slow. Offline rescue planner and tests are in `hardware/boot-recovery-lab/tools/recovery_rescue_dry_run.py`; see `docs/REDONE-RECOVERY-RESCUE-PREFLIGHT-20261018.md`. **Do not execute factory boot until the full backup and independently tested rescue path are complete.**
+
+## Offline OTA transition rehearsal — 18 October 2026
+
+`hardware/boot-recovery-lab/tools/recovery_transition_sim.py` models the actual fresh `ota_0` selection, the factory boot's OTA metadata erase and the recovery `bootA` rewrite. Both modeled OTA-state policies return selection to `ota_0`. See `docs/REDONE-RECOVERY-TRANSITION-SIMULATION-20261018.md`. This is not physical validation; fresh complete backup and independent rescue rehearsal remain outstanding. **NO-GO**.

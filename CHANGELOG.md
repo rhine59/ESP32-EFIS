@@ -1,3 +1,7 @@
+## 2026-10-18 — Offline factory recovery transition simulation
+
+Modeled fresh OTA selection through factory metadata erase and recovery bootA rewrite, covering NEW/UNDEFINED state variants. No physical boot or flash writes.
+
 ## 2026-10-18 — Fresh OTA snapshot and offline rescue preflight
 
 Captured fresh read-only 8 KiB OTA metadata; discovered the older full backup has stale OTA selection. Added fail-closed offline rescue planner/tests. Fresh 16 MiB backup remains incomplete; physical factory recovery boot NO-GO.
