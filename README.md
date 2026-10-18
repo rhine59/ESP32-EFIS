@@ -1,5 +1,12 @@
 # ESP32 EFIS
 
+## Comprehensive project guides (18 October 2026)
+
+- **[RedOne User Guide](docs/REDONE-USER-GUIDE.md)** — owner/pilot/app procedures, commissioning prerequisites, firmware, diagnostics and troubleshooting.
+- **[RedOne Architecture and Engineering Guide](docs/REDONE-ARCHITECTURE-GUIDE.md)** — component boundaries, hardware, OTA/recovery trust model, services, tests, operational runbooks and outstanding safety gates.
+
+These guides explicitly distinguish available development functionality from planned or unvalidated production behaviour.
+
 Experimental **supplementary/non-primary** multifunction electronic flight instrument for a non-certified aircraft, based on ESP32-S3 and a single 2.1-inch round 480×480 high-brightness display.
 
 > **Safety:** experimental development hardware/software. It is not a certified or approved primary flight instrument and must not be relied upon as the sole source of attitude, altitude, heading or position information.

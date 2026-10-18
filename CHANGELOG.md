@@ -1,3 +1,9 @@
+## 2026-10-18 — Comprehensive RedOne guides
+
+- Added `docs/REDONE-USER-GUIDE.md` for customer/owner and bench use, including connection, licence, instrument operation, firmware safety, diagnostics and troubleshooting.
+- Added `docs/REDONE-ARCHITECTURE-GUIDE.md` for component boundaries, hardware, signed OTA, boot/rollback, services, security, test commands and acceptance gates.
+- Linked both guides from the project README. Documentation only: no firmware flash, device configuration or application deployment.
+
 # Change History
 
 This file is the chronological checkpoint history for ESP32-EFIS. GitHub `main` is the authoritative source of truth. Every future project checkpoint must update this file in the same change set as the implementation/documentation checkpoint.
