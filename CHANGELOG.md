@@ -1,3 +1,7 @@
+## 2026-10-18 — Live account and PostgreSQL cutover
+
+Migrated Synology account API and PostgreSQL to isolated `lollipop-account` project, preserving original external data volume. PostgreSQL healthy, existing user retained, account `/healthz` HTTP 200. Legacy containers stopped and retained for rollback.
+
 ## 2026-10-18 — Live OTA download/admin cutover
 
 Migrated OTA download and admin containers on Synology to isolated `lollipop-ota` project, retaining firmware and signing-key mounts. Fixed missing Python module in admin image, rolled back and retried safely. Both new containers healthy; legacy containers retained for rollback.
