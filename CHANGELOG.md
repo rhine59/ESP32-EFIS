@@ -1,3 +1,7 @@
+## 2026-10-18 — All previously running Synology service groups isolated
+
+Migrated licence service, web simulator and local licence gateway after OTA and account cutovers. Preserved external volumes, TLS and network connections; HTTP and Docker health checks pass where provided. Pre-existing RedOne simulator remains running. Support and signer are unprovisioned and intentionally not launched without private credentials. See `docs/LOLLIPOP-FULL-LIVE-CUTOVER-20261018.md`.
+
 ## 2026-10-18 — Live account and PostgreSQL cutover
 
 Migrated Synology account API and PostgreSQL to isolated `lollipop-account` project, preserving original external data volume. PostgreSQL healthy, existing user retained, account `/healthz` HTTP 200. Legacy containers stopped and retained for rollback.
