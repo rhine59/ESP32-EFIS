@@ -1,3 +1,7 @@
+## 2026-10-18 — Live OTA download/admin cutover
+
+Migrated OTA download and admin containers on Synology to isolated `lollipop-ota` project, retaining firmware and signing-key mounts. Fixed missing Python module in admin image, rolled back and retried safely. Both new containers healthy; legacy containers retained for rollback.
+
 ## 2026-10-18 — Parameterise OTA public directory for staged Synology deployment
 
 OTA Compose can reuse the live public firmware directory through `OTA_PUBLIC_DIR`, avoiding an empty staging bind mount. Private signing key and environment remain external; no production restart.

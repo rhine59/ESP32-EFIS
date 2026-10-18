@@ -1,0 +1,9 @@
+# Lollipop OTA production cutover — 18 October 2026
+
+**Completed:** OTA download and OTA administration services moved to isolated Compose project `lollipop-ota`, with explicit containers `lollipop-efis-ota` and `lollipop-efis-ota-admin`. Both were confirmed **healthy** after migration. Existing OTA public firmware bind path `/volume1/docker/ESP32-EFIS/ota-server/public` and private signing-key mount were retained. Existing `ota-server_default` network now includes the OTA download container and the legacy web simulator. No account, licence or firmware-device changes.
+
+**Issue and recovery:** Initial admin image failed to boot due to missing `release_build_policy.py` in Dockerfile `COPY`. Restored the previous admin container immediately, fixed Dockerfile in commit `76ce2ea`, rebuilt and retried admin only. New admin confirmed healthy. Also made `ota-server_default` an external network in commit `c908b5f` after Compose warned the pre-existing network belonged to another project. Source update needs pulling into staging before any subsequent Compose operation.
+
+**Rollback:** Previous OTA download container retained stopped as `lollipop-efis-ota-legacy`. Previous admin container retained stopped under its original name `lollipop-efis-ota-admin-1`. To roll back, stop the new service(s), free their published host ports, and restart corresponding old container(s). Do not remove the legacy images, original OTA public bind directory or signing-key file until post-cutover acceptance is complete. A full external client download and signed-release publishing exercise is still outstanding; health checks alone are not end-to-end verification.
+
+**Status:** first service group migrated; do not migrate account/database or licence until their individual preflight and rollback checks pass.
