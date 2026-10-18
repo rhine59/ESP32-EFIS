@@ -143,6 +143,8 @@ struct EFISWiFiView: View {
                 if let firmwareError { Label(firmwareError, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red).font(.footnote) }
             } header: {
                 Label("1. Download firmware", systemImage: "arrow.down.circle")
+            } footer: {
+                Text("Internet connection required. Before finding or downloading firmware, disconnect from the RedOne EFIS Wi-Fi network and connect to your normal Wi-Fi or mobile data. Download the signed release to your phone before connecting to the EFIS.")
             }
             Section {
                 HStack(spacing: 12) {
