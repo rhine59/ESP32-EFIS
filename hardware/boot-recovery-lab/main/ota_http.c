@@ -77,7 +77,7 @@ static esp_err_t verify_image(httpd_req_t *req) {
     esp_app_desc_t desc;
     if (!staged || esp_ota_get_partition_description(staged, &desc) != ESP_OK ||
         strcmp(desc.project_name, "efis_boot_lab")) {
-        httpd_resp_send_err(req, HTTPD_409_CONFLICT, "No valid staged lab image");
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No valid staged lab image");
         return ESP_FAIL;
     }
     verified = true;
@@ -87,7 +87,7 @@ static esp_err_t verify_image(httpd_req_t *req) {
 static esp_err_t activate_image(httpd_req_t *req) {
     if (!require_auth(req)) return ESP_FAIL;
     if (!staged || !verified) {
-        httpd_resp_send_err(req, HTTPD_409_CONFLICT, "Verify staged image first");
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Verify staged image first");
         return ESP_FAIL;
     }
     esp_err_t err = esp_ota_set_boot_partition(staged);
