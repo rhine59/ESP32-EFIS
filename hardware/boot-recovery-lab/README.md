@@ -99,3 +99,27 @@ use a logging terminal, and treat the USB link as physically trusted only.
 There is no secure channel, device attestation, signature verification, or
 phone pairing yet. The offline generated whole-partition NVS image remains
 DO-NOT-FLASH.
+
+## Physical bench results — 18 October 2026
+
+Board: ESP32-S3 16 MB, USB `/dev/cu.usbmodem1101`. The existing full flash
+backup was created and independently checked before any writes. Serial boot
+logs confirmed recovery was running from `0x20000`, OTA A occupied, OTA B
+empty. Only the application binary was written to OTA B at `0x420000`
+(780224 bytes; esptool reported verified hash). No bootloader, recovery,
+partition table, OTA A, NVS or eFuse was intentionally written.
+
+Recovery `bootB` selected OTA B, bootloader loaded `0x420000`, and the new
+lab firmware reported `running=ota_1`, heartbeat and disabled Wi-Fi due to
+missing credentials. Then `boot0` selected OTA A and loaded `0x120000`,
+with a heartbeat; `boot1` selected OTA B again and loaded `0x420000`, with
+another heartbeat. **PASS: physical A/B selection and reboot in both
+directions.** The board was left running OTA B.
+
+**NOT PASS / NOT YET TESTED:** Both slots identify as `IMAGE B — 1.1.0` in
+serial output, so switching partitions does NOT yet prove version rollback.
+USB provisioning, phone transfer, signed-release validation, failure
+injection and automatic rollback remain untested. The generated private NVS
+image must not be flashed to the device. A previous attempt to send private
+credentials through remote execution was blocked; no provisioning write
+occurred.
