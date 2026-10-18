@@ -67,3 +67,7 @@ The shared recovery cryptography component now provides `redone_verify_release_m
 ## Stage 11: fail-closed boot-health evidence policy
 
 Added `ota_boot_health.c/.h` with seven independent health predicates and a pending-image-only confirmation gate. Host unit tests test the successful case and each missing predicate; bench startup currently supplies false for unavailable physical sensor/display/power/rollback/ground evidence and leaves the image pending. No call to `esp_ota_mark_app_valid_cancel_rollback()` has been added. This is a **policy** implementation, not physical rollback or boot-health acceptance testing. The signed staging endpoint and boot activation remain locked.
+
+## Stage 12: authenticated, read-only live boot-health snapshot
+
+Added `GET /boot-health` to the bench HTTP server. It requires the provisioned NVS token and reads the actual running partition, next OTA partition, ESP-IDF boot state and compiled application descriptor. It exposes distinct evidence flags and `mayConfirmBoot`, but does not call any OTA mutation, boot confirmation or reboot API. Physical sensor, display, supply, rollback, self-test and on-ground evidence remain explicitly `false` until validated measurement sources are implemented. The endpoint is **compiled but not deployed to the physical board**. The existing `/update`, `/verify`, `/activate` routes remain locked. This is observability, not proof of rollback.

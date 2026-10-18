@@ -9,6 +9,7 @@
 #include "esp_http_server.h"
 #include "esp_ota_ops.h"
 #include "esp_app_desc.h"
+#include "ota_boot_health.h"
 #include "esp_system.h"
 #include "nvs.h"
 #include "esp_ota_ops.h"
@@ -397,6 +398,48 @@ static esp_err_t activate_image(httpd_req_t *req) {
     return ESP_OK;
 #endif
 }
+/* Read-only live evidence. Each true check is directly measured here;
+ * unavailable sensors/display/power are explicitly false, never inferred
+ * from a heartbeat, heap or Wi-Fi connection. No boot confirmation occurs. */
+static esp_err_t boot_health(httpd_req_t *req) {
+    if (!require_auth(req)) return ESP_FAIL;
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    const esp_partition_t *next = esp_ota_get_next_update_partition(NULL);
+    const esp_app_desc_t *app = esp_app_get_description();
+    esp_ota_img_states_t state = ESP_OTA_IMG_UNDEFINED;
+    bool pending = running && esp_ota_get_state_partition(running, &state) == ESP_OK &&
+                   state == ESP_OTA_IMG_PENDING_VERIFY;
+    bool image_ok = running && running->type == ESP_PARTITION_TYPE_APP && app &&
+                    strcmp(app->project_name, "efis_boot_lab") == 0;
+    bool inactive_ok = running && next && running->address != next->address &&
+                       next->type == ESP_PARTITION_TYPE_APP &&
+                       (next->subtype == ESP_PARTITION_SUBTYPE_APP_OTA_0 ||
+                        next->subtype == ESP_PARTITION_SUBTYPE_APP_OTA_1);
+    redone_boot_evidence_t evidence = {
+        .image_identity_ok = image_ok,
+        .firmware_self_test_ok = false, /* no validated complete self-test */
+        .required_sensors_ok = false, /* external sensor hardware not assembled */
+        .display_ok = false, /* physical display not validated */
+        .power_ok = false, /* no measured supply/ADC threshold */
+        .rollback_path_ok = false, /* physical rollback not validated */
+        .operator_ground_confirmation = false,
+    };
+    bool may_confirm = redone_boot_may_confirm(pending ? REDONE_BOOT_PENDING : REDONE_BOOT_UNKNOWN,
+                                               &evidence);
+    char response[640];
+    snprintf(response, sizeof(response),
+        "{\"pendingVerify\":%s,\"imageIdentityOk\":%s,\"inactiveSlotPresent\":%s,"
+        "\"firmwareSelfTestOk\":false,\"requiredSensorsOk\":false,"
+        "\"displayOk\":false,\"powerOk\":false,\"rollbackPathOk\":false,"
+        "\"operatorGroundConfirmation\":false,\"mayConfirmBoot\":%s,"
+        "\"updateReady\":false,\"evidenceSource\":\"device-live-read-only\"}",
+        pending ? "true" : "false", image_ok ? "true" : "false",
+        inactive_ok ? "true" : "false", may_confirm ? "true" : "false");
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-store");
+    return httpd_resp_sendstr(req, response);
+}
+
 static esp_err_t status(httpd_req_t *req) {
     if (!require_auth(req)) return ESP_FAIL;
     const esp_partition_t *running = esp_ota_get_running_partition();
@@ -431,6 +474,8 @@ void lab_http_start(void) {
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &uri));
     httpd_uri_t info = {.uri="/status", .method=HTTP_GET, .handler=status};
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &info));
+    httpd_uri_t health = {.uri="/boot-health", .method=HTTP_GET, .handler=boot_health};
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &health));
     httpd_uri_t manifest = {.uri="/firmware/verify-manifest", .method=HTTP_POST, .handler=verify_manifest};
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &manifest));
     httpd_uri_t digest = {.uri="/firmware/hash", .method=HTTP_POST, .handler=hash_firmware};

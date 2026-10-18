@@ -1,3 +1,9 @@
+## 2026-10-18 — Read-only device boot-health snapshot
+
+- Added authenticated `GET /boot-health` to bench firmware for live ESP-IDF partition and boot-state evidence.
+- Physical sensor/display/power/rollback/ground-confirmation evidence remains explicitly false; the endpoint cannot confirm or activate firmware.
+- Host source tests and ESP-IDF build passed; no board flashing performed. Partition B remains NO-GO.
+
 ## 2026-10-18 — Fail-closed OTA boot-health policy
 
 - Added pure C boot-health evidence policy with host tests for each missing prerequisite.
