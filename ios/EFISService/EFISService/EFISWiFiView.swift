@@ -64,8 +64,12 @@ struct EFISWiFiView: View {
                     .font(.footnote).foregroundStyle(.secondary)
                 Button("Check available firmware releases") { Task { await fetchPublishedFirmware() } }
                     .disabled(preparingFirmware)
-                if preparingFirmware || publishedFirmware != nil || signedReleaseStatus != "No release checked" {
-                    Text(signedReleaseStatus).font(.footnote).foregroundStyle(.secondary)
+                if preparingFirmware {
+                    Text("Checking available firmware…")
+                        .font(.footnote).foregroundStyle(.green)
+                } else if signedReleaseStatus != "No release checked" && trustedEnvelope == nil {
+                    Text("Unable to verify available firmware")
+                        .font(.footnote).foregroundStyle(.red)
                 }
                 if let publishedFirmware {
                     LabeledContent("Published version", value: publishedFirmware.version)
@@ -76,9 +80,9 @@ struct EFISWiFiView: View {
                 }
                 if downloadedReleases.filter({ FirmwareLibrary.verify($0) && FirmwareLibrary.transferPreflight($0) == nil }).isEmpty {
                     Text("No firmware ready for use")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.green)
                 } else {
-                    Text("Firmware ready for use").font(.headline)
+                    Text("Firmware ready for use").font(.headline).foregroundStyle(.green)
                 }
                 ForEach(downloadedReleases.filter({ FirmwareLibrary.verify($0) && FirmwareLibrary.transferPreflight($0) == nil })) { release in
                     Button {
