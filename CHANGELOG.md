@@ -1,3 +1,7 @@
+## 2026-10-18 — Single-board recovery plan and fresh live OTA check
+
+Recorded single-board test approach and its elevated risks. Read-only live OTA snapshot again selects A and matches verified full backup. Physical factory boot/metadata erase still awaits separate explicit authorization.
+
 ## 2026-10-18 — Independent physical recovery execution gate
 
 Added read-only ten-check evidence preflight for RedOne backup, OTA metadata and factory recovery, explicitly rejecting physical writes/boot authorization despite passing offline checks. 46 tests pass.

@@ -70,3 +70,7 @@ The chunked read-only backup tool now verifies per-chunk SHA-256 and device iden
 ## Independent execution evidence gate — 18 October 2026
 
 All ten offline checks of device identity argument, backup, OTA selection and recovery partition pass. The read-only execution gate still explicitly refuses physical recovery boot, host writes and Partition B. See `docs/REDONE-PHYSICAL-RECOVERY-EXECUTION-GATE-20261018.md`. A physical rescue rehearsal on a separate board remains the outstanding dependency.
+
+## Single-board path selected — 18 October 2026
+
+The user has chosen to proceed without a second board. Fresh read-only OTA selection again confirms A and matches the full verified backup. See `docs/REDONE-SINGLE-BOARD-RECOVERY-PLAN-20261018.md`. Single-board recovery has greater risk: a failed factory boot/return may strand the only device. The single-board choice is **not** approval to erase OTA metadata; a separate explicit informed decision remains required.
