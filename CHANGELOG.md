@@ -1,3 +1,7 @@
+## 2026-10-18 — Isolated account database restore verified
+
+Restored private PostgreSQL backup into a temporary network-isolated container on Synology, verified eight tables and one user record, and removed the temporary container. Documented persistent mount requirements for staged deployment; production containers unchanged.
+
 ## 2026-10-18 — Synology clean staging checkout validated
 
 Cloned current Git main to separate NAS staging directory; verified commit and container naming audit. Identified private live-only env and OTA public/signing-key mounts requiring safe migration. No container changes.
