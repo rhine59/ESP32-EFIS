@@ -1,3 +1,7 @@
+## 2026-10-18 — Recovery stack fix flashed and read back on RedOne
+
+With explicit approval, preserved a fresh factory backup, flashed only the corrected factory recovery image at 0x20000 and independently verified all 814560 image bytes by readback. Normal OTA A status remains running/selected. Physical recovery diagnostic retest not yet done.
+
 ## 2026-10-18 — Fix recovery diagnostic main-task stack overflow (not deployed)
 
 Moved the 4096-byte USB diagnostics JSON buffer from the 3584-byte main task stack to checked heap allocation; added two regression tests. ESP-IDF 5.4.4 recovery build and 48 Python tests pass. Physical factory image unchanged pending separate flash authorization.

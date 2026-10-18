@@ -1,0 +1,11 @@
+# RedOne factory recovery diagnostic fix — physical deployment
+
+**18 October 2026 — factory partition-only firmware update PASS; readback PASS; normal Partition A still running. Physical recovery diagnostic retest pending.**
+
+The operator explicitly approved updating the existing board's factory recovery partition and verifying by readback. Before writing, a fresh independent read-only backup of the original factory partition was saved privately as `hardware/board-backups/redone-factory-before-stack-fix-20261018.bin`, SHA-256 `5ec003355adea49738eace6bf7b262b90a5f6fa9a90b3fc156604faf24ac42fa`, matching the original verified recovery image. The full 16 MiB backup remains preserved separately.
+
+The new pinned ESP-IDF 5.4.4 recovery image was `firmware/recovery/build/redone_recovery.bin`, 814560 bytes, SHA-256 `cf5e7172e77fb8704179f1eacf1692d75882bd7fc81f67ad431f97f1af477648`. The Mac used esptool with the correct MAC `3c:0f:02:d6:1f:dc` to write **only** at factory partition offset `0x20000`, with flash parameters preserved (`keep`). esptool reported successful image hash verification. It reported erasure from `0x20000` through `0xe6fff` (sector-rounded image footprint), not an erase of the entire 1 MiB factory partition. No bootloader, partition table, NVS, OTA A/B, OTA metadata or eFuse operations were requested.
+
+An independent read-only 1 MiB post-write factory partition dump was saved privately as `hardware/board-backups/redone-factory-after-stack-fix-20261018.bin`. Its first 814560 bytes **match the new image byte-for-byte**. The remaining partition bytes are **not all erased** because the write only erased the image footprint. This is expected and should not be misreported as a fully blank partition. The existing normal application USB `status` subsequently reported `running=ota_0 selected=ota_0`.
+
+**Limits:** The newly flashed factory recovery application has not yet been physically booted and its `test` command has not been retested. This is a verified firmware write, not proof of corrected runtime behaviour. A further factory-entry operation would require erasing OTA selection again and its own explicit approval. Partition B remains NO-GO; the instrument is not certified for flight reliance.
