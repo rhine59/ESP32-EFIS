@@ -36,3 +36,20 @@ The initial firmware used `CONFIG_ESP_CONSOLE_USB_CDC=y`, whereas this developme
 ## A/B switch test — 10 October 2026
 
 **PASS: physical ESP32-S3 partition switching.** With the board running factory Image A, the Mac wrote lab Image B directly to `ota_0` (`0x120000`) and a lab console command `boot0` called `esp_ota_set_boot_partition()`. Serial output confirmed Image B v1.1.0 running from `ota_0` and confirming its pending OTA state. The Mac then staged Image A in `ota_1` (`0x620000`); command `boot1` selected it. Serial output confirmed `Loaded app from partition at offset 0x620000`, `IMAGE A — 1.0.0`, `Running partition: ota_1, next update: ota_0`, successful pending-image confirmation and repeated heartbeats. These are **boot-selection tests with direct serial flashing**, not yet end-to-end network/phone OTA or automatic failure rollback tests. The lab application now accepts `status`, `boot0`, and `boot1` on USB serial; these controls are strictly for bench use.
+
+## Staged bench OTA API (development, not yet hardware validated)
+
+The bench-only HTTP update flow now separates `POST /update` (stage),
+`POST /verify` (validate the staged lab image) and `POST /activate`
+(explicitly select the boot partition and reboot). `GET /status` is also
+authenticated. Every request requires `X-Lab-Token` matching the unique
+32-or-more-character token provisioned into NVS namespace `lab_auth`, string
+key `token`. **No default token is accepted.** No NVS provisioning workflow
+is implemented yet; until one is built and validated, the API fails closed.
+
+This is not production authentication: transport is plain HTTP over a bench
+WPA2 access point, and the Wi-Fi password remains a shared development value.
+The server does not independently verify a signed release, the staged state
+is volatile, and the HTTP upload is not resumable. Do not flash this build
+or enable an aircraft OTA workflow until those gaps are resolved. The existing
+recovery image and running application remain unchanged.

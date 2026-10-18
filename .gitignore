@@ -13,3 +13,6 @@ __pycache__/
 
 # Local physical ESP32 flash backups (never commit)
 hardware/board-backups/
+
+# Disposable ESP-IDF secure OTA build directory
+hardware/boot-recovery-lab/build-secure-ota/
