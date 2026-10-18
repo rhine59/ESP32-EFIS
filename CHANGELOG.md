@@ -1,3 +1,7 @@
+## 2026-10-18 — Independent chunk backup integrity audit
+
+Added offline tool and tests comparing all 16 source flash chunks, assembled backup, current OTA metadata and independently captured factory recovery partition. Forty tests pass; no device writes.
+
 ## 2026-10-18 — Offline OTA metadata rescue rehearsal
 
 Added fail-closed in-memory erase/restore rehearsal using verified physical flash backup and current OTA snapshot; full-image hash restored byte-for-byte. No device writes or boot changes.

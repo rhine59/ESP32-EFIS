@@ -58,3 +58,7 @@ The previously outstanding fresh 16 MiB backup was completed via sixteen verifie
 ## Rescue snapshot byte-for-byte offline rehearsal — 18 October 2026
 
 The full verified backup and fresh OTA snapshot pass an in-memory erase/restore simulation with exact whole-image SHA-256 restoration and no other changed bytes. See `docs/REDONE-RESCUE-RESTORE-REHEARSAL-20261018.md`. This satisfies an **offline** rehearsal only; the physical rescue procedure and factory recovery boot have not been validated. Separate explicit approval is still required for any physical boot-selection write.
+
+## Independent chunk integrity audit — 18 October 2026
+
+All 16 source chunks match the assembled full backup byte-for-byte, and independently read OTA and factory partitions match. See `docs/REDONE-BACKUP-INDEPENDENT-CHUNK-AUDIT-20261018.md`. Offline integrity PASS; physical recovery boot remains NO-GO.
