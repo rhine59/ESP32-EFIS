@@ -59,83 +59,128 @@ struct EFISWiFiView: View {
 
     var body: some View {
         List {
-            Section("1. Download firmware") {
-                Text("Browse and Download firmware for deployment to your RedOne EFIS")
-                    .font(.footnote).foregroundStyle(.secondary)
-                Button("Check available firmware releases") { Task { await fetchPublishedFirmware() } }
-                    .disabled(preparingFirmware)
+            Section {
+                HStack(spacing: 12) {
+                    Image(systemName: "square.and.arrow.down.on.square.fill")
+                        .font(.largeTitle).foregroundStyle(.blue)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("FIRMWARE LIBRARY").font(.caption.weight(.bold))
+                        Text("Signed releases only").font(.caption).foregroundStyle(.green)
+                    }
+                    Spacer()
+                    Image(systemName: trustedEnvelope != nil ? "checkmark.shield.fill" : "shield")
+                        .font(.title2).foregroundStyle(trustedEnvelope != nil ? Color.green : Color.secondary)
+                }
+                Button { Task { await fetchPublishedFirmware() } } label: {
+                    Label("Find releases", systemImage: "arrow.triangle.2.circlepath.circle")
+                        .font(.headline)
+                }
+                .disabled(preparingFirmware)
                 if preparingFirmware {
-                    Text("Checking available firmware…")
+                    Label("Checking releases…", systemImage: "arrow.down.circle")
                         .font(.footnote).foregroundStyle(.green)
                 } else if signedReleaseStatus != "No release checked" && trustedEnvelope == nil {
-                    Text("Unable to verify available firmware")
+                    Label("Release verification failed", systemImage: "xmark.shield")
                         .font(.footnote).foregroundStyle(.red)
                 }
                 if let publishedFirmware {
-                    LabeledContent("Published version", value: publishedFirmware.version)
-                    LabeledContent("Hardware profile", value: publishedFirmware.hardware_profile)
-                    if let notes = publishedFirmware.release_notes { Text(notes).font(.footnote) }
-                    Button("Download firmware") { Task { await downloadPublishedFirmware() } }
-                        .disabled(preparingFirmware || trustedEnvelope == nil)
+                    HStack(spacing: 12) {
+                        Image(systemName: "shippingbox.fill")
+                            .font(.title).foregroundStyle(.blue)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("RedOne \(publishedFirmware.version)").font(.headline)
+                            Text(publishedFirmware.hardware_profile).font(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: trustedEnvelope == nil ? "lock.fill" : "checkmark.seal.fill")
+                            .foregroundStyle(trustedEnvelope == nil ? Color.secondary : Color.green)
+                    }
+                    if let notes = publishedFirmware.release_notes {
+                        Text(notes).font(.caption).foregroundStyle(.green)
+                    }
+                    Button { Task { await downloadPublishedFirmware() } } label: {
+                        Label("Download verified release", systemImage: "arrow.down.to.line.compact")
+                    }
+                    .disabled(preparingFirmware || trustedEnvelope == nil)
                 }
-                if downloadedReleases.filter({ FirmwareLibrary.verify($0) && FirmwareLibrary.transferPreflight($0) == nil }).isEmpty {
-                    Text("No firmware ready for use")
-                        .foregroundStyle(.green)
-                } else {
-                    Text("Firmware ready for use").font(.headline).foregroundStyle(.green)
+                let readyReleases = downloadedReleases.filter {
+                    FirmwareLibrary.verify($0) && FirmwareLibrary.transferPreflight($0) == nil
                 }
-                ForEach(downloadedReleases.filter({ FirmwareLibrary.verify($0) && FirmwareLibrary.transferPreflight($0) == nil })) { release in
-                    Button {
-                        selectCachedRelease(release)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("RedOne \(release.version)").font(.headline)
-                            Text(release.hardwareProfile).font(.caption)
-                            Text(release.downloadedAt, style: .date).font(.caption)
-                            Label("Verified and ready for use", systemImage: "checkmark.shield.fill")
-                                .font(.caption).foregroundStyle(.green)
+                Label(readyReleases.isEmpty ? "No firmware downloaded" : "\(readyReleases.count) verified release(s) ready",
+                      systemImage: readyReleases.isEmpty ? "tray" : "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                    .font(.subheadline)
+                ForEach(readyReleases) { release in
+                    Button { selectCachedRelease(release) } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "checkmark.shield.fill")
+                                .font(.title2).foregroundStyle(.green)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("RedOne \(release.version)").font(.headline)
+                                Text(release.hardwareProfile).font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: selectedRelease?.filename == release.filename ? "checkmark.circle.fill" : "chevron.right")
+                                .foregroundStyle(selectedRelease?.filename == release.filename ? Color.green : Color.secondary)
                         }
                     }
                 }
-
-                if let selectedRelease {
-                    if FirmwareLibrary.verify(selectedRelease), FirmwareLibrary.transferPreflight(selectedRelease) == nil {
-                        Label("Firmware verified and ready for use", systemImage: "checkmark.shield.fill")
-                            .foregroundStyle(.green)
-                    } else {
-                        Label("Firmware could not be verified for this EFIS. Download it again.", systemImage: "xmark.shield")
-                            .foregroundStyle(.red)
-                    }
+                if let selectedRelease, FirmwareLibrary.transferPreflight(selectedRelease) != nil {
+                    Label("Selected firmware needs verification", systemImage: "xmark.shield")
+                        .foregroundStyle(.red)
                 }
-                if let firmwareError { Text(firmwareError).foregroundStyle(.red).font(.footnote) }
+                if let firmwareError { Label(firmwareError, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red).font(.footnote) }
+            } header: {
+                Label("1. Download firmware", systemImage: "arrow.down.circle")
             }
-            Section("2. Connect to EFIS") {
-                Text("Connect to your RedOne EFIS with WiFi. Join for a first time using the supplied QR Code, or rejoin the EFIS WiFi using your saved connection below.")
-                    .font(.footnote).foregroundStyle(.secondary)
-                if currentWiFi.hasPrefix("Connected to Wi-Fi ") {
-                    (Text("Connected to Wi-Fi ") +
-                     Text(String(currentWiFi.dropFirst("Connected to Wi-Fi ".count))).foregroundColor(.green))
-                } else {
-                    Text(currentWiFi)
+            Section {
+                HStack(spacing: 12) {
+                    Image(systemName: "wifi.router.fill")
+                        .font(.largeTitle).foregroundStyle(verified == nil ? Color.secondary : Color.green)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("REDONE CONNECTION").font(.caption.weight(.bold))
+                        Text(currentWiFi.replacingOccurrences(of: "Connected to Wi-Fi ", with: ""))
+                            .font(.subheadline).foregroundStyle(currentWiFi.hasPrefix("Connected to Wi-Fi ") ? Color.green : Color.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: verified == nil ? "circle.dashed" : "checkmark.circle.fill")
+                        .font(.title2).foregroundStyle(verified == nil ? Color.secondary : Color.green)
                 }
-                Button("Refresh Wi-Fi status") { Task { await refreshCurrentWiFi() } }
+                Button { Task { await refreshCurrentWiFi() } } label: {
+                    Label("Refresh connection", systemImage: "arrow.clockwise.circle")
+                }
                 if !savedMacAddress.isEmpty {
-                    Button("Rejoin RedOne_" + savedMacAddress) {
+                    Button {
                         macAddress = savedMacAddress
                         connectionPassword = RecoveryPairingStore.load().flatMap {
                             $0.ssid == ssid ? $0.password : nil
                         }
                         joinNetwork()
+                    } label: {
+                        Label("Rejoin RedOne_" + savedMacAddress, systemImage: "wifi")
                     }
                 }
-                Button("Scan QR code to connect to RedOne") { scanningConnectionQR = true }
-                if let qrError { Text(qrError).foregroundStyle(.red).font(.footnote) }
-                if let verified {
-                    LabeledContent("Device", value: verified.device)
-                    LabeledContent("Firmware", value: verified.version)
-                    LabeledContent("Running partition", value: verified.running)
-                    LabeledContent("Next update partition", value: verified.next)
+                Button { scanningConnectionQR = true } label: {
+                    Label("Scan RedOne QR", systemImage: "qrcode.viewfinder")
+                        .font(.headline)
                 }
+                if let qrError { Label(qrError, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red).font(.footnote) }
+                if let verified {
+                    HStack(spacing: 12) {
+                        Image(systemName: "cpu.fill").font(.title2).foregroundStyle(.green)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(verified.device + " · " + verified.version).font(.headline)
+                            Text("Running \(verified.running)  →  Next \(verified.next)")
+                                .font(.caption).foregroundStyle(.green)
+                        }
+                        Spacer()
+                        Image(systemName: "checkmark.shield.fill").foregroundStyle(.green)
+                    }
+                }
+            } header: {
+                Label("2. Connect to EFIS", systemImage: "wifi")
+            } footer: {
+                Text("Scan the QR on your RedOne or rejoin a saved connection.")
             }
             RedOneDeploymentSimulator()
             Section("Firmware update") {
