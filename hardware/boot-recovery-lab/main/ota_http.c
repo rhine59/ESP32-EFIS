@@ -11,6 +11,14 @@
 static const char *TAG = "LAB_OTA";
 static const esp_partition_t *staged = NULL;
 static bool verified = false;
+/* Production safety gate: authentication and image parsing are not a signature
+ * verification protocol. Never allow writes or boot changes from this build. */
+static esp_err_t reject_untrusted_firmware(httpd_req_t *req) {
+    httpd_resp_send_err(req, HTTPD_403_FORBIDDEN,
+        "OTA locked: device-side signed manifest verification and rollback testing required");
+    return ESP_FAIL;
+}
+
 /* Fail closed until a unique bench token has been provisioned into NVS. */
 static bool authorised(httpd_req_t *req) {
     char supplied[80] = {0}, expected[80] = {0};
@@ -32,6 +40,8 @@ static bool require_auth(httpd_req_t *req) {
 }
 static esp_err_t upload(httpd_req_t *req) {
     if (!require_auth(req)) return ESP_FAIL;
+    return reject_untrusted_firmware(req);
+#if 0 /* Unsafe legacy bench implementation retained for reference only. */
     staged = NULL;
     verified = false;
     const esp_partition_t *dest = esp_ota_get_next_update_partition(NULL);
@@ -71,9 +81,12 @@ static esp_err_t upload(httpd_req_t *req) {
     ESP_LOGI(TAG, "Staged %s version %s; activation requires separate command", dest->label, desc.version);
     httpd_resp_sendstr(req, "Firmware staged; verify and activate separately");
     return ESP_OK;
+#endif
 }
 static esp_err_t verify_image(httpd_req_t *req) {
     if (!require_auth(req)) return ESP_FAIL;
+    return reject_untrusted_firmware(req);
+#if 0
     esp_app_desc_t desc;
     if (!staged || esp_ota_get_partition_description(staged, &desc) != ESP_OK ||
         strcmp(desc.project_name, "efis_boot_lab")) {
@@ -83,9 +96,12 @@ static esp_err_t verify_image(httpd_req_t *req) {
     verified = true;
     httpd_resp_sendstr(req, "Staged image validated");
     return ESP_OK;
+#endif
 }
 static esp_err_t activate_image(httpd_req_t *req) {
     if (!require_auth(req)) return ESP_FAIL;
+    return reject_untrusted_firmware(req);
+#if 0
     if (!staged || !verified) {
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Verify staged image first");
         return ESP_FAIL;
@@ -99,6 +115,7 @@ static esp_err_t activate_image(httpd_req_t *req) {
     vTaskDelay(pdMS_TO_TICKS(500));
     esp_restart();
     return ESP_OK;
+#endif
 }
 static esp_err_t status(httpd_req_t *req) {
     if (!require_auth(req)) return ESP_FAIL;
