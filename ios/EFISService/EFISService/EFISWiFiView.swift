@@ -125,9 +125,20 @@ struct EFISWiFiView: View {
                         }
                     }
                 }
-                if let selectedRelease, FirmwareLibrary.transferPreflight(selectedRelease) != nil {
-                    Label("Selected firmware needs verification", systemImage: "xmark.shield")
-                        .foregroundStyle(.red)
+                if let selectedRelease {
+                    if let issue = FirmwareLibrary.transferPreflight(selectedRelease) {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Label("Not ready for real EFIS transfer", systemImage: "exclamationmark.shield.fill")
+                                .font(.subheadline.weight(.semibold))
+                            Text(issue).font(.caption)
+                            Text("The deployment simulator below uses separate, non-flashable test images.")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(.orange)
+                    } else {
+                        Label("Signed firmware validated for RedOne", systemImage: "checkmark.shield.fill")
+                            .foregroundStyle(.green)
+                    }
                 }
                 if let firmwareError { Label(firmwareError, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red).font(.footnote) }
             } header: {
@@ -260,7 +271,9 @@ struct EFISWiFiView: View {
         firmwareDigest = release.sha256
         firmwareSize = (try? FirmwareLibrary.folder.appendingPathComponent(release.filename)
             .resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init)
-        firmwareAssessment = "Firmware verified and ready for use"
+        firmwareAssessment = FirmwareLibrary.transferPreflight(release) == nil
+            ? "Firmware validated for RedOne transfer"
+            : "Firmware checksum verified; deployment validation required"
     }
 
     @MainActor
@@ -346,7 +359,9 @@ struct EFISWiFiView: View {
             firmwareName = destination.lastPathComponent
             firmwareSize = Int64(data.count)
             firmwareDigest = digest
-            firmwareAssessment = "Firmware verified and ready for use"
+            firmwareAssessment = FirmwareLibrary.transferPreflight(cached) == nil
+                ? "Firmware validated for RedOne transfer"
+                : "Firmware downloaded; deployment validation required"
         } catch {
             firmwareName = nil; firmwareSize = nil; firmwareDigest = nil
             firmwareAssessment = "Download verification failed"
