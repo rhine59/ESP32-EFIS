@@ -84,3 +84,18 @@ needed by other firmware. It must **not** be flashed to the current RedOne.
 A non-destructive on-device provisioning mechanism, secure credential
 exchange to the phone, and authenticated encrypted transport are required
 before proceeding with live OTA. The tool is a generation/format test only.
+
+## Non-destructive USB provisioning — bench implementation
+
+The **new** boot-lab app accepts `provision` on its physically connected USB
+serial console. It reads an AP password and API token (one line each), checks
+lengths, and commits only `lab_auth/ap_password` and `lab_auth/token` using
+ESP-IDF NVS APIs. It never calls `nvs_flash_erase()`, and existing unrelated
+NVS keys remain intact. Reboot to start the provisioned AP.
+
+**Not yet flashed or hardware tested.** This command is unavailable in the
+currently installed firmware. Terminal software may echo/log input; do not
+use a logging terminal, and treat the USB link as physically trusted only.
+There is no secure channel, device attestation, signature verification, or
+phone pairing yet. The offline generated whole-partition NVS image remains
+DO-NOT-FLASH.

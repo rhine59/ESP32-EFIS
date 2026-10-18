@@ -5,6 +5,8 @@
 #include "esp_log.h"
 #include "esp_ota_ops.h"
 #include "esp_partition.h"
+#include "nvs.h"
+#include "nvs_flash.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -15,6 +17,39 @@
 #define EFIS_IMAGE_VERSION "1.0.0"
 #endif
 
+/* Bench USB only: updates two NVS keys without erasing the partition.
+ * Credentials are supplied over a physically attached USB console; this is
+ * NOT a production pairing or remote provisioning mechanism.
+ */
+static void provision_usb(void) {
+    char password[80] = {0}, token[80] = {0};
+    puts("USB BENCH PROVISIONING: supply AP password then API token on separate lines.");
+    puts("WARNING: terminal software may record or echo these secrets.");
+    fflush(stdout);
+    if (!fgets(password, sizeof(password), stdin) || !fgets(token, sizeof(token), stdin)) {
+        puts("Provisioning cancelled: incomplete input");
+        goto cleanup;
+    }
+    password[strcspn(password, "\r\n")] = 0;
+    token[strcspn(token, "\r\n")] = 0;
+    if (strlen(password) < 16 || strlen(password) > 63 ||
+        strlen(token) < 32 || strlen(token) > 64) {
+        puts("Provisioning rejected: credential length invalid");
+        goto cleanup;
+    }
+    nvs_handle_t handle;
+    esp_err_t err = nvs_open("lab_auth", NVS_READWRITE, &handle);
+    if (err != ESP_OK) { puts("Provisioning failed: NVS unavailable"); goto cleanup; }
+    err = nvs_set_str(handle, "ap_password", password);
+    if (err == ESP_OK) err = nvs_set_str(handle, "token", token);
+    if (err == ESP_OK) err = nvs_commit(handle);
+    nvs_close(handle);
+    puts(err == ESP_OK ? "Bench credentials saved without NVS erase; reboot required" :
+                         "Provisioning failed; verify NVS health");
+cleanup:
+    memset(password, 0, sizeof(password));
+    memset(token, 0, sizeof(token));
+}
 static void console_task(void *arg) {
     char command[32];
     while (1) {
@@ -24,7 +59,9 @@ static void console_task(void *arg) {
             continue;
         }
         command[strcspn(command, "\r\n")] = 0;
-        if (!strcmp(command, "status")) {
+        if (!strcmp(command, "provision")) {
+            provision_usb();
+        } else if (!strcmp(command, "status")) {
             const esp_partition_t *running = esp_ota_get_running_partition();
             const esp_partition_t *selected = esp_ota_get_boot_partition();
             ESP_LOGI("BOOT_LAB", "running=%s selected=%s", running->label, selected->label);
