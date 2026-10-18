@@ -2,6 +2,8 @@
 #include "esp_log.h"
 #include "redone_envelope.h"
 #include "esp_heap_caps.h"
+#include "mbedtls/sha256.h"
+#include "esp_partition.h"
 #include "esp_http_server.h"
 #include "esp_ota_ops.h"
 #include "esp_app_desc.h"
@@ -71,6 +73,59 @@ static esp_err_t verify_manifest(httpd_req_t *req) {
     return httpd_resp_sendstr(req, valid ?
         "{\"signatureVerified\":true,\"transferEnabled\":false}" :
         "{\"signatureVerified\":false,\"transferEnabled\":false}");
+}
+
+/* Read-only streaming SHA-256. The request is never written to flash.
+ * The digest must be compared to a separately authenticated signed manifest;
+ * this endpoint by itself does not authorize staging. */
+static esp_err_t hash_firmware(httpd_req_t *req) {
+    if (!require_auth(req)) return ESP_FAIL;
+    const esp_partition_t *destination = esp_ota_get_next_update_partition(NULL);
+    if (!destination || req->content_len < 1024 ||
+        (size_t)req->content_len > destination->size) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid firmware size");
+        return ESP_FAIL;
+    }
+    mbedtls_sha256_context sha;
+    mbedtls_sha256_init(&sha);
+    if (mbedtls_sha256_starts(&sha, 0) != 0) {
+        mbedtls_sha256_free(&sha);
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "SHA-256 unavailable");
+        return ESP_FAIL;
+    }
+    size_t remaining = (size_t)req->content_len;
+    uint8_t buffer[1024];
+    bool complete = true;
+    while (remaining) {
+        size_t wanted = remaining < sizeof(buffer) ? remaining : sizeof(buffer);
+        int received = httpd_req_recv(req, (char *)buffer, wanted);
+        if (received <= 0 || mbedtls_sha256_update(&sha, buffer, (size_t)received) != 0) {
+            complete = false;
+            break;
+        }
+        remaining -= (size_t)received;
+    }
+    uint8_t digest[32];
+    if (complete && mbedtls_sha256_finish(&sha, digest) != 0) complete = false;
+    mbedtls_sha256_free(&sha);
+    if (!complete) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Incomplete or invalid firmware stream");
+        return ESP_FAIL;
+    }
+    char response[128];
+    static const char hex[] = "0123456789abcdef";
+    char digest_hex[65];
+    for (size_t i = 0; i < sizeof(digest); ++i) {
+        digest_hex[i * 2] = hex[digest[i] >> 4];
+        digest_hex[i * 2 + 1] = hex[digest[i] & 15];
+    }
+    digest_hex[64] = 0;
+    snprintf(response, sizeof(response),
+             "{\"sha256\":\"%s\",\"bytes\":%lu,\"transferEnabled\":false}",
+             digest_hex, (unsigned long)req->content_len);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-store");
+    return httpd_resp_sendstr(req, response);
 }
 
 static esp_err_t upload(httpd_req_t *req) {
@@ -188,6 +243,8 @@ void lab_http_start(void) {
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &info));
     httpd_uri_t manifest = {.uri="/firmware/verify-manifest", .method=HTTP_POST, .handler=verify_manifest};
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &manifest));
+    httpd_uri_t digest = {.uri="/firmware/hash", .method=HTTP_POST, .handler=hash_firmware};
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &digest));
     httpd_uri_t check = {.uri="/verify", .method=HTTP_POST, .handler=verify_image};
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &check));
     httpd_uri_t activate = {.uri="/activate", .method=HTTP_POST, .handler=activate_image};

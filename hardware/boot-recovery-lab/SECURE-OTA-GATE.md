@@ -21,3 +21,7 @@ Never use `idf.py flash` for this bench board; it can overwrite bootloader, part
 The bench OTA application now reuses the recovery firmware's trusted-key Ed25519 verifier and canonical signed JSON envelope parser through the `redone_crypto` component. `POST /firmware/verify-manifest` requires `X-Lab-Token`, accepts at most 8192 bytes, rejects incomplete payloads, and reports `signatureVerified` while always reporting `transferEnabled:false`. It never writes flash or changes boot selection. The existing `/update`, `/verify`, and `/activate` safety locks remain in place.
 
 This checks the **manifest signature and declared hardware/product metadata only**; it does not verify the firmware binary against the signed SHA-256 digest, enforce downgrade prevention, or establish safe staging. Do not enable transfer yet. Built successfully with ESP-IDF; not flashed or hardware-tested.
+
+## Read-only streamed firmware digest
+
+`POST /firmware/hash` authenticates using `X-Lab-Token`, bounds the incoming image to the inactive OTA partition size (minimum 1024 bytes), and computes SHA-256 incrementally in 1024-byte chunks. It returns the digest, received byte count, and `transferEnabled:false`. Incomplete transfers are rejected; no flash writes or boot changes occur. This does **not** bind the image to a signed manifest yet and is not permission to stage it. The signed digest must be compared inside the ESP32 in the same authenticated update transaction before any OTA writes are unlocked. Built and source-tested; not flashed to the physical board.

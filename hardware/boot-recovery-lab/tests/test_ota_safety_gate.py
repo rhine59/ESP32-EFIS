@@ -6,6 +6,20 @@ import unittest
 SOURCE = Path(__file__).resolve().parents[1] / 'main' / 'ota_http.c'
 
 class OTASafetyGate(unittest.TestCase):
+    def test_hash_is_read_only_and_bounded(self):
+        source = SOURCE.read_text()
+        match = re.search(r'static esp_err_t hash_firmware\(httpd_req_t \*req\) \{(.*?)\n\}\n', source, re.S)
+        self.assertIsNotNone(match)
+        body = match.group(1)
+        self.assertIn('require_auth(req)', body)
+        self.assertIn('destination->size', body)
+        self.assertIn('mbedtls_sha256_update', body)
+        self.assertIn('transferEnabled\\\":false', body)
+        self.assertNotIn('esp_ota_begin(', body)
+        self.assertNotIn('esp_ota_write(', body)
+        self.assertNotIn('esp_partition_write(', body)
+        self.assertNotIn('esp_ota_set_boot_partition(', body)
+
     def test_mutating_endpoints_fail_closed(self):
         source = SOURCE.read_text()
         for function in ('upload', 'verify_image', 'activate_image'):
