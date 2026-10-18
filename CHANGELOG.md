@@ -1,3 +1,7 @@
+## 2026-10-18 — Stage 23 trusted monotonic floor design and read-only audit
+
+Documented authenticated secure-element option and recovery/security-epoch constraints for the single-board RedOne, plus fail-closed source audit and regression tests. No provider, hardware provisioning or Partition B write authorised.
+
 ## 2026-10-18 — Recovery trusted release policy abstraction (offline)
 
 Added fail-closed C policy for signed candidate build, signed minimum, trusted installed floor and authenticated running build, requiring hardware protection attestation. Added compiled host regression test; ESP-IDF recovery build passes. No physical backend or write route; Partition B remains NO-GO.
