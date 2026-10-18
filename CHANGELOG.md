@@ -1,3 +1,7 @@
+## 2026-10-18 — Physical factory entry mechanism reviewed
+
+Confirmed running Partition A USB console has no factory-selection command. A host-side OTA metadata erase would be required; documented the difference and held execution pending specific approval. No writes.
+
 ## 2026-10-18 — Single-board recovery plan and fresh live OTA check
 
 Recorded single-board test approach and its elevated risks. Read-only live OTA snapshot again selects A and matches verified full backup. Physical factory boot/metadata erase still awaits separate explicit authorization.
