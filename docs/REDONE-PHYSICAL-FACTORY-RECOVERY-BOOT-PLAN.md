@@ -50,3 +50,7 @@ A fresh 8 KiB live OTA metadata snapshot was saved locally (not in Git) and vali
 ## Offline OTA transition rehearsal — 18 October 2026
 
 `hardware/boot-recovery-lab/tools/recovery_transition_sim.py` models the actual fresh `ota_0` selection, the factory boot's OTA metadata erase and the recovery `bootA` rewrite. Both modeled OTA-state policies return selection to `ota_0`. See `docs/REDONE-RECOVERY-TRANSITION-SIMULATION-20261018.md`. This is not physical validation; fresh complete backup and independent rescue rehearsal remain outstanding. **NO-GO**.
+
+## Full backup completed — 18 October 2026
+
+The previously outstanding fresh 16 MiB backup was completed via sixteen verified 1 MiB reads. Full SHA-256 `cca94c604a405a8aa137f3978de4ec4531c7d9cec6ff5542f295f7da1f80a7b3`; its OTA selection, factory recovery partition and first 1 MiB match independently read snapshots. See `docs/REDONE-FULL-BACKUP-SUCCESS-20261018.md`. **The backup gate is satisfied; independent rescue rehearsal and explicit physical boot approval remain outstanding.**

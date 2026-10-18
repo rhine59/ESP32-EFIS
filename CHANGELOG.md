@@ -1,3 +1,7 @@
+## 2026-10-18 — Fresh complete RedOne flash backup verified
+
+Captured 16 MiB read-only backup in sixteen verified 1 MiB chunks; verified full SHA-256 and independent OTA metadata/factory/first-MiB consistency. Added resumable read-only chunk tool. No boot or flash changes; recovery test NO-GO pending rescue validation.
+
 ## 2026-10-18 — Intermittent USB full backup handshake investigated
 
 Verified read-only 64 KiB and 1 MiB transfers at 921600 baud, while repeated full 16 MiB attempts stalled at Connecting. No fresh full backup completed; recovery boot NO-GO.
