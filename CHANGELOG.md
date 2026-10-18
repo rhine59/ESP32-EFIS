@@ -1,3 +1,7 @@
+## 2026-10-18 — Synology clean staging checkout validated
+
+Cloned current Git main to separate NAS staging directory; verified commit and container naming audit. Identified private live-only env and OTA public/signing-key mounts requiring safe migration. No container changes.
+
 ## 2026-10-18 — Synology migration preflight and account database backup
 
 Read-only live inventory found invalid Git HEAD on NAS deployment checkout. Created private PostgreSQL custom-format logical backup and verified its archive listing; held container recreation until safe staging and restore plan.
