@@ -235,6 +235,10 @@ struct EFISWiFiView: View {
                 }
                 .disabled(checking)
                 guidance(message, severity: connectionMessageColor)
+                if verified == nil {
+                    Text("The iPhone must join RedOne Wi-Fi to read physical device status. Internet access is not needed for local diagnostics.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
                 if let qrError { Label(qrError, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red).font(.footnote) }
                 if let verified {
                     VStack(alignment: .leading, spacing: 7) {
@@ -545,23 +549,30 @@ struct EFISWiFiView: View {
     }
 
     private func joinNetwork() {
-                    verified = nil
-                    bootHealth = nil
-                    bootHealthMessage = "Not checked"
-                    message = "Requesting Wi-Fi connection…"
-                    let config = NEHotspotConfiguration(ssid: ssid, passphrase: connectionPassword ?? "BenchOnly-2026!", isWEP: false)
-                    config.joinOnce = false
-                    NEHotspotConfigurationManager.shared.apply(config) { error in
-                        Task { @MainActor in
-                            if let error = error as NSError?,
-                               error.code != NEHotspotConfigurationError.alreadyAssociated.rawValue {
-                                message = "Wi-Fi join failed: \(error.localizedDescription)"
-                            } else {
-                                await refreshCurrentWiFi()
-                                await verifyConnection()
-                            }
-                        }
-                    }
+        verified = nil
+        bootHealth = nil
+        bootHealthMessage = "Not checked"
+        guard let pairing = RecoveryPairingStore.load(),
+              pairing.ssid == ssid,
+              !pairing.password.isEmpty,
+              pairing.token.count >= 32 else {
+            message = "RedOne pairing required. Scan the device connection QR to securely save Wi-Fi credentials and the authentication token."
+            return
+        }
+        message = "Requesting RedOne Wi-Fi connection…"
+        let config = NEHotspotConfiguration(ssid: ssid, passphrase: pairing.password, isWEP: false)
+        config.joinOnce = false
+        NEHotspotConfigurationManager.shared.apply(config) { error in
+            Task { @MainActor in
+                if let error = error as NSError?,
+                   error.code != NEHotspotConfigurationError.alreadyAssociated.rawValue {
+                    message = "Wi-Fi join failed: \(error.localizedDescription)"
+                } else {
+                    await refreshCurrentWiFi()
+                    await verifyConnection()
+                }
+            }
+        }
     }
 
     @MainActor
