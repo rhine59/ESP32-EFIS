@@ -73,7 +73,7 @@ struct EFISWiFiView: View {
                 .fontWeight(.semibold)
                 .multilineTextAlignment(.trailing)
         }
-        .foregroundStyle(.green)
+        .foregroundStyle(.secondary)
         .accessibilityElement(children: .combine)
     }
 
@@ -214,6 +214,7 @@ struct EFISWiFiView: View {
                     VStack(alignment: .leading, spacing: 7) {
                         Label("EFIS status", systemImage: "checkmark.circle.fill")
                             .font(.headline).foregroundStyle(.green)
+                        Spacer(minLength: 12)
                         efisStatusRow("Device", verified.device)
                         efisStatusRow("Wi-Fi network", ssid)
                         efisStatusRow("Connection", "Connected · authenticated")
@@ -222,7 +223,7 @@ struct EFISWiFiView: View {
                         efisStatusRow("Next OTA partition", verified.next)
                         efisStatusRow("Boot state", verified.bootState ?? "Not reported")
                         efisStatusRow("Management API", verified.apiVersion.map(String.init) ?? "Not reported")
-                        efisStatusRow("Rollback", verified.rollbackAvailable.map { $0 ? "Available" : "Unavailable" } ?? "Not reported")
+                        efisStatusRow("Rollback", verified.rollbackAvailable == true ? "Reported available (unverified)" : "Unavailable / unverified")
                     }
                     HStack(spacing: 12) {
                         Image(systemName: "cpu.fill").font(.title2).foregroundStyle(.green)
