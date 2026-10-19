@@ -238,9 +238,23 @@ struct EFISWiFiView: View {
             } header: {
                 Label("2. Connect to EFIS", systemImage: "wifi")
             }
-            RedOneDeploymentSimulator()
-            Section("Firmware update") {
-                guidance("Firmware transfer and activation are locked until signed-image authentication and A/B recovery testing are complete.", severity: .red)
+            Section("Physical RedOne readiness") {
+                guidance("PHYSICAL DEVICE — Read-only Wi-Fi checks are permitted. Writing Partition B, changing boot selection and rollback commands remain NO-GO until the physical security and recovery gates pass.", severity: .red)
+                if let verified {
+                    LabeledContent("Read-only connection", value: "Authenticated")
+                    LabeledContent("Running firmware", value: verified.version)
+                    LabeledContent("Current partition", value: verified.running)
+                    LabeledContent("Device rollback report", value: verified.rollbackAvailable == true ? "Reported available — not independently tested" : "Unavailable or unverified")
+                } else {
+                    guidance("Connect to the physical RedOne and select Read EFIS status above. Do not interpret simulator results as physical-device evidence.")
+                }
+            }
+            Section("Simulation only — no physical flash") {
+                guidance("The following controls operate a local or Synology simulator, not the connected ESP32. They cannot certify physical upgrade, activation or rollback.")
+                RedOneDeploymentSimulator()
+            }
+            Section("Physical firmware update — locked") {
+                guidance("Physical transfer, verification, activation and rollback are locked until independent signed-image, anti-downgrade, boot-health and recovery tests pass. Do not use simulator success as authorisation.", severity: .red)
                 if let verified {
                     LabeledContent("Installed version", value: verified.version)
                     LabeledContent("Active partition", value: verified.running)
