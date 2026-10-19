@@ -479,10 +479,27 @@ static esp_err_t status(httpd_req_t *req) {
             default: boot_state = "undefined"; break;
         }
     }
-    char response[512];
+    /* Read-only capability inventory, not a claim that rollback is validated.
+     * The inactive image must parse, and the running slot must be OTA A/B.
+     * A bootable-looking image alone never enables physical rollback. */
+    bool running_ota = running && running->type == ESP_PARTITION_TYPE_APP &&
+        (running->subtype == ESP_PARTITION_SUBTYPE_APP_OTA_0 ||
+         running->subtype == ESP_PARTITION_SUBTYPE_APP_OTA_1);
+    const esp_partition_t *inactive = running_ota ? esp_ota_get_next_update_partition(NULL) : NULL;
+    esp_app_desc_t inactive_desc;
+    bool inactive_image_present = inactive && inactive->address != running->address &&
+        esp_ota_get_partition_description(inactive, &inactive_desc) == ESP_OK;
+    const char *rollback_reason = !running_ota ? "Running image is not an OTA slot" :
+        !inactive ? "No inactive OTA partition found" :
+        !inactive_image_present ? "Inactive OTA image missing or invalid" :
+        "Inactive image present; physical rollback and boot-health not validated";
+    char response[640];
     snprintf(response, sizeof(response),
-        "{\"device\":\"RedOne\",\"version\":\"%s\",\"running\":\"%s\",\"next\":\"%s\",\"rollbackAvailable\":false,\"rollbackReason\":\"Rollback not yet validated on bench\",\"updateReady\":false,\"apiVersion\":1,\"bootState\":\"%s\"}",
-        app->version, running ? running->label : "unknown", next ? next->label : "unknown", boot_state);
+        "{\"device\":\"RedOne\",\"version\":\"%s\",\"running\":\"%s\",\"next\":\"%s\","
+        "\"rollbackAvailable\":false,\"rollbackReason\":\"%s\","
+        "\"inactiveImagePresent\":%s,\"updateReady\":false,\"apiVersion\":1,\"bootState\":\"%s\"}",
+        app->version, running ? running->label : "unknown", next ? next->label : "unknown",
+        rollback_reason, inactive_image_present ? "true" : "false", boot_state);
     httpd_resp_set_type(req, "application/json");
     return httpd_resp_sendstr(req, response);
 }

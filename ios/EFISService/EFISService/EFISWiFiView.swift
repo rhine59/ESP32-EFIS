@@ -20,6 +20,7 @@ private struct RedOneStatus: Decodable {
     let next: String
     let rollbackAvailable: Bool?
     let rollbackReason: String?
+    let inactiveImagePresent: Bool?
     let previousVersion: String?
     let updateReady: Bool?
     let apiVersion: Int?
@@ -224,6 +225,9 @@ struct EFISWiFiView: View {
                         efisStatusRow("Boot state", verified.bootState ?? "Not reported")
                         efisStatusRow("Management API", verified.apiVersion.map(String.init) ?? "Not reported")
                         efisStatusRow("Rollback", verified.rollbackAvailable == true ? "Reported available (unverified)" : "Unavailable / unverified")
+                        if let reason = verified.rollbackReason {
+                            Text(reason).font(.footnote).foregroundStyle(.secondary)
+                        }
                     }
                     HStack(spacing: 12) {
                         Image(systemName: "cpu.fill").font(.title2).foregroundStyle(.green)
