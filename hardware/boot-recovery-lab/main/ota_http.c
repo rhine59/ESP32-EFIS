@@ -178,17 +178,12 @@ static esp_err_t signed_preflight(httpd_req_t *req) {
         return ESP_FAIL;
     }
     manifest[manifest_length] = 0;
-    bool valid = redone_verify_release_envelope(manifest, manifest_length) == 0;
-    char expected[65] = {0};
-    if (valid) {
-        cJSON *root = cJSON_ParseWithLengthOpts(manifest, manifest_length + 1, NULL, 1);
-        const cJSON *payload = root ? cJSON_GetObjectItemCaseSensitive(root, "payload") : NULL;
-        const cJSON *sha = payload ? cJSON_GetObjectItemCaseSensitive(payload, "sha256") : NULL;
-        if (cJSON_IsString(sha) && strlen(sha->valuestring) == 64)
-            memcpy(expected, sha->valuestring, 64);
-        else valid = false;
-        cJSON_Delete(root);
-    }
+    /* Only consume digest bytes returned by the verified signature parser.
+     * Never reparse unauthenticated JSON to obtain security-critical claims. */
+    redone_verified_release_t release;
+    bool valid = redone_verify_release_metadata(manifest, manifest_length, &release) == 0;
+    uint8_t expected_digest[32] = {0};
+    if (valid) memcpy(expected_digest, release.sha256, sizeof(expected_digest));
     heap_caps_free(manifest);
     if (!valid) {
         httpd_resp_send_err(req, HTTPD_403_FORBIDDEN, "Invalid signed manifest");
@@ -211,20 +206,10 @@ static esp_err_t signed_preflight(httpd_req_t *req) {
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Incomplete firmware stream");
         return ESP_FAIL;
     }
-    static const char hex[] = "0123456789abcdef";
-    char actual[65];
-    for (size_t i = 0; i < 32; ++i) {
-        actual[2 * i] = hex[digest[i] >> 4];
-        actual[2 * i + 1] = hex[digest[i] & 15];
-    }
-    actual[64] = 0;
-    /* Manifest parser accepts uppercase hex; digest comparison is case-insensitive. */
+    /* Constant-time comparison over the signed digest, not its textual form. */
     unsigned mismatch = 0;
-    for (size_t i = 0; i < 64; ++i) {
-        char c = expected[i];
-        if (c >= 'A' && c <= 'F') c += 'a' - 'A';
-        mismatch |= (unsigned)(c ^ actual[i]);
-    }
+    for (size_t i = 0; i < sizeof(digest); ++i)
+        mismatch |= (unsigned)(digest[i] ^ expected_digest[i]);
     httpd_resp_set_type(req, "application/json");
     httpd_resp_set_hdr(req, "Cache-Control", "no-store");
     if (mismatch) {

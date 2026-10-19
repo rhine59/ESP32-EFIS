@@ -25,10 +25,12 @@ class OTASafetyGate(unittest.TestCase):
         match = re.search(r'static esp_err_t signed_preflight\(httpd_req_t \*req\) \{(.*?)\n\}\n', source, re.S)
         self.assertIsNotNone(match)
         body = match.group(1)
-        for required in ('require_auth(req)', 'redone_verify_release_envelope',
+        for required in ('require_auth(req)', 'redone_verify_release_metadata', 'release.sha256',
                          'mbedtls_sha256_update', 'destination->size',
                          'imageHashMatches', 'transferEnabled'):
             self.assertIn(required, body)
+        self.assertNotIn('cJSON_ParseWithLengthOpts', body)
+        self.assertIn('digest[i] ^ expected_digest[i]', body)
         for forbidden in ('esp_ota_begin(', 'esp_ota_write(',
                           'esp_partition_write(', 'esp_ota_set_boot_partition('):
             self.assertNotIn(forbidden, body)
