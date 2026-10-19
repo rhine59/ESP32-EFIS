@@ -52,6 +52,48 @@ class SecureFloorSimulator(unittest.TestCase):
         self.assertFalse(result['physical_flash_authorized'])
         self.assertEqual(result['partition_b_decision'],'NO-GO')
 
+class ReleaseConfirmationPolicy(unittest.TestCase):
+    def setUp(self):
+        self.element=m.SimulatedElement(floor=8)
+        self.options=dict(candidate=10,signed_minimum=8,running_build=9,
+                          signature_ok=True,boot_health_ok=True,
+                          operator_ground_confirmed=True,recovery_floor_compatible=True)
+
+    def review(self, **overrides):
+        opts=dict(self.options);opts.update(overrides)
+        return m.review_release_confirmation(self.element,m.SimulatedVerifier(),
+                                             bytes(range(16)),**opts)
+
+    def test_valid_release_commit(self):
+        self.assertTrue(self.review())
+        self.assertEqual(self.element.floor,10)
+
+    def test_invalid_signed_minimum_or_running_version(self):
+        for overrides in ({'signed_minimum':10},{'running_build':7},
+                          {'candidate':8},{'candidate':9},
+                          {'signed_minimum':-1},{'candidate':True}):
+            with self.subTest(overrides=overrides):
+                with self.assertRaises(m.TrustFailure):self.review(**overrides)
+                self.assertEqual(self.element.floor,8)
+
+    def test_independent_evidence_gates(self):
+        for name in ('signature_ok','boot_health_ok','operator_ground_confirmed',
+                     'recovery_floor_compatible'):
+            with self.subTest(gate=name):
+                with self.assertRaises(m.TrustFailure):self.review(**{name:False})
+                self.assertEqual(self.element.floor,8)
+
+    def test_before_commit_power_cut_does_not_advance(self):
+        with self.assertRaises(m.TrustFailure):self.review(fault='before_commit')
+        self.assertEqual(self.element.floor,8)
+
+    def test_after_commit_power_cut_requires_fresh_authenticated_read(self):
+        with self.assertRaises(m.TrustFailure):self.review(fault='after_commit')
+        self.assertEqual(self.element.floor,10)
+        self.assertEqual(m.SimulatedVerifier().verify(
+            self.element.respond(bytes(range(1,17))),bytes(range(1,17))),10)
+        with self.assertRaises(m.TrustFailure):self.review(candidate=9)
+
 class ConfirmationGate(unittest.TestCase):
     def setUp(self):
         self.element=m.SimulatedElement(floor=8)

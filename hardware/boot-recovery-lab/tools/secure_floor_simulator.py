@@ -89,6 +89,26 @@ def confirm_and_advance(element, verifier, nonce, candidate, *, signature_ok,
     element.advance(candidate, fault=fault)
     return True
 
+def review_release_confirmation(element, verifier, nonce, *, candidate, signed_minimum,
+                                running_build, signature_ok, boot_health_ok,
+                                operator_ground_confirmed, recovery_floor_compatible,
+                                fault=None):
+    """Fail-closed offline release confirmation model; no physical capabilities.
+
+    Signed minimum must be checked against the running build, not against
+    the candidate alone. The authenticated installed floor is re-read before
+    the simulated irreversible commit. This cannot attest real hardware.
+    """
+    if not all((signature_ok, boot_health_ok, operator_ground_confirmed,
+                recovery_floor_compatible)):
+        raise TrustFailure('missing independent release confirmation gate')
+    floor = verifier.verify(element.respond(nonce), nonce)
+    if (not allow_candidate(candidate, signed_minimum, running_build, floor) or
+            candidate <= running_build):
+        raise TrustFailure('candidate violates signed minimum or trusted build floor')
+    element.advance(candidate, fault=fault)
+    return True
+
 def simulate():
     element = SimulatedElement(floor=8)
     verifier = SimulatedVerifier()
