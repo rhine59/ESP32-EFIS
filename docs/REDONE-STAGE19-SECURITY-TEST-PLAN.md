@@ -42,3 +42,9 @@ Stop on unexpected board identity, missing serial recovery, unknown eFuse state,
 ## Expected deliverables
 
 Signed-image validation logs, hardware inventory, recovery boot demonstration, physical interruption matrix, security-epoch compatibility report and explicit independent go/no-go review. Until completed, **NO-GO**.
+
+## Evidence register (offline, read-only)
+
+Run `python3 hardware/boot-recovery-lab/tools/physical_fault_evidence.py` to list missing evidence. Once a **separate** disposable board is available, maintain a private JSON record with `board.mac`, `board.disposable`, `board.test_only_keys`, and a `scenarios` object. Each scenario requires `result: "PASS"`, a SHA-256 digest of its retained test log in `log_sha256`, and a nonempty `reviewer`. The scenarios are defined in the script and cover signatures, downgrade, staging/activation/boot interruptions, failed boot health, both OTA slots invalid, recovery after each fault, and security-epoch compatibility. Do not include private keys, tokens, or confidential serial logs in Git.
+
+The tool checks only the *shape of operator claims*. It cannot authenticate a log, identify a physically connected board, prove fault injection, or approve provisioning. Even a complete record remains **NO-GO** for RedOne flashing. The existing RedOne MAC is explicitly rejected as a separate test-board identity. Physical execution requires a separate, narrowly scoped operator-approved test plan and equipment.
