@@ -60,6 +60,19 @@ enum FirmwareLibrary {
               data.count >= 1024, data.count <= maximumOTAImageBytes else {
             return "Firmware exceeds the 3 MiB OTA partition or is too small"
         }
+        if let reason = imagePreflight(data) { return reason }
+        guard release.hardwareProfile == "s3-n16r2-v1" else {
+            return "Firmware is not intended for this RedOne hardware profile"
+        }
+        return nil
+    }
+
+    // Pure image inspection, shared by phone preflight and host-side regression tests.
+    // This does not prove image authenticity or authorise installation.
+    static func imagePreflight(_ data: Data) -> String? {
+        guard data.count >= 1024, data.count <= maximumOTAImageBytes else {
+            return "Firmware exceeds the 3 MiB OTA partition or is too small"
+        }
         guard data.first == 0xE9, (1...16).contains(Int(data[1])) else {
             return "File does not have a valid ESP application image header"
         }
@@ -71,9 +84,6 @@ enum FirmwareLibrary {
         let projectBytes = data[80..<112].prefix(while: { $0 != 0 })
         guard String(bytes: projectBytes, encoding: .utf8) == "esp32_efis" else {
             return "Firmware is not the RedOne EFIS application"
-        }
-        guard release.hardwareProfile == "s3-n16r2-v1" else {
-            return "Firmware is not intended for this RedOne hardware profile"
         }
         return nil
     }
