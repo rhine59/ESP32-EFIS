@@ -27,10 +27,28 @@ private struct RedOneStatus: Decodable {
     let bootState: String?
 }
 
+private struct RedOneBootHealth: Decodable {
+    let pendingVerify: Bool
+    let imageIdentityOk: Bool
+    let inactiveSlotPresent: Bool
+    let firmwareSelfTestOk: Bool
+    let requiredSensorsOk: Bool
+    let displayOk: Bool
+    let powerOk: Bool
+    let rollbackPathOk: Bool
+    let operatorGroundConfirmation: Bool
+    let mayConfirmBoot: Bool
+    let updateReady: Bool
+    let blocker: String
+    let evidenceSource: String
+}
+
 struct EFISWiFiView: View {
     @State private var message = "Not connected"
     @State private var verified: RedOneStatus?
     @State private var checking = false
+    @State private var bootHealth: RedOneBootHealth?
+    @State private var bootHealthMessage = "Not checked"
     @State private var showingFirmwarePicker = false
     @State private var firmwareName: String?
     @State private var firmwareSize: Int64?
@@ -76,6 +94,13 @@ struct EFISWiFiView: View {
         }
         .foregroundStyle(.secondary)
         .accessibilityElement(children: .combine)
+    }
+
+    private func bootCheck(_ label: String, _ passed: Bool) -> some View {
+        Label(label, systemImage: passed ? "checkmark.circle.fill" : "xmark.circle.fill")
+            .font(.subheadline)
+            .foregroundStyle(passed ? .green : .orange)
+            .accessibilityLabel("\(label): \(passed ? "reported satisfied" : "not satisfied")")
     }
 
     private var connectionMessageColor: Color {
@@ -250,6 +275,28 @@ struct EFISWiFiView: View {
                     LabeledContent("Running firmware", value: verified.version)
                     LabeledContent("Current partition", value: verified.running)
                     LabeledContent("Device rollback report", value: verified.rollbackAvailable == true ? "Reported available — not independently tested" : "Unavailable or unverified")
+                    Button { Task { await readBootHealth() } } label: {
+                        Label("Read boot-health diagnostics", systemImage: "heart.text.square")
+                    }
+                    .disabled(checking)
+                    if let bootHealth {
+                        guidance("Device-reported checks only. No boot confirmation or update authorisation.", severity: .red)
+                        bootCheck("Pending verification", bootHealth.pendingVerify)
+                        bootCheck("Running image identity", bootHealth.imageIdentityOk)
+                        bootCheck("Inactive OTA slot", bootHealth.inactiveSlotPresent)
+                        bootCheck("Firmware self-test", bootHealth.firmwareSelfTestOk)
+                        bootCheck("Required sensors", bootHealth.requiredSensorsOk)
+                        bootCheck("Display", bootHealth.displayOk)
+                        bootCheck("Power", bootHealth.powerOk)
+                        bootCheck("Rollback path", bootHealth.rollbackPathOk)
+                        bootCheck("Operator ground confirmation", bootHealth.operatorGroundConfirmation)
+                        guidance("Blocking reason: " + bootHealth.blocker, severity: .red)
+                        LabeledContent("Boot confirmation", value: bootHealth.mayConfirmBoot ? "Reported eligible (not independently verified)" : "Locked")
+                        LabeledContent("Firmware update", value: bootHealth.updateReady ? "Device reports ready — app remains locked" : "Locked")
+                        Text("Source: " + bootHealth.evidenceSource).font(.caption).foregroundStyle(.secondary)
+                    } else {
+                        guidance(bootHealthMessage)
+                    }
                 } else {
                     guidance("Connect to the physical RedOne and select Read EFIS status above. Do not interpret simulator results as physical-device evidence.")
                 }
@@ -499,6 +546,8 @@ struct EFISWiFiView: View {
 
     private func joinNetwork() {
                     verified = nil
+                    bootHealth = nil
+                    bootHealthMessage = "Not checked"
                     message = "Requesting Wi-Fi connection…"
                     let config = NEHotspotConfiguration(ssid: ssid, passphrase: connectionPassword ?? "BenchOnly-2026!", isWEP: false)
                     config.joinOnce = false
@@ -516,9 +565,47 @@ struct EFISWiFiView: View {
     }
 
     @MainActor
+    private func readBootHealth() async {
+        bootHealth = nil
+        bootHealthMessage = "Reading device boot-health diagnostics…"
+        guard verified != nil, let url = URL(string: "http://192.168.4.1/boot-health") else {
+            bootHealthMessage = "Read EFIS status first."
+            return
+        }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 5
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        if let pairing = RecoveryPairingStore.load(), pairing.ssid == ssid {
+            request.setValue(pairing.token, forHTTPHeaderField: "X-Lab-Token")
+        }
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
+            if http.statusCode == 401 {
+                bootHealthMessage = "Authentication required. Scan the device pairing QR again."
+                return
+            }
+            guard http.statusCode == 200 else {
+                bootHealthMessage = "Boot-health diagnostics unavailable on this firmware (HTTP \(http.statusCode))."
+                return
+            }
+            let health = try JSONDecoder().decode(RedOneBootHealth.self, from: data)
+            guard health.evidenceSource == "device-live-read-only" else {
+                bootHealthMessage = "Unrecognised boot-health evidence source."
+                return
+            }
+            bootHealth = health
+        } catch {
+            bootHealthMessage = "Unable to read boot-health diagnostics. The installed firmware may not support this endpoint."
+        }
+    }
+
+    @MainActor
     private func verifyConnection() async {
         checking = true
         verified = nil
+        bootHealth = nil
+        bootHealthMessage = "Not checked"
         message = "Checking RedOne device…"
         defer { checking = false }
         guard let url = URL(string: "http://192.168.4.1/status") else { return }
