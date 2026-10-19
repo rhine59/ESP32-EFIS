@@ -585,8 +585,12 @@ struct EFISWiFiView: View {
                 bootHealthMessage = "Authentication required. Scan the device pairing QR again."
                 return
             }
+            if http.statusCode == 404 {
+                bootHealthMessage = "Boot-health diagnostics are not supported by the installed RedOne firmware. Basic device status remains available. No firmware update is required to continue using existing functions."
+                return
+            }
             guard http.statusCode == 200 else {
-                bootHealthMessage = "Boot-health diagnostics unavailable on this firmware (HTTP \(http.statusCode))."
+                bootHealthMessage = "Boot-health diagnostics unavailable (HTTP \(http.statusCode)). Basic device status remains available."
                 return
             }
             let health = try JSONDecoder().decode(RedOneBootHealth.self, from: data)
