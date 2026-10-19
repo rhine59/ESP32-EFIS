@@ -77,3 +77,44 @@ Record each test's board identity, ESP-IDF version, firmware hashes, partition o
 **Decision:** use a separate disposable production-representative ESP32-S3 for security provisioning; retain existing RedOne as an unprovisioned recovery-capable development unit. Preserve the factory recovery architecture provisionally, but do not claim its security-epoch compatibility until verified. No production floor backend, image security-epoch migration, boot-health instrumentation, or physical fault-injection has yet been completed.
 
 **Go/no-go:** NO-GO for physical Partition B until the readiness checklist in `docs/REDONE-PARTITION-B-DEPLOYMENT-READINESS.md` is independently satisfied.
+
+## Stage 21: trusted-floor provider selection checkpoint (19 October 2026)
+
+**Recommendation for evaluation, not a hardware selection:** prototype a separately
+authenticated secure-element-backed monotonic build floor on a *separate*
+ESP32-S3 test board. Keep ESP-IDF `secure_version` for infrequent security
+**epochs**, not each signed release. Do not rely on writable NVS or ordinary
+external EEPROM for the per-release floor.
+
+A suitable provider must demonstrate all of the following before integration:
+
+- A unique device-bound identity, authenticated fresh reads (nonce/challenge),
+  replay rejection, and cryptographic verification rooted in an immutable or
+  independently protected key. The phone or publisher cannot assert the floor.
+- A genuinely nondecreasing, hardware-enforced state transition that resists
+  host-controlled rollback, bus disconnection, cloning, reset and power loss.
+  A general-purpose secure-element data slot is **not** a monotonic counter
+  unless the exact part and its provisioning mode guarantee this behavior.
+- Sufficient monotonic updates for the intended lifetime. Evaluate counter
+  exhaustion, write endurance, maximum update rate and recovery of an
+  interrupted increment **before** choosing a part. Never infer capacity from
+  a marketing description.
+- A documented I2C electrical interface, power sequencing, watchdog/timeout
+  policy, locked configuration and provisioned-key lifecycle; no secret keys
+  committed to Git or distributed to the phone.
+- Recovery compatibility: a build-floor advance must not strand the factory
+  recovery or the last known-good OTA application. Confirmation, recovery
+  verification and trusted-floor advancement must have an audited ordering.
+- Fail closed if identity, attestation, floor read, power, bus or hardware
+  protection is unavailable. Neither a simulator nor a caller-set flag counts
+  as physical attestation.
+
+The C `ota_floor` abstraction now rechecks hardware protection immediately
+before an advance; this is only defense in depth. It **cannot** close a
+read/write race, so the eventual provider must enforce atomic monotonicity
+within the hardware itself. Host tests cover loss of protection after read.
+
+**Decision remains NO-GO:** no secure-element part has been selected,
+provisioned or attached; no independent physical test board has been approved;
+no eFuses or RedOne flash have been modified. The staged firmware candidate
+remains unpublished.

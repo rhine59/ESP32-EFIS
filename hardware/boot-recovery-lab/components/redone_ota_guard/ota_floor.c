@@ -19,6 +19,10 @@ bool redone_floor_advance_trusted(const redone_floor_backend_t *backend,
     if (!redone_floor_read_trusted(backend, &previous) || candidate_floor < previous)
         return false;
     if (candidate_floor == previous) return true;
+    // A separate protection check immediately before the irreversible operation
+    // catches a provider that has become unavailable since the initial read.
+    // The real provider must also enforce monotonicity atomically in hardware.
+    if (!backend->hardware_protected(backend->context)) return false;
     if (!backend->advance(backend->context, candidate_floor)) return false;
     int32_t observed = -1;
     return redone_floor_read_trusted(backend, &observed) && observed >= candidate_floor;
