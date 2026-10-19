@@ -49,6 +49,7 @@ struct EFISWiFiView: View {
     @State private var checking = false
     @State private var bootHealth: RedOneBootHealth?
     @State private var bootHealthMessage = "Not checked"
+    @State private var transferPreflightReport = "Not checked"
     @State private var showingFirmwarePicker = false
     @State private var firmwareName: String?
     @State private var firmwareSize: Int64?
@@ -308,6 +309,16 @@ struct EFISWiFiView: View {
             Section("Simulation only — no physical flash") {
                 guidance("The following controls operate a local or Synology simulator, not the connected ESP32. They cannot certify physical upgrade, activation or rollback.")
                 RedOneDeploymentSimulator()
+            }
+            Section("Phone-to-RedOne transfer preparation") {
+                guidance("Offline, read-only preflight. No firmware bytes are sent to RedOne, and this does not authorise installation.")
+                Button("Check downloaded release and connected RedOne") {
+                    checkPhoneTransferPreflight()
+                }
+                Label(transferPreflightReport, systemImage: "checkmark.shield")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                LabeledContent("Physical firmware transfer", value: "Locked")
             }
             Section("Physical firmware update — locked") {
                 guidance("Physical transfer, verification, activation and rollback are locked until independent signed-image, anti-downgrade, boot-health and recovery tests pass. Do not use simulator success as authorisation.", severity: .red)
@@ -576,6 +587,27 @@ struct EFISWiFiView: View {
     }
 
     @MainActor
+    private func checkPhoneTransferPreflight() {
+        guard let release = selectedRelease else {
+            transferPreflightReport = "Select a downloaded signed firmware release first."
+            return
+        }
+        if let issue = FirmwareLibrary.transferPreflight(release) {
+            transferPreflightReport = "Release rejected: " + issue
+            return
+        }
+        guard let status = verified, status.device == "RedOne" else {
+            transferPreflightReport = "Connect over RedOne Wi-Fi and read authenticated EFIS status first."
+            return
+        }
+        guard status.running == "ota_0", status.next == "ota_1" else {
+            transferPreflightReport = "Unexpected partition arrangement. No transfer permitted."
+            return
+        }
+        transferPreflightReport = "Signed cached image and expected RedOne A/B partition arrangement checked on the phone. Device-side signed-image policy, boot-health and rollback are not validated; transfer remains locked."
+    }
+
+    @MainActor
     private func readBootHealth() async {
         bootHealth = nil
         bootHealthMessage = "Reading device boot-health diagnostics…"
@@ -621,6 +653,7 @@ struct EFISWiFiView: View {
         verified = nil
         bootHealth = nil
         bootHealthMessage = "Not checked"
+        transferPreflightReport = "Not checked"
         message = "Checking RedOne device…"
         defer { checking = false }
         guard let url = URL(string: "http://192.168.4.1/status") else { return }
