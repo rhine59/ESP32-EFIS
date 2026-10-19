@@ -38,10 +38,13 @@ with tempfile.TemporaryDirectory(prefix="efis-ota-test-") as td:
     r=client.get("/healthz"); check(r.status_code==200 and r.json=={"status":"ok"},"admin health endpoint")
     r=client.get("/"); check(r.status_code==200 and b"Firmware Administration" in r.data,"dashboard renders")
 
-    image=(b"EFIS-TEST-IMAGE-"*100)
+    bad=client.post("/upload",data={"version":"9.9.8-bad","build":"998","minimum":"build:0",
+        "firmware":(io.BytesIO(b"SIMULATOR-ONLY-"*100),"bad.bin")},content_type="multipart/form-data")
+    check(bad.status_code==400 and not (efis/"releases/9.9.8-bad").exists(),"simulator image rejected at upload")
+    image=bytes([0xE9, 0x06]) + bytes(22) + b"EFIS-TEST-IMAGE-"*100
     digest=hashlib.sha256(image).hexdigest()
     r=client.post("/upload",data={
-        "version":"9.9.9-test","build":"999","minimum":"0.0.0","notes":"Functional harness release",
+        "version":"9.9.9-test","build":"999","minimum":"build:0","notes":"Functional harness release",
         "firmware":(io.BytesIO(image),"test.bin")
     },content_type="multipart/form-data",follow_redirects=True)
     check(r.status_code==200 and b"9.9.9-test" in r.data,"firmware stages")
@@ -49,6 +52,10 @@ with tempfile.TemporaryDirectory(prefix="efis-ota-test-") as td:
     staged=efis/"releases/9.9.9-test/esp32-efis-9.9.9-test.bin"
     check(staged.exists() and hashlib.sha256(staged.read_bytes()).hexdigest()==digest,"staged binary hash")
 
+    staged.write_bytes(b"SIMULATOR-ONLY-"*100)
+    refused=client.post("/publish/9.9.9-test")
+    check(refused.status_code==409,"invalid staged image rejected at publish")
+    staged.write_bytes(image)
     r=client.post("/publish/9.9.9-test",follow_redirects=True); check(r.status_code==200,"publish action")
     manifest=json.loads((efis/"manifest.json").read_text())
     check(manifest["version"]=="9.9.9-test" and manifest["build"]==999,"manifest version/build")

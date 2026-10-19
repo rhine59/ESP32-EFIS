@@ -112,6 +112,9 @@ def upload():
         f.save(image)
         validate_esp_application_image(image)
         atomic_json(META/f'{version}.json',{'version':version,'build':build_number,'minimum_allowed_version':minimum,'release_notes':notes or f'ESP32 EFIS release {version}','sha256':sha256(image)})
+    except ValueError as exc:
+        shutil.rmtree(target,ignore_errors=True)
+        abort(400, str(exc))
     except Exception:
         shutil.rmtree(target,ignore_errors=True);raise
     flash(f'Uploaded {version} to staging. It is NOT visible to EFIS units until Publish is selected.')
