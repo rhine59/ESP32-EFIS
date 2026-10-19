@@ -21,3 +21,14 @@
 ## Verification status
 
 This report records blockers and the safe implementation order; it is **not** evidence that the remaining hardware/security gates have been resolved. Until those gates are closed, the full physical upgrade/activate/rollback test cannot safely be completed.
+
+## Existing-hardware continuation — read-only Wi-Fi diagnostics
+
+A separate board is not required to collect authenticated status from the existing RedOne. The host-side `hardware/boot-recovery-lab/tools/live_readonly_diagnostics.py` sends **only GET** requests to `/status` and `/boot-health`; it never uploads firmware, selects a boot partition, resets the board or reads/writes eFuses. It reports a boot-health 404 as `not_installed` rather than a hardware fault, and prints only allowlisted non-secret response fields. A provisioned token must be supplied via an environment variable, not a command-line argument or Git. Example, on a computer already connected to the RedOne network:
+
+```sh
+# Set REDONE_LAB_TOKEN privately in the current shell first.
+python3 hardware/boot-recovery-lab/tools/live_readonly_diagnostics.py --base-url http://192.168.4.1
+```
+
+The address is illustrative; use the actual device gateway/IP confirmed on the connected network. No token or network address is assumed by the tool. The physical firmware currently predates `/boot-health`, so a 404 is expected. The diagnostics do not establish OTA activation or rollback readiness. Keep the existing RedOne on Partition A and preserve its verified factory recovery. A later physical write or power-cut experiment needs separate, explicit authorisation and a reviewed recovery procedure.
