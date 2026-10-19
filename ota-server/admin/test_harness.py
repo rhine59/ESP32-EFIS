@@ -41,7 +41,16 @@ with tempfile.TemporaryDirectory(prefix="efis-ota-test-") as td:
     bad=client.post("/upload",data={"version":"9.9.8-bad","build":"998","minimum":"build:0",
         "firmware":(io.BytesIO(b"SIMULATOR-ONLY-"*100),"bad.bin")},content_type="multipart/form-data")
     check(bad.status_code==400 and not (efis/"releases/9.9.8-bad").exists(),"simulator image rejected at upload")
-    image=bytes([0xE9, 0x06]) + bytes(22) + b"EFIS-TEST-IMAGE-"*100
+    header=bytearray(112)
+    header[0:2]=bytes([0xE9,0x06])
+    header[32:36]=bytes.fromhex('3254cdab')
+    header[80:90]=b'esp32_efis'
+    image=bytes(header)+b"EFIS-TEST-IMAGE-"*100
+    wrong=bytearray(image)
+    wrong[80:90]=b'efis_lab  '
+    wrong_response=client.post("/upload",data={"version":"9.9.8-wrong","build":"998","minimum":"build:0",
+        "firmware":(io.BytesIO(wrong),"wrong.bin")},content_type="multipart/form-data")
+    check(wrong_response.status_code==400,"wrong ESP-IDF project rejected")
     digest=hashlib.sha256(image).hexdigest()
     r=client.post("/upload",data={
         "version":"9.9.9-test","build":"999","minimum":"build:0","notes":"Functional harness release",

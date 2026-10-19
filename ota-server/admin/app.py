@@ -52,9 +52,15 @@ def validate_esp_application_image(path):
     if not 1024 <= size <= 0x300000:
         raise ValueError('Firmware must fit the 3 MiB RedOne OTA partition')
     with path.open('rb') as f:
-        header=f.read(24)
-    if len(header)!=24 or header[0]!=0xE9 or not 1<=header[1]<=16:
+        header=f.read(112)
+    if len(header)!=112 or header[0]!=0xE9 or not 1<=header[1]<=16:
         raise ValueError('Not an ESP32 application image (invalid image header)')
+    # ESP-IDF app descriptor follows the 24-byte image header and 8-byte segment header.
+    if header[32:36] != bytes.fromhex('3254cdab'):
+        raise ValueError('ESP-IDF application descriptor missing')
+    project=header[80:112].split(b'\0',1)[0]
+    if project != b'esp32_efis':
+        raise ValueError('Wrong application project; only esp32_efis may be published')
     return size
 
 def atomic_json(p,data):
