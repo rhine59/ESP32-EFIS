@@ -52,3 +52,17 @@ counter part, plus a disposable production-representative ESP32-S3 and an
 appropriate secure-element evaluation board. Verify increment limits,
 power-cut semantics, host challenge authentication, device binding and recovery
 compatibility before implementing a device backend. Current decision: NO-GO.
+
+## Existing-hardware continuation — boot-health reporting (19 October 2026)
+
+The bench firmware's authenticated, read-only `/boot-health` endpoint now
+reports a `blocker` explaining why confirmation cannot proceed: the running
+image is not pending verification, image identity is unverified, the inactive
+OTA slot is missing, or the physical sensor/display/power/rollback/ground
+checks are unavailable. This is a diagnostic only; the endpoint does not
+confirm boot, advance a floor, write flash or enable OTA. The blocker is
+selected by priority, so other unmet checks may also remain.
+
+This source change is not installed on the physical RedOne. With the existing
+board alone, the safe next tasks are offline tests, source review and read-only
+physical observation. No secure-element or eFuse security claim can be made.

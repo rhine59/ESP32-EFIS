@@ -12,6 +12,9 @@ class BootHealthEndpoint(unittest.TestCase):
         self.assertNotIn('esp_ota_set_boot_partition(',body)
         self.assertNotIn('esp_partition_write(',body)
         self.assertIn('"/boot-health"',SRC)
+        self.assertIn('"blocker', body)
+        self.assertIn('"device-live-read-only', body)
+        self.assertIn('"updateReady\\\":false', body)
     def test_unavailable_hardware_evidence_never_claimed_good(self):
         body=SRC.split('static esp_err_t boot_health(',1)[1].split('static esp_err_t status(',1)[0]
         for item in ('firmware_self_test_ok = false','required_sensors_ok = false',

@@ -432,15 +432,22 @@ static esp_err_t boot_health(httpd_req_t *req) {
     };
     bool may_confirm = redone_boot_may_confirm(pending ? REDONE_BOOT_PENDING : REDONE_BOOT_UNKNOWN,
                                                &evidence);
-    char response[640];
+    /* Report the first blocking condition as read-only diagnostic evidence.
+     * A present inactive slot is not proof of a valid rollback image. */
+    const char *blocker = !pending ? "running image not pending verification" :
+        !image_ok ? "running image identity not validated" :
+        !inactive_ok ? "inactive OTA slot not available" :
+        "physical self-test, sensors, display, power, rollback and ground confirmation unavailable";
+    char response[800];
     snprintf(response, sizeof(response),
         "{\"pendingVerify\":%s,\"imageIdentityOk\":%s,\"inactiveSlotPresent\":%s,"
         "\"firmwareSelfTestOk\":false,\"requiredSensorsOk\":false,"
         "\"displayOk\":false,\"powerOk\":false,\"rollbackPathOk\":false,"
         "\"operatorGroundConfirmation\":false,\"mayConfirmBoot\":%s,"
-        "\"updateReady\":false,\"evidenceSource\":\"device-live-read-only\"}",
+        "\"updateReady\":false,\"blocker\":\"%s\","
+        "\"evidenceSource\":\"device-live-read-only\"}",
         pending ? "true" : "false", image_ok ? "true" : "false",
-        inactive_ok ? "true" : "false", may_confirm ? "true" : "false");
+        inactive_ok ? "true" : "false", may_confirm ? "true" : "false", blocker);
     httpd_resp_set_type(req, "application/json");
     httpd_resp_set_hdr(req, "Cache-Control", "no-store");
     return httpd_resp_sendstr(req, response);
