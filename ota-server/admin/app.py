@@ -46,6 +46,17 @@ def sha256(p):
     with p.open('rb') as f:
         for c in iter(lambda:f.read(1024*1024),b''):h.update(c)
     return h.hexdigest()
+def validate_esp_application_image(path):
+    """Reject obvious non-ESP32 application uploads before staging/publishing."""
+    size=path.stat().st_size
+    if not 1024 <= size <= 0x300000:
+        raise ValueError('Firmware must fit the 3 MiB RedOne OTA partition')
+    with path.open('rb') as f:
+        header=f.read(24)
+    if len(header)!=24 or header[0]!=0xE9 or not 1<=header[1]<=16:
+        raise ValueError('Not an ESP32 application image (invalid image header)')
+    return size
+
 def atomic_json(p,data):
     p.parent.mkdir(parents=True,exist_ok=True); fd,tmp=tempfile.mkstemp(dir=p.parent,prefix='.'+p.name+'.',text=True)
     with os.fdopen(fd,'w') as f:json.dump(data,f,indent=2);f.write('\n')
@@ -66,6 +77,8 @@ def publish_manifest(version,image):
         validate_release_build(m['build'], m['minimum_allowed_version'])
     except ValueError as exc:
         abort(409, f'Release build policy rejected: {exc}')
+    try: validate_esp_application_image(image)
+    except ValueError as exc: abort(409, str(exc))
     manifest = {'product':PRODUCT,'version':version,'build':int(m['build']),'hardware_profile':HARDWARE,'idf':IDF,'image_url':f'{BASE_URL}/efis/releases/{version}/{image.name}','sha256':sha256(image),'minimum_allowed_version':m['minimum_allowed_version'],'release_notes':m['release_notes']}
     signing_key = os.environ.get('OTA_ED25519_PRIVATE_KEY_PATH')
     if not signing_key:
@@ -97,7 +110,7 @@ def upload():
     target.mkdir(parents=True);image=target/f'esp32-efis-{version}.bin'
     try:
         f.save(image)
-        if image.stat().st_size<1024:raise ValueError('Firmware image is implausibly small')
+        validate_esp_application_image(image)
         atomic_json(META/f'{version}.json',{'version':version,'build':build_number,'minimum_allowed_version':minimum,'release_notes':notes or f'ESP32 EFIS release {version}','sha256':sha256(image)})
     except Exception:
         shutil.rmtree(target,ignore_errors=True);raise
