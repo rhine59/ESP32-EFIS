@@ -60,7 +60,18 @@ enum FirmwareLibrary {
               data.count >= 1024, data.count <= maximumOTAImageBytes else {
             return "Firmware exceeds the 3 MiB OTA partition or is too small"
         }
-        guard data.first == 0xE9 else { return "File does not have an ESP application image header" }
+        guard data.first == 0xE9, (1...16).contains(Int(data[1])) else {
+            return "File does not have a valid ESP application image header"
+        }
+        // ESP-IDF application descriptor: image header (24), segment header (8),
+        // descriptor magic (4), then project_name at offset 80 (32 bytes).
+        guard Array(data[32..<36]) == [0x32, 0x54, 0xcd, 0xab] else {
+            return "Firmware is missing its ESP-IDF application descriptor"
+        }
+        let projectBytes = data[80..<112].prefix(while: { $0 != 0 })
+        guard String(bytes: projectBytes, encoding: .utf8) == "esp32_efis" else {
+            return "Firmware is not the RedOne EFIS application"
+        }
         guard release.hardwareProfile == "s3-n16r2-v1" else {
             return "Firmware is not intended for this RedOne hardware profile"
         }
