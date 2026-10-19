@@ -29,3 +29,26 @@ Secure Boot V2 and flash-encryption provisioning on an expendable ESP32-S3 are a
 - Independent review of advance-after-confirmation and RMA/replacement semantics.
 
 **Current outcome:** preferred/fallback evaluation paths chosen, but no exact SKU approved, no physical trust anchor, no hardware-backed floor provider and no physical test. NO-GO for Partition B.
+
+## Stage 25 continuation — floor advancement transaction (19 October 2026)
+
+The offline simulator now exercises a **post-confirmation-only** floor-advance
+transaction. All four independent conditions are required: authenticated
+release signature, complete boot-health confirmation, explicit on-ground
+operator confirmation, and proof that the known-good recovery path remains
+compatible with the proposed new floor. A failure in any condition leaves the
+simulated floor unchanged. Replay of a used nonce is rejected. A power cut
+*after* an abstract commit leaves the new floor in place, so the host must
+reconcile with a fresh authenticated read instead of blindly retrying.
+
+This models the required decision boundary, **not** physical atomicity,
+cryptographic host identity, a real secure-element counter or a working
+recovery-compatibility verifier. The booleans are controlled test fixtures and
+must never be exposed as caller-provided production authorisation. No hardware
+provider, secure boot, flash encryption, or physical OTA write is enabled.
+
+**Next external prerequisite:** acquire vendor evidence for an exact secure
+counter part, plus a disposable production-representative ESP32-S3 and an
+appropriate secure-element evaluation board. Verify increment limits,
+power-cut semantics, host challenge authentication, device binding and recovery
+compatibility before implementing a device backend. Current decision: NO-GO.

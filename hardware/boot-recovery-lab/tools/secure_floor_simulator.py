@@ -70,6 +70,25 @@ def allow_candidate(candidate, signed_minimum, running, installed_floor):
             running >= installed_floor and candidate >= running and
             candidate >= installed_floor and signed_minimum <= running)
 
+def confirm_and_advance(element, verifier, nonce, candidate, *, signature_ok,
+                        boot_health_ok, operator_ground_confirmed,
+                        recovery_floor_compatible, fault=None):
+    """Offline transaction model; never used for device provisioning.
+
+    Advancing a floor is irreversible in the threat model. Even after a
+    successful candidate boot, reject if the known-good recovery image could
+    be locked out by the proposed floor. A failed/ambiguous commit must be
+    reconciled through a fresh authenticated read, never retried blindly.
+    """
+    if not all((signature_ok, boot_health_ok, operator_ground_confirmed,
+                recovery_floor_compatible)):
+        raise TrustFailure('confirmation or recovery compatibility missing')
+    current = verifier.verify(element.respond(nonce), nonce)
+    if not isinstance(candidate, int) or isinstance(candidate, bool) or not current <= candidate <= MAX_BUILD:
+        raise TrustFailure('invalid candidate floor')
+    element.advance(candidate, fault=fault)
+    return True
+
 def simulate():
     element = SimulatedElement(floor=8)
     verifier = SimulatedVerifier()

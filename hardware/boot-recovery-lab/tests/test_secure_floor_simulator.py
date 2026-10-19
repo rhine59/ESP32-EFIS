@@ -51,3 +51,33 @@ class SecureFloorSimulator(unittest.TestCase):
         self.assertFalse(result['hardware_attested'])
         self.assertFalse(result['physical_flash_authorized'])
         self.assertEqual(result['partition_b_decision'],'NO-GO')
+
+class ConfirmationGate(unittest.TestCase):
+    def setUp(self):
+        self.element=m.SimulatedElement(floor=8)
+        self.verifier=m.SimulatedVerifier()
+        self.nonce=bytes(range(16))
+        self.conditions=dict(signature_ok=True,boot_health_ok=True,
+                             operator_ground_confirmed=True,recovery_floor_compatible=True)
+    def test_every_independent_gate_required(self):
+        for gate in self.conditions:
+            values=dict(self.conditions);values[gate]=False
+            with self.assertRaises(m.TrustFailure):
+                m.confirm_and_advance(self.element,self.verifier,self.nonce,10,**values)
+            self.assertEqual(self.element.floor,8)
+    def test_confirmed_advance_and_no_downgrade(self):
+        self.assertTrue(m.confirm_and_advance(self.element,self.verifier,self.nonce,10,**self.conditions))
+        self.assertEqual(self.element.floor,10)
+        with self.assertRaises(m.TrustFailure):
+            m.confirm_and_advance(self.element,m.SimulatedVerifier(),bytes(range(1,17)),9,**self.conditions)
+    def test_power_loss_requires_reconciliation(self):
+        with self.assertRaises(m.TrustFailure):
+            m.confirm_and_advance(self.element,self.verifier,self.nonce,10,fault='after_commit',**self.conditions)
+        self.assertEqual(self.element.floor,10)
+        fresh=m.SimulatedVerifier()
+        self.assertEqual(fresh.verify(self.element.respond(bytes(range(1,17))),bytes(range(1,17))),10)
+    def test_replay_fails_even_if_all_gates_true(self):
+        self.verifier.verify(self.element.respond(self.nonce),self.nonce)
+        with self.assertRaises(m.TrustFailure):
+            m.confirm_and_advance(self.element,self.verifier,self.nonce,10,**self.conditions)
+        self.assertEqual(self.element.floor,8)
