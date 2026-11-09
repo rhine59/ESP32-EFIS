@@ -37,6 +37,8 @@ All application host ports shown above are loopback-only except the host-network
 5. Preserve old stopped `*-legacy` containers until account/email, reverse-proxy, gateway and OTA functional acceptance is complete. Do not indiscriminately prune volumes, images, networks or stopped containers.
 6. Check `http://127.0.0.1:8091/healthz`, `http://127.0.0.1:8094/health`, `http://127.0.0.1:8093/api/state`, `http://127.0.0.1:8090/healthz`, and `http://127.0.0.1:8180/efis/manifest.signed.json` from the NAS. The OTA root `/` is not a health endpoint and may return 404.
 
+For account startup retries, runtime health, incident evidence, backup/restore gates and targeted rollback, see [Account database recovery](LOLLIPOP-ACCOUNT-DATABASE-RECOVERY.md).
+
 ## Recovery and acceptance
 
 To revert a group, stop the new container(s) and restart its retained legacy container(s) with original port/network mappings. For the account group, stop the **new PostgreSQL** before restarting the old PostgreSQL, and verify schema compatibility. Do not delete or rename persistent volumes during rollback. Do not treat restarting a legacy container as a substitute for a tested backup.

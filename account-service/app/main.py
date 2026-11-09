@@ -10,7 +10,8 @@ from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel, EmailStr
 from pwdlib import PasswordHash
 import psycopg
-from psycopg.rows import dict_row
+from app.database import connect, initialize, probe
+from fastapi.responses import JSONResponse
 DATABASE_URL=os.environ["DATABASE_URL"]; SESSION_SECRET=os.environ["SESSION_SECRET"]
 password_hash=PasswordHash.recommended(); templates=Jinja2Templates(directory="app/templates"); logger=logging.getLogger("uvicorn.error")
 SCHEMA="""CREATE TABLE IF NOT EXISTS users(id BIGSERIAL PRIMARY KEY,email TEXT UNIQUE NOT NULL,password_hash TEXT NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT now());
@@ -22,7 +23,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ;
 CREATE TABLE IF NOT EXISTS password_reset_tokens(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,token_hash TEXT UNIQUE NOT NULL,expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS app_login_tokens(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,token_hash TEXT UNIQUE NOT NULL,expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS app_sessions(id BIGSERIAL PRIMARY KEY,user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,token_hash TEXT UNIQUE NOT NULL,expires_at TIMESTAMPTZ NOT NULL,revoked_at TIMESTAMPTZ,last_used_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now());"""
-def db(): return psycopg.connect(DATABASE_URL,row_factory=dict_row)
+def db(): return connect(DATABASE_URL)
 
 def send_verification_email(user_id:int,email:str):
     token=secrets.token_urlsafe(32)
@@ -65,7 +66,7 @@ def issue_verification(user_id:int,email:str):
         return False
 @asynccontextmanager
 async def lifespan(app):
-    with db() as c: c.execute(SCHEMA); c.commit()
+    await initialize(db, SCHEMA)
     yield
 app=FastAPI(title="EFIS Account Service",version="0.2.0",lifespan=lifespan)
 app.add_middleware(SessionMiddleware,secret_key=SESSION_SECRET,https_only=os.getenv("COOKIE_SECURE","1")=="1",same_site="lax")
@@ -77,9 +78,20 @@ def current_user(r):
     uid=r.session.get("uid")
     if not uid:return None
     with db() as c:return c.execute("SELECT id,email,created_at,email_verified_at FROM users WHERE id=%s AND email_verified_at IS NOT NULL",(uid,)).fetchone()
+@app.exception_handler(psycopg.OperationalError)
+@app.exception_handler(psycopg.InterfaceError)
+async def database_unavailable(request, exc):
+    logger.warning("Account request failed: database unavailable")
+    return JSONResponse({"detail":"Database temporarily unavailable"}, status_code=503,
+                        headers={"Retry-After":"5"})
+
+@app.get("/livez")
+def live():
+    return {"status":"alive"}
+
 @app.get("/healthz")
 def health():
-    with db() as c:c.execute("SELECT 1")
+    probe(db)
     return {"status":"ok"}
 @app.get("/",response_class=HTMLResponse)
 def home(request:Request):return templates.TemplateResponse(request,"home.html",{"user":current_user(request)})
