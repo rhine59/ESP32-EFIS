@@ -1,6 +1,6 @@
 # Lollipop Design — Synology container operations and architecture
 
-**Current as of 18 October 2026.** Applies to the deployed development infrastructure, not a certified aviation system. GitHub `main` is the source of truth for source and Compose definitions. The clean NAS deployment checkout is `/volume1/docker/ESP32-EFIS-staging`. Do **not** reset or pull in `/volume1/docker/ESP32-EFIS`: its Git HEAD is damaged. The latter still owns live firmware files and some historical mounts.
+**Current as of 18 October 2026.** Applies to the deployed development infrastructure, not a certified aviation system. GitHub is the source of truth for source and Compose definitions. Record the exact deployed commit; the account recovery runbook records its rollout revision and review branch. The clean NAS deployment checkout is `/volume1/docker/ESP32-EFIS-staging`. Do **not** reset or pull in `/volume1/docker/ESP32-EFIS`: its Git HEAD is damaged. The latter still owns live firmware files and some historical mounts.
 
 ## Running stack inventory
 

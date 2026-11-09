@@ -75,3 +75,21 @@ Reproduce with `tests/Dockerfile` and `tests/compose.recovery.yml` as described 
 The prepared changes had not been committed or deployed before the prior session was interrupted. Live logs still showed the original one-shot startup failing with PostgreSQL `the database system is starting up`. Both active account containers were healthy/running when inspected on 9 November.
 
 A separate obsolete container, `lollipop-efis-ota-admin-1`, had exit code 128 with `Bind for 127.0.0.1:8090 failed: port is already allocated`. The active `lollipop-efis-ota-admin` already owns that endpoint. Retain the obsolete container for rollback, but set its restart policy to `no`; do not start both. Other historical legacy containers remain stopped. Home Assistant was stopped with exit code zero and no recorded startup error, so its state is outside this fix.
+
+### Backup and rollback resources — 9 November
+
+Before rollout, `/volume1/homes/chatgpt/account-recovery-20261109/accounts.dump` was created privately and restored into a separate network-isolated PostgreSQL container. Archive listing and full restore both succeeded. Live and restored counts matched: users 1, app sessions 4, devices 0, entitlements 0. SHA-256, schema and prior image/commit records are kept in the same private directory. The restore test container and its anonymous volume were removed. Previous account image: `lollipop-account-rollback:20261109`.
+
+The application revision selected for rollout is `8aab42c22d467ea9f6c6674b4d7f66c036fb1558`, published on GitHub branch `fix/account-db-startup-20261109`, pull request #2. The clean NAS checkout uses a detached exact revision. Do not run an unqualified pull there; fetch and select an explicitly reviewed commit while preserving the existing `.env`.
+
+The PostgreSQL health startup grace and stop-grace changes in Compose are intended for the next planned database recreation. This rollout replaces only the account app, avoiding an unnecessary live database interruption. PostgreSQL already has its readiness check and `unless-stopped` restart policy. An explicitly stopped database remains stopped by Docker design; operators must start it again after intentional maintenance. The account retries startup and resumes requests once PostgreSQL is available; it cannot undo an intentional database stop.
+
+### Verified rollout — 9 November 2026, 14:38–14:40 UTC
+
+NAS production Compose validation and account image build succeeded. Only `lollipop-account` was recreated; its image is `sha256:bc9bed6ee02fbf76caa95dc5aefe89e65776142a0dcd893eb0e39d9a9f9b0877`. The app started at 14:38:44 UTC and logged successful database initialization. Initial requests during the brief container transition reset; subsequent local `/livez` and `/healthz` returned 200.
+
+At 14:39:25, 14:39:55 and 14:40:25 UTC both account and database containers were healthy, each with zero restarts. The database retained its 8 November start timestamp and original image/volume. Post-deployment schema comparison and table counts matched the pre-deployment records. The public HTTPS `/healthz` passed certificate validation and returned 200 from both NAS and Mac. `/login` returned 200; unauthenticated `/v1/me` returned 401. The active OTA-admin `/healthz` returned 200; its obsolete duplicate remained exited with restart policy `no`. Remaining active Lollipop services continued running.
+
+Five unit/HTTP tests were rerun successfully before this deployment. Disposable local integration containers were stopped afterward, with their test volume retained. Full authenticated email/mobile login was not exercised because no test credentials were provided; no accounts, authentication configuration, sessions, signing keys or administrator 2FA were reset or changed. The origin of historical shutdown requests remains unproven; the observed startup race and duplicate port conflict are addressed.
+
+For rollback, use the private `.env` in the clean NAS account directory and a private Compose override containing `services: {account: {image: "lollipop-account-rollback:20261109"}}`, then run Compose with both files and `up -d --no-deps --no-build account`. Leave the database and external volume running. Record the selected source revision separately; documentation-only follow-up commits do not require rebuilding the verified application image.
