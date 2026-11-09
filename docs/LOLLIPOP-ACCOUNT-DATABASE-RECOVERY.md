@@ -74,7 +74,7 @@ Reproduce with `tests/Dockerfile` and `tests/compose.recovery.yml` as described 
 
 The prepared changes had not been committed or deployed before the prior session was interrupted. Live logs still showed the original one-shot startup failing with PostgreSQL `the database system is starting up`. Both active account containers were healthy/running when inspected on 9 November.
 
-A separate obsolete container, `lollipop-efis-ota-admin-1`, had exit code 128 with `Bind for 127.0.0.1:8090 failed: port is already allocated`. The active `lollipop-efis-ota-admin` already owns that endpoint. Retain the obsolete container for rollback, but set its restart policy to `no`; do not start both. Other historical legacy containers remain stopped. Home Assistant was stopped with exit code zero and no recorded startup error, so its state is outside this fix.
+A separate obsolete container, `lollipop-efis-ota-admin-1`, had exit code 128 with `Bind for 127.0.0.1:8090 failed: port is already allocated`. The active `lollipop-efis-ota-admin` already owns that endpoint. Its restart policy was initially set to `no`. The user subsequently requested removal, and the stopped duplicate was removed without deleting volumes. Keep only the active `lollipop-efis-ota-admin` on port 8090. Other historical legacy containers remain stopped. Home Assistant was stopped with exit code zero and no recorded startup error, so its state is outside this fix.
 
 ### Backup and rollback resources — 9 November
 
@@ -93,3 +93,7 @@ At 14:39:25, 14:39:55 and 14:40:25 UTC both account and database containers were
 Five unit/HTTP tests were rerun successfully before this deployment. Disposable local integration containers were stopped afterward, with their test volume retained. Full authenticated email/mobile login was not exercised because no test credentials were provided; no accounts, authentication configuration, sessions, signing keys or administrator 2FA were reset or changed. The origin of historical shutdown requests remains unproven; the observed startup race and duplicate port conflict are addressed.
 
 For rollback, use the private `.env` in the clean NAS account directory and a private Compose override containing `services: {account: {image: "lollipop-account-rollback:20261109"}}`, then run Compose with both files and `up -d --no-deps --no-build account`. Leave the database and external volume running. Record the selected source revision separately; documentation-only follow-up commits do not require rebuilding the verified application image.
+
+### Obsolete OTA-admin cleanup — 9 November 2026
+
+At the user’s explicit request, the stopped `lollipop-efis-ota-admin-1` container was removed using `docker rm` without volume removal. The active `lollipop-efis-ota-admin` remained running and healthy; its port 8090 health endpoint returned HTTP 200. Shared data, images, volumes and the account rollback resources were preserved. Earlier rollout observations above describe the state before this cleanup.
