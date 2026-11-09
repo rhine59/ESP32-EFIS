@@ -1,6 +1,6 @@
 # Lollipop Design — Synology container operations and architecture
 
-**Current as of 18 October 2026.** Applies to the deployed development infrastructure, not a certified aviation system. GitHub `main` is the source of truth for source and Compose definitions. The clean NAS deployment checkout is `/volume1/docker/ESP32-EFIS-staging`. Do **not** reset or pull in `/volume1/docker/ESP32-EFIS`: its Git HEAD is damaged. The latter still owns live firmware files and some historical mounts.
+**Current as of 18 October 2026.** Applies to the deployed development infrastructure, not a certified aviation system. GitHub is the source of truth for source and Compose definitions. Record the exact deployed commit; the account recovery runbook records its rollout revision and review branch. The clean NAS deployment checkout is `/volume1/docker/ESP32-EFIS-staging`. Do **not** reset or pull in `/volume1/docker/ESP32-EFIS`: its Git HEAD is damaged. The latter still owns live firmware files and some historical mounts.
 
 ## Running stack inventory
 
@@ -36,6 +36,8 @@ All application host ports shown above are loopback-only except the host-network
 4. Build first, then recreate **only the target service group**, with health/HTTP checks and rollback plan. Never run `docker compose down -v`. Never attach two PostgreSQL instances to `esp32-efis_efis-account-db` at the same time.
 5. Preserve old stopped `*-legacy` containers until account/email, reverse-proxy, gateway and OTA functional acceptance is complete. Do not indiscriminately prune volumes, images, networks or stopped containers.
 6. Check `http://127.0.0.1:8091/healthz`, `http://127.0.0.1:8094/health`, `http://127.0.0.1:8093/api/state`, `http://127.0.0.1:8090/healthz`, and `http://127.0.0.1:8180/efis/manifest.signed.json` from the NAS. The OTA root `/` is not a health endpoint and may return 404.
+
+For account startup retries, runtime health, incident evidence, backup/restore gates and targeted rollback, see [Account database recovery](LOLLIPOP-ACCOUNT-DATABASE-RECOVERY.md).
 
 ## Recovery and acceptance
 

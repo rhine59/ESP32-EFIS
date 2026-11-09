@@ -1,0 +1,26 @@
+# Disposable test stack. No production secrets, volumes, ports, or container names.
+name: account-recovery-test
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: recovery_test
+      POSTGRES_USER: recovery_test
+      POSTGRES_PASSWORD: disposable-test-password
+    volumes:
+      - recovery-test-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recovery_test -d recovery_test"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  account:
+    image: lollipop-account-recovery-suite
+    environment:
+      PYTHONPATH: /app
+      DATABASE_URL: postgresql://recovery_test:disposable-test-password@db:5432/recovery_test
+      SESSION_SECRET: disposable-test-session-secret
+    volumes:
+      - .:/tests:ro
+volumes:
+  recovery-test-data:
