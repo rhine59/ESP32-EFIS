@@ -97,3 +97,7 @@ For rollback, use the private `.env` in the clean NAS account directory and a pr
 ### Obsolete OTA-admin cleanup — 9 November 2026
 
 At the user’s explicit request, the stopped `lollipop-efis-ota-admin-1` container was removed using `docker rm` without volume removal. The active `lollipop-efis-ota-admin` remained running and healthy; its port 8090 health endpoint returned HTTP 200. Shared data, images, volumes and the account rollback resources were preserved. Earlier rollout observations above describe the state before this cleanup.
+
+### Legacy container cleanup — 9 November 2026
+
+At the user’s explicit request, the following six stopped containers were removed without `-v` or force: `lollipop-web-simulator-legacy`, `lollipop-local-gateway-legacy`, `lollipop-efis-ota-legacy`, `lollipop-license-legacy`, `lollipop-account-legacy`, and `lollipop-db-legacy`. Active replacement services were retained. The database, licence and simulator named volumes were verified present after removal; shared bind-mounted files and images were preserved. Account and OTA-admin health endpoints continued returning 200. Rollback now uses retained images and backups, not removed legacy containers. Historical migration documents remain records of their original dates.

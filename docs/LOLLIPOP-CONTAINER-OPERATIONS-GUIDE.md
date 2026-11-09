@@ -1,6 +1,6 @@
 # Lollipop Design — Synology container operations and architecture
 
-**Current as of 18 October 2026.** Applies to the deployed development infrastructure, not a certified aviation system. GitHub is the source of truth for source and Compose definitions. Record the exact deployed commit; the account recovery runbook records its rollout revision and review branch. The clean NAS deployment checkout is `/volume1/docker/ESP32-EFIS-staging`. Do **not** reset or pull in `/volume1/docker/ESP32-EFIS`: its Git HEAD is damaged. The latter still owns live firmware files and some historical mounts.
+**Updated 9 November 2026; original stack migration dated 18 October.** Applies to the deployed development infrastructure, not a certified aviation system. GitHub is the source of truth for source and Compose definitions. Record the exact deployed commit; the account recovery runbook records its rollout revision and review branch. The clean NAS deployment checkout is `/volume1/docker/ESP32-EFIS-staging`. Do **not** reset or pull in `/volume1/docker/ESP32-EFIS`: its Git HEAD is damaged. The latter still owns live firmware files and some historical mounts.
 
 ## Running stack inventory
 
@@ -34,14 +34,14 @@ All application host ports shown above are loopback-only except the host-network
 2. Back up PostgreSQL and confirm a restorable archive before schema or database changes. The last tested private logical backup is `/volume1/homes/chatgpt/lollipop-account-pre-migration-20261018.dump`; ensure a **fresh** backup for any later maintenance.
 3. Check each stack independently: `cd /volume1/docker/ESP32-EFIS-staging/<stack-directory>` then `/usr/local/bin/docker compose config --quiet`. For OTA, private `OTA_PUBLIC_DIR` and `OTA_SIGNING_KEY_FILE` overrides are necessary; ensure they point to existing live resources and are supplied for every Compose command.
 4. Build first, then recreate **only the target service group**, with health/HTTP checks and rollback plan. Never run `docker compose down -v`. Never attach two PostgreSQL instances to `esp32-efis_efis-account-db` at the same time.
-5. Preserve old stopped `*-legacy` containers until account/email, reverse-proxy, gateway and OTA functional acceptance is complete. Do not indiscriminately prune volumes, images, networks or stopped containers.
+5. The six stopped `*-legacy` containers were removed at the user’s request on 9 November 2026. Their volumes, bind-mounted data and images were preserved. Rollback must use retained images, known-good Compose definitions and verified backups; do not rely on removed containers. Do not indiscriminately prune volumes, images or networks.
 6. Check `http://127.0.0.1:8091/healthz`, `http://127.0.0.1:8094/health`, `http://127.0.0.1:8093/api/state`, `http://127.0.0.1:8090/healthz`, and `http://127.0.0.1:8180/efis/manifest.signed.json` from the NAS. The OTA root `/` is not a health endpoint and may return 404.
 
 For account startup retries, runtime health, incident evidence, backup/restore gates and targeted rollback, see [Account database recovery](LOLLIPOP-ACCOUNT-DATABASE-RECOVERY.md).
 
 ## Recovery and acceptance
 
-To revert a group, stop the new container(s) and restart its retained legacy container(s) with original port/network mappings. For the account group, stop the **new PostgreSQL** before restarting the old PostgreSQL, and verify schema compatibility. Do not delete or rename persistent volumes during rollback. Do not treat restarting a legacy container as a substitute for a tested backup.
+To revert a group, recreate its prior application image using known-good Compose definitions and original port/network/mount mappings. The legacy containers were removed on 9 November 2026; use retained images and verified backups. For the account app, follow the recovery runbook’s targeted image rollback and leave PostgreSQL running. Never start a second PostgreSQL instance on the same volume. Do not delete or rename persistent volumes during rollback.
 
 As of migration, all eight running containers had correct project labels; OTA, licence, PostgreSQL and web simulator Docker health checks passed, and the account API was responsive. Full real-user login, verification/reset email, external TLS, phone-app login, gateway LAN discovery, and physical-device signed OTA remain outstanding functional tests. No physical EFIS firmware changes were authorized or made by the container migration.
 
