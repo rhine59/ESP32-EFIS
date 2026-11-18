@@ -17,6 +17,13 @@
 #define BACKLIGHT_PWM_GPIO GPIO_NUM_42
 #define BACKLIGHT_PWM_FREQ_HZ 10000
 static const char *TAG="newhaven_test";
+static volatile uint16_t active_colour = 0xF800;
+static bool IRAM_ATTR fill_bounce(esp_lcd_panel_handle_t panel, void *buf, int pos_px, int len_bytes, void *ctx) {
+    uint16_t *pixels=(uint16_t *)buf;
+    uint16_t colour=active_colour;
+    for (int i=0;i<len_bytes/2;i++) pixels[i]=colour;
+    return false;
+}
 void app_main(void) {
     gpio_config_t outputs={.pin_bit_mask=(1ULL<<40)|(1ULL<<41),.mode=GPIO_MODE_OUTPUT};
     ESP_ERROR_CHECK(gpio_config(&outputs));
@@ -35,18 +42,17 @@ void app_main(void) {
         .timings={.pclk_hz=18000000,.h_res=W,.v_res=H,
                   .hsync_pulse_width=20,.hsync_back_porch=60,.hsync_front_porch=40,
                   .vsync_pulse_width=6,.vsync_back_porch=10,.vsync_front_porch=10},
-        .data_width=16,.num_fbs=1,
+        .data_width=16,.num_fbs=0,.bounce_buffer_size_px=W*10,
         .hsync_gpio_num=38,.vsync_gpio_num=39,.de_gpio_num=2,.pclk_gpio_num=1,
         .disp_gpio_num=-1,
         .data_gpio_nums={4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21},
-        .flags.fb_in_psram=true
+        .flags.no_fb=true
     };
     esp_lcd_panel_handle_t panel=NULL;
     ESP_ERROR_CHECK(esp_lcd_new_rgb_panel(&cfg,&panel));
+    esp_lcd_rgb_panel_event_callbacks_t callbacks={.on_bounce_empty=fill_bounce};
+    ESP_ERROR_CHECK(esp_lcd_rgb_panel_register_event_callbacks(panel,&callbacks,NULL));
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel));
-    void *buffer=NULL;
-    ESP_ERROR_CHECK(esp_lcd_rgb_panel_get_frame_buffer(panel,1,&buffer));
-    uint16_t *fb=(uint16_t *)buffer;
     const uint16_t colours[]={0xF800,0x07E0,0x001F,0xFFFF,0x0000};
     // Press BOOT (GPIO0) AFTER the application has started for >= 2 seconds
     // to request a switch back to ota_0. Never press during power-on.
@@ -70,8 +76,7 @@ void app_main(void) {
     int boot_hold_ms=0;
     while(1){
         for(int c=0;c<5;c++){
-            for(size_t i=0;i<(size_t)W*H;i++) fb[i]=colours[c];
-            ESP_ERROR_CHECK(esp_lcd_panel_draw_bitmap(panel,0,0,W,H,fb));
+            active_colour=colours[c];
             ESP_LOGI(TAG,"Colour index %d sent",c);
             for (int elapsed=0; elapsed<2000; elapsed+=100) {
                 if (gpio_get_level(GPIO_NUM_0)==0) boot_hold_ms+=100;
