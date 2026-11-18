@@ -17,11 +17,33 @@
 #define BACKLIGHT_PWM_GPIO GPIO_NUM_42
 #define BACKLIGHT_PWM_FREQ_HZ 10000
 static const char *TAG="newhaven_test";
-static volatile uint16_t active_colour = 0xF800;
+// PSRAM-free simulated attitude instrument: ISR draws directly into RGB DMA bounce strips.
+// Simulation is deliberately not connected to flight sensors; NOT FOR FLIGHT USE.
+static volatile int pitch_px=0, bank_slope=0;
+static inline int absi(int v) { return v<0?-v:v; }
 static bool IRAM_ATTR fill_bounce(esp_lcd_panel_handle_t panel, void *buf, int pos_px, int len_bytes, void *ctx) {
     uint16_t *pixels=(uint16_t *)buf;
-    uint16_t colour=active_colour;
-    for (int i=0;i<len_bytes/2;i++) pixels[i]=colour;
+    const int pitch=pitch_px, slope=bank_slope;
+    for (int i=0;i<len_bytes/2;i++) {
+        int n=pos_px+i, x=n%W, y=n/W;
+        int dx=x-W/2, dy=y-H/2;
+        int horizon=H/2+pitch+(dx*slope)/256;
+        uint16_t color=(y<horizon)?0x45BF:0xA345; // sky blue / earth brown
+        if (absi(y-horizon)<=1) color=0xFFFF;
+        // Pitch ladder, short white bars at 10-degree intervals (24 pixels each).
+        for (int k=-3;k<=3;k++) {
+            if (k==0) continue;
+            int ly=horizon+k*24;
+            if (absi(y-ly)<=1 && absi(dx)<((k%2)==0?58:34)) color=0xFFFF;
+        }
+        // Fixed aircraft symbol: wings, center reticle and nose.
+        if ((absi(dy)<=2 && absi(dx)>=15 && absi(dx)<=88) ||
+            (absi(dx)<=2 && dy>=-13 && dy<=13) ||
+            (absi(dy+9)<=2 && absi(dx)<=12)) color=0xFFE0;
+        // Bank index marks across the upper arc.
+        if (y>=28 && y<=38 && (absi(dx)==0 || absi(dx)==65 || absi(dx)==120)) color=0xFFFF;
+        pixels[i]=color;
+    }
     return false;
 }
 void app_main(void) {
@@ -53,7 +75,7 @@ void app_main(void) {
     esp_lcd_rgb_panel_event_callbacks_t callbacks={.on_bounce_empty=fill_bounce};
     ESP_ERROR_CHECK(esp_lcd_rgb_panel_register_event_callbacks(panel,&callbacks,NULL));
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel));
-    const uint16_t colours[]={0xF800,0x07E0,0x001F,0xFFFF,0x0000};
+
     // Press BOOT (GPIO0) AFTER the application has started for >= 2 seconds
     // to request a switch back to ota_0. Never press during power-on.
     gpio_set_direction(GPIO_NUM_0, GPIO_MODE_INPUT);
@@ -71,13 +93,15 @@ void app_main(void) {
         .timer_sel = LEDC_TIMER_0, .duty = 512, .hpoint = 0
     };
     ESP_ERROR_CHECK(ledc_channel_config(&bl_channel));
-    ESP_LOGI(TAG,"Display colour test running; backlight PWM GPIO42 at 10kHz, 50 percent duty");
+    ESP_LOGI(TAG,"Simulated attitude indicator running without PSRAM; PWM GPIO42 10kHz 50 percent");
     ESP_LOGW(TAG,"Hold BOOT for 2 seconds AFTER startup to return to ota_0");
     int boot_hold_ms=0;
     while(1){
-        for(int c=0;c<5;c++){
-            active_colour=colours[c];
-            ESP_LOGI(TAG,"Colour index %d sent",c);
+        for(int c=0;c<8;c++){
+            static const int pitches[]={0,12,25,12,0,-12,-25,-12};
+            static const int banks[]={0,24,48,24,0,-24,-48,-24};
+            pitch_px=pitches[c]; bank_slope=banks[c];
+            ESP_LOGI(TAG,"Simulated attitude step %d: pitch_offset=%d slope=%d",c,pitch_px,bank_slope);
             for (int elapsed=0; elapsed<2000; elapsed+=100) {
                 if (gpio_get_level(GPIO_NUM_0)==0) boot_hold_ms+=100;
                 else boot_hold_ms=0;

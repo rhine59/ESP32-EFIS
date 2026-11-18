@@ -34,3 +34,6 @@ The ESP32-S3 octal PSRAM failed memory tests at both 80 MHz and 40 MHz. This tes
 
 ## Verified bench result (2026-11-18)
 ESP32-S3-N16R8 boots ota_1 at 0x420000 with CONFIG_SPIRAM disabled; ST7701S initialization and GPIO42 backlight PWM logged successfully. User observed red/green/blue/white/black colour cycling on the Newhaven LCD. PSRAM tests at 80 MHz and 40 MHz previously failed; this bypass does not repair PSRAM. Future full-frame graphics must respect internal DRAM limits or fix PSRAM.
+
+## Simulated attitude indicator (development)
+The PSRAM-free bounce-buffer ISR now draws a blue sky, brown ground, horizon, pitch ladder, bank marks and fixed yellow aircraft reference. Eight simulated pitch/bank positions repeat. No IMU is connected and the rendering is NOT FOR FLIGHT USE.
