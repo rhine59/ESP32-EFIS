@@ -37,3 +37,8 @@ ESP32-S3-N16R8 boots ota_1 at 0x420000 with CONFIG_SPIRAM disabled; ST7701S init
 
 ## Simulated attitude indicator (development)
 The PSRAM-free bounce-buffer ISR now draws a blue sky, brown ground, horizon, pitch ladder, bank marks and fixed yellow aircraft reference. Eight simulated pitch/bank positions repeat. No IMU is connected and the rendering is NOT FOR FLIGHT USE.
+
+## Flicker investigation and revision
+The first graphics version timed out in the DMA ISR. A single 8-bit indexed framebuffer then booted, but the user reported visible flicker without apparent board restarts. The next revision uses two 2-bit indexed frames (57,600 bytes each), draws only into the inactive buffer in task context and swaps at vertical sync. Hardware stability and visual quality still require verification.
+
+See [WIRING-BENCH.md](WIRING-BENCH.md) for the numbered working FFC40 wiring and backlight connections; these differ from the planned carrier PCB allocation.

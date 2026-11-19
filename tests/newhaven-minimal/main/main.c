@@ -3,6 +3,8 @@
 #include "driver/gpio.h"
 #include "driver/ledc.h"
 #include "esp_err.h"
+#include "esp_heap_caps.h"
+#include <stdlib.h>
 #include "esp_ota_ops.h"
 #include "esp_partition.h"
 #include "esp_system.h"
@@ -17,32 +19,36 @@
 #define BACKLIGHT_PWM_GPIO GPIO_NUM_42
 #define BACKLIGHT_PWM_FREQ_HZ 10000
 static const char *TAG="newhaven_test";
-// PSRAM-free simulated attitude instrument: ISR draws directly into RGB DMA bounce strips.
-// Simulation is deliberately not connected to flight sensors; NOT FOR FLIGHT USE.
-static volatile int pitch_px=0, bank_slope=0;
-static inline int absi(int v) { return v<0?-v:v; }
+// Diagnostic: fixed centre aircraft reference added to verified horizon scanlines.
+// No framebuffer, per-pixel palette lookup, or animation.
 static bool IRAM_ATTR fill_bounce(esp_lcd_panel_handle_t panel, void *buf, int pos_px, int len_bytes, void *ctx) {
     uint16_t *pixels=(uint16_t *)buf;
-    const int pitch=pitch_px, slope=bank_slope;
-    for (int i=0;i<len_bytes/2;i++) {
-        int n=pos_px+i, x=n%W, y=n/W;
-        int dx=x-W/2, dy=y-H/2;
-        int horizon=H/2+pitch+(dx*slope)/256;
-        uint16_t color=(y<horizon)?0x45BF:0xA345; // sky blue / earth brown
-        if (absi(y-horizon)<=1) color=0xFFFF;
-        // Pitch ladder, short white bars at 10-degree intervals (24 pixels each).
-        for (int k=-3;k<=3;k++) {
-            if (k==0) continue;
-            int ly=horizon+k*24;
-            if (absi(y-ly)<=1 && absi(dx)<((k%2)==0?58:34)) color=0xFFFF;
+    int count=len_bytes/2;
+    for(int i=0;i<count;) {
+        int row=(pos_px+i)/W;
+        int until=W-((pos_px+i)%W);
+        if(until>count-i) until=count-i;
+        uint16_t colour=(row>=239 && row<=241)?0xFFFF:(row<(H/2)?0x45BF:0xA345);
+        // Fill each scanline with a single colour first; overlay only the few
+        // symbol pixels. No modulo, division, or conditional per display pixel.
+        for(int j=0;j<until;j++) pixels[i+j]=colour;
+        int x0=(pos_px+i)%W;
+        if(row>=246 && row<=249) {
+            for(int x=185;x<=225;x++) if(x>=x0 && x<x0+until) pixels[i+x-x0]=0xFFE0;
+            for(int x=255;x<=295;x++) if(x>=x0 && x<x0+until) pixels[i+x-x0]=0xFFE0;
         }
-        // Fixed aircraft symbol: wings, center reticle and nose.
-        if ((absi(dy)<=2 && absi(dx)>=15 && absi(dx)<=88) ||
-            (absi(dx)<=2 && dy>=-13 && dy<=13) ||
-            (absi(dy+9)<=2 && absi(dx)<=12)) color=0xFFE0;
-        // Bank index marks across the upper arc.
-        if (y>=28 && y<=38 && (absi(dx)==0 || absi(dx)==65 || absi(dx)==120)) color=0xFFFF;
-        pixels[i]=color;
+        if(row>=238 && row<=255) {
+            for(int x=237;x<=242;x++) if(x>=x0 && x<x0+until) pixels[i+x-x0]=0xFFE0;
+        }
+        // Static pitch ladder: short white marks at 5 and 10 degrees above/below.
+        // Touch only the marked rows, never calculate geometry for every pixel.
+        if (row==180 || row==300 || row==210 || row==270) {
+            int half=(row==180 || row==300)?35:20;
+            for(int x=240-half;x<=240+half;x++) {
+                if(x>=x0 && x<x0+until) pixels[i+x-x0]=0xFFFF;
+            }
+        }
+        i+=until;
     }
     return false;
 }
@@ -95,13 +101,13 @@ void app_main(void) {
     ESP_ERROR_CHECK(ledc_channel_config(&bl_channel));
     ESP_LOGI(TAG,"Simulated attitude indicator running without PSRAM; PWM GPIO42 10kHz 50 percent");
     ESP_LOGW(TAG,"Hold BOOT for 2 seconds AFTER startup to return to ota_0");
+    ESP_LOGW(TAG,"STATIC PITCH LADDER DIAGNOSTIC: scanline fills with sparse overlays");
     int boot_hold_ms=0;
     while(1){
         for(int c=0;c<8;c++){
             static const int pitches[]={0,12,25,12,0,-12,-25,-12};
             static const int banks[]={0,24,48,24,0,-24,-48,-24};
-            pitch_px=pitches[c]; bank_slope=banks[c];
-            ESP_LOGI(TAG,"Simulated attitude step %d: pitch_offset=%d slope=%d",c,pitch_px,bank_slope);
+            ESP_LOGI(TAG,"Static diagnostic heartbeat %d",c);
             for (int elapsed=0; elapsed<2000; elapsed+=100) {
                 if (gpio_get_level(GPIO_NUM_0)==0) boot_hold_ms+=100;
                 else boot_hold_ms=0;
