@@ -78,7 +78,7 @@ GND -----> TPS61169 G
 - ESP-IDF 5.4.4; pixel clock 18 MHz; HSYNC 20/60/40 and VSYNC 6/10/10; 16-bit RGB565; PSRAM disabled following failed octal-PSRAM tests at 80 and 40 MHz.
 - Display uses internal DMA bounce buffers, 10 lines each, with `.flags.no_fb=true`. The original complex per-pixel callback triggered `Interrupt wdt timeout on CPU0` and visible black-screen resets.
 - Verified stable in sequence: solid blue/brown fields, white horizontal horizon, then optimized yellow aircraft symbol. The successful symbol code fills each scanline and overlays only the relevant symbol segments; it avoids costly per-pixel modulo/geometry tests.
-- **Next build, not yet hardware-tested:** static pitch ladder in `main/main.c`. Do not label it validated until physically tested.
+- **Verified physical test (2026-11-20):** the static pitch ladder with four white marks (rows 180, 210, 270 and 300) remained stable with the horizon and yellow aircraft symbol. The user confirmed all four marks visible without black-screen resets. Animated pitch/bank are not yet tested.
 - Partition layout: recovery `0x20000` (1 MiB); A/`ota_0` `0x120000` (3 MiB); B/`ota_1` `0x420000` (3 MiB). For this bench test write **only the application binary to `0x420000`**, preserving bootloader, partition table, recovery and A. A raw write does not change OTA selection.
 - Bench download mode: hold BOOT, press/release RESET, release BOOT; after a verified flash, press RESET alone. Holding BOOT for 2 seconds **after** application startup requests a return to A.
 

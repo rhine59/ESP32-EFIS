@@ -42,3 +42,6 @@ The PSRAM-free bounce-buffer ISR now draws a blue sky, brown ground, horizon, pi
 The first graphics version timed out in the DMA ISR. A single 8-bit indexed framebuffer then booted, but the user reported visible flicker without apparent board restarts. The next revision uses two 2-bit indexed frames (57,600 bytes each), draws only into the inactive buffer in task context and swaps at vertical sync. Hardware stability and visual quality still require verification.
 
 See [WIRING-BENCH.md](WIRING-BENCH.md) for the numbered working FFC40 wiring and backlight connections; these differ from the planned carrier PCB allocation.
+
+## Verified static pitch ladder (2026-11-20)
+The user confirmed the four white pitch marks are visible and the display remains stable with the blue/brown horizon and yellow aircraft symbol. No simulated motion has been tested yet.
