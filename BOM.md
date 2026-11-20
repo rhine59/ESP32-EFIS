@@ -46,7 +46,8 @@ Evolving purchasing BOM for the **ESP32 EFIS** supplementary/non-primary multifu
 | Pressure module | **Adafruit BMP585 Baro+Temp Sensor PID 6413** | 2 | 1 | 1 | **RECEIVED — packaging/photo confirmed 22 Sep 2026** | Adafruit PID `6413`; DigiKey UK `1528-6413-ND`; The Pi Hut/Pimoroni alternate |
 | Pressure cable | **Adafruit STEMMA QT/Qwiic JST-SH 4-pin, 150 mm, PID 4397** | 2 | 2 | 2 | **RECEIVED — qty 2, DigiKey packaging/photo confirmed 24 Sep 2026** | DigiKey UK `1528-4397-ND` |
 | QT breadboard adapter | **Adafruit PID 5961** | 2 | 1 | 1 | **RECEIVED — DigiKey packaging/photo confirmed 24 Sep 2026** | DigiKey UK `1528-5961-ND` |
-| Magnetic heading sensor | **PNI RM3100-CB P/N 14754** | 2 | 1 | 0 | **NEEDED** | PNI Sensor direct SKU `14754` |
+| Temporary bench magnetometer | **Adafruit LSM303AGR STEMMA QT/Qwiic, PID 4413** | 2 | 1 | 0 | **ORDER PLACED — awaiting delivery, not received** | Temporary I2C heading development; RM3100 remains final target |
+| Final magnetic heading sensor | **PNI RM3100-CB P/N 14754** | 2 | 1 | 0 | **NEEDED** | PNI Sensor direct SKU `14754` |
 | GNSS receiver | Position/fix/freshness + explicit horizontal accuracy | 2 | 1 | 0 | **SELECTION REQUIRED** | Source after receiver selection |
 | GNSS bench antenna | Compatible with selected receiver | 2 | 1 | 0 | **BLOCKED by receiver selection** | Select with receiver |
 
@@ -74,7 +75,7 @@ Stage 1 gate: safe/current-limited 5 V power, programmable/mounted single MCU, w
 2. **Adafruit BMP585 PID 6413 received.** Retain for Stage 2 pressure/temperature bench integration.
 3. **2 × STEMMA QT/Qwiic 150 mm cables PID 4397 received.**
 4. **Adafruit PID 5961 QT breadboard adapter received.**
-5. Buy 1 × PNI RM3100-CB P/N 14754.
+5. Use ordered Adafruit LSM303AGR PID 4413 for temporary bench heading tests; PNI RM3100-CB P/N 14754 remains a later final-sensor purchase.
 6. Select the GNSS receiver, then its compatible bench antenna.
 
 ## Stage-specific items not yet ready to order
