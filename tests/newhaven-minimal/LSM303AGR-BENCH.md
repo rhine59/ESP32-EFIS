@@ -22,3 +22,9 @@ The existing `firmware/include/pins.h` is for a **different custom carrier desig
 ## Firmware
 
 `firmware/main/lsm303agr.c` provides an I2C magnetometer driver (identity verification, continuous mode, three-axis field in microtesla) using a caller-owned I2C bus. It is compiled into the carrier firmware but **not activated at runtime**; the validated no-PSRAM display diagnostic is unchanged. Future work: board-pin audit, I2C chip-ID diagnostic, magnetic calibration, axis mapping and tilt compensation; never present raw magnetic bearing as validated flight heading.
+
+## Shared I2C BMI088 option (software prepared, NOT wired or activated)
+
+Bosch Shuttle Board 3.0 P1: pin 1 VDD -> 3V3; pin 2 VDDIO -> 3V3; pin 3 GND -> GND. P2: pin 1 CS -> 3V3 (accelerometer I2C); pin 2 SCK/SCL -> shared SCL; pin 4 SDI/SDA -> shared SDA; pin 6 GPIO5/PS -> 3V3 (gyro I2C); pin 5 GPIO4/gyro CS -> leave disconnected in I2C mode; pin 3 SDO is shared accelerometer/gyro address selection and must be tied to GND to select 0x18 and 0x68. **Check board jumper and pin-1 orientation before applying power.** P1 interrupt pins remain disconnected. The BMI088 accel address 0x18 avoids the LSM303AGR accel 0x19. See Bosch BMI088 Shuttle Board 3.0 flyer and BMI088 datasheet.
+
+The new `firmware/main/bmi088_i2c.c` offers separate opt-in I2C init/read/deinit functions and does not change the SPI transport or the validated LCD test. No electrical or motion validation has been performed.

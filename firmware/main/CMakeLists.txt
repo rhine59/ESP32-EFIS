@@ -9,6 +9,7 @@ idf_component_register(
         "instrument_sim.c"
         "baro_altitude.c"
         "bmi088.c"
+        "bmi088_i2c.c"
         "lsm303agr.c"
         "attitude_estimator.c"
         "gnss_quality.c"
