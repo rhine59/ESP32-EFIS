@@ -87,3 +87,10 @@ The display is a bench test only: no IMU, magnetometer, pressure sensor or aircr
 ## Verified simulated pitch test (2026-11-20)
 
 The user observed smooth simulated vertical motion of the horizon and all four pitch marks, with the yellow aircraft reference fixed. No flicker or black-screen resets were observed. The task updates a single `pitch_offset_px` integer every 100 ms, sweeping between -30 and +30 pixels; the ISR reads that value while filling scanlines. **Bank motion and actual sensor data remain untested.**
+
+### Verified simulated bank-angle diagnostic — 20 November 2026
+
+- **Hardware PASS (user observed):** slow simulated bank sweep from −15° to +15°; correct blue/brown sloping horizon; fixed yellow aircraft reference; smooth motion without visible flicker or black flashes.
+- ESP-IDF build succeeded; app-only image (244,352 bytes) flashed to `ota_1` at `0x420000`; esptool reported `Hash of data verified`. Recovery and `ota_0` were not written.
+- Uses precomputed per-row horizon split spans, double-buffered bank tables, and lightweight DMA bounce-buffer callback; PSRAM disabled. Pitch fixed at zero and pitch marks deliberately omitted for this isolated bank test.
+- Previous pitch sweep and this bank sweep were each tested independently. **Combined pitch + bank is not yet implemented or hardware-validated.**
