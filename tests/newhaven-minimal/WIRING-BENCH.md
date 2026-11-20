@@ -94,3 +94,10 @@ The user observed smooth simulated vertical motion of the horizon and all four p
 - ESP-IDF build succeeded; app-only image (244,352 bytes) flashed to `ota_1` at `0x420000`; esptool reported `Hash of data verified`. Recovery and `ota_0` were not written.
 - Uses precomputed per-row horizon split spans, double-buffered bank tables, and lightweight DMA bounce-buffer callback; PSRAM disabled. Pitch fixed at zero and pitch marks deliberately omitted for this isolated bank test.
 - Previous pitch sweep and this bank sweep were each tested independently. **Combined pitch + bank is not yet implemented or hardware-validated.**
+
+### Verified combined pitch and bank diagnostic — 20 November 2026
+
+- **Hardware PASS (user observed):** simultaneous smooth pitch sweep ±30 pixels and bank sweep ±15°; all four white pitch markings follow the moving/rotating horizon correctly; yellow aircraft reference stays fixed; no visible flicker or black flashes.
+- ESP-IDF build completed successfully; 244,784-byte application flashed only to partition B (`ota_1`) at `0x420000`; esptool reported `Hash of data verified`. Recovery and partition A were preserved.
+- Geometry and pitch ladder spans are precomputed in task context and double-buffered for the DMA bounce callback. No PSRAM or full framebuffer required.
+- This validates **simulated display rendering only**, not sensor-driven attitude estimation or flight suitability.

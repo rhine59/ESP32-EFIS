@@ -28,21 +28,37 @@ static const char *TAG="newhaven_test";
 typedef struct { int16_t left, right; uint8_t sky_on_left; } bank_row_t;
 static bank_row_t bank_rows[2][H];
 static volatile int active_bank_table=0;
-static void prepare_bank_table(int slot, int degrees) {
+typedef struct {int16_t x0,x1;} mark_span_t;
+static mark_span_t ladder[2][H];
+static void prepare_bank_table(int slot, int degrees, int pitch) {
     // Fixed-point slopes for 0..15 degrees, scaled by 1024.
     static const int slope_q10[16]={0,18,36,54,72,90,108,126,144,162,181,199,217,236,255,274};
     int slope=slope_q10[abs(degrees)];
     if(degrees<0) slope=-slope;
+    for(int y=0;y<H;y++) { ladder[slot][y].x0=-1; ladder[slot][y].x1=-1; }
+    // Four short pitch ladder ticks, transformed using integer fixed-point bank.
+    // Generate their horizontal spans in task context, never in the ISR.
+    const int offsets[4]={-60,-30,30,60};
+    for(int m=0;m<4;m++) {
+        int half=(m==0 || m==3)?35:20;
+        for(int x=240-half;x<=240+half;x++) {
+            int y=240+pitch+offsets[m]+(slope*(x-240))/1024;
+            if(y>=0 && y<H) {
+                if(ladder[slot][y].x0<0 || x<ladder[slot][y].x0)ladder[slot][y].x0=x;
+                if(x>ladder[slot][y].x1)ladder[slot][y].x1=x;
+            }
+        }
+    }
     for(int y=0;y<H;y++) {
         bank_row_t *r=&bank_rows[slot][y];
         if(slope==0) {
-            r->left=(y>=239 && y<=241)?0:W;
-            r->right=(y>=239 && y<=241)?W:W;
-            r->sky_on_left=(y<239)?2:((y>241)?4:1);
+            r->left=(y>=239+pitch && y<=241+pitch)?0:W;
+            r->right=(y>=239+pitch && y<=241+pitch)?W:W;
+            r->sky_on_left=(y<239+pitch)?2:((y>241+pitch)?4:1);
         } else {
             // White band covers y = 240 + slope*(x-240)/1024 +/- 1.
-            int x1=240+((y-241)*1024)/slope;
-            int x2=240+((y-239)*1024)/slope;
+            int x1=240+((y-241-pitch)*1024)/slope;
+            int x2=240+((y-239-pitch)*1024)/slope;
             if(x1>x2){int t=x1;x1=x2;x2=t;}
             r->left=x1<0?0:(x1>W?W:x1);
             r->right=x2<0?0:(x2>W?W:x2);
@@ -75,6 +91,12 @@ static bool IRAM_ATTR fill_bounce(esp_lcd_panel_handle_t panel, void *buf, int p
             if(n>until-j)n=until-j;
             for(int k=0;k<n;k++) pixels[i+j+k]=colour;
             j+=n;
+        }
+        mark_span_t mark=ladder[table][row];
+        if(mark.x0>=0) {
+            int left=mark.x0>x0?mark.x0:x0;
+            int right=mark.x1<x0+until-1?mark.x1:x0+until-1;
+            for(int x=left;x<=right;x++) pixels[i+x-x0]=WHITE;
         }
         // Aircraft reference is always fixed in screen coordinates.
         if(row>=246 && row<=249) {
@@ -115,8 +137,8 @@ void app_main(void) {
     ESP_ERROR_CHECK(esp_lcd_new_rgb_panel(&cfg,&panel));
     esp_lcd_rgb_panel_event_callbacks_t callbacks={.on_bounce_empty=fill_bounce};
     ESP_ERROR_CHECK(esp_lcd_rgb_panel_register_event_callbacks(panel,&callbacks,NULL));
-    prepare_bank_table(0,0);
-    prepare_bank_table(1,0);
+    prepare_bank_table(0,0,0);
+    prepare_bank_table(1,0,0);
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel));
 
     // Press BOOT (GPIO0) AFTER the application has started for >= 2 seconds
@@ -138,19 +160,24 @@ void app_main(void) {
     ESP_ERROR_CHECK(ledc_channel_config(&bl_channel));
     ESP_LOGI(TAG,"Simulated attitude indicator running without PSRAM; PWM GPIO42 10kHz 50 percent");
     ESP_LOGW(TAG,"Hold BOOT for 2 seconds AFTER startup to return to ota_0");
-    ESP_LOGW(TAG,"SIMULATED BANK ONLY: +/-15 degrees; aircraft fixed; pitch ladder omitted for this diagnostic");
+    ESP_LOGW(TAG,"SIMULATED COMBINED ATTITUDE: bank +/-15 degrees, pitch +/-30px, ladder and fixed aircraft");
     int boot_hold_ms=0;
     // Advance one degree per 200 ms; table generation runs in task context.
     int direction=1;
     int bank_degrees=0;
+    int pitch_px=0;
+    int pitch_direction=1;
     while(1){
         for (int elapsed=0; elapsed<2000; elapsed+=100) {
                 if((elapsed%200)==0) {
                     bank_degrees+=direction;
                     if(bank_degrees>=15) {bank_degrees=15;direction=-1;}
                     if(bank_degrees<=-15) {bank_degrees=-15;direction=1;}
+                    pitch_px+=pitch_direction;
+                    if(pitch_px>=30){pitch_px=30;pitch_direction=-1;}
+                    if(pitch_px<=-30){pitch_px=-30;pitch_direction=1;}
                     int inactive=1-active_bank_table;
-                    prepare_bank_table(inactive,bank_degrees);
+                    prepare_bank_table(inactive,bank_degrees,pitch_px);
                     active_bank_table=inactive;
                 }
                 if (gpio_get_level(GPIO_NUM_0)==0) boot_hold_ms+=100;
