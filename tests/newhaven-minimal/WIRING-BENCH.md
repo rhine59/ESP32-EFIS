@@ -83,3 +83,7 @@ GND -----> TPS61169 G
 - Bench download mode: hold BOOT, press/release RESET, release BOOT; after a verified flash, press RESET alone. Holding BOOT for 2 seconds **after** application startup requests a return to A.
 
 The display is a bench test only: no IMU, magnetometer, pressure sensor or aircraft integration is validated by these display results.
+
+## Verified simulated pitch test (2026-11-20)
+
+The user observed smooth simulated vertical motion of the horizon and all four pitch marks, with the yellow aircraft reference fixed. No flicker or black-screen resets were observed. The task updates a single `pitch_offset_px` integer every 100 ms, sweeping between -30 and +30 pixels; the ISR reads that value while filling scanlines. **Bank motion and actual sensor data remain untested.**

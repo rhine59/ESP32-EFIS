@@ -19,8 +19,9 @@
 #define BACKLIGHT_PWM_GPIO GPIO_NUM_42
 #define BACKLIGHT_PWM_FREQ_HZ 10000
 static const char *TAG="newhaven_test";
-// Diagnostic: fixed centre aircraft reference added to verified horizon scanlines.
-// No framebuffer, per-pixel palette lookup, or animation.
+// Slow simulated pitch: move horizon/ladder only; fixed yellow aircraft reference.
+// ISR reads one aligned integer, updated by the task every 100 ms.
+static volatile int pitch_offset_px=0;
 static bool IRAM_ATTR fill_bounce(esp_lcd_panel_handle_t panel, void *buf, int pos_px, int len_bytes, void *ctx) {
     uint16_t *pixels=(uint16_t *)buf;
     int count=len_bytes/2;
@@ -28,7 +29,9 @@ static bool IRAM_ATTR fill_bounce(esp_lcd_panel_handle_t panel, void *buf, int p
         int row=(pos_px+i)/W;
         int until=W-((pos_px+i)%W);
         if(until>count-i) until=count-i;
-        uint16_t colour=(row>=239 && row<=241)?0xFFFF:(row<(H/2)?0x45BF:0xA345);
+        const int pitch=pitch_offset_px;
+        const int shifted=row-pitch;
+        uint16_t colour=(shifted>=239 && shifted<=241)?0xFFFF:(shifted<(H/2)?0x45BF:0xA345);
         // Fill each scanline with a single colour first; overlay only the few
         // symbol pixels. No modulo, division, or conditional per display pixel.
         for(int j=0;j<until;j++) pixels[i+j]=colour;
@@ -42,8 +45,8 @@ static bool IRAM_ATTR fill_bounce(esp_lcd_panel_handle_t panel, void *buf, int p
         }
         // Static pitch ladder: short white marks at 5 and 10 degrees above/below.
         // Touch only the marked rows, never calculate geometry for every pixel.
-        if (row==180 || row==300 || row==210 || row==270) {
-            int half=(row==180 || row==300)?35:20;
+        if (shifted==180 || shifted==300 || shifted==210 || shifted==270) {
+            int half=(shifted==180 || shifted==300)?35:20;
             for(int x=240-half;x<=240+half;x++) {
                 if(x>=x0 && x<x0+until) pixels[i+x-x0]=0xFFFF;
             }
@@ -101,14 +104,16 @@ void app_main(void) {
     ESP_ERROR_CHECK(ledc_channel_config(&bl_channel));
     ESP_LOGI(TAG,"Simulated attitude indicator running without PSRAM; PWM GPIO42 10kHz 50 percent");
     ESP_LOGW(TAG,"Hold BOOT for 2 seconds AFTER startup to return to ota_0");
-    ESP_LOGW(TAG,"STATIC PITCH LADDER DIAGNOSTIC: scanline fills with sparse overlays");
+    ESP_LOGW(TAG,"SIMULATED PITCH SWEEP: horizon and ladder move; aircraft fixed");
     int boot_hold_ms=0;
+    // One pixel per 100 ms, bouncing between -30 and +30 pixels.
+    int direction=1;
     while(1){
-        for(int c=0;c<8;c++){
-            static const int pitches[]={0,12,25,12,0,-12,-25,-12};
-            static const int banks[]={0,24,48,24,0,-24,-48,-24};
-            ESP_LOGI(TAG,"Static diagnostic heartbeat %d",c);
-            for (int elapsed=0; elapsed<2000; elapsed+=100) {
+        for (int elapsed=0; elapsed<2000; elapsed+=100) {
+                int next=pitch_offset_px+direction;
+                if(next>=30) {next=30; direction=-1;}
+                if(next<=-30) {next=-30; direction=1;}
+                pitch_offset_px=next;
                 if (gpio_get_level(GPIO_NUM_0)==0) boot_hold_ms+=100;
                 else boot_hold_ms=0;
                 if (boot_hold_ms>=2000) {
@@ -132,6 +137,5 @@ void app_main(void) {
                 }
                 vTaskDelay(pdMS_TO_TICKS(100));
             }
-        }
     }
 }
